@@ -42,8 +42,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -51,13 +51,16 @@ import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.extension.TestWatcher;
+import org.mockito.Mockito;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBConfigFileProvider;
+import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.DalContextListener;
 import org.openbravo.dal.core.DalLayerInitializer;
+import org.openbravo.dal.core.DalSessionFactoryController;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
@@ -121,11 +124,15 @@ public class OBBaseTest {
     if (!disabledTestCase) {
       log.info("*** Starting test case: " + getTestName(context));
     }
-    
-    // Ensure OBContext is set if setUp() wasn't called (shouldn't happen in normal flow)
+
+    // Ensure setUp() logic runs even if @BeforeEach wasn't called
+    // (e.g., Arquillian JUnit 5 may skip @BeforeEach methods)
+    ensureDalInitialized();
     if (OBContext.getOBContext() == null) {
-      log.warn("OBContext was null before test execution, initializing it now");
       setTestUserContext();
+    }
+    if (shouldMockServletContext() && DalContextListener.getServletContext() == null) {
+      setMockServletContext();
     }
   }
 
@@ -185,6 +192,9 @@ public class OBBaseTest {
     if (shouldMockServletContext()) {
       cleanMockServletContext();
     }
+
+    // Defensive cleanup: avoid leaking inline static mocks between tests in the same thread.
+    Mockito.framework().clearInlineMocks();
   }
 
   private String getTestName(ExtensionContext context) {
@@ -373,10 +383,10 @@ public class OBBaseTest {
    *
    * @see TestLogAppender
    */
-  @BeforeClass
+  @BeforeAll
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
-    staticInitializeDalLayer();
+    ensureDalInitialized();
     initializeDisabledTestCases();
   }
 
@@ -394,6 +404,7 @@ public class OBBaseTest {
   @BeforeEach
   public void setUp() throws Exception {
     // clear the session otherwise it keeps the old model
+    ensureDalInitialized();
     setTestUserContext();
     if (shouldMockServletContext()) {
       setMockServletContext();
@@ -484,10 +495,11 @@ public class OBBaseTest {
     staticInitializeDalLayer();
   }
 
-  protected static void staticInitializeDalLayer() throws Exception {
-    DalLayerInitializer initializer = DalLayerInitializer.getInstance();
-    if (!initializer.isInitialized()) {
-      initializer.initialize(true);
+  protected static void staticInitializeDalLayer() {
+    if (SessionFactoryController.getInstance() == null) {
+      DalSessionFactoryController controller = new DalSessionFactoryController();
+      controller.initialize();
+      SessionFactoryController.setInstance(controller);
     }
   }
 
@@ -682,5 +694,23 @@ public class OBBaseTest {
   protected <T extends BaseOBObject> int count(Class<T> clz) {
     final OBCriteria<T> obc = OBDal.getInstance().createCriteria(clz);
     return obc.count();
+  }
+
+  /**
+   * Ensures DAL is initialized before running tests
+   */
+  private static synchronized void ensureDalInitialized() {
+    DalLayerInitializer initializer = DalLayerInitializer.getInstance();
+    if (!initializer.isInitialized()) {
+      try {
+        log.info("Initializing DAL layer for test...");
+        staticInitializeDalLayer();
+        initializer.initialize(true);
+        log.info("DAL layer initialized successfully");
+      } catch (Exception e) {
+        log.error("Failed to initialize DAL layer", e);
+        throw new RuntimeException("Cannot initialize DAL layer", e);
+      }
+    }
   }
 }

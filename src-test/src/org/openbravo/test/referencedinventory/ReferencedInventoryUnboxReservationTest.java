@@ -82,7 +82,7 @@ public abstract class ReferencedInventoryUnboxReservationTest extends Referenced
         && (RECEIVEDQTY_10.subtract(reservationQty)).compareTo(qtyToUnbox) < 0;
   }
 
-  protected class ParamsUnboxReservationTest extends ParamsBoxReservationTest {
+  protected static class ParamsUnboxReservationTest extends ParamsBoxReservationTest {
     BigDecimal qtyToUnbox;
 
     ParamsUnboxReservationTest(String testDesc, String qtyToBox, String qtyToUnbox,

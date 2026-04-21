@@ -19,14 +19,13 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.Restrictions;
 import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Client;
@@ -42,7 +41,6 @@ import org.openbravo.model.materialmgmt.onhandquantity.StockProposed;
 /**
  * Unit tests for the StockUtils class.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class StockUtilsTest {
 
   private static final String TEST_CLIENT_ID = "TEST_CLIENT_ID";
@@ -57,6 +55,7 @@ public class StockUtilsTest {
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<StockUtilsData> mockedStockUtilsData;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal mockOBDal;
@@ -102,6 +101,8 @@ public class StockUtilsTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedStockUtilsData = mockStatic(StockUtilsData.class);
@@ -110,7 +111,7 @@ public class StockUtilsTest {
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
 
     when(mockOBDal.createCriteria(StockProposed.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any())).thenReturn(mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockCriteria);
     when(mockCriteria.scroll(ScrollMode.FORWARD_ONLY)).thenReturn(mockScrollableResults);
 
@@ -153,6 +154,13 @@ public class StockUtilsTest {
     }
     if (mockedStockUtilsData != null) {
       mockedStockUtilsData.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 
@@ -247,7 +255,7 @@ public class StockUtilsTest {
 
     // Verify that createCriteria and its methods were called correctly
     verify(mockOBDal).createCriteria(StockProposed.class);
-    verify(mockCriteria).add(Restrictions.eq(anyString(), any()));
+    verify(mockCriteria, atLeastOnce()).add(any());
     verify(mockCriteria).addOrderBy(anyString(), anyBoolean());
     verify(mockCriteria).scroll(ScrollMode.FORWARD_ONLY);
   }

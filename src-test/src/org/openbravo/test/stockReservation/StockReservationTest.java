@@ -11,9 +11,8 @@ import java.math.BigDecimal;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -38,16 +37,9 @@ public class StockReservationTest extends WeldBaseTest {
   @Inject
   private WeldUtils weldUtils;
 
-  /**
-   * Sets up the test environment, initializing the OBContext and VariablesSecureApp.
-   *
-   * @throws Exception
-   *     if an error occurs during setup
-   */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
     Utils.initializeTestContext();
     stockReservationPreference();
   }
@@ -184,15 +176,22 @@ public class StockReservationTest extends WeldBaseTest {
   /**
    * Cleans up the test environment by rolling back the transaction and closing the session.
    */
-  @AfterEach
-  public void cleanUp() {
-    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).add(
-        Restrictions.eq(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY))
-        .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true)).uniqueResult();
-    OBDal.getInstance().remove(pref);
-    OBDal.getInstance().flush();
-    OBDal.getInstance().commitAndClose();
-    OBDal.getInstance().rollbackAndClose();
+  @Override
+  protected void afterTestExecution(ExtensionContext context) {
+    try {
+      var criteria = OBDal.getInstance().createCriteria(Preference.class);
+      criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY));
+      criteria.add(Restrictions.eq(Preference.PROPERTY_SELECTED, true));
+      for (Object obj : criteria.list()) {
+        OBDal.getInstance().remove(obj);
+      }
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+    } catch (Exception e) {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      super.afterTestExecution(context);
+    }
   }
 
   /**
@@ -238,6 +237,8 @@ public class StockReservationTest extends WeldBaseTest {
 
     if (salesOrder != null) {
       processOrder(salesOrder, StockReservationTestUtils.REACTIVATE);
+      OBDal.getInstance().getSession().clear();
+      salesOrder = OBDal.getInstance().get(Order.class, salesOrder.getId());
       OBDal.getInstance().remove(salesOrder);
     }
 

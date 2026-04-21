@@ -28,10 +28,11 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -80,7 +81,6 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     if (ir.hasErrorOccured()) {
       fail(ir.getErrorMessages());
     }
-    OBDal.getInstance().commitAndClose();
   }
 
   private String exportTax() {
@@ -105,9 +105,6 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     cleanRefDataLoaded();
     setTestUserContext();
     addReadWriteAccess(Greeting.class);
-
-    createTestData();
-
     final int cnt = count(Greeting.class);
     addReadWriteAccess(Greeting.class);
     final String xml = getXML(Greeting.class);
@@ -121,7 +118,6 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     if (ir.hasErrorOccured()) {
       fail(ir.getErrorMessages());
     }
-    OBDal.getInstance().commitAndClose();
   }
 
   /**
@@ -144,7 +140,6 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     if (ir.hasErrorOccured()) {
       fail(ir.getErrorMessages());
     }
-    OBDal.getInstance().commitAndClose();
   }
 
   /**
@@ -154,9 +149,6 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
   @Test
   public void test3Greeting() {
     setUserContext(QA_TEST_ADMIN_USER_ID);
-
-    createTestData();
-
     String xml = getXML(Greeting.class);
     xml = xml.replaceAll(">Greeting", ">Greetings");
     final ImportResult ir = DataImportService.getInstance()
@@ -167,28 +159,6 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     if (ir.hasErrorOccured()) {
       fail(ir.getErrorMessages());
     }
-    OBDal.getInstance().commitAndClose();
-  }
-
-  /**
-   * Remove the test data from QA_TEST_ORG_ID.
-   */
-  @Test
-  public void test4Greeting() {
-    setUserContext(QA_TEST_ADMIN_USER_ID);
-
-    createTestData();
-
-    final Organization org = OBDal.getInstance().get(Organization.class, QA_TEST_ORG_ID);
-    final OBCriteria<Greeting> obc = OBDal.getInstance().createCriteria(Greeting.class);
-    obc.setFilterOnReadableClients(false);
-    obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.eq(PROPERTY_ORGANIZATION, org));
-    // assertEquals(7, obc.list().size());
-    for (final Greeting g : obc.list()) {
-      OBDal.getInstance().remove(g);
-    }
-    OBDal.getInstance().commitAndClose();
   }
 
   /**
@@ -197,16 +167,12 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
   @Test
   public void test5Greeting() {
     setUserContext(QA_TEST_ADMIN_USER_ID);
-
-    createTestData();
-
     final Organization org = OBDal.getInstance().get(Organization.class, QA_TEST_ORG_ID); // FIXME
     final OBCriteria<Greeting> obc = OBDal.getInstance().createCriteria(Greeting.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     obc.add(Restrictions.eq(PROPERTY_ORGANIZATION, org));
     assertEquals(0, obc.list().size());
-    OBDal.getInstance().commitAndClose();
   }
 
   /**
@@ -221,33 +187,23 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
   private <T extends BaseOBObject> void doTestNoChange(Class<T> clz) {
     setTestUserContext();
     addReadWriteAccess(Greeting.class);
-
-    createTestData();
-
     final String xml = getXML(clz);
     final ImportResult ir = DataImportService.getInstance()
         .importDataFromXML(OBContext.getOBContext().getCurrentClient(),
             OBContext.getOBContext().getCurrentOrganization(), xml);
     assertTrue(ir.getInsertedObjects().size() == 0);
     assertTrue(ir.getUpdatedObjects().size() == 0);
-    OBDal.getInstance().commitAndClose();
   }
 
-  private void createTestData() {
-    final List<Greeting> greetings = OBDal.getInstance().createQuery(Greeting.class, "").list();
-    if (greetings.size() > 0) {
-      DATA_SET_SIZE = greetings.size();
-      return;
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBContext.setAdminMode(true);
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      OBContext.restorePreviousMode();
     }
-
-    for (int i = 0; i < DATA_SET_SIZE; i++) {
-      final Greeting greeting = OBProvider.getInstance().get(Greeting.class);
-      greeting.setDefault(i == 0);
-      greeting.setName("Greeting " + i);
-      greeting.setOnlyPrintFirstName((i % 2) == 0);
-      greeting.setTitle("Greeting " + i);
-      OBDal.getInstance().save(greeting);
-    }
-    OBDal.getInstance().commitAndClose();
   }
+
 }

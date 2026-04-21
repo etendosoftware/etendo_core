@@ -746,6 +746,7 @@ public class IssuesTest extends OBBaseTest {
     processBundle.setProcessClass(Test22235.class);
 
     try {
+      RequestContext.clear();
       RequestContext.get().getVariablesSecureApp();
       fail();
     } catch (OBException e) {

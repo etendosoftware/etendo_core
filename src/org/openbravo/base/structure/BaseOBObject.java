@@ -172,6 +172,22 @@ public abstract class BaseOBObject
     data[p.getIndexInEntity()] = value;
   }
 
+  /**
+   * Replaces internal data with data from another instance of the same entity.
+   * Used by OBDal.refresh() to handle Hibernate 6 cascade refresh failures
+   * when associated records have been deleted by stored procedures.
+   */
+  public void replaceDataFrom(BaseOBObject source) {
+    if (source.data != null) {
+      if (this.data == null || this.data.length != source.data.length) {
+        this.data = new Object[source.data.length];
+      }
+      System.arraycopy(source.data, 0, this.data, 0, source.data.length);
+    }
+    this.hasLookedForTrl = false;
+    this.dataTrl = null;
+  }
+
   @Override
   public Object getId() {
     return get(ID);

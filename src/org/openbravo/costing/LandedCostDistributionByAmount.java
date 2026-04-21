@@ -37,6 +37,7 @@ import org.openbravo.model.materialmgmt.cost.LandedCost;
 import org.openbravo.model.materialmgmt.cost.LandedCostCost;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 
+@jakarta.enterprise.context.Dependent
 public class LandedCostDistributionByAmount extends LandedCostDistributionAlgorithm {
 
   @Override
@@ -113,7 +114,7 @@ public class LandedCostDistributionByAmount extends LandedCostDistributionAlgori
       }
       pendingAmt = pendingAmt.subtract(receiptAmt);
       final LCReceipt lcrl = (LCReceipt) OBDal.getInstance()
-          .getProxy(LCReceipt.ENTITY_NAME, receiptCosts.get());
+          .getProxy(LCReceipt.ENTITY_NAME, row[0]);
       final LCReceiptLineAmt lcrla = OBProvider.getInstance().get(LCReceiptLineAmt.class);
       lcrla.setLandedCostCost((LandedCostCost) OBDal.getInstance()
           .getProxy(LandedCostCost.ENTITY_NAME, localLcCost.getId()));

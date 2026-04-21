@@ -26,8 +26,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -68,8 +67,9 @@ public class AccessPropagation extends WeldBaseTest {
   private static final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS,
       FIELDS, REPORTS, FORMS, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
 
-  @BeforeEach
-  public void createDummyView() {
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
     RoleInheritanceTestUtils.createDummyView();
   }
 
@@ -83,11 +83,12 @@ public class AccessPropagation extends WeldBaseTest {
     Role template = null;
     try {
       OBContext.setAdminMode(true);
-      // Create roles
-      role = RoleInheritanceTestUtils.createRole("role", RoleInheritanceTestUtils.CLIENT_ID,
+      // Create roles with unique names to avoid constraint violations between parameterized runs
+      String suffix = "_" + parameter + "_" + System.nanoTime();
+      role = RoleInheritanceTestUtils.createRole("role" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleId = role.getId();
-      template = RoleInheritanceTestUtils.createRole("template", RoleInheritanceTestUtils.CLIENT_ID,
+      template = RoleInheritanceTestUtils.createRole("template" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String templateId = template.getId();
 
@@ -160,9 +161,10 @@ public class AccessPropagation extends WeldBaseTest {
     }
   }
 
-  @AfterEach
-  public void removeDummyView() {
+  @Override
+  protected void afterTestExecution(ExtensionContext context) {
     RoleInheritanceTestUtils.removeDummyView();
+    super.afterTestExecution(context);
   }
 
   private static Stream<Arguments> accessParameters() {

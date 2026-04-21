@@ -73,13 +73,9 @@ public abstract class CopyLinesFromOrdersTestData {
 
   public abstract void initialize();
 
-  public void applyTestSettings() {
+  public void applyTestSettings() {};
 
-  };
-
-  public void applyTestSettingsBeforeExecuteProcess() {
-
-  };
+  public void applyTestSettingsBeforeExecuteProcess() {};
 
   public String[] getExpectedOrderHeader() {
     return expectedOrderAmounts;

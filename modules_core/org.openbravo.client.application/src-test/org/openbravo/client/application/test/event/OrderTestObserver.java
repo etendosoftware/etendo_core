@@ -20,6 +20,7 @@ package org.openbravo.client.application.test.event;
 
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
@@ -33,6 +34,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 
+@Dependent
 class OrderTestObserver extends EntityPersistenceEventObserver {
   private static Entity[] entities = { ModelProvider.getInstance().getEntity(Order.ENTITY_NAME) };
   private static int executionCount = 0;

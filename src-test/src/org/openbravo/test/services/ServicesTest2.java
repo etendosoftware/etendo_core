@@ -117,7 +117,6 @@ public class ServicesTest2 extends WeldBaseTest {
       OBDal.getInstance().flush();
       log.debug("Order Created:" + testOrder.getDocumentNo());
       log.debug(parameter.getTestDescription());
-      OBDal.getInstance().refresh(testOrder);
       testOrderId = testOrder.getId();
       final List<String> serviceLines = new ArrayList<String>();
       // Insert Product Line
@@ -129,15 +128,12 @@ public class ServicesTest2 extends WeldBaseTest {
         insertRelation(serviceOrderLine, productOrderLine, productOrderLine.getOrderedQuantity(),
             productOrderLine.getLineNetAmount());
         OBDal.getInstance().flush();
-        OBDal.getInstance().refresh(serviceOrderLine);
       }
 
       productOrderLine.setOrderedQuantity(parameter.getProductChangedQty());
 
       OBDal.getInstance().save(productOrderLine);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(testOrder);
-
       for (String serviceLineId : serviceLines) {
         OrderLine serviceLine = OBDal.getInstance().get(OrderLine.class, serviceLineId);
         for (String[] service : parameter.getServicesResults()) {
@@ -209,13 +205,12 @@ public class ServicesTest2 extends WeldBaseTest {
     }
     testOrderLine.setSalesOrder(testOrder);
     testOrder.getOrderLineList().add(testOrderLine);
+    testOrderLine.getOrderLineTaxList().clear();
     testOrderLine.setId(SequenceIdData.getUUID());
     testOrderLine.setNewOBObject(true);
     OBDal.getInstance().save(testOrderLine);
     OBDal.getInstance().save(testOrder);
     OBDal.getInstance().flush();
-    OBDal.getInstance().refresh(testOrder);
-    OBDal.getInstance().refresh(testOrderLine);
     return testOrderLine;
   }
 

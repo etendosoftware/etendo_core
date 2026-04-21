@@ -29,7 +29,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -37,6 +36,7 @@ import org.openbravo.client.application.WindowSettingsActionHandler;
 import org.openbravo.client.application.window.ApplicationDictionaryCachedStructures;
 import org.openbravo.client.application.window.StandardWindowComponent;
 import org.openbravo.client.kernel.ComponentGenerator;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.ui.Tab;
@@ -57,88 +57,108 @@ public class ADCSTest extends WeldBaseTest {
   @Inject
   private StandardWindowComponent component;
 
-  @BeforeEach
-  public void doChecks() {
+  private void doChecks() {
     assumeTrue(adcs.useCache(), "Cache can be used (no modules in development)");
     setSystemAdministratorContext();
+    OBContext.setAdminMode(true);
   }
 
   @Test
   @Issue("40633")
   public void tabWithProductCharacteristicsIsGeneratedAfterADCSInitialization() {
-    // given ADCS initialized with only Discounts and Promotions window
-    adcs.init();
-    Window w = adcs.getWindow(Windows.DISCOUNTS_AND_PROMOTIONS);
+    doChecks();
+    try {
+      // given ADCS initialized with only Discounts and Promotions window
+      adcs.init();
+      Window w = adcs.getWindow(Windows.DISCOUNTS_AND_PROMOTIONS);
 
-    // when Discounts and Promotions view is requested in a different DAL session
-    OBDal.getInstance().commitAndClose();
-    component.setWindow(w);
-    String generatedView = ComponentGenerator.getInstance().generate(component);
+      // when Discounts and Promotions view is requested in a different DAL session
+      OBDal.getInstance().commitAndClose();
+      component.setWindow(w);
+      String generatedView = ComponentGenerator.getInstance().generate(component);
 
-    // then the view gets generated without throwing exceptions
-    assertThat(generatedView, not(isEmptyString()));
+      // then the view gets generated without throwing exceptions
+      assertThat(generatedView, not(isEmptyString()));
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   @Test
   @Issue("41338")
   public void tabsSharingTableAreCorrectlyInitialized() {
-    // given ADCS initialized with only Sales Invoice header tab (uses c_order)
-    adcs.init();
+    doChecks();
+    try {
+      // given ADCS initialized with only Sales Invoice header tab (uses c_order)
+      adcs.init();
 
-    adcs.getTab(Tabs.SALES_INVOICE_HEADER);
-    OBDal.getInstance().commitAndClose();
+      adcs.getTab(Tabs.SALES_INVOICE_HEADER);
+      OBDal.getInstance().commitAndClose();
 
-    // when Purchase Invoice header (it also uses c_order) is taken from ADCS
-    adcs.getTab(Tabs.PURCHASE_INVOICE_HEADER);
-    OBDal.getInstance().commitAndClose();
+      // when Purchase Invoice header (it also uses c_order) is taken from ADCS
+      adcs.getTab(Tabs.PURCHASE_INVOICE_HEADER);
+      OBDal.getInstance().commitAndClose();
 
-    // then Purchase Invoice header is fully initialized even if taken in a different session
-    Tab t = adcs.getTab(Tabs.PURCHASE_INVOICE_HEADER);
-    assertThat(t.getTable().getADColumnList().size(), greaterThan(1));
+      // then Purchase Invoice header is fully initialized even if taken in a different session
+      Tab t = adcs.getTab(Tabs.PURCHASE_INVOICE_HEADER);
+      assertThat(t.getTable().getADColumnList().size(), greaterThan(1));
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   @Test
   @Issue("41338")
   public void wsahDoesNotLeaveAdcsInInvalidState() {
-    // given a clean ADCS
-    adcs.init();
+    doChecks();
+    try {
+      // given a clean ADCS
+      adcs.init();
 
-    // when first action using it is to execute WSAH for sales and purchase invoice windows
-    WindowSettingsActionHandlerTest wsa = WeldUtils
-        .getInstanceFromStaticBeanManager(WindowSettingsActionHandlerTest.class);
+      // when first action using it is to execute WSAH for sales and purchase invoice windows
+      WindowSettingsActionHandlerTest wsa = WeldUtils
+          .getInstanceFromStaticBeanManager(WindowSettingsActionHandlerTest.class);
 
-    wsa.execute(Windows.SALES_INVOICE);
-    wsa.execute(Windows.PURCHASE_INVOICE);
+      wsa.execute(Windows.SALES_INVOICE);
+      wsa.execute(Windows.PURCHASE_INVOICE);
 
-    // then it should be possible to generate Purchase Invoice window in a different session
-    Window w = adcs.getWindow(Windows.PURCHASE_INVOICE);
-    OBDal.getInstance().commitAndClose();
+      // then it should be possible to generate Purchase Invoice window in a different session
+      Window w = adcs.getWindow(Windows.PURCHASE_INVOICE);
+      OBDal.getInstance().commitAndClose();
 
-    component.setWindow(w);
-    HttpServletRequestMock.setRequestMockInRequestContext();
-    String generatedView = ComponentGenerator.getInstance().generate(component);
-    assertThat(generatedView, not(isEmptyString()));
+      component.setWindow(w);
+      HttpServletRequestMock.setRequestMockInRequestContext();
+      String generatedView = ComponentGenerator.getInstance().generate(component);
+      assertThat(generatedView, not(isEmptyString()));
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   @Test
   @Issue("41892")
   public void maskedStringsShouldntBreakADCS() {
-    // given a clean ADCS initialized with any window
-    adcs.init();
-    adcs.getWindow(Windows.PURCHASE_INVOICE);
-    OBDal.getInstance().commitAndClose();
+    doChecks();
+    try {
+      // given a clean ADCS initialized with any window
+      adcs.init();
+      adcs.getWindow(Windows.PURCHASE_INVOICE);
+      OBDal.getInstance().commitAndClose();
 
-    // when any column from any tab in that window is obtained by another session
-    Reference anyColumnReference = adcs.getWindow(Windows.PURCHASE_INVOICE)
-        .getADTabList()
-        .get(0)
-        .getADFieldList()
-        .get(0)
-        .getColumn()
-        .getReference();
+      // when any column from any tab in that window is obtained by another session
+      Reference anyColumnReference = adcs.getWindow(Windows.PURCHASE_INVOICE)
+          .getADTabList()
+          .get(0)
+          .getADFieldList()
+          .get(0)
+          .getColumn()
+          .getReference();
 
-    // then its mask list must be accessible
-    assertThat(anyColumnReference.getOBCLKERREFMASKList().size(), greaterThanOrEqualTo(0));
+      // then its mask list must be accessible
+      assertThat(anyColumnReference.getOBCLKERREFMASKList().size(), greaterThanOrEqualTo(0));
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   @Dependent

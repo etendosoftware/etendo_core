@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.openbravo.test.materialMgmt.linevalidation.GoodMovementUtils.createGoodsMovement;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
@@ -24,15 +24,13 @@ import org.openbravo.test.base.TestConstants;
 public class GoodMovementTest extends OBBaseTest {
 
   /**
-   * Sets up the test environment before each test execution.
-   *
-   * @throws Exception
-   *     if an error occurs during setup.
+   * Overrides setTestUserContext() to configure the test OBContext before each test.
+   * Using setTestUserContext() instead of setUp() ensures the context is set correctly
+   * within the JUnit 5 + Arquillian lifecycle, avoiding issues where the parent setUp()
+   * could be invoked after a subclass override and overwrite the configured OBContext.
    */
-  @BeforeEach
   @Override
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
         TestConstants.Orgs.ESP_NORTE);
     OBContext currentContext = OBContext.getOBContext();

@@ -260,6 +260,7 @@ public class ModifyTaxesTest extends OBBaseTest {
       index++;
     }
 
+    order.getOrderLineList().clear();
     for (OrderLine l : alllines) {
       OBDal.getInstance().remove(l);
     }

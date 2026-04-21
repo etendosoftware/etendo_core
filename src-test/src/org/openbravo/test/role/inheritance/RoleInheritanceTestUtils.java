@@ -862,6 +862,9 @@ public class RoleInheritanceTestUtils {
     obCriteria
         .add(Restrictions.eq(OBUIAPPViewImplementation.PROPERTY_NAME, viewImplementationName));
     obCriteria.setMaxResults(1);
+    obCriteria.setFilterOnReadableClients(false);
+    obCriteria.setFilterOnReadableOrganization(false);
+    obCriteria.setFilterOnActive(false);
     viewAccess.setClient(role.getClient());
     viewAccess.setOrganization(role.getOrganization());
     viewAccess.setRole(role);
@@ -876,6 +879,9 @@ public class RoleInheritanceTestUtils {
         .createCriteria(OBUIAPPViewImplementation.class);
     viewCriteria.add(Restrictions.eq(OBUIAPPViewImplementation.PROPERTY_NAME, viewName));
     viewCriteria.setMaxResults(1);
+    viewCriteria.setFilterOnReadableClients(false);
+    viewCriteria.setFilterOnReadableOrganization(false);
+    viewCriteria.setFilterOnActive(false);
     final OBCriteria<ViewRoleAccess> viewAccessCriteria = OBDal.getInstance()
         .createCriteria(ViewRoleAccess.class);
     viewAccessCriteria.add(Restrictions.eq(ViewRoleAccess.PROPERTY_ROLE, role));

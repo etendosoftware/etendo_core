@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests for the {@link InOutLineData} class.
  * Verifies the behavior of the constructor, getters, and setters.
  */
-class InOutLineDataTest {
+public class InOutLineDataTest {
 
   /**
    * Tests the constructor and getter methods of the {@link InOutLineData} class.

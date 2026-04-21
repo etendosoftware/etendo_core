@@ -25,7 +25,10 @@ import static org.junit.Assert.assertThat;
 import java.math.BigDecimal;
 
 import org.codehaus.jettison.json.JSONArray;
+import org.junit.After;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.materialmgmt.refinventory.BoxProcessor;
 import org.openbravo.model.common.plm.Product;
@@ -129,6 +132,12 @@ public class ReferencedInventoryBoxSeveralStorageDetailsTest extends ReferencedI
     assertsGoodsMovementNumberOfLines(boxMovement, 1);
     assertThat("Referenced Inventory has two different storage details",
         refInv.getMaterialMgmtStorageDetailList().size(), equalTo(2));
+  }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBDal.getInstance().rollbackAndClose();
   }
 
 }
