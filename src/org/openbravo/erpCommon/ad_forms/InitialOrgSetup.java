@@ -31,6 +31,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.model.common.enterprise.OrganizationType;
 import org.openbravo.erpCommon.businessUtility.WindowTabs;
 import org.openbravo.erpCommon.modules.ModuleReferenceDataOrgTree;
 import org.openbravo.erpCommon.utility.LeftTabsBar;
@@ -72,9 +73,19 @@ public class InitialOrgSetup extends HttpSecureAppServlet {
       org.openbravo.erpCommon.businessUtility.InitialOrgSetup ios = new org.openbravo.erpCommon.businessUtility.InitialOrgSetup(
           OBContext.getOBContext().getCurrentClient());
 
-      OBError obeResult = ios.createOrganization(strOrganization, strOrgUser, strOrgType,
-          strParentOrg, strcLocationId, strPassword, strModules, isTrue(strCreateAccounting),
-          fileCoAFilePath, strCurrency, bBPartner, bProduct, bProject, bCampaign, bSalesRegion);
+      final OrganizationType orgType = OBDal.getInstance().get(OrganizationType.class, strOrgType);
+      final boolean useAutomaticAccounting = orgType != null
+          && orgType.isLegalEntityWithAccounting();
+
+      OBError obeResult;
+      if (useAutomaticAccounting) {
+        obeResult = ios.createOrganizationWithAutomaticAccounting(strOrganization, strOrgUser,
+            strOrgType, strParentOrg, strcLocationId, strPassword, strModules, strCurrency);
+      } else {
+        obeResult = ios.createOrganization(strOrganization, strOrgUser, strOrgType, strParentOrg,
+            strcLocationId, strPassword, strModules, isTrue(strCreateAccounting), fileCoAFilePath,
+            strCurrency, bBPartner, bProduct, bProject, bCampaign, bSalesRegion);
+      }
       if (!obeResult.getType().equals(OKTYPE)) {
         OBContext.getOBContext().removeWritableOrganization(ios.getOrgId());
         OBContext.getOBContext().removeFromWritableOrganization(ios.getOrgId());
