@@ -30,6 +30,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.window.StandardWindowComponent;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
@@ -44,7 +45,8 @@ import org.openbravo.test.base.mock.HttpServletRequestMock;
  */
 public class ConfigurableTransactionalFilters extends ViewGenerationTest {
 
-  private static final String FILTER_NAME = "This grid is filtered using a transactional filter <i\\>(only draft & modified documents in the last 1 day(s))</i\\>.";
+  private static final String FILTER_NAME =
+      "This grid is filtered using a transactional filter <i>(only draft & modified documents in the last 1 day(s))";
 
   @BeforeEach
   public void shouldExecuteOnlyIfThereIsNoGridConfigAtSystemLevel() {
@@ -71,6 +73,7 @@ public class ConfigurableTransactionalFilters extends ViewGenerationTest {
       assertThat("Transactional filters are enabled by default", viewDef,
           containsString(FILTER_NAME));
     } finally {
+      markTransactionForRollback();
       OBDal.getInstance().rollbackAndClose();
     }
   }
@@ -87,6 +90,7 @@ public class ConfigurableTransactionalFilters extends ViewGenerationTest {
       String viewDef = getTransactionalWindowView();
       assertThat("Transactional filters are disabled", viewDef, containsString(FILTER_NAME));
     } finally {
+      markTransactionForRollback();
       OBDal.getInstance().rollbackAndClose();
     }
   }
@@ -103,6 +107,7 @@ public class ConfigurableTransactionalFilters extends ViewGenerationTest {
       String viewDef = getTransactionalWindowView();
       assertThat("Transactional filters are disabled", viewDef, not(containsString(FILTER_NAME)));
     } finally {
+      markTransactionForRollback();
       OBDal.getInstance().rollbackAndClose();
     }
   }
@@ -118,6 +123,12 @@ public class ConfigurableTransactionalFilters extends ViewGenerationTest {
       OBDal.getInstance().flush();
     } finally {
       OBContext.restorePreviousMode();
+    }
+  }
+
+  private void markTransactionForRollback() {
+    if (SessionHandler.isSessionHandlerPresent()) {
+      SessionHandler.getInstance().setDoRollback(true);
     }
   }
 
