@@ -64,45 +64,32 @@ pipeline {
                         env.FAILED_SUITES = "" // List to collect failed test suites
                         sh 'printenv'
 
+                        def skipConditions = load "${pwd()}/pipelines/unittests/utils/skipConditions.groovy"
+
+                        echo "--------------- Checking branch type ---------------"
+                        if (skipConditions.skipIfVersionHotfix(env.GIT_BRANCH, REPO_NAME, COMMIT_SUCCESS_STATUS, ACCESS_TOKEN, GIT_COMMIT, BUILD_URL, CONTEXT_BUILD)) {
+                            return
+                        }
+
                         echo "--------------- Checking if pipeline should be skipped ---------------"
                         def changedFiles = sh(
-                        script: "git diff --name-only HEAD~1 HEAD",
-                        returnStdout: true
-                        ).trim()
+                            script: "git diff --name-only HEAD~1 HEAD",
+                            returnStdout: true
+                        ).trim().split('\n') as List
 
                         echo "Files changed in last commit: ${changedFiles}"
 
-                        // Check if only Jenkinsfile and/or sonarUtils.groovy were changed
-                        def filesList = changedFiles.split('\n')
                         def allowedFiles = [
                             "pipelines/unittests/Jenkinsfile",
                             "pipelines/unittests/utils/sonarUtils.groovy"
                         ]
-
-                        // Check if all changed files are in the allowed list
-                        def onlyAllowedFiles = filesList.every { file -> 
-                            allowedFiles.contains(file)
-                        }
-
-                        // Additionally check that at least one of the allowed files was changed
-                        def hasAllowedFiles = filesList.any { file -> 
-                            allowedFiles.contains(file)
-                        }
-
-                        if (onlyAllowedFiles && hasAllowedFiles) {
-                            echo "⏭️ Only Jenkinsfile and/or sonarUtils.groovy were changed. Skipping pipeline execution."
-                            echo "📋 Changed files: ${changedFiles}"
-
-                            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped - Only pipeline config files changed\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-
-                            echo "✅ Pipeline execution aborted successfully. Commit marked as success."
-                            currentBuild.result = ABORTED
+                        if (skipConditions.skipIfOnlyAllowedFilesChanged(changedFiles, allowedFiles, REPO_NAME, COMMIT_SUCCESS_STATUS, "Pipeline skipped - Only pipeline config files changed", ACCESS_TOKEN, GIT_COMMIT, BUILD_URL, CONTEXT_BUILD)) {
                             return
-                        } else {
-                            echo "✅ Pipeline will continue - Changes detected in other files."
-                            echo "📋 Changed files: ${changedFiles}"
-                            currentBuild.result = SUCCESS
                         }
+
+                        echo "✅ Pipeline will continue - Changes detected in other files."
+                        echo "📋 Changed files: ${changedFiles}"
+                        currentBuild.result = SUCCESS
                     } catch (Exception e) {
                         echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
                         env.ERROR_MESSAGE = "Pipeline Check Failed"
