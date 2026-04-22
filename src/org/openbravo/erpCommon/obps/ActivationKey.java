@@ -111,6 +111,10 @@ public class ActivationKey {
 
   private static final String HEARTBEAT_URL = "https://activation.futit.cloud:443/license-server/heartbeat";
   private static final String STATELESS_REQUEST = "statelessRequest";
+  public static final String WS_PACKS = "wsPacks";
+  public static final String WS_UNITS_PER_UNIT = "wsUnitsPerUnit";
+  public static final String INSTANCENO = "instanceno";
+  public static final String LINCENSETYPE = "lincensetype";
 
   private boolean isActive = false;
   private boolean hasActivationKey = false;
@@ -242,6 +246,15 @@ public class ActivationKey {
      */
     public String getStatusName(String language) {
       return Utility.getListValueName("OBPSLicenseStatus", code, language);
+    }
+
+    /**
+     * Returns the status code associated with this subscription status.
+     *
+     * @return the status code as a String
+     */
+    public String getStatusCode() {
+      return code;
     }
 
   }
@@ -413,7 +426,7 @@ public class ActivationKey {
       return;
     }
 
-    String pLicenseType = getProperty("lincensetype");
+    String pLicenseType = getProperty(LINCENSETYPE);
     if ("USR".equals(pLicenseType)) {
       licenseType = LicenseType.CONCURRENT_USERS;
     } else if ("DMD".equals(pLicenseType)) {
@@ -456,8 +469,8 @@ public class ActivationKey {
       if (trial || golden) {
         limitedWsAccess = true;
         maxWsCalls = 500L;
-        instanceProperties.put("wsPacks", "1");
-        instanceProperties.put("wsUnitsPerUnit", "500");
+        instanceProperties.put(WS_PACKS, "1");
+        instanceProperties.put(WS_UNITS_PER_UNIT, "500");
         initializeWsCounter();
       } else {
         limitedWsAccess = false;
@@ -465,8 +478,8 @@ public class ActivationKey {
     } else {
       limitedWsAccess = "false".equals(getProperty("unlimitedWsAccess"));
       if (limitedWsAccess) {
-        String packs = getProperty("wsPacks");
-        String unitsPack = getProperty("wsUnitsPerUnit");
+        String packs = getProperty(WS_PACKS);
+        String unitsPack = getProperty(WS_UNITS_PER_UNIT);
 
         if (StringUtils.isEmpty(packs) || StringUtils.isEmpty(unitsPack)) {
           log.warn("Couldn't determine ws call limitation, setting unlimited.");
@@ -526,8 +539,93 @@ public class ActivationKey {
 
     checkDates();
 
+    // Persist activation key information to database
+    persistActivationInfoToDB();
+
     // this occurs on Tomcat start, don't want to try to refresh on next login, let's wait for 24hr
     resetRefreshTime();
+  }
+
+  /**
+   * Persists the calculated activation key information to the database
+   * in the new columns of AD_SYSTEM_INFO table
+   */
+  private void persistActivationInfoToDB() {
+    if (!isActive && !hasActivationKey) {
+      // No activation key, don't persist anything
+      return;
+    }
+
+    OBContext.setAdminMode(true);
+    try {
+      SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
+      if (sysInfo == null) {
+        log.warn("SystemInformation record not found, cannot persist activation info");
+        return;
+      }
+
+      // Persist customer name
+      if (instanceProperties != null && getProperty("customer") != null) {
+        sysInfo.setCustomerName(getProperty("customer"));
+      }
+
+      // Persist license edition
+      if (licenseClass != null) {
+        sysInfo.setLicenseEdition(licenseClass.getCode());
+      }
+
+      // Persist subscription type (license type)
+      if (licenseType != null) {
+        sysInfo.setSubscriptionType(licenseType.getCode());
+      } else if (instanceProperties != null && getProperty(LINCENSETYPE) != null) {
+        sysInfo.setSubscriptionType(getProperty(LINCENSETYPE));
+      }
+
+      // Persist subscription start date
+      if (startDate != null) {
+        sysInfo.setSubscriptionStartDate(startDate);
+      }
+
+      // Persist subscription end date
+      if (endDate != null) {
+        sysInfo.setSubscriptionEndDate(endDate);
+      }
+
+      // Persist concurrent users limit
+      if (maxUsers != null) {
+        sysInfo.setConcurrentGlobalSystemUsers(maxUsers);
+      }
+
+      // Persist instance number
+      if (instanceProperties != null && getProperty(INSTANCENO) != null) {
+        sysInfo.setInstanceNumber(getProperty(INSTANCENO));
+      }
+
+      // Persist web service access information
+      String wsAccess = null;
+      if (limitedWsAccess) {
+        String packs = getProperty(WS_PACKS);
+        String unitsPack = getProperty(WS_UNITS_PER_UNIT);
+        if (packs != null && unitsPack != null) {
+          wsAccess = "Limited: " + packs + " packs x " + unitsPack + " calls";
+        } else {
+          wsAccess = "Limited";
+        }
+      } else {
+        wsAccess = "Unlimited";
+      }
+      sysInfo.setWEBServiceAccess(wsAccess);
+
+      OBDal.getInstance().save(sysInfo);
+      OBDal.getInstance().flush();
+
+      log.info("Activation key information persisted to database successfully");
+    } catch (Exception e) {
+      log.error("Error persisting activation key information to database", e);
+      // Don't throw exception to not break the activation process
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   private void reset() {
@@ -980,7 +1078,7 @@ public class ActivationKey {
           : userLimit;
       return userMsg + " " + Utility.messageBD(conn, "OPSConcurrentUsers", lang);
     } else {
-      return Utility.getListValueName("OPSLicenseType", getProperty("lincensetype"), lang);
+      return Utility.getListValueName("OPSLicenseType", getProperty(LINCENSETYPE), lang);
     }
   }
 
@@ -991,8 +1089,8 @@ public class ActivationKey {
     if (!limitedWsAccess) {
       return Utility.messageBD(conn, "OPSWSUnlimited", lang);
     } else {
-      String packs = getProperty("wsPacks");
-      String unitsPack = getProperty("wsUnitsPerUnit");
+      String packs = getProperty(WS_PACKS);
+      String unitsPack = getProperty(WS_UNITS_PER_UNIT);
       return Utility.messageBD(conn, "OPWSLimited", lang)
           .replace("@packs@", packs)
           .replace("@unitsPerPack@", unitsPack);
@@ -1263,7 +1361,7 @@ public class ActivationKey {
       if (instanceProperties != null) {
         // this could happen ie. with old basic licenses signed with a now invalid key
         params.put("purpose", getProperty("purpose"));
-        params.put("instanceNo", getProperty("instanceno"));
+        params.put("instanceNo", getProperty(INSTANCENO));
         params.put("updated", getProperty("updated"));
       } else {
         params.put("purpose",

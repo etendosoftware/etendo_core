@@ -3,7 +3,7 @@ List<String> _dependenciesListCOMPILATION = [
   'com.auth0:java-jwt:4.4.0',
 
   // Etendo Core and Internal Components
-  'com.etendoerp:dbsm:1.1.0',
+  'com.etendoerp:dbsm:1.2.0',
   'com.etendoerp:font.bitstreamverasans:1.0.0',
   'com.etendoerp:YUIAnt:1.0.0',
   'com.etendoerp:yuicompressor:2.4.2',
@@ -115,8 +115,8 @@ List<String> _dependenciesListCOMPILATION = [
 
   // Template and Scripting Engines
   'org.freemarker:freemarker:2.3.34',
-  'org.mozilla:rhino:1.7.14',
-  'org.mozilla:rhino-engine:1.7.14',
+  'org.mozilla:rhino:1.8.0',
+  'org.mozilla:rhino-engine:1.8.0',
 
   // Scheduling and Distributed Systems
   'org.quartz-scheduler:quartz:2.3.2',
