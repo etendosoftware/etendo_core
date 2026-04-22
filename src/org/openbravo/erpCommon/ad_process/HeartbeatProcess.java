@@ -523,20 +523,6 @@ public class HeartbeatProcess implements Process {
     return false;
   }
 
-  public static boolean isClonedInstance() throws ServletException {
-    OBContext.setAdminMode();
-    try {
-      HeartbeatLog lastBeat = getLastHBLog();
-      return (lastBeat != null && lastBeat.getDatabaseIdentifier() != null
-          && lastBeat.getMacIdentifier() != null)
-          && (!lastBeat.getSystemIdentifier().equals(SystemInfo.getSystemIdentifier())
-          || !lastBeat.getDatabaseIdentifier().equals(SystemInfo.getDBIdentifier())
-          || !lastBeat.getMacIdentifier().equals(SystemInfo.getMacAddress()));
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-  }
-
   private static HeartbeatLog getLastHBLog() {
     OBCriteria<HeartbeatLog> obc = OBDal.getInstance().createCriteria(HeartbeatLog.class);
     obc.addOrderBy(HeartbeatLog.PROPERTY_CREATIONDATE, false);

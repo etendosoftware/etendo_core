@@ -21,21 +21,18 @@ package org.openbravo.erpCommon.instancemanagement;
 
 import java.util.HashMap;
 
-import javax.enterprise.context.Dependent;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_process.HeartbeatProcess;
 import org.openbravo.erpCommon.obps.ActivationKey;
@@ -51,6 +48,8 @@ import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Data;
 import com.smf.jobs.Result;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Action for managing instance activation and deactivation.
@@ -198,7 +197,7 @@ public class InstanceManagementAction extends Action {
       OBCriteria<Module> qMods = OBDal.getInstance().createCriteria(Module.class);
       qMods.add(Restrictions.eq(Module.PROPERTY_COMMERCIAL, true));
       qMods.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
-      qMods.addOrder(Order.asc(Module.PROPERTY_NAME));
+      qMods.addOrderBy(Module.PROPERTY_NAME);
 
       // core can be commercial, do not take it into account
       qMods.add(Restrictions.ne(Module.PROPERTY_ID, "0"));

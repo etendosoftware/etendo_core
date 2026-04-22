@@ -2,9 +2,9 @@ package org.openbravo.erpCommon.instancemanagement;
 
 import java.util.Map;
 
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.system.System;
 
 /**
