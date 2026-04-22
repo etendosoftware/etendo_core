@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -53,6 +54,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromProcess;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.Restrictions;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeResolver;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -405,7 +407,7 @@ public class InvoiceGeneratorFromGoodsShipment {
 
     newInvoice.setClient(shipment.getClient());
     newInvoice.setOrganization(shipment.getOrganization());
-    final DocumentType invoiceDocumentType = getDocumentTypeForARI(getShipment().getOrganization());
+    final DocumentType invoiceDocumentType = getDocumentTypeForARI(getShipment().getOrganization(), shipment.getBusinessPartner());
     newInvoice.setDocumentType(invoiceDocumentType);
     newInvoice.setTransactionDocument(invoiceDocumentType);
     newInvoice.setDocumentNo(
@@ -477,15 +479,9 @@ public class InvoiceGeneratorFromGoodsShipment {
     return query.uniqueResult();
   }
 
-  private DocumentType getDocumentTypeForARI(final Organization org) {
-    final List<Object> parameters = new ArrayList<>(3);
-    parameters.add(org.getClient().getId());
-    parameters.add(org.getId());
-    parameters.add("ARI");
-    final String documentTypeId = (String) CallStoredProcedure.getInstance()
-        .call("AD_GET_DOCTYPE", parameters, null, false);
+  private DocumentType getDocumentTypeForARI(final Organization org,  final BusinessPartner bp) {
     try {
-      return OBDal.getInstance().get(DocumentType.class, documentTypeId);
+      return resolveDocTypeFor(org, bp, "ARI", true);
     } catch (Exception e) {
       throw new OBException("There is no Document type for Sales Invoice defined");
     }
@@ -525,4 +521,39 @@ public class InvoiceGeneratorFromGoodsShipment {
       CallStoredProcedure.getInstance().call("C_INVOICE_POST", parameters, null, false, false);
     }
   }
+
+  /**
+   * Resolves the most suitable {@link DocumentType} for a given organization, business partner,
+   * and {@code DocBaseType}. The resolution follows a two-step strategy
+   * @param org the organization context used to resolve the document type; must not be {@code null}
+   * @param bp the business partner whose mapping may override the org default; may be {@code null}
+   * @param docBaseType the concrete DocBaseType to resolve (e.g., {@code "ARI"}, {@code "API"}, {@code "SOO"})
+   * @param isAutomation whether the caller is an automatic process; when {@code true}, only BP mappings
+   *   with {@code isforceautomation = 'Y'} are eligible
+   * @return the resolved and loaded {@link DocumentType} entity
+   * @throws OBException if no document type can be determined either via BP mapping or {@code AD_GET_DOCTYPE}
+   */
+  protected DocumentType resolveDocTypeFor(final Organization org, final BusinessPartner bp, final String docBaseType, final boolean isAutomation) {
+    String docTypeId = null;
+    try {
+      docTypeId = new BpDocTypeResolver().resolveId(org.getId(), bp != null ? bp.getId() : null, docBaseType, isAutomation);
+    } catch (Exception e) {
+      log.warn("DocType resolution failed; falling back to AD_GET_DOCTYPE. org={}, bp={}, dbt={}",
+        org.getId(), bp != null ? bp.getId() : "null", docBaseType, e);
+    } finally {
+      BpDocTypeResolver.clearCache();
+    }
+    if (StringUtils.isBlank(docTypeId)) {
+      final List<Object> parameters = new ArrayList<>(3);
+      parameters.add(org.getClient().getId());
+      parameters.add(org.getId());
+      parameters.add(docBaseType);
+      docTypeId = (String) CallStoredProcedure.getInstance().call("AD_GET_DOCTYPE", parameters, null, false);
+    }
+    if (StringUtils.isBlank(docTypeId)) {
+      throw new OBException("There is no Document type defined for DocBaseType " + docBaseType);
+    }
+    return OBDal.getInstance().get(DocumentType.class, docTypeId);
+  }
+
 }

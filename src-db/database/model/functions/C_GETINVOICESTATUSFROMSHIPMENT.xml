@@ -22,28 +22,55 @@
 ************************************************************************/
 v_percent NUMBER:=0;
 v_isinvoiced VARCHAR2(1):='N';
+v_issotrx CHAR(1);
 BEGIN
+  SELECT COALESCE(issotrx, 'N')
+    INTO v_issotrx
+  FROM m_inout
+  WHERE m_inout_id = p_minoutid;
 
-  SELECT 
-  CASE 
-    WHEN SUM(ABS(COALESCE(del.movementqty, 0))) = 0 THEN 0 
-    ELSE ROUND(SUM(ABS(COALESCE(inv.qtyinvoiced, 0))) / SUM(ABS(COALESCE(del.movementqty, 0))) * 100, 0) 
-  END AS invoiced_percentage
-  into v_percent
-FROM m_inoutline del
-LEFT JOIN (
+  IF v_issotrx = 'Y' THEN
+    SELECT
+      CASE
+        WHEN SUM(ABS(COALESCE(del.movementqty, 0))) = 0 THEN 0
+        ELSE ROUND(SUM(ABS(COALESCE(inv_si.qtymatched, 0))) / SUM(ABS(COALESCE(del.movementqty, 0))) * 100, 0)
+      END
+    INTO v_percent
+    FROM m_inoutline del
+    LEFT JOIN (
+      SELECT
+        msi.m_inoutline_id,
+        SUM(msi.qty) AS qtymatched
+      FROM m_matchsi msi
+      JOIN c_invoiceline il ON il.c_invoiceline_id = msi.c_invoiceline_id
+      JOIN c_invoice i ON i.c_invoice_id = il.c_invoice_id
+      WHERE i.processed = 'Y'
+        AND i.docstatus NOT IN ('VO', 'CL', 'DR')
+      GROUP BY msi.m_inoutline_id
+    ) inv_si ON inv_si.m_inoutline_id = del.m_inoutline_id
+    WHERE del.m_inout_id = p_minoutid;
+  ELSE
     SELECT 
-        COALESCE(del.m_inoutline_id, il.m_inoutline_id) AS m_inoutline_id,
-        SUM(ABS(il.qtyinvoiced)) AS qtyinvoiced
-    FROM c_invoiceline il
-    JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id
-    LEFT JOIN c_orderline ol ON il.c_orderline_id = ol.c_orderline_id
-    LEFT JOIN m_inoutline del ON ol.c_orderline_id = del.c_orderline_id
-    WHERE i.processed = 'Y' AND i.docstatus NOT IN ('VO', 'CL', 'DR')
-    GROUP BY COALESCE(del.m_inoutline_id, il.m_inoutline_id)
-) inv ON del.m_inoutline_id = inv.m_inoutline_id
-  WHERE del.m_inout_id = p_minoutid;
-  
+    CASE 
+      WHEN SUM(ABS(COALESCE(del.movementqty, 0))) = 0 THEN 0 
+      ELSE ROUND(SUM(ABS(COALESCE(inv_pi.qtymatched, 0))) / SUM(ABS(COALESCE(del.movementqty, 0))) * 100, 0) 
+    END
+    into v_percent
+    FROM m_inoutline del
+    LEFT JOIN (
+      SELECT
+        mi.m_inoutline_id,
+        SUM(mi.qty) AS qtymatched
+      FROM m_matchinv mi
+      JOIN c_invoiceline il ON il.c_invoiceline_id = mi.c_invoiceline_id
+      JOIN c_invoice i ON i.c_invoice_id = il.c_invoice_id
+      WHERE i.processed = 'Y'
+        AND i.docstatus NOT IN ('VO', 'CL', 'DR')
+      GROUP BY mi.m_inoutline_id
+    ) inv_pi ON inv_pi.m_inoutline_id = del.m_inoutline_id
+    WHERE del.m_inout_id = p_minoutid;
+  END IF;
+
   IF (v_percent IS NULL) THEN
     SELECT iscompletelyinvoiced
     INTO v_isinvoiced

@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
+ * the License at http://www.openbravo.com/legal/license.html 
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
  * All portions are Copyright (C) 2015-2018 Openbravo SLU
- * All Rights Reserved.
+ * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -37,13 +37,13 @@ import org.openbravo.model.ad.access.Role;
 
 /**
  * Test case for horizontal inheritance
- *
+ * 
  * Role A inherits from T1 (sequence 10), T2 (sequence 20) and T3 (sequence 30)
- *
+ * 
  * T1 Accesses {A3, A4} , T2 Accesses {A1, A2}, T3 Accesses {A0, A2, A3}
- *
+ * 
  * With this settings, Role A Accesses must be {A0(T3), A1(T2), A2(T3), A3(T3), A4(T1)}
- *
+ * 
  * After removing the inheritance of T3, access for Role A must be {A1(T2), A2(T2), A3(T1), A4(T1)}
  */
 public class HorizontalInheritance extends WeldBaseTest {
@@ -57,7 +57,7 @@ public class HorizontalInheritance extends WeldBaseTest {
       "Credit Line Limit", "Description", "URL");
   private static final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants",
       "Journal Entries Report", "Print orders process", "Set as Ready");
-  private static final List<String> FORMS = Arrays.asList("About", "Heartbeat", "Instance Activation", "Logout",
+  private static final List<String> FORMS = Arrays.asList("About", "Alert Management", "Background Process", "Logout",
       "Menu");
   private static final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect",
       "Motion Chart", "Planet", "Twitter");

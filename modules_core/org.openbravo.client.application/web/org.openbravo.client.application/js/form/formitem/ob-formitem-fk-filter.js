@@ -324,6 +324,29 @@ isc.OBFKFilterTextItem.addProperties({
   },
 
   blur: function() {
+    // Check if blur is caused by clicking on the grid
+    // In that case, skip performAction to prevent duplicate fetch
+    var isGridClick = false;
+    try {
+      var target = isc.EH.getTarget();
+      var grid = this.grid && this.grid.sourceWidget;
+      
+      // Check if the event target is the grid or one of its components
+      if (target && grid) {
+        // Walk up the component hierarchy to see if we're clicking on the grid
+        var current = target;
+        while (current) {
+          if (current === grid || current === grid.body || current === grid.header) {
+            isGridClick = true;
+            break;
+          }
+          current = current.parentElement;
+        }
+      }
+    } catch (e) {
+      // If we can't determine, allow the action (safer default)
+    }
+    
     if (this._hasChanged && this.allowFkFilterByIdentifier === false) {
       // close the picklist if the item is due to a user tab action
       if (isc.EH.getKeyName() === 'Tab') {
@@ -335,7 +358,7 @@ isc.OBFKFilterTextItem.addProperties({
         this.setCriterion(this.getAppliedCriteria());
       }
       // do not perform a filter action on blur if the filtering by identifier is not allowed
-    } else if (this._hasChanged && this.allowFkFilterByIdentifier !== false) {
+    } else if (this._hasChanged && this.allowFkFilterByIdentifier !== false && !isGridClick) {
       this.form.grid.performAction();
     }
     delete this._hasChanged;
