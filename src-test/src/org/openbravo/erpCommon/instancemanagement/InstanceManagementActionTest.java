@@ -296,7 +296,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       OBCriteria<Module> critMock = mock(OBCriteria.class);
       when(dalMock.createCriteria(Module.class)).thenReturn(critMock);
       when(critMock.add(any())).thenReturn(critMock);
-      when(critMock.addOrder(any())).thenReturn(critMock);
+      when(critMock.addOrderBy(any())).thenReturn(critMock);
       when(critMock.list()).thenReturn(new ArrayList<Module>());
 
       // Mock System retrieval and its setters
@@ -345,7 +345,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       OBCriteria<Module> critMock = mock(OBCriteria.class);
       when(dalMock.createCriteria(Module.class)).thenReturn(critMock);
       when(critMock.add(any())).thenReturn(critMock);
-      when(critMock.addOrder(any())).thenReturn(critMock);
+      when(critMock.addOrderBy(any())).thenReturn(critMock);
 
       ArrayList<Module> mods = new ArrayList<>();
       Module modMock = mock(Module.class);
@@ -376,7 +376,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       OBCriteria<Module> critMock = mock(OBCriteria.class);
       when(dalMock.createCriteria(Module.class)).thenReturn(critMock);
       when(critMock.add(any())).thenReturn(critMock);
-      when(critMock.addOrder(any())).thenReturn(critMock);
+      when(critMock.addOrderBy(any())).thenReturn(critMock);
       when(critMock.list()).thenReturn(new ArrayList<Module>());
 
       System sysMock = mock(System.class);

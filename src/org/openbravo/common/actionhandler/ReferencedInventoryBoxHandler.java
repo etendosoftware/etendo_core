@@ -22,10 +22,6 @@ package org.openbravo.common.actionhandler;
 import java.util.Comparator;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +40,9 @@ import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
 import org.openbravo.service.db.DbUtility;
 
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Action handler for boxing storage details into a Referenced Inventory

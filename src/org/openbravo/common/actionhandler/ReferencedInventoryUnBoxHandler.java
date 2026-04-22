@@ -21,10 +21,6 @@ package org.openbravo.common.actionhandler;
 
 import java.util.Comparator;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-
 import org.codehaus.jettison.json.JSONArray;
 import org.openbravo.materialmgmt.refinventory.DefaultProcessorProvider;
 import org.openbravo.materialmgmt.refinventory.RefInvProcessorProvider;
@@ -32,6 +28,9 @@ import org.openbravo.materialmgmt.refinventory.ReferencedInventoryProcessor;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
 
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Action handler for unboxing storage details from a Referenced Inventory

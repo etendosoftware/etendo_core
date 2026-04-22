@@ -19,7 +19,7 @@
 
 package org.openbravo.erpCommon.instancemanagement;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,15 +29,15 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.criterion.Criterion;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restriction;
 import org.openbravo.model.ad.system.System;
 
 /**
@@ -48,14 +48,14 @@ import org.openbravo.model.ad.system.System;
  * database dependencies and verify behavior without requiring an
  * actual database connection.</p>
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class PKeyFilterExpressionTest {
 
   private PKeyFilterExpression pKeyFilterExpression;
   private OBDal mockOBDal;
   private OBCriteria<System> mockCriteria;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     pKeyFilterExpression = new PKeyFilterExpression();
     mockOBDal = mock(OBDal.class);
@@ -75,7 +75,7 @@ public class PKeyFilterExpressionTest {
     Map<String, String> requestMap = new HashMap<>();
 
     // Mock the criteria chain
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Restriction.class))).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(anyInt())).thenReturn(mockCriteria);
     when(mockCriteria.uniqueResult()).thenReturn(mockSystem);
     when(mockOBDal.createCriteria(eq(System.class))).thenReturn(mockCriteria);
@@ -88,7 +88,7 @@ public class PKeyFilterExpressionTest {
     }
 
     // Then
-    assertEquals("Should return the instance key from active system", expectedInstanceKey, result);
+    assertEquals(expectedInstanceKey, result, "Should return the instance key from active system");
   }
 
   /**
@@ -100,7 +100,7 @@ public class PKeyFilterExpressionTest {
     Map<String, String> requestMap = new HashMap<>();
 
     // Mock the criteria chain to return null
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Restriction.class))).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(anyInt())).thenReturn(mockCriteria);
     when(mockCriteria.uniqueResult()).thenReturn(null);
     when(mockOBDal.createCriteria(eq(System.class))).thenReturn(mockCriteria);
@@ -113,7 +113,7 @@ public class PKeyFilterExpressionTest {
     }
 
     // Then
-    assertEquals("Should return empty string when no active system found", "", result);
+    assertEquals("", result, "Should return empty string when no active system found");
   }
 
   /**
@@ -129,7 +129,7 @@ public class PKeyFilterExpressionTest {
     Map<String, String> emptyRequestMap = new HashMap<>();
 
     // Mock the criteria chain
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Restriction.class))).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(anyInt())).thenReturn(mockCriteria);
     when(mockCriteria.uniqueResult()).thenReturn(mockSystem);
     when(mockOBDal.createCriteria(eq(System.class))).thenReturn(mockCriteria);
@@ -142,7 +142,7 @@ public class PKeyFilterExpressionTest {
     }
 
     // Then
-    assertEquals("Should work correctly with empty request map", expectedInstanceKey, result);
+    assertEquals(expectedInstanceKey, result, "Should work correctly with empty request map");
   }
 
   /**
@@ -156,7 +156,7 @@ public class PKeyFilterExpressionTest {
     when(mockSystem.getInstanceKey()).thenReturn(expectedInstanceKey);
 
     // Mock the criteria chain
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Restriction.class))).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(anyInt())).thenReturn(mockCriteria);
     when(mockCriteria.uniqueResult()).thenReturn(mockSystem);
     when(mockOBDal.createCriteria(eq(System.class))).thenReturn(mockCriteria);
@@ -169,6 +169,6 @@ public class PKeyFilterExpressionTest {
     }
 
     // Then
-    assertEquals("Should work correctly with null request map", expectedInstanceKey, result);
+    assertEquals(expectedInstanceKey, result, "Should work correctly with null request map");
   }
 }

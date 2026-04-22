@@ -20,10 +20,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.exception.OBException;
@@ -34,6 +30,11 @@ import org.openbravo.materialmgmt.refinventory.DefaultBoxFilterProvider;
 import org.openbravo.materialmgmt.refinventory.StockSelectorFilterProvider;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Unique dispatcher for the M_Storage_Detail table HQL transformation.

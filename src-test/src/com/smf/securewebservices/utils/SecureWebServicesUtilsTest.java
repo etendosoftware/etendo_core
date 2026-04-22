@@ -85,22 +85,29 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * @param keys
    */
   private static void configSWSConfig(String keys) {
-    // Try to get existing config first
-    OBCriteria<SMFSWSConfig> criteria = OBDal.getInstance().createCriteria(SMFSWSConfig.class);
-    criteria.setMaxResults(1);
-    SMFSWSConfig config = (SMFSWSConfig) criteria.uniqueResult();
+    try {
+      OBContext.setAdminMode();
+      OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
+          TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
+      // Try to get existing config first
+      OBCriteria<SMFSWSConfig> criteria = OBDal.getInstance().createCriteria(SMFSWSConfig.class);
+      criteria.setMaxResults(1);
+      SMFSWSConfig config = (SMFSWSConfig) criteria.uniqueResult();
 
-    // If no config exists, create a new one
-    if (config == null) {
-      config = OBProvider.getInstance().get(SMFSWSConfig.class);
+      // If no config exists, create a new one
+      if (config == null) {
+        config = OBProvider.getInstance().get(SMFSWSConfig.class);
+      }
+
+      config.setExpirationTime(1440L);
+      config.setPrivateKey(keys);
+      OBDal.getInstance().save(config);
+      OBDal.getInstance().commitAndClose();
+      SWSConfig instance = SWSConfig.getInstance();
+      instance.refresh(config);
+    } finally {
+      OBContext.restorePreviousMode();
     }
-
-    config.setExpirationTime(1440L);
-    config.setPrivateKey(keys);
-    OBDal.getInstance().save(config);
-    OBDal.getInstance().commitAndClose();
-    SWSConfig instance = SWSConfig.getInstance();
-    instance.refresh(config);
   }
 
   /**
@@ -110,24 +117,32 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * @param algorithm
    */
   private static void configAlgorithmPreference(String algorithm) {
-    // Try to get existing preference first
-    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
-        .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE))
-        .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
-        .uniqueResult();
+    try {
+      OBContext.setAdminMode();
+      // Set SYSTEM context for preference creation
+      OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
+          TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
+      // Try to get existing preference first
+      Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
+          .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE))
+          .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
+          .uniqueResult();
 
-    // If no preference exists, create a new one
-    if (pref == null) {
-      pref = OBProvider.getInstance().get(Preference.class);
-      pref.setProperty(ENCRYPTION_ALGORITHM_PREFERENCE);
-      pref.setSelected(true);
+      // If no preference exists, create a new one
+      if (pref == null) {
+        pref = OBProvider.getInstance().get(Preference.class);
+        pref.setProperty(ENCRYPTION_ALGORITHM_PREFERENCE);
+        pref.setSelected(true);
+      }
+
+      pref.setSearchKey(algorithm);
+      OBDal.getInstance().save(pref);
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+      OBContext.setOBContext(TestConstants.Users.SYSTEM);
+    } finally {
+      OBContext.restorePreviousMode();
     }
-
-    pref.setSearchKey(algorithm);
-    OBDal.getInstance().save(pref);
-    OBDal.getInstance().flush();
-    OBDal.getInstance().commitAndClose();
-    OBContext.setOBContext(TestConstants.Users.SYSTEM);
   }
 
   /**

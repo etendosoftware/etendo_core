@@ -18,7 +18,7 @@ package org.openbravo.materialmgmt.refinventory;
 
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Default implementation of {@link StockSelectorFilterProvider} for referenced inventory boxing operations.
