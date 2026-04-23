@@ -36,7 +36,7 @@ import net.sf.jasperreports.engine.JRDataSource;
  * and parameter handling.
  */
 @ExtendWith(MockitoExtension.class)
-class CashflowForecastReportActionHandlerTest {
+public class CashflowForecastReportActionHandlerTest {
 
   private CashflowForecastReportActionHandler handler;
 

@@ -63,6 +63,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
   /** Updating order line without observer */
   @Test
   public void standardUpdateRequestWithoutObserver() throws JSONException {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.OFF;
 
     OrderLine ol = pickARandomOrderLine();
@@ -76,6 +77,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
   /** The observer updates line description to a fixed value */
   @Test
   public void observerCanModifyPropertyValues() throws JSONException {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.UPDATE_DESCRIPTION;
 
     OrderLine ol = pickARandomOrderLine();
@@ -89,6 +91,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
   /** The observer creates a new note on order line */
   @Test
   public void observerCanAddNewObjects() throws JSONException {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.CREATE_NOTE;
 
     OrderLine ol = pickARandomOrderLine();
@@ -106,6 +109,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
   /** Observer does ol.getSalesOrder().getOrderLineList(). Covers issue #32308 */
   @Test
   public void observerCanInstantiateObservedObject() throws JSONException {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.COUNT_LINES;
 
     OrderLine ol = pickARandomOrderLine();
@@ -120,6 +124,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
   /** Observer updates order line's header */
   @Test
   public void observerCanUpdateParentObject() throws JSONException {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.UPDATE_PARENT;
 
     OrderLine ol = pickARandomOrderLine();
@@ -140,6 +145,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
    */
   @Test
   public void observerFiredByChildObjectObserverShouldBeExecuteOnce() throws JSONException {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.UPDATE_PARENT_RANDOM;
 
     OrderLine ol = pickARandomOrderLine();
@@ -158,6 +164,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
    */
   @Test
   public void observerFiredByParentObjectObserverShouldBeExecuteOnce() throws JSONException {
+    resetObservers();
     // Use ON_NOOP execution type to avoid subsequent actions from the OrderLine observer
     observerExecutionType = ObserverExecutionType.ON_NOOP;
 

@@ -27,7 +27,8 @@ import java.util.Date;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+
 import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -69,15 +70,29 @@ public class PaymentTest_06 extends WeldBaseTest {
   private String financialAccountId;
 
   /**
-   * Initial Set up.
-   * 
-   * This before method is named setUpP06() to avoid overwriting the super setUp method that is
-   * invoke automatically before this one.
-   * 
+   * Override initializeDalLayer to ensure proper initialization for this test.
+   * This method is called by WeldBaseTest during the Weld component initialization.
    */
-  @BeforeEach
-  public void setUpP06() throws Exception {
-    TestUtility.setTestContext();
+  @Override
+  protected void initializeDalLayer() throws Exception {
+    // Let the parent class handle DAL initialization
+    super.initializeDalLayer();
+    log.info("DAL Layer initialized for PaymentTest_01");
+  }
+
+  /**
+   * Set up test context after DAL is initialized.
+   * This is called after WeldBaseTest.classSetUp() completes.
+   */
+  @BeforeAll
+  public static void setUpTestContext() {
+    try {
+      TestUtility.setTestContext();
+      log.info("Test context initialized for PaymentTest_01");
+    } catch (Exception e) {
+      log.error("Failed to set test context", e);
+      throw new RuntimeException("Cannot set test context", e);
+    }
   }
 
   @Test

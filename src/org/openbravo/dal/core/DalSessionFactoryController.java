@@ -74,32 +74,6 @@ public class DalSessionFactoryController extends SessionFactoryController {
 
   @Override
   protected void mapModel(Configuration configuration) {
-    DalMappingGenerator mappingGenerator = DalMappingGenerator.getInstance();
-    final String mapping = mappingGenerator.generateMapping();
-    log.debug("Generated mapping: \n{}", mapping);
-
-    if (mappingGenerator.getHibernateFileLocation() != null) {
-      configuration.addFile(mappingGenerator.getHibernateFileLocation());
-      return;
-    }
-
-    Path tmpFile = null;
-    try {
-      tmpFile = Files.createTempFile("", ".hbm");
-      Files.write(tmpFile, mapping.getBytes());
-      configuration.addFile(tmpFile.toString());
-    } catch (IOException ioex) {
-      throw new OBException("Error writing temporary .hbm file for configuration", ioex);
-    } finally {
-      try {
-        if (tmpFile != null) {
-          Files.delete(tmpFile);
-        }
-      } catch (IOException ioex) {
-        log.error("Error deleting temporary .hbm file for configuration", ioex);
-      }
-    }
-    // Register OBYesNoType under the logical name "yes_no"
     configuration.registerTypeContributor(new TypeContributor() {
       @Override
       public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
@@ -110,6 +84,17 @@ public class DalSessionFactoryController extends SessionFactoryController {
       }
     });
     log.info("OBYesNoType linked to logical type name 'yes_no' (Y/N boolean mapping)");
+
+    DalMappingGenerator mappingGenerator = DalMappingGenerator.getInstance();
+    final String mapping = mappingGenerator.generateMapping();
+    log.debug("Generated mapping: \n{}", mapping);
+
+    if (mappingGenerator.getHibernateFileLocation() != null) {
+      configuration.addFile(mappingGenerator.getHibernateFileLocation());
+      return;
+    }
+
+    configuration.addInputStream(new java.io.ByteArrayInputStream(mapping.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
   }
 
   @Override

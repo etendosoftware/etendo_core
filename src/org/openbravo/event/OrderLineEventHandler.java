@@ -52,8 +52,8 @@ class OrderLineEventHandler extends EntityPersistenceEventObserver {
 
       //@formatter:off
       final String hql =
-                    "update from OrderLine ol " +
-                    " set ol.sOPOReference.id = null " +
+                    "update OrderLine ol " +
+                    " set ol.sOPOReference = null " +
                     " where ol.sOPOReference.id = :thisLineId " +
                     "   and ol.client.id = :clientId ";
       //@formatter:on

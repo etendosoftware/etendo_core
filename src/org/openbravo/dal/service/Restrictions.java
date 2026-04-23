@@ -2,12 +2,14 @@ package org.openbravo.dal.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -521,14 +523,39 @@ public class Restrictions {
     return result;
   }
 
-  // Helper method to get nested path
+  /**
+   * Thread-local storage for alias-to-Join mappings, set by OBCriteria
+   * before applying restrictions and cleared after.
+   */
+  private static final ThreadLocal<Map<String, From<?, ?>>> currentAliases = new ThreadLocal<>();
+
+  static void setCurrentAliases(Map<String, From<?, ?>> aliases) {
+    currentAliases.set(aliases);
+  }
+
+  static void clearCurrentAliases() {
+    currentAliases.remove();
+  }
+
+  static Map<String, From<?, ?>> getCurrentAliases() {
+    Map<String, From<?, ?>> aliases = currentAliases.get();
+    return aliases != null ? aliases : Collections.emptyMap();
+  }
+
+  // Helper method to get nested path with alias resolution
   @SuppressWarnings("rawtypes")
   static Path getPath(Root<?> root, String propertyName) {
     String[] parts = propertyName.split("\\.");
     Path path = root;
 
-    for (String part : parts) {
-      path = path.get(part);
+    Map<String, From<?, ?>> aliases = getCurrentAliases();
+    for (int i = 0; i < parts.length; i++) {
+      if (i == 0 && aliases.containsKey(parts[i])) {
+        // First segment matches an alias - start from the alias join
+        path = aliases.get(parts[i]);
+      } else {
+        path = path.get(parts[i]);
+      }
     }
 
     return path;

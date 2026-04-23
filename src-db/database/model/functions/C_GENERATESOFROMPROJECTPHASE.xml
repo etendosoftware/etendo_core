@@ -122,7 +122,13 @@
            RAISE_APPLICATION_ERROR(-20000, '@ThebusinessPartner@'||' '||' @InvoiceRuleNotdefined@'||'.');
         END IF;
 
-        v_C_DOCTYPE_ID:=Ad_Get_Doctype(Cur_SO.AD_Client_ID, Cur_SO.AD_Org_ID, 'SOO', 'SO') ;
+        v_C_DOCTYPE_ID := c_bp_get_doctype(
+            Cur_SO.AD_Client_ID,
+            Cur_SO.AD_Org_ID,
+            Cur_SO.C_BPartner_ID,
+            'SOO',
+            'Y'
+        );
         v_ResultStr:='C_DOCTYPE_ID - ' || v_C_DOCTYPE_ID;
         Ad_Sequence_Doctype(v_C_DOCTYPE_ID, Cur_SO.AD_Client_ID, 'Y', v_DocumentNo) ;
         IF(v_DocumentNo IS NULL) THEN

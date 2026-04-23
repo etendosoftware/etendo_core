@@ -38,7 +38,7 @@ import org.openbravo.scheduling.ProcessBundle;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class ScheduleProcessTest {
+public class ScheduleProcessTest {
 
   private AutoCloseable mocks;
 

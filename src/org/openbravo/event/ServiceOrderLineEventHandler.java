@@ -20,6 +20,7 @@ package org.openbravo.event;
 
 import java.math.BigDecimal;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
 
 import org.hibernate.ScrollMode;
@@ -40,6 +41,7 @@ import org.openbravo.materialmgmt.ServicePriceUtils;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.order.OrderlineServiceRelation;
 
+@Dependent
 class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
   private static Entity[] entities = {
       ModelProvider.getInstance().getEntity(OrderLine.ENTITY_NAME) };

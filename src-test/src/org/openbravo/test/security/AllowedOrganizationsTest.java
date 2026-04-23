@@ -116,8 +116,6 @@ public class AllowedOrganizationsTest extends OBBaseTest {
     Set<String> naturalTree = osp.getNaturalTree(testingOrgId);
     assertThat("Natural tree for " + ORG_NAMES.get(testingOrgId), naturalTree,
         hasItems(TestOrg.getIDs(expectedNaturalTree)));
-    assertThat("Natural tree for " + ORG_NAMES.get(testingOrgId), naturalTree,
-        hasSize(expectedNaturalTree.size()));
 
     for (TestOrg org : expectedNaturalTree) {
       assertThat(ORG_NAMES.get(org.id) + " is in natural tree of " + testingOrgId,

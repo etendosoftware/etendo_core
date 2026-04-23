@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
-<database name="FUNCTION M_PROMOTION_CALCULATE">
-  <function name="M_PROMOTION_CALCULATE" type="NULL">
-    <parameter name="p_type" type="VARCHAR" mode="in">
-      <default/>
-    </parameter>
-    <parameter name="p_doc_id" type="VARCHAR" mode="in">
-      <default/>
-    </parameter>
-    <parameter name="p_user_id" type="VARCHAR" mode="in">
-      <default/>
-    </parameter>
-    <body><![CDATA[/*************************************************************************
+  <database name="FUNCTION M_PROMOTION_CALCULATE">
+    <function name="M_PROMOTION_CALCULATE" type="NULL">
+      <parameter name="p_type" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_doc_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
 * The contents of this file are subject to the Openbravo  Public  License
 * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
 * Version 1.1  with a permitted attribution clause; you may not  use this
@@ -420,5 +420,5 @@ BEGIN
   end loop;
 END M_PROMOTION_CALCULATE
 ]]></body>
-  </function>
-</database>
+    </function>
+  </database>

@@ -53,14 +53,6 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="ACTIVITY_RATE" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
-      <column name="COMPLEXITY_RATE" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
       <column name="OS" primaryKey="false" required="false" type="NVARCHAR" size="60" autoIncrement="false">
         <default/>
         <onCreateDefault/>
@@ -94,10 +86,6 @@
         <onCreateDefault/>
       </column>
       <column name="JAVA_VERSION" primaryKey="false" required="false" type="NVARCHAR" size="20" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
-      <column name="ANT_VERSION" primaryKey="false" required="false" type="NVARCHAR" size="20" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
@@ -210,6 +198,10 @@
         <onCreateDefault/>
       </column>
       <column name="WS_REJECTED_AVG" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="STATUS" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>

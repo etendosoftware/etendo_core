@@ -21,16 +21,14 @@ public class ${entity.simpleClassName}SequenceContributor implements MetadataCon
     @Override
     public void contribute(InFlightMetadataCollector inFlightMetadataCollector, IndexView indexView) {
         var entity = inFlightMetadataCollector.getEntityBindingMap().get("${entity.name}");
-        DefaultSequenceGenerator generator = null;
         if (entity != null) {
             String sequencedProperty = null;
             try {
                 <#list entity.sequencedColumnProperties as p>
                 // Add sequence number generator to property ${p.name}
                 sequencedProperty = "${p.name}";
-                generator = new ${p.getSequenceGeneratorClassName()}(sequencedProperty);
-                final DefaultSequenceGenerator finalGenerator = generator;
-                entity.getProperty(sequencedProperty).setValueGeneratorCreator(context -> finalGenerator);
+                final DefaultSequenceGenerator generator = new ${p.getSequenceGeneratorClassName()}(sequencedProperty);
+                entity.getProperty(sequencedProperty).setValueGeneratorCreator(ctx -> generator);
 
                 <#if p.DBSequenceName?has_content>
                 // Register the non transactional db sequence

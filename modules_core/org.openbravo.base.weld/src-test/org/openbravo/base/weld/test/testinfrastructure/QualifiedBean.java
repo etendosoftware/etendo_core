@@ -19,9 +19,12 @@
 
 package org.openbravo.base.weld.test.testinfrastructure;
 
+import jakarta.enterprise.context.Dependent;
+
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 
 /** Simple qualified bean */
+@Dependent
 @Qualifier("")
 public class QualifiedBean extends ExtensionBean {
 
