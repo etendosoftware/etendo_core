@@ -182,6 +182,25 @@
     <Parameter name="taxId"/>
     <Parameter name="invoiceId"/>
    </SqlMethod>
+   <SqlMethod name="selectGLItemAcctForTaxLineByLine" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+        <![CDATA[
+      SELECT a.GLITEM_CREDIT_ACCT AS P_REVENUE_ACCT, a.GLITEM_DEBIT_ACCT AS P_EXPENSE_ACCT, t.TaxAmt
+      FROM C_GLITEM_ACCT a, C_InvoiceLineTax t, C_InvoiceLine l
+      WHERE t.C_InvoiceLine_Id = l.C_InvoiceLine_Id
+      AND l.Account_ID = a.C_GLITEM_id
+      AND a.C_ACCTSCHEMA_id = ?
+      AND t.C_Tax_Id= ?
+      AND t.C_Invoice_Id= ?
+      AND l.C_InvoiceLine_Id = ?
+          ]]>
+      </Sql>
+      <Parameter name="acctSchemaId"/>
+      <Parameter name="taxId"/>
+      <Parameter name="invoiceId"/>
+      <Parameter name="invoiceLineId"/>
+    </SqlMethod>
     <SqlMethod name="getTaxLineCount" type="preparedStatement" return="multiple">
     <SqlMethodComment></SqlMethodComment>
     <Sql>
