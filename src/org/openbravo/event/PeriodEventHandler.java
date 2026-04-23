@@ -80,8 +80,9 @@ class PeriodEventHandler extends EntityPersistenceEventObserver {
     criteria.add(Restrictions.ge(Period.PROPERTY_ENDINGDATE, period.getStartingDate()));
     criteria.add(Restrictions.le(Period.PROPERTY_STARTINGDATE, period.getEndingDate()));
     criteria.add(Restrictions.eq(Period.PROPERTY_PERIODTYPE, "S"));
-    criteria.createAlias(Period.PROPERTY_YEAR, "y");
-    criteria.add(Restrictions.eq("y." + Year.PROPERTY_CALENDAR, period.getYear().getCalendar()));
+    criteria.add(Restrictions.eq(
+        Period.PROPERTY_YEAR + "." + Year.PROPERTY_CALENDAR,
+        period.getYear().getCalendar()));
     criteria.setMaxResults(1);
 
     if (criteria.uniqueResult() != null) {
