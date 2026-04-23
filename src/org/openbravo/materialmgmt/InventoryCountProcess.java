@@ -317,7 +317,7 @@ public class InventoryCountProcess implements Process {
                   " where icl.physInventory.id = :inventoryId" +
                   "   and aset.requireAtLeastOneValue = true" +
                   "   and coalesce(p.useAttributeSetValueAs, '-') <> 'F'" +
-                  "   and coalesce(icl.attributeSetValue, '0') = '0' " +
+                  "   and coalesce(icl.attributeSetValue.id, '0') = '0' " +
                   // Allow to regularize to 0 any existing Stock without attribute for this Product
                   // (this situation can happen when there is a bug in a different part of the code,
                   // but the user should be able always to zero this stock)
@@ -333,7 +333,7 @@ public class InventoryCountProcess implements Process {
                   "             from MaterialMgmtStorageDetail sd" +
                   "            where sd.storageBin.id = sb.id" +
                   "              and sd.product.id = p.id" +
-                  "              and sd.attributeSetValue = '0'" +
+                  "              and sd.attributeSetValue.id = '0'" +
                   "              and sd.uOM.id = icl.uOM.id" +
                   "              and sd.quantityOnHand <> 0" +
                   "              and sd.quantityInDraftTransactions <> 0" +
