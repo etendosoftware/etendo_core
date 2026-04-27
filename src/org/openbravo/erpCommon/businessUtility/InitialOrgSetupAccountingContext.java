@@ -127,46 +127,99 @@ public final class InitialOrgSetupAccountingContext {
     private Builder() {
     }
 
+    /**
+     * Sets the client that owns the organization being initialized.
+     *
+     * @param client client that owns the organization
+     * @return this builder
+     */
     public Builder client(Client client) {
       this.client = client;
       return this;
     }
 
+    /**
+     * Sets the organization being initialized.
+     *
+     * @param organization organization being initialized
+     * @return this builder
+     */
     public Builder organization(Organization organization) {
       this.organization = organization;
       return this;
     }
 
+    /**
+     * Sets the organization type selected for the new organization.
+     *
+     * @param organizationType selected organization type
+     * @return this builder
+     */
     public Builder organizationType(OrganizationType organizationType) {
       this.organizationType = organizationType;
       return this;
     }
 
+    /**
+     * Sets the accounting currency identifier selected by the user.
+     *
+     * @param currencyId accounting currency identifier
+     * @return this builder
+     */
     public Builder currencyId(String currencyId) {
       this.currencyId = currencyId;
       return this;
     }
 
+    /**
+     * Sets the parent organization identifier selected in the setup form.
+     *
+     * @param parentOrgId parent organization identifier
+     * @return this builder
+     */
     public Builder parentOrgId(String parentOrgId) {
       this.parentOrgId = parentOrgId;
       return this;
     }
 
+    /**
+     * Sets the reference data modules selected in the setup form.
+     *
+     * @param selectedModules selected reference data modules
+     * @return this builder
+     */
     public Builder selectedModules(String selectedModules) {
       this.selectedModules = selectedModules;
       return this;
     }
 
+    /**
+     * Sets whether the user requested accounting setup.
+     *
+     * @param createAccountingRequested true when accounting setup was requested
+     * @return this builder
+     */
     public Builder createAccountingRequested(boolean createAccountingRequested) {
       this.createAccountingRequested = createAccountingRequested;
       return this;
     }
 
+    /**
+     * Sets whether the user uploaded a chart-of-accounts file.
+     *
+     * @param hasUploadedCoAFile true when a CoA file was uploaded
+     * @return this builder
+     */
     public Builder hasUploadedCoAFile(boolean hasUploadedCoAFile) {
       this.hasUploadedCoAFile = hasUploadedCoAFile;
       return this;
     }
 
+    /**
+     * Builds the immutable accounting setup context.
+     *
+     * @return accounting setup context
+     */
     public InitialOrgSetupAccountingContext build() {
       return new InitialOrgSetupAccountingContext(this);
     }
