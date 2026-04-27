@@ -140,7 +140,7 @@ List<String> _dependenciesListCOMPILATION = [
   'junit:junit:4.12',
 
   // Analytcs
-  'com.etendoerp:analytics.exporter:3.2.0'
+  'com.etendoerp:analytics.exporter:3.3.0'
 ]
 
 ext {
