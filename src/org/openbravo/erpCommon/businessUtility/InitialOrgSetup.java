@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBQuery;
@@ -88,6 +90,7 @@ public class InitialOrgSetup {
   private Client client;
   private User user;
   private Role role;
+  private List<InitialOrgSetupAccountingHandler> accountingHandlers;
 
   private static final String ACCOUNT_TREE_TABLE_ID = "188";
 
@@ -150,6 +153,9 @@ public class InitialOrgSetup {
     obResult.setType(ERRORTYPE);
     strHeaderLog.append("@ReportSummary@").append(NEW_LINE).append(NEW_LINE);
 
+    final OrganizationType orgType = getOrgType(strOrgType);
+    final boolean useAccountingHook = requiresAccountingHook(orgType);
+
     log4j.debug("createOrganization() - Checking if user and org names duplicated.");
     obResult = checkDuplicated(strOrgUser, strOrgName);
     if (!obResult.getType().equals(OKTYPE)) {
@@ -157,7 +163,8 @@ public class InitialOrgSetup {
     }
     logEvent("@StartingOrg@" + NEW_LINE);
 
-    if (boCreateAccounting && (fileCoAFilePath == null || fileCoAFilePath.getSize() < 1)) {
+    if (!useAccountingHook && boCreateAccounting
+        && (fileCoAFilePath == null || fileCoAFilePath.getSize() < 1)) {
       log4j.debug("process() - Check COA");
       obResult = coaModule(strModules);
       if (!obResult.getType().equals(OKTYPE)) {
@@ -183,7 +190,14 @@ public class InitialOrgSetup {
     }
 
     boolean bAccountingCreated = false;
-    if (boCreateAccounting) {
+    if (useAccountingHook) {
+      obResult = runAccountingHook(orgType, strParentOrg, strModules, boCreateAccounting,
+          fileCoAFilePath, strCurrency);
+      if (!obResult.getType().equals(OKTYPE)) {
+        return obResult;
+      }
+      bAccountingCreated = true;
+    } else if (boCreateAccounting) {
       if (fileCoAFilePath != null && fileCoAFilePath.getSize() > 0) {
         obResult = createAccounting(fileCoAFilePath, strCurrency, bBPartner, bProduct, bProject,
             bCampaign, bSalesRegion, null);
@@ -224,85 +238,67 @@ public class InitialOrgSetup {
       strHeaderLog.append(NEW_LINE + "@CreateReferenceDataSuccess@" + NEW_LINE);
     }
 
-    return finishSuccessfulCreation();
-  }
-
-  public OBError createOrganizationWithAutomaticAccounting(String strOrgName, String strOrgUser,
-      String strOrgType, String strParentOrg, String strcLocationId, String strPassword,
-      String strModules, String strCurrency) {
-    OBError obResult = new OBError();
-    obResult.setType(ERRORTYPE);
-    strHeaderLog.append("@ReportSummary@").append(NEW_LINE).append(NEW_LINE);
-
-    log4j.debug("createOrganizationWithAutomaticAccounting() - Checking if user and org names duplicated.");
-    obResult = checkDuplicated(strOrgUser, strOrgName);
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
-    }
-    logEvent("@StartingOrg@" + NEW_LINE);
-
-    obResult = insertOrganization(
-        (strOrgName == null || strOrgName.equals("")) ? "newOrg" : strOrgName, strOrgType,
-        strParentOrg, strcLocationId, strCurrency);
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
-    }
-
-    logEvent(InitialSetupUtility.getTranslatedElement(language, "AD_Org_ID", "Organization") + "="
-        + org.getName());
-    addWritableOrganizationAccess(org.getId());
-
-    obResult = applyPostCreationBasics(strcLocationId, strOrgUser, strPassword);
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
-    }
-
-    final ResolvedAccountingPackage accountingPackage;
-    try {
-      accountingPackage = resolveAccountingPackage(strCurrency);
-    } catch (Exception e) {
-      return logErrorAndRollback("@CreateReferenceDataFailed@",
-          "createOrganizationWithAutomaticAccounting() - Could not resolve accounting package", e);
-    }
-
-    obResult = validateAccountingPackage(accountingPackage);
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
-    }
-
-    obResult = applyAccountingPackageWiring(accountingPackage, strCurrency, strOrgType);
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
-    }
-
-    obResult = clonePackageTaxes(accountingPackage);
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
-    }
-    strHeaderLog.append(NEW_LINE + "@CreateAccountingSuccess@" + NEW_LINE);
-    logEvent("@CreateAccountingSuccess@");
-    logEvent(NEW_LINE + STRSEPARATOR);
-
-    if (!strModules.equals("")) {
-      logEvent(NEW_LINE + "@StartingReferenceData@");
-      obResult = createReferenceData(strModules, false, false, false, false, false, false,
-          strCurrency);
+    if (useAccountingHook) {
+      obResult = markOrganizationReady();
       if (!obResult.getType().equals(OKTYPE)) {
         return obResult;
       }
-      logEvent(NEW_LINE + "@CreateReferenceDataSuccess@");
-      strHeaderLog.append(NEW_LINE + "@CreateReferenceDataSuccess@" + NEW_LINE);
-    } else {
-      strHeaderLog.append(NEW_LINE + "@SkippingReferenceData@" + NEW_LINE);
-      logEvent(NEW_LINE + "@SkippingReferenceData@");
-    }
-
-    obResult = markOrganizationReady();
-    if (!obResult.getType().equals(OKTYPE)) {
-      return obResult;
     }
 
     return finishSuccessfulCreation();
+  }
+
+
+  private boolean requiresAccountingHook(OrganizationType orgType) {
+    return orgType != null && orgType.isLegalEntityWithAccounting();
+  }
+
+  private List<InitialOrgSetupAccountingHandler> getAccountingHandlers() {
+    if (accountingHandlers == null) {
+      try {
+        accountingHandlers = WeldUtils.getInstances(InitialOrgSetupAccountingHandler.class);
+        accountingHandlers.sort(
+            Comparator.comparingInt(InitialOrgSetupAccountingHandler::getPriority));
+      } catch (Exception e) {
+        log4j.debug("getAccountingHandlers() - Could not retrieve accounting onboarding handlers.",
+            e);
+        accountingHandlers = new ArrayList<>();
+      }
+    }
+    return accountingHandlers;
+  }
+
+  private OBError runAccountingHook(OrganizationType orgType, String strParentOrg, String strModules,
+      boolean boCreateAccounting, FileItem fileCoAFilePath, String strCurrency) {
+    final InitialOrgSetupAccountingContext context = new InitialOrgSetupAccountingContext(client,
+        org, orgType, strCurrency, strParentOrg, strModules, boCreateAccounting,
+        fileCoAFilePath != null && fileCoAFilePath.getSize() > 0);
+
+    for (InitialOrgSetupAccountingHandler handler : getAccountingHandlers()) {
+      if (!handler.applies(context)) {
+        continue;
+      }
+      final InitialOrgSetupAccountingResult result;
+      try {
+        result = handler.wire(context);
+      } catch (Exception e) {
+        return logErrorAndRollback("@CreateReferenceDataFailed@",
+            "runAccountingHook() - Exception while executing accounting onboarding handler.", e);
+      }
+      if (!result.isHandled()) {
+        continue;
+      }
+      if (!result.isSuccess()) {
+        return logErrorAndRollback("@CreateReferenceDataFailed@", result.getMessage(), null);
+      }
+      strHeaderLog.append(NEW_LINE + "@CreateAccountingSuccess@" + NEW_LINE);
+      logEvent("@CreateAccountingSuccess@");
+      logEvent(NEW_LINE + STRSEPARATOR);
+      return success();
+    }
+
+    return logErrorAndRollback("@CreateReferenceDataFailed@",
+        "runAccountingHook() - No accounting onboarding handler applied.", null);
   }
 
   private OBError applyPostCreationBasics(String strcLocationId, String strOrgUser,
@@ -369,332 +365,6 @@ public class InitialOrgSetup {
     return obResult;
   }
 
-  private static final class ResolvedAccountingPackage {
-    private final Organization sourceOrganization;
-
-    private ResolvedAccountingPackage(Organization sourceOrganization) {
-      this.sourceOrganization = sourceOrganization;
-    }
-  }
-
-
-  private ResolvedAccountingPackage resolveAccountingPackage(String strCurrency) {
-    final OBQuery<Organization> query = OBDal.getInstance().createQuery(Organization.class,
-        "as o join o.organizationType as ot "
-            + "where o.client.id = :clientId "
-            + "and o.ready = true "
-            + "and ot.legalEntityWithAccounting = true "
-            + "and o.allowPeriodControl = true "
-            + "and o.calendar is not null "
-            + "and o.generalLedger is not null "
-            + "and o.generalLedger.currency.id = :currencyId "
-            + "order by o.creationDate asc, o.id asc");
-    query.setFilterOnReadableClients(false);
-    query.setFilterOnReadableOrganization(false);
-    query.setNamedParameter("clientId", client.getId());
-    query.setNamedParameter("currencyId", strCurrency);
-    for (Organization candidate : query.list()) {
-      if (isCompleteAccountingPackage(candidate)) {
-        return new ResolvedAccountingPackage(candidate);
-      }
-    }
-    throw new OBException("No accounting package source is available for currency " + strCurrency);
-  }
-
-  private OBError validateAccountingPackage(ResolvedAccountingPackage accountingPackage) {
-    if (!isCompleteAccountingPackage(accountingPackage.sourceOrganization)) {
-      return logErrorAndRollback("@CreateReferenceDataFailed@",
-          "validateAccountingPackage() - Source accounting package is incomplete.", null);
-    }
-    return success();
-  }
-
-  private boolean isCompleteAccountingPackage(Organization sourceOrg) {
-    final String acctSchemaId = sourceOrg.getGeneralLedger().getId();
-    final String calendarId = sourceOrg.getCalendar().getId();
-    return countQuery(OrganizationAcctSchema.class,
-        "as e where e.organization.id = :orgId and e.accountingSchema.id = :acctSchemaId",
-        params("orgId", sourceOrg.getId(), "acctSchemaId", acctSchemaId)) >= 1
-        && countQuery(AcctSchemaDefault.class,
-            "as e where e.accountingSchema.id = :acctSchemaId",
-            params("acctSchemaId", acctSchemaId)) >= 1
-        && countQuery(AcctSchemaElement.class,
-            "as e where e.accountingSchema.id = :acctSchemaId",
-            params("acctSchemaId", acctSchemaId)) >= 1
-        && countQuery(AcctSchemaGL.class,
-            "as e where e.accountingSchema.id = :acctSchemaId",
-            params("acctSchemaId", acctSchemaId)) >= 1
-        && countQuery(AcctSchemaTable.class,
-            "as e where e.accountingSchema.id = :acctSchemaId",
-            params("acctSchemaId", acctSchemaId)) >= 1
-        && countQuery(ElementValue.class,
-            "as e where e.accountingElement.id in (select ase.accountingElement.id from "
-                + AcctSchemaElement.ENTITY_NAME
-                + " ase where ase.accountingSchema.id = :acctSchemaId and ase.type = 'AC')",
-            params("acctSchemaId", acctSchemaId)) >= 1
-        && countQuery(Year.class, "as e where e.calendar.id = :calendarId",
-            params("calendarId", calendarId)) >= 1
-        && countQuery(Period.class, "as e where e.year.calendar.id = :calendarId",
-            params("calendarId", calendarId)) >= 1
-        && countQuery(TaxCategory.class, "as e where e.organization.id = :orgId",
-            params("orgId", sourceOrg.getId())) >= 1
-        && countQuery(TaxRate.class, "as e where e.organization.id = :orgId",
-            params("orgId", sourceOrg.getId())) >= 1
-        && countQuery(TaxRateAccounts.class,
-            "as e where e.accountingSchema.id = :acctSchemaId and e.tax.organization.id = :orgId",
-            params("acctSchemaId", acctSchemaId, "orgId", sourceOrg.getId())) >= 1
-        && countQuery(TaxRate.class,
-            "as e where e.organization.id = :orgId and e.summaryLevel = false and not exists (select 1 from "
-                + TaxRateAccounts.ENTITY_NAME
-                + " ta where ta.tax.id = e.id and ta.accountingSchema.id = :acctSchemaId)",
-            params("orgId", sourceOrg.getId(), "acctSchemaId", acctSchemaId)) == 0;
-  }
-
-  private OBError applyAccountingPackageWiring(ResolvedAccountingPackage accountingPackage,
-      String strCurrency, String strOrgType) {
-    final Organization sourceOrg = accountingPackage.sourceOrganization;
-    try {
-      org.setOrganizationType(getOrgType(strOrgType));
-      org.setCurrency(getCurencyType(strCurrency));
-      org.setAllowPeriodControl(true);
-      org.setCalendar(sourceOrg.getCalendar());
-      org.setGeneralLedger(sourceOrg.getGeneralLedger());
-      OBDal.getInstance().save(org);
-      OBDal.getInstance().flush();
-
-      if (countQuery(OrganizationAcctSchema.class,
-          "as e where e.organization.id = :orgId and e.accountingSchema.id = :acctSchemaId",
-          params("orgId", org.getId(), "acctSchemaId", sourceOrg.getGeneralLedger().getId())) == 0) {
-        InitialSetupUtility.insertOrgAcctSchema(client, sourceOrg.getGeneralLedger(), org);
-      }
-      OBDal.getInstance().flush();
-      return success();
-    } catch (Exception e) {
-      return logErrorAndRollback("@CreateReferenceDataFailed@",
-          "applyAccountingPackageWiring() - Could not wire accounting package into the organization.",
-          e);
-    }
-  }
-
-  private OBError clonePackageTaxes(ResolvedAccountingPackage accountingPackage) {
-    final Organization sourceOrg = accountingPackage.sourceOrganization;
-    final Map<String, TaxCategory> taxCategories = new HashMap<>();
-    final Map<String, org.openbravo.model.common.businesspartner.TaxCategory> businessPartnerTaxCategories = new HashMap<>();
-    final Map<String, TaxRate> taxRates = new HashMap<>();
-    final Map<String, AccountingCombination> accountingCombinations = new HashMap<>();
-
-    try {
-      for (TaxCategory sourceCategory : listByOrg(TaxCategory.class, sourceOrg.getId())) {
-        final TaxCategory categoryCopy = (TaxCategory) DalUtil.copy(sourceCategory, false);
-        categoryCopy.setOrganization(org);
-        OBDal.getInstance().save(categoryCopy);
-        taxCategories.put(sourceCategory.getId(), categoryCopy);
-      }
-
-      for (org.openbravo.model.common.businesspartner.TaxCategory sourceCategory :
-          listByOrg(org.openbravo.model.common.businesspartner.TaxCategory.class,
-              sourceOrg.getId())) {
-        final org.openbravo.model.common.businesspartner.TaxCategory categoryCopy =
-            (org.openbravo.model.common.businesspartner.TaxCategory) DalUtil.copy(sourceCategory,
-                false);
-        categoryCopy.setOrganization(org);
-        OBDal.getInstance().save(categoryCopy);
-        businessPartnerTaxCategories.put(sourceCategory.getId(), categoryCopy);
-      }
-
-      for (TaxRate sourceTax : listByOrg(TaxRate.class, sourceOrg.getId())) {
-        final TaxRate taxCopy = (TaxRate) DalUtil.copy(sourceTax, false);
-        taxCopy.setOrganization(org);
-        taxCopy.setTaxCategory(taxCategories.get(sourceTax.getTaxCategory().getId()));
-        if (sourceTax.getBusinessPartnerTaxCategory() != null) {
-          taxCopy.setBusinessPartnerTaxCategory(
-              businessPartnerTaxCategories.get(sourceTax.getBusinessPartnerTaxCategory().getId()));
-        }
-        taxCopy.setParentTaxRate(null);
-        taxCopy.setTaxBase(null);
-        OBDal.getInstance().save(taxCopy);
-        taxRates.put(sourceTax.getId(), taxCopy);
-      }
-
-      OBDal.getInstance().flush();
-
-      for (TaxRate sourceTax : listByOrg(TaxRate.class, sourceOrg.getId())) {
-        final TaxRate taxCopy = taxRates.get(sourceTax.getId());
-        if (sourceTax.getParentTaxRate() != null) {
-          taxCopy.setParentTaxRate(taxRates.get(sourceTax.getParentTaxRate().getId()));
-        }
-        if (sourceTax.getTaxBase() != null) {
-          taxCopy.setTaxBase(taxRates.get(sourceTax.getTaxBase().getId()));
-        }
-        OBDal.getInstance().save(taxCopy);
-      }
-
-      for (TaxZone sourceZone : listTaxZones(sourceOrg.getId())) {
-        final TaxZone zoneCopy = (TaxZone) DalUtil.copy(sourceZone, false);
-        zoneCopy.setOrganization(org);
-        zoneCopy.setTax(taxRates.get(sourceZone.getTax().getId()));
-        OBDal.getInstance().save(zoneCopy);
-      }
-
-      OBDal.getInstance().flush();
-
-      for (TaxRateAccounts sourceAccounts : listTaxAccounts(sourceOrg.getGeneralLedger().getId(),
-          sourceOrg.getId())) {
-        final TaxRateAccounts accountsCopy = (TaxRateAccounts) DalUtil.copy(sourceAccounts, false);
-        accountsCopy.setOrganization(org);
-        accountsCopy.setAccountingSchema(org.getGeneralLedger());
-        accountsCopy.setTax(taxRates.get(sourceAccounts.getTax().getId()));
-        accountsCopy.setTaxDue(
-            cloneAccountingCombination(sourceAccounts.getTaxDue(), sourceOrg, accountingCombinations));
-        accountsCopy.setTaxLiability(cloneAccountingCombination(sourceAccounts.getTaxLiability(),
-            sourceOrg, accountingCombinations));
-        accountsCopy.setTaxCredit(
-            cloneAccountingCombination(sourceAccounts.getTaxCredit(), sourceOrg, accountingCombinations));
-        accountsCopy.setTaxReceivables(
-            cloneAccountingCombination(sourceAccounts.getTaxReceivables(), sourceOrg,
-                accountingCombinations));
-        accountsCopy.setTaxExpense(
-            cloneAccountingCombination(sourceAccounts.getTaxExpense(), sourceOrg,
-                accountingCombinations));
-        accountsCopy.setTaxDueTransitory(
-            cloneAccountingCombination(sourceAccounts.getTaxDueTransitory(), sourceOrg,
-                accountingCombinations));
-        accountsCopy.setTaxCreditTransitory(
-            cloneAccountingCombination(sourceAccounts.getTaxCreditTransitory(), sourceOrg,
-                accountingCombinations));
-        OBDal.getInstance().save(accountsCopy);
-      }
-
-      OBDal.getInstance().flush();
-      return success();
-    } catch (Exception e) {
-      return logErrorAndRollback("@CreateReferenceDataFailed@",
-          "clonePackageTaxes() - Could not clone tax package data.", e);
-    }
-  }
-
-
-  private AccountingCombination cloneAccountingCombination(AccountingCombination sourceCombination,
-      Organization sourceOrg, Map<String, AccountingCombination> accountingCombinations) {
-    if (sourceCombination == null) {
-      return null;
-    }
-    AccountingCombination existing = accountingCombinations.get(sourceCombination.getId());
-    if (existing != null) {
-      return existing;
-    }
-
-    AccountingCombination combinationCopy = (AccountingCombination) DalUtil.copy(sourceCombination,
-        false);
-    combinationCopy.setOrganization(org);
-    combinationCopy.setAccountingSchema(org.getGeneralLedger());
-    if (sourceCombination.getTrxOrganization() != null) {
-      if (sourceOrg.getId().equals(sourceCombination.getTrxOrganization().getId())) {
-        combinationCopy.setTrxOrganization(org);
-      } else {
-        combinationCopy.setTrxOrganization(null);
-      }
-    }
-    if (clearSourceOwnedCombinationDimensions(combinationCopy, sourceOrg)) {
-      combinationCopy.setAlias(null);
-      combinationCopy.setCombination(null);
-      combinationCopy.setDescription(null);
-      combinationCopy.setFullyQualified(false);
-    }
-    OBDal.getInstance().save(combinationCopy);
-    accountingCombinations.put(sourceCombination.getId(), combinationCopy);
-    return combinationCopy;
-  }
-
-  private boolean clearSourceOwnedCombinationDimensions(AccountingCombination combinationCopy,
-      Organization sourceOrg) {
-    boolean changed = false;
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_BUSINESSPARTNER,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_PRODUCT,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_PROJECT,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_SALESCAMPAIGN,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_SALESREGION,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_ACTIVITY,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_LOCATIONFROMADDRESS,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_LOCATIONTOADDRESS,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_STDIMENSION,
-        sourceOrg);
-    changed |= clearIfOwnedBySource(combinationCopy, AccountingCombination.PROPERTY_NDDIMENSION,
-        sourceOrg);
-    return changed;
-  }
-
-  private boolean clearIfOwnedBySource(AccountingCombination combinationCopy, String propertyName,
-      Organization sourceOrg) {
-    Object propertyValue = combinationCopy.get(propertyName);
-    if (!(propertyValue instanceof BaseOBObject)) {
-      return false;
-    }
-    BaseOBObject referenced = (BaseOBObject) propertyValue;
-    if (referenced.getEntity().hasProperty("organization")) {
-      Object dimensionOrg = referenced.get("organization");
-      if (dimensionOrg instanceof Organization
-          && !"0".equals(((Organization) dimensionOrg).getId())) {
-        combinationCopy.set(propertyName, null);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private List<TaxZone> listTaxZones(String orgId) {
-    final OBQuery<TaxZone> query = OBDal.getInstance().createQuery(TaxZone.class,
-        "as e where e.tax.organization.id = :orgId order by e.id");
-    query.setFilterOnReadableClients(false);
-    query.setFilterOnReadableOrganization(false);
-    query.setNamedParameter("orgId", orgId);
-    return query.list();
-  }
-  private <T extends BaseOBObject> List<T> listByOrg(Class<T> entityClass, String orgId) {
-    final OBQuery<T> query = OBDal.getInstance().createQuery(entityClass,
-        "as e where e.organization.id = :orgId order by e.id");
-    query.setFilterOnReadableClients(false);
-    query.setFilterOnReadableOrganization(false);
-    query.setNamedParameter("orgId", orgId);
-    return query.list();
-  }
-
-  private List<TaxRateAccounts> listTaxAccounts(String acctSchemaId, String orgId) {
-    final OBQuery<TaxRateAccounts> query = OBDal.getInstance().createQuery(TaxRateAccounts.class,
-        "as e where e.accountingSchema.id = :acctSchemaId and e.tax.organization.id = :orgId order by e.id");
-    query.setFilterOnReadableClients(false);
-    query.setFilterOnReadableOrganization(false);
-    query.setNamedParameter("acctSchemaId", acctSchemaId);
-    query.setNamedParameter("orgId", orgId);
-    return query.list();
-  }
-
-  private <T extends BaseOBObject> long countQuery(Class<T> entityClass, String whereClause,
-      Map<String, Object> parameters) {
-    final OBQuery<T> query = OBDal.getInstance().createQuery(entityClass, whereClause);
-    query.setFilterOnReadableClients(false);
-    query.setFilterOnReadableOrganization(false);
-    for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
-      query.setNamedParameter(parameter.getKey(), parameter.getValue());
-    }
-    return query.count();
-  }
-
-  private Map<String, Object> params(Object... values) {
-    final Map<String, Object> parameters = new HashMap<>();
-    for (int i = 0; i < values.length; i += 2) {
-      parameters.put((String) values[i], values[i + 1]);
-    }
-    return parameters;
-  }
 
   private OBError markOrganizationReady() {
     try {

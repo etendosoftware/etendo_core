@@ -19,77 +19,115 @@
 package org.openbravo.test.generalsetup.enterprise.organization;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
-import org.hibernate.criterion.Restrictions;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.commons.fileupload.FileItem;
 import org.junit.Test;
-import org.openbravo.base.structure.BaseOBObject;
+import org.mockito.MockedStatic;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetup;
+import org.openbravo.erpCommon.businessUtility.InitialOrgSetupAccountingContext;
+import org.openbravo.erpCommon.businessUtility.InitialOrgSetupAccountingHandler;
+import org.openbravo.erpCommon.businessUtility.InitialOrgSetupAccountingResult;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.model.ad.system.Client;
+import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.common.enterprise.Organization;
-import org.openbravo.model.common.enterprise.OrganizationAcctSchema;
-import org.openbravo.model.financialmgmt.calendar.PeriodControl;
-import org.openbravo.model.financialmgmt.tax.TaxCategory;
-import org.openbravo.model.financialmgmt.tax.TaxRate;
-import org.openbravo.model.financialmgmt.tax.TaxRateAccounts;
-import org.openbravo.test.base.OBBaseTest;
+import org.openbravo.model.common.enterprise.OrganizationType;
 
-public class InitialOrgSetupAutomaticAccountingTest extends OBBaseTest {
+public class InitialOrgSetupAutomaticAccountingTest {
 
   @Test
-  public void legalWithAccountingOrgIsAutomaticallyWiredAndReadied() {
-    ADOrgPersistInfoUtility.setTestContextFB();
+  public void legalWithAccountingOrganizationRequiresAccountingHook() throws Exception {
+    OrganizationType legalWithAccounting = mock(OrganizationType.class);
+    when(legalWithAccounting.isLegalEntityWithAccounting()).thenReturn(true);
+    OrganizationType regularOrganization = mock(OrganizationType.class);
+    when(regularOrganization.isLegalEntityWithAccounting()).thenReturn(false);
 
-    InitialOrgSetup initialOrg = new InitialOrgSetup(OBContext.getOBContext().getCurrentClient());
-    OBError result = initialOrg.createOrganizationWithAutomaticAccounting(
-        "Auto EUR " + System.currentTimeMillis(), "",
-        ADOrgPersistInfoConstants.ORGTYPE_LEGALWITHACCOUNTING,
-        ADOrgPersistInfoConstants.ORG_FB_FBGROUP, "", "", "",
-        ADOrgPersistInfoConstants.CUR_EURO);
+    assertTrue(requiresAccountingHook(legalWithAccounting));
+    assertFalse(requiresAccountingHook(regularOrganization));
+    assertFalse(requiresAccountingHook(null));
+  }
+
+  @Test
+  public void successfulAccountingHookReceivesOrganizationContextAndReturnsSuccess() throws Exception {
+    InitialOrgSetup initialOrgSetup = newInitialOrgSetup();
+    Client client = mock(Client.class);
+    Organization organization = mock(Organization.class);
+    OrganizationType organizationType = mock(OrganizationType.class);
+    FileItem coaFile = mock(FileItem.class);
+    when(coaFile.getSize()).thenReturn(0L);
+    setField(initialOrgSetup, "client", client);
+    setField(initialOrgSetup, "org", organization);
+
+    AtomicReference<InitialOrgSetupAccountingContext> capturedContext = new AtomicReference<>();
+    InitialOrgSetupAccountingHandler handler = new InitialOrgSetupAccountingHandler() {
+      @Override
+      public boolean applies(InitialOrgSetupAccountingContext context) {
+        return true;
+      }
+
+      @Override
+      public InitialOrgSetupAccountingResult wire(InitialOrgSetupAccountingContext context) {
+        capturedContext.set(context);
+        return InitialOrgSetupAccountingResult.success();
+      }
+    };
+    setField(initialOrgSetup, "accountingHandlers", List.of(handler));
+
+    OBError result = runAccountingHook(initialOrgSetup, organizationType, "parent-org", "modules",
+        true, coaFile, "102");
 
     assertEquals("Success", result.getType());
-
-    Organization org = OBDal.getInstance().get(Organization.class, initialOrg.getOrgId());
-    assertNotNull(org);
-    assertEquals(ADOrgPersistInfoConstants.ORGTYPE_LEGALWITHACCOUNTING,
-        org.getOrganizationType().getId());
-    assertEquals(ADOrgPersistInfoConstants.CUR_EURO, org.getCurrency().getId());
-    assertTrue(org.isAllowPeriodControl());
-    assertTrue(org.isReady());
-    assertNotNull(org.getGeneralLedger());
-    assertNotNull(org.getCalendar());
-    assertNotNull(org.getPeriodControlAllowedOrganization());
-    assertNotNull(org.getCalendarOwnerOrganization());
-    assertNotNull(org.getInheritedCalendar());
-
-    assertTrue(count(OrganizationAcctSchema.class, "organization.id", org.getId()) > 0);
-    assertTrue(count(PeriodControl.class, "organization.id", org.getId()) > 0);
-    assertTrue(count(TaxCategory.class, "organization.id", org.getId()) > 0);
-    assertTrue(count(TaxRate.class, "organization.id", org.getId()) > 0);
-    assertTrue(countTaxAccounts(org.getId()) > 0);
-
-    assertEquals(org.getId(), org.getPeriodControlAllowedOrganization().getId());
-    assertEquals(org.getId(), org.getCalendarOwnerOrganization().getId());
-    assertEquals(org.getCalendar().getId(), org.getInheritedCalendar().getId());
+    assertSame(client, capturedContext.get().getClient());
+    assertSame(organization, capturedContext.get().getOrganization());
+    assertSame(organizationType, capturedContext.get().getOrganizationType());
+    assertEquals("102", capturedContext.get().getCurrencyId());
+    assertEquals("parent-org", capturedContext.get().getParentOrgId());
+    assertEquals("modules", capturedContext.get().getSelectedModules());
+    assertTrue(capturedContext.get().isCreateAccountingRequested());
+    assertFalse(capturedContext.get().hasUploadedCoAFile());
   }
 
-  private <T extends BaseOBObject> long count(Class<T> entityClass, String propertyPath,
-      String value) {
-    OBCriteria<T> criteria = OBDal.getInstance().createCriteria(entityClass);
-    criteria.setFilterOnReadableClients(false);
-    criteria.setFilterOnReadableOrganization(false);
-    criteria.add(Restrictions.eq(propertyPath, value));
-    return criteria.count();
+  private boolean requiresAccountingHook(OrganizationType organizationType) throws Exception {
+    Method method = InitialOrgSetup.class.getDeclaredMethod("requiresAccountingHook",
+        OrganizationType.class);
+    method.setAccessible(true);
+    return (boolean) method.invoke(newInitialOrgSetup(), organizationType);
   }
 
-  private long countTaxAccounts(String orgId) {
-    return OBDal.getInstance().createQuery(TaxRateAccounts.class,
-        "as e where e.tax.organization.id = :orgId")
-        .setNamedParameter("orgId", orgId)
-        .count();
+  private OBError runAccountingHook(InitialOrgSetup initialOrgSetup, OrganizationType organizationType,
+      String parentOrgId, String selectedModules, boolean createAccounting, FileItem coaFile,
+      String currencyId) throws Exception {
+    Method method = InitialOrgSetup.class.getDeclaredMethod("runAccountingHook", OrganizationType.class,
+        String.class, String.class, boolean.class, FileItem.class, String.class);
+    method.setAccessible(true);
+    return (OBError) method.invoke(initialOrgSetup, organizationType, parentOrgId, selectedModules,
+        createAccounting, coaFile, currencyId);
+  }
+
+  private InitialOrgSetup newInitialOrgSetup() {
+    OBContext obContext = mock(OBContext.class);
+    when(obContext.getLanguage()).thenReturn(mock(Language.class));
+    try (MockedStatic<OBContext> context = mockStatic(OBContext.class)) {
+      context.when(OBContext::getOBContext).thenReturn(obContext);
+      return new InitialOrgSetup(mock(Client.class));
+    }
+  }
+
+  private void setField(Object target, String fieldName, Object value) throws Exception {
+    Field field = InitialOrgSetup.class.getDeclaredField(fieldName);
+    field.setAccessible(true);
+    field.set(target, value);
   }
 }
