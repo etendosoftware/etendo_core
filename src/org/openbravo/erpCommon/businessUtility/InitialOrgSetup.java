@@ -154,7 +154,7 @@ public class InitialOrgSetup {
     strHeaderLog.append("@ReportSummary@").append(NEW_LINE).append(NEW_LINE);
 
     final OrganizationType orgType = getOrgType(strOrgType);
-    final boolean useAccountingHook = requiresAccountingHook(orgType);
+    final boolean useAccountingHook = boCreateAccounting && requiresAccountingHook(orgType);
 
     log4j.debug("createOrganization() - Checking if user and org names duplicated.");
     obResult = checkDuplicated(strOrgUser, strOrgName);
@@ -230,7 +230,7 @@ public class InitialOrgSetup {
       logEvent(NEW_LINE + "@StartingReferenceData@");
       log4j.debug("process() - Starting creation of reference data");
       obResult = createReferenceData(strModules, bProduct, bBPartner, bProject, bCampaign,
-          bSalesRegion, bAccountingCreated ? false : boCreateAccounting, strCurrency);
+          bSalesRegion, boCreateAccounting && !bAccountingCreated, strCurrency);
       if (!obResult.getType().equals(OKTYPE)) {
         return obResult;
       }
@@ -256,7 +256,8 @@ public class InitialOrgSetup {
   private List<InitialOrgSetupAccountingHandler> getAccountingHandlers() {
     if (accountingHandlers == null) {
       try {
-        accountingHandlers = WeldUtils.getInstances(InitialOrgSetupAccountingHandler.class);
+        accountingHandlers = new ArrayList<>(
+            WeldUtils.getInstances(InitialOrgSetupAccountingHandler.class));
         accountingHandlers.sort(
             Comparator.comparingInt(InitialOrgSetupAccountingHandler::getPriority));
       } catch (Exception e) {
@@ -270,35 +271,49 @@ public class InitialOrgSetup {
 
   private OBError runAccountingHook(OrganizationType orgType, String strParentOrg, String strModules,
       boolean boCreateAccounting, FileItem fileCoAFilePath, String strCurrency) {
-    final InitialOrgSetupAccountingContext context = new InitialOrgSetupAccountingContext(client,
-        org, orgType, strCurrency, strParentOrg, strModules, boCreateAccounting,
-        fileCoAFilePath != null && fileCoAFilePath.getSize() > 0);
+    final InitialOrgSetupAccountingContext context = InitialOrgSetupAccountingContext.builder()
+        .client(client)
+        .organization(org)
+        .organizationType(orgType)
+        .currencyId(strCurrency)
+        .parentOrgId(strParentOrg)
+        .selectedModules(strModules)
+        .createAccountingRequested(boCreateAccounting)
+        .hasUploadedCoAFile(fileCoAFilePath != null && fileCoAFilePath.getSize() > 0)
+        .build();
 
     for (InitialOrgSetupAccountingHandler handler : getAccountingHandlers()) {
-      if (!handler.applies(context)) {
-        continue;
+      if (handler.applies(context)) {
+        OBError handlerResult = runApplicableAccountingHandler(handler, context);
+        if (handlerResult != null) {
+          return handlerResult;
+        }
       }
-      final InitialOrgSetupAccountingResult result;
-      try {
-        result = handler.wire(context);
-      } catch (Exception e) {
-        return logErrorAndRollback("@CreateReferenceDataFailed@",
-            "runAccountingHook() - Exception while executing accounting onboarding handler.", e);
-      }
-      if (!result.isHandled()) {
-        continue;
-      }
-      if (!result.isSuccess()) {
-        return logErrorAndRollback("@CreateReferenceDataFailed@", result.getMessage(), null);
-      }
-      strHeaderLog.append(NEW_LINE + "@CreateAccountingSuccess@" + NEW_LINE);
-      logEvent("@CreateAccountingSuccess@");
-      logEvent(NEW_LINE + STRSEPARATOR);
-      return success();
     }
 
     return logErrorAndRollback("@CreateReferenceDataFailed@",
         "runAccountingHook() - No accounting onboarding handler applied.", null);
+  }
+
+  private OBError runApplicableAccountingHandler(InitialOrgSetupAccountingHandler handler,
+      InitialOrgSetupAccountingContext context) {
+    final InitialOrgSetupAccountingResult result;
+    try {
+      result = handler.wire(context);
+    } catch (Exception e) {
+      return logErrorAndRollback("@CreateReferenceDataFailed@",
+          "runAccountingHook() - Exception while executing accounting onboarding handler.", e);
+    }
+    if (!result.isHandled()) {
+      return null;
+    }
+    if (!result.isSuccess()) {
+      return logErrorAndRollback("@CreateReferenceDataFailed@", result.getMessage(), null);
+    }
+    strHeaderLog.append(NEW_LINE + "@CreateAccountingSuccess@" + NEW_LINE);
+    logEvent("@CreateAccountingSuccess@");
+    logEvent(NEW_LINE + STRSEPARATOR);
+    return success();
   }
 
   private OBError applyPostCreationBasics(String strcLocationId, String strOrgUser,

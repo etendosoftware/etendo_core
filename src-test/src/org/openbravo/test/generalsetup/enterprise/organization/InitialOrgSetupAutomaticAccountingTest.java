@@ -7,8 +7,7 @@
  * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
+ * License for the specific  language governing rights and limitations under the License.
  * The Original Code is Openbravo ERP.
  * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2026 Openbravo SLU
@@ -27,6 +26,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -45,10 +45,16 @@ import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.OrganizationType;
 
+/**
+ * Verifies the Initial Organization Setup hook contract without initializing the DAL model.
+ */
 public class InitialOrgSetupAutomaticAccountingTest {
 
+  /**
+   * Verifies that only legal entities with accounting require the accounting hook path.
+   */
   @Test
-  public void legalWithAccountingOrganizationRequiresAccountingHook() throws Exception {
+  public void legalWithAccountingOrganizationRequiresAccountingHook() {
     OrganizationType legalWithAccounting = mock(OrganizationType.class);
     when(legalWithAccounting.isLegalEntityWithAccounting()).thenReturn(true);
     OrganizationType regularOrganization = mock(OrganizationType.class);
@@ -59,8 +65,11 @@ public class InitialOrgSetupAutomaticAccountingTest {
     assertFalse(requiresAccountingHook(null));
   }
 
+  /**
+   * Verifies that the accounting hook receives all setup inputs in its context and returns success.
+   */
   @Test
-  public void successfulAccountingHookReceivesOrganizationContextAndReturnsSuccess() throws Exception {
+  public void successfulAccountingHookReceivesOrganizationContextAndReturnsSuccess() {
     InitialOrgSetup initialOrgSetup = newInitialOrgSetup();
     Client client = mock(Client.class);
     Organization organization = mock(Organization.class);
@@ -99,21 +108,17 @@ public class InitialOrgSetupAutomaticAccountingTest {
     assertFalse(capturedContext.get().hasUploadedCoAFile());
   }
 
-  private boolean requiresAccountingHook(OrganizationType organizationType) throws Exception {
-    Method method = InitialOrgSetup.class.getDeclaredMethod("requiresAccountingHook",
-        OrganizationType.class);
-    method.setAccessible(true);
-    return (boolean) method.invoke(newInitialOrgSetup(), organizationType);
+  private boolean requiresAccountingHook(OrganizationType organizationType) {
+    return invokePrivate("requiresAccountingHook", new Class<?>[] { OrganizationType.class },
+        newInitialOrgSetup(), organizationType);
   }
 
   private OBError runAccountingHook(InitialOrgSetup initialOrgSetup, OrganizationType organizationType,
       String parentOrgId, String selectedModules, boolean createAccounting, FileItem coaFile,
-      String currencyId) throws Exception {
-    Method method = InitialOrgSetup.class.getDeclaredMethod("runAccountingHook", OrganizationType.class,
-        String.class, String.class, boolean.class, FileItem.class, String.class);
-    method.setAccessible(true);
-    return (OBError) method.invoke(initialOrgSetup, organizationType, parentOrgId, selectedModules,
-        createAccounting, coaFile, currencyId);
+      String currencyId) {
+    return invokePrivate("runAccountingHook", new Class<?>[] { OrganizationType.class, String.class,
+        String.class, boolean.class, FileItem.class, String.class }, initialOrgSetup, organizationType,
+        parentOrgId, selectedModules, createAccounting, coaFile, currencyId);
   }
 
   private InitialOrgSetup newInitialOrgSetup() {
@@ -125,9 +130,35 @@ public class InitialOrgSetupAutomaticAccountingTest {
     }
   }
 
-  private void setField(Object target, String fieldName, Object value) throws Exception {
-    Field field = InitialOrgSetup.class.getDeclaredField(fieldName);
-    field.setAccessible(true);
-    field.set(target, value);
+  private void setField(Object target, String fieldName, Object value) {
+    try {
+      Field field = InitialOrgSetup.class.getDeclaredField(fieldName);
+      field.setAccessible(true);
+      field.set(target, value);
+    } catch (ReflectiveOperationException exception) {
+      throw new InitialOrgSetupReflectionTestException(exception);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> T invokePrivate(String methodName, Class<?>[] parameterTypes, Object target,
+      Object... arguments) {
+    try {
+      Method method = InitialOrgSetup.class.getDeclaredMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return (T) method.invoke(target, arguments);
+    } catch (IllegalAccessException | NoSuchMethodException exception) {
+      throw new InitialOrgSetupReflectionTestException(exception);
+    } catch (InvocationTargetException exception) {
+      throw new InitialOrgSetupReflectionTestException(exception.getCause());
+    }
+  }
+
+  private static final class InitialOrgSetupReflectionTestException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    private InitialOrgSetupReflectionTestException(Throwable cause) {
+      super(cause);
+    }
   }
 }

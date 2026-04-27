@@ -7,8 +7,7 @@
  * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
+ * License for the specific  language governing rights and limitations under the License.
  * The Original Code is Openbravo ERP.
  * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2026 Openbravo SLU
@@ -25,8 +24,14 @@ import org.openbravo.erpCommon.businessUtility.InitialOrgSetupAccountingContext;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetupAccountingHandler;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetupAccountingResult;
 
+/**
+ * Verifies priority defaults for accounting setup handlers used by Initial Organization Setup.
+ */
 public class InitialOrgSetupAccountingHookSelectionTest {
 
+  /**
+   * Verifies that handlers without an explicit priority use the default ordering value.
+   */
   @Test
   public void accountingHandlerHasDefaultPriorityForStableHookSelection() {
     InitialOrgSetupAccountingHandler handler = new InitialOrgSetupAccountingHandler() {
@@ -44,6 +49,9 @@ public class InitialOrgSetupAccountingHookSelectionTest {
     assertEquals(100, handler.getPriority());
   }
 
+  /**
+   * Verifies that handlers can override priority when a module needs to run first.
+   */
   @Test
   public void accountingHandlerCanOverridePriorityForDeterministicSelection() {
     InitialOrgSetupAccountingHandler handler = new InitialOrgSetupAccountingHandler() {
