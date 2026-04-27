@@ -70,30 +70,30 @@ pipeline {
             env.FAILED_SUITES = "" // List to collect failed test suites
             sh "printenv"
 
+            def skipConditions = load "${pwd()}/pipelines/unittests/utils/skipConditions.groovy"
+
+            echo "--------------- Checking branch type ---------------"
+            if (skipConditions.skipIfVersionHotfix(env.GIT_BRANCH, REPO_NAME, COMMIT_SUCCESS_STATUS, ACCESS_TOKEN, GIT_COMMIT, BUILD_URL, CONTEXT_BUILD)) {
+              return
+            }
+
             echo "--------------- Checking if pipeline should be skipped ---------------"
             def changedFiles = sh(
               script: "git diff --name-only HEAD~1 HEAD",
               returnStdout: true
-            ).trim()
+            ).trim().split('\n') as List
 
             echo "Files changed in last commit: ${changedFiles}"
 
-            // Check if only JenkinsfileOracle was changed
-            def filesList = changedFiles.split('\n')
-            def onlyOracleJenkinsfile = filesList.size() == 1 && filesList[0] == "pipelines/unittests/JenkinsfileOracle"
-
-            if (onlyOracleJenkinsfile) {
-              echo "⏭️ Only pipelines/unittests/JenkinsfileOracle was changed. Skipping pipeline execution."
-
-              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-
-              echo "✅ Pipeline execution aborted successfully. Commit marked as success."
-              currentBuild.result = ABORTED
+            def allowedFiles = [
+              "pipelines/unittests/JenkinsfileOracle"
+            ]
+            if (skipConditions.skipIfOnlyAllowedFilesChanged(changedFiles, allowedFiles, REPO_NAME, COMMIT_SUCCESS_STATUS, "Pipeline skipped", ACCESS_TOKEN, GIT_COMMIT, BUILD_URL, CONTEXT_BUILD)) {
               return
-            } else {
-              echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
-              currentBuild.result = SUCCESS
             }
+
+            echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
+            currentBuild.result = SUCCESS
           } catch (Exception e) {
             echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
             env.ERROR_MESSAGE = "Pipeline Check Failed"
@@ -243,31 +243,8 @@ pipeline {
                       sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${PLUGIN_URL} ${PLUGIN_NAME}"
                     }
 
-                    if (!(env.GIT_BRANCH.contains("-Y")) && !(env.GIT_BRANCH.startsWith("release")) && !(env.GIT_BRANCH.startsWith("main" )) && !(env.GIT_BRANCH.startsWith("master")) && !(env.GIT_BRANCH.startsWith("hotfix"))) {
-                        if (isFeatureBranch && epicKey) {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.DEVELOP_BRANCH}
-                            """
-                        } else {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.DEVELOP_BRANCH}
-                            """
-                        }
-                    } else if (env.GIT_BRANCH.contains("-Y") || env.GIT_BRANCH.startsWith("release")) {
-                        if (isFeatureBranch && epicKey) {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.BACKPORT_BRANCH}
-                            """
-                        } else {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.BACKPORT_BRANCH}
-                            """
-                        }
-                    }
+                    def pluginBranchCheckout = load "${rootDir}/pipelines/unittests/utils/pluginBranchCheckout.groovy"
+                    pluginBranchCheckout.run(isFeatureBranch, epicKey)
 
                     sh """
                     cd ${PLUGIN_NAME}
@@ -361,41 +338,14 @@ pipeline {
         container('compiler') {
           script {
             dir(REPO_NAME) {
-              def suiteName = "org.openbravo.test.WebserviceTestSuite"
-              try {
-                echo "--------------- Running ${suiteName} ---------------"
-                sh "./gradlew test --tests ${suiteName} --info"
-                sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
-                echo "--------------- ${suiteName} Successful ---------------"
-                currentBuild.result = SUCCESS
-              } catch (Exception e) {
-                env.ERROR_MESSAGE = "${suiteName} Failed"
-                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
-                echo 'Exception occurred: ' + e.toString()
-                currentBuild.result = UNSTABLE
-                unstable(env.ERROR_MESSAGE)
-                env.STATUS_TEST = FAILED
-
-                def currentFailed = env.FAILED_SUITES ?: ""
-                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
-              } finally {
-                if (fileExists("build/reports/tests/test/")) {
-                  publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: 'build/reports/tests/test',
-                    reportFiles: '*.html',
-                    reportName: 'WEBSERVICES TESTS REPORT',
-                    reportTitles: ''
-                  ])
-                  sh "rm -rf build/reports/tests/test"
-                } else {
-                 echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
-                }
-                sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
-                sh "./gradlew --stop"
-              }
+              def rootDir = pwd()
+              def testRunner = load "${rootDir}/pipelines/unittests/utils/testRunner.groovy"
+              testRunner.runTestSuite(
+                suiteName: "org.openbravo.test.WebserviceTestSuite",
+                execIndex: 0,
+                reportName: 'WEBSERVICES TESTS REPORT',
+                stopCatalina: true
+              )
             }
           }
         }
@@ -413,40 +363,14 @@ pipeline {
         container('compiler') {
           script {
             dir(REPO_NAME) {
-              def suiteName = "com.smf.test.CoreTestSuite"
-              try {
-                echo "--------------- Running ${suiteName} ---------------"
-                sh "./gradlew test --tests ${suiteName} --info"
-                sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
-                echo "--------------- ${suiteName} Successful ---------------"
-                currentBuild.result = SUCCESS
-              } catch (Exception e) {
-                env.ERROR_MESSAGE = "${suiteName} Failed"
-                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
-                echo 'Exception occurred: ' + e.toString()
-                currentBuild.result = UNSTABLE
-                unstable(env.ERROR_MESSAGE)
-                env.STATUS_TEST = FAILED
-
-                def currentFailed = env.FAILED_SUITES ?: ""
-                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
-              } finally {
-                if (fileExists("build/reports/tests/test/")) {
-                  publishHTML([
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: 'build/reports/tests/test',
-                    reportFiles: '*.html',
-                    reportName: 'com.smf.* TESTS REPORT',
-                    reportTitles: ''
-                  ])
-                  sh "rm -rf build/reports/tests/test"
-                } else {
-                  echo "Report directory of com.smf.* tests does not exist. Skipping HTML report publishing."
-                }
-
-              }
+              def rootDir = pwd()
+              def testRunner = load "${rootDir}/pipelines/unittests/utils/testRunner.groovy"
+              testRunner.runTestSuite(
+                suiteName: "com.smf.test.CoreTestSuite",
+                execIndex: 1,
+                reportName: 'com.smf.* TESTS REPORT',
+                allowMissing: false
+              )
             }
           }
         }
@@ -464,39 +388,13 @@ pipeline {
         container('compiler') {
           script {
             dir(REPO_NAME) {
-              def suiteName = "org.openbravo.test.StandaloneTestSuite"
-              try {
-                echo "--------------- Running ${suiteName} ---------------"
-                sh "./gradlew test --tests ${suiteName} --info"
-                sh "mv build/jacoco/test.exec build/jacoco/test2.exec"
-                echo "--------------- ${suiteName} Successful ---------------"
-                currentBuild.result = SUCCESS
-              } catch (Exception e) {
-                env.ERROR_MESSAGE = "${suiteName} Failed"
-                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
-                echo 'Exception occurred: ' + e.toString()
-                currentBuild.result = UNSTABLE
-                unstable(env.ERROR_MESSAGE)
-                env.STATUS_TEST = FAILED
-
-                def currentFailed = env.FAILED_SUITES ?: ""
-                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
-              } finally {
-                if (fileExists("build/reports/tests/test/")) {
-                  publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: 'build/reports/tests/test',
-                    reportFiles: '*.html',
-                    reportName: 'STANDALONE TESTS REPORT',
-                    reportTitles: ''
-                  ])
-                  sh "rm -rf build/reports/tests/test"
-                } else {
-                  echo "Report directory of Standalone tests does not exist. Skipping HTML report publishing."
-                }
-              }
+              def rootDir = pwd()
+              def testRunner = load "${rootDir}/pipelines/unittests/utils/testRunner.groovy"
+              testRunner.runTestSuite(
+                suiteName: "org.openbravo.test.StandaloneTestSuite",
+                execIndex: 2,
+                reportName: 'STANDALONE TESTS REPORT'
+              )
             }
           }
         }
@@ -514,55 +412,42 @@ pipeline {
         container('compiler') {
           script {
             dir(REPO_NAME) {
-              def suiteName = "com.etendoerp.*"
-              try {
-                echo "--------------- Running ${suiteName} Tests ---------------"
-                sh "./gradlew test --tests \"com.etendoerp.*\" --info"
-                sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
-                sh "./gradlew --stop"
-                echo "--------------- ${suiteName} Tests Successful ---------------"
-                currentBuild.result = SUCCESS
-              } catch (Exception e) {
-                env.ERROR_MESSAGE = "${suiteName} Tests Failed"
-                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
-                echo 'Exception occurred: ' + e.toString()
-                currentBuild.result = UNSTABLE
-                unstable(env.ERROR_MESSAGE)
-                env.STATUS_TEST = FAILED
-
-                def currentFailed = env.FAILED_SUITES ?: ""
-                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName} Tests" : "${currentFailed}, ${suiteName} Tests"
-              } finally {
-                if (fileExists('build/spock-reports/')) {
-                  publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: 'build/spock-reports/',
-                    reportFiles: '*.html',
-                    reportName: 'com.etendoerp.* SPOCK TESTS REPORT',
-                    reportTitles: ''
-                  ])
-                  sh "rm -rf build/spock-reports"
-                } else {
-                  echo "Spock report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
-                }
-
-                if (fileExists('build/reports/tests/test/')) {
-                  publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: 'build/reports/tests/test',
-                    reportFiles: '*.html',
-                    reportName: 'com.etendoerp.* TESTS REPORT',
-                    reportTitles: ''
-                  ])
-                  sh "rm -rf build/reports/tests/test"
-                } else {
-                  echo "Report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
-                }
-              }
+              def rootDir = pwd()
+              def testRunner = load "${rootDir}/pipelines/unittests/utils/testRunner.groovy"
+              testRunner.runTestSuite(
+                suiteName: "com.etendoerp.* Tests",
+                testPattern: "com.etendoerp.*",
+                execIndex: 3,
+                reportName: 'com.etendoerp.* TESTS REPORT',
+                stopGradle: true,
+                hasSpockReport: true,
+                spockReportName: 'com.etendoerp.* SPOCK TESTS REPORT'
+              )
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
+// ------------------------------ COVERAGE TESTS -------------------------------------------
+    stage ('Coverage Test Suite') { // MARK: Coverage Test Suite
+      when {
+        expression {
+          env.STATUS_BUILD == SUCCESS
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            dir(REPO_NAME) {
+              def rootDir = pwd()
+              def testRunner = load "${rootDir}/pipelines/unittests/utils/testRunner.groovy"
+              testRunner.runTestSuite(
+                suiteName: "org.openbravo.test.CoverageTestSuite",
+                execIndex: 4,
+                reportName: 'COVERAGE TESTS REPORT',
+                stopGradle: true
+              )
             }
           }
         }
@@ -582,7 +467,6 @@ pipeline {
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Generating JaCoCo report\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             echo "---------------------- Run jacocoRootReport ----------------------"
             sh """
-            su etendo
             cd ${REPO_NAME}
             ./gradlew jacocoRootReport --info
             """
@@ -641,6 +525,10 @@ pipeline {
               sourceExclusions = "${sourceExclusions},${deprecatedExclusions}"
 
               echo "Sources to exclusions: ${sourceExclusions}"
+
+              def coverageExclusions = readFile('pipelines/unittests/coverage-exclusions.txt').trim().readLines().findAll { it.trim() && !it.trim().startsWith('#') }.join(',')
+
+              echo "Coverage exclusions configured"
               def modules_src_dirs = sh(script: "cd ${REPO_NAME}/modules_core && find . -type d -name 'src' | grep -v 'src-util' | sed 's|./|modules_core/|' | tr '\n' ','", returnStdout: true).trim()
               echo "Modules with src directories: ${modules_src_dirs}"
 
@@ -666,7 +554,8 @@ pipeline {
                     -Dsonar.java.coveragePlugin=jacoco \
                     -Dsonar.coverage.jacoco.xmlReportPaths=${JACOCO_REPORT} \
                     -Dsonar.inclusions=**/*.java \
-                    -Dsonar.exclusions=${sourceExclusions}
+                    -Dsonar.exclusions=${sourceExclusions} \
+                    -Dsonar.coverage.exclusions=${coverageExclusions}
               """
               echo "---------------------- Getting SonarQube Report URL ----------------------"
               def branchName = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
