@@ -216,7 +216,10 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         try {
           OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
               .createCriteria(ConversionRateDoc.class);
-          obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
+          obc.add(Restrictions.eq(
+              ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION + "."
+                  + APRM_FinaccTransactionV.PROPERTY_FINANCIALACCOUNTTRANSACTION + ".id",
+              transaction.getId()));
           boolean dataRemoved = false;
           for (ConversionRateDoc conversionRateDoc : obc.list()) {
             dataRemoved = true;
@@ -275,7 +278,10 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
           .createCriteria(ConversionRateDoc.class);
       obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency()));
       obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency()));
-      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
+      obc.add(Restrictions.eq(
+          ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION + "."
+              + APRM_FinaccTransactionV.PROPERTY_FINANCIALACCOUNTTRANSACTION + ".id",
+          transaction.getId()));
       return obc.list();
     } finally {
       OBContext.restorePreviousMode();
