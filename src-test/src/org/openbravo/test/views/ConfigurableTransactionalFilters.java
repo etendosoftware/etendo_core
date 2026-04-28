@@ -24,8 +24,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.window.StandardWindowComponent;
@@ -45,11 +45,11 @@ import org.openbravo.test.base.mock.HttpServletRequestMock;
  */
 public class ConfigurableTransactionalFilters extends ViewGenerationTest {
 
-  private static final String FILTER_NAME =
-      "This grid is filtered using a transactional filter <i>(only draft & modified documents in the last 1 day(s))";
+  private static final String FILTER_NAME = "This grid is filtered using a transactional filter <i>(only draft & modified documents in the last 1 day(s))<\\/i>.";
 
-  @BeforeEach
-  public void shouldExecuteOnlyIfThereIsNoGridConfigAtSystemLevel() {
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
     assumeTrue(Boolean.FALSE.equals(existsSystemGridConfig()),
         "Exists grid config at system level");
   }

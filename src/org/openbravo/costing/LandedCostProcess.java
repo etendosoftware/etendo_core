@@ -234,14 +234,13 @@ public class LandedCostProcess {
                   " select sum(rla.amount) as amt" +
                   "   , rla.landedCostCost.currency.id as lcCostCurrency" +
                   "   , gsl.id as receipt" +
-                  "   , (select transactionProcessDate " +
-                  "      from MaterialMgmtMaterialTransaction as transaction " +
-                  "      where goodsShipmentLine.id = gsl.id" +
-                  "     ) as trxprocessdate" +
+                  "   , min(trx.transactionProcessDate) as trxprocessdate" +
                   "  from LandedCostReceiptLineAmt as rla" +
                   "    join rla.landedCostReceipt as rl" +
                   "    join rl.goodsShipment as gs" +
                   "    join rla.goodsShipmentLine as gsl" +
+                  "    join MaterialMgmtMaterialTransaction as trx" +
+                  "      on trx.goodsShipmentLine = gsl" +
                   " where rl.landedCost.id = :landedCostId" +
                   "   and rla.isMatchingAdjustment = false " +
                   " group by rla.landedCostCost.currency.id" +

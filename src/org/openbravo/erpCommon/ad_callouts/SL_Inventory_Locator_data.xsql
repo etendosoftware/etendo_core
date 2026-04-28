@@ -26,7 +26,7 @@
       <![CDATA[
       SELECT COALESCE(qtyorderonhand,0) AS qtyorder, COALESCE(qtyonhand,0) AS qty
       FROM M_storage_detail 
-      WHERE m_product_id=? AND m_locator_id=? AND c_uom_id=? AND 1=1 AND m_attributesetinstance_id=?
+      WHERE m_product_id=? AND m_locator_id=? AND c_uom_id=? AND 1=1 AND COALESCE(m_attributesetinstance_id, '0') = COALESCE(?, '0')
       ]]>
     </Sql>
      <Parameter name="product"/>

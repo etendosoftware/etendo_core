@@ -34,6 +34,7 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -61,6 +62,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.service.db.DalConnectionProvider;
+import org.openbravo.test.base.mock.HttpServletRequestMock;
 
 /**
  * Test class for Automatic Invoice From Goods Shipment test cases
@@ -70,11 +72,6 @@ import org.openbravo.service.db.DalConnectionProvider;
 public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   private static final Logger log = LogManager.getLogger();
-
-  private static final String CLIENT_ID = "4028E6C72959682B01295A070852010D"; // QA Testing
-  private static final String ORG_ID = "357947E87C284935AD1D783CF6F099A1"; // Spain
-  private static final String USER_ID = "100"; // Openbravo
-  private static final String ROLE_ID = "4028E6C72959682B01295A071429011E"; // QA Testing Admin
 
   private static final String GOODS_SHIPMENT_ID = "8BEAC8CAFFCE444FA15D0170F897B641";
   private static final String SALES_ORDER = "5B29AF263D004CD3830D4F9B23C17DFD";
@@ -86,14 +83,39 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   private static final String AFTER_ORDER_DELIVERY = "O";
   private static final String PRICE_LIST_SALES_ID = "4028E6C72959682B01295ADC1D55022B";
 
-  @BeforeEach
-  public void initialize() {
-    log.info("Initializing Invoice From Shipment Tests ...");
-    OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID);
+  /**
+   * Overrides the default test user context set by {@link OBBaseTest#setUp()} so that
+   * every code path that initializes the OBContext — including
+   * {@code DalCleanupExtension.beforeTestExecution()} — uses the QA Admin context
+   * required by these tests.
+   *
+   * <p>Overriding {@code setTestUserContext()} rather than {@code setUp()} is necessary
+   * in JUnit 5 + Arquillian because {@code setUp()} overrides are not reliably invoked
+   * by Arquillian's lifecycle: the parent {@code @BeforeEach setUp()} runs independently
+   * and may overwrite the subclass context after it has been set. Overriding
+   * {@code setTestUserContext()} guarantees the correct context regardless of invocation
+   * order, and also ensures that other {@code @BeforeEach} and {@code @AfterEach} methods
+   * in this subclass (such as {@code tearDown()}) are properly registered and executed
+   * by the JUnit 5 + Arquillian lifecycle.
+   */
+  @Override
+  protected void setTestUserContext() {
+    initializeInvoiceFromShipmentContext();
+  }
+
+  @AfterEach
+  public void tearDown() {
+    // Clean up RequestContext to avoid contaminating other tests
+    RequestContext.clear();
+  }
+
+  private void initializeInvoiceFromShipmentContext() {
+    setQAAdminContext();
     final OBContext obContext = OBContext.getOBContext();
     final VariablesSecureApp vars = new VariablesSecureApp(obContext.getUser().getId(),
         obContext.getCurrentClient().getId(), obContext.getCurrentOrganization().getId(),
         obContext.getRole().getId(), obContext.getLanguage().getLanguage());
+    HttpServletRequestMock.setRequestMockInRequestContext(vars);
     RequestContext.get().setVariableSecureApp(vars);
   }
 
@@ -741,6 +763,9 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   }
 
   private void setProductInOrderLine(final OrderLine orderLine, final Product product) {
+    if (orderLine == null) {
+      throw new OBException("Order line not found");
+    }
     orderLine.setProduct(product);
   }
 
@@ -770,6 +795,7 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   }
 
   private void assertInvoiceLineNumber(final Invoice invoice, final int numLines) {
+    assertThat("Invoice should not be null", invoice == null, equalTo(false));
     assertThat("Invoice should have " + numLines + " lines", invoice.getInvoiceLineList().size(),
         equalTo(numLines));
   }
@@ -809,22 +835,49 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   }
 
   private OrderLine getOrderLineByLineNo(final Order salesOrder, long lineNo) {
-    final String hql = "as ol where ol.salesOrder.id = :salesOrderId and ol.lineNo = :lineNo";
-    final OBQuery<OrderLine> query = OBDal.getInstance().createQuery(OrderLine.class, hql);
-    query.setNamedParameter("salesOrderId", salesOrder.getId());
-    query.setNamedParameter("lineNo", lineNo);
-    query.setMaxResult(1);
-    return query.uniqueResult();
+    final Query<OrderLine> query = OBDal.getInstance().getSession()
+        .createQuery(
+            "from OrderLine as ol where ol.salesOrder.id = :salesOrderId and ol.lineNo = :lineNo",
+            OrderLine.class);
+    query.setParameter("salesOrderId", salesOrder.getId());
+    query.setParameter("lineNo", lineNo);
+    query.setMaxResults(1);
+    final OrderLine orderLine = query.uniqueResult();
+    if (orderLine == null) {
+      final Query<OrderLine> linesQuery = OBDal.getInstance().getSession()
+          .createQuery("from OrderLine as ol where ol.salesOrder.id = :salesOrderId order by ol.lineNo",
+              OrderLine.class);
+      linesQuery.setParameter("salesOrderId", salesOrder.getId());
+      throw new OBException(
+          "Order line not found for order " + salesOrder.getId() + " and lineNo " + lineNo
+              + ". Current persisted lines: " + linesQuery.list().stream()
+                  .map(l -> String.valueOf(l.getLineNo()))
+                  .reduce((a, b) -> a + "," + b).orElse("<none>"));
+    }
+    return orderLine;
   }
 
   private ShipmentInOutLine getShipmentLineByLineNo(final ShipmentInOut shipment, long lineNo) {
-    final String hql = "as sl where sl.shipmentReceipt.id = :shipmentId and sl.lineNo = :lineNo";
-    final OBQuery<ShipmentInOutLine> query = OBDal.getInstance()
-        .createQuery(ShipmentInOutLine.class, hql);
-    query.setNamedParameter("shipmentId", shipment.getId());
-    query.setNamedParameter("lineNo", lineNo);
-    query.setMaxResult(1);
-    return query.uniqueResult();
+    final Query<ShipmentInOutLine> query = OBDal.getInstance().getSession()
+        .createQuery(
+            "from MaterialMgmtShipmentInOutLine as sl where sl.shipmentReceipt.id = :shipmentId and sl.lineNo = :lineNo",
+            ShipmentInOutLine.class);
+    query.setParameter("shipmentId", shipment.getId());
+    query.setParameter("lineNo", lineNo);
+    query.setMaxResults(1);
+    final ShipmentInOutLine shipmentLine = query.uniqueResult();
+    if (shipmentLine == null) {
+      final Query<ShipmentInOutLine> linesQuery = OBDal.getInstance().getSession().createQuery(
+          "from MaterialMgmtShipmentInOutLine as sl where sl.shipmentReceipt.id = :shipmentId order by sl.lineNo",
+          ShipmentInOutLine.class);
+      linesQuery.setParameter("shipmentId", shipment.getId());
+      throw new OBException(
+          "Shipment line not found for shipment " + shipment.getId() + " and lineNo " + lineNo
+              + ". Current persisted lines: " + linesQuery.list().stream()
+                  .map(l -> String.valueOf(l.getLineNo()))
+                  .reduce((a, b) -> a + "," + b).orElse("<none>"));
+    }
+    return shipmentLine;
   }
 
   private InvoiceLine getInvoiceLineByProductQuantity(final Invoice invoice, final Product product,

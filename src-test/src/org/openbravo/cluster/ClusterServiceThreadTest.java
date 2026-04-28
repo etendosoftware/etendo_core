@@ -34,7 +34,6 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.ADClusterService;
 import org.openbravo.model.ad.system.Client;
@@ -214,7 +213,7 @@ public class ClusterServiceThreadTest {
 
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.createCriteria(ADClusterService.class)).thenReturn(mockCriteria);
-      when(mockCriteria.add(Restrictions.eq(any(), any()))).thenReturn(mockCriteria);
+      when(mockCriteria.add(any())).thenReturn(mockCriteria);
       when(mockCriteria.uniqueResult()).thenReturn(mockADClusterService);
 
       Method method = clusterServiceThread.getClass().getDeclaredMethod("getService", String.class);
@@ -223,7 +222,7 @@ public class ClusterServiceThreadTest {
 
       assertEquals(mockADClusterService, result);
       verify(mockOBDal).createCriteria(ADClusterService.class);
-      verify(mockCriteria).add(Restrictions.eq(any(), any()));
+      verify(mockCriteria).add(any());
       verify(mockCriteria).uniqueResult();
     }
   }

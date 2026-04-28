@@ -64,6 +64,7 @@ public class OBCriteria<E extends BaseOBObject> {
   private List<RestrictionEntry> restrictions = new ArrayList<>();
   private List<OrderByEntry> orderBys = new ArrayList<>();
   private List<AliasEntry> aliases = new ArrayList<>();
+  private Map<String, From<?, ?>> aliasJoins = new HashMap<>();
   private Map<String, FetchMode> fetchModes = new HashMap<>();
 
   private ProjectionEntry projection;
@@ -170,8 +171,8 @@ public class OBCriteria<E extends BaseOBObject> {
     Expression<?> projectionExpr = projection.toExpression(cb, root);
     cq.select(projectionExpr);
 
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
 
     Query<Object> query = session.createQuery(cq);
     applyPagination(query);
@@ -201,8 +202,8 @@ public class OBCriteria<E extends BaseOBObject> {
     // Use multiselect for multiple projections
     cq.multiselect(expressions);
 
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
 
     Query<Object[]> query = session.createQuery(cq);
     applyPagination(query);
@@ -217,21 +218,26 @@ public class OBCriteria<E extends BaseOBObject> {
   @SuppressWarnings("unchecked")
   private <F> List<F> executeProjectionQuery(Class<F> className) {
     CriteriaBuilder cb = session.getCriteriaBuilder();
-    CriteriaQuery<F> cq = cb.createQuery(className);
-    Root<F> root = cq.from(className);
+    CriteriaQuery<Object> cq = cb.createQuery(Object.class);
+    Root<E> root = cq.from(entityClass);
 
     // Apply projection
     Expression<?> projectionExpr = projection.toExpression(cb, root);
-    cq.select((Selection<? extends F>) projectionExpr);
+    cq.select(projectionExpr);
 
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
 
-    Query<F> query = session.createQuery(cq);
+    Query<Object> query = session.createQuery(cq);
     applyPagination(query);
     applyTimeout(query);
 
-    return query.getResultList();
+    List<Object> rawResults = query.getResultList();
+    List<F> results = new ArrayList<>();
+    for (Object result : rawResults) {
+      results.add((F) result);
+    }
+    return results;
   }
 
   /**
@@ -248,8 +254,8 @@ public class OBCriteria<E extends BaseOBObject> {
     Root<E> root = cq.from(entityClass);
 
     cq.select(cb.count(root));
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
 
     Query<Long> query = session.createQuery(cq);
 
@@ -279,8 +285,8 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaQuery<E> cq = cb.createQuery(entityClass);
     Root<E> root = cq.from(entityClass);
 
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
     applyOrderBy(cb, cq, root);
 
     Query<E> query = session.createQuery(cq);
@@ -323,13 +329,16 @@ public class OBCriteria<E extends BaseOBObject> {
     } else {
       throw new OBException("Projection must be set to use this method");
     }
-
   }
 
   /**
    * Apply all predicates including filters and custom restrictions
    */
   private void applyPredicates(CriteriaBuilder cb, CriteriaQuery<?> cq, Root<?> root) {
+    if (initialized) {
+      log.warn("OBCriteria for entity " + entityClass.getName()
+          + " has already been initialized. Re-initializing the criteria may result in unexpected behavior.");
+    }
     List<Predicate> predicates = new ArrayList<>();
 
     final OBContext obContext = OBContext.getOBContext();
@@ -359,12 +368,17 @@ public class OBCriteria<E extends BaseOBObject> {
       predicates.add(cb.equal(root.get(Organization.PROPERTY_ACTIVE), true));
     }
 
-    // Apply custom restrictions
-    for (RestrictionEntry entry : restrictions) {
-      Predicate predicate = entry.getRestriction().toPredicate(cb, root);
-      if (predicate != null) {
-        predicates.add(predicate);
+    // Apply custom restrictions with alias resolution
+    Restrictions.setCurrentAliases(aliasJoins);
+    try {
+      for (RestrictionEntry entry : restrictions) {
+        Predicate predicate = entry.getRestriction().toPredicate(cb, root);
+        if (predicate != null) {
+          predicates.add(predicate);
+        }
       }
+    } finally {
+      Restrictions.clearCurrentAliases();
     }
 
     if (!predicates.isEmpty()) {
@@ -379,9 +393,10 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   /**
-   * Apply aliases (joins) to the query
+   * Apply aliases (joins) to the query and store alias-to-Join mappings
    */
   private void applyAliases(Root<?> root) {
+    aliasJoins.clear();
     for (AliasEntry aliasEntry : aliases) {
       String path = aliasEntry.getPath();
       jakarta.persistence.criteria.JoinType joinType = aliasEntry.getJoinType();
@@ -397,6 +412,9 @@ public class OBCriteria<E extends BaseOBObject> {
       for (String part : parts) {
         current = createOrGetJoin(current, part, joinType);
       }
+
+      // Store the alias name mapping to the final Join
+      aliasJoins.put(aliasEntry.getAlias(), current);
     }
   }
 
@@ -438,15 +456,19 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   /**
-   * Get path from root navigating through properties
+   * Get path from root navigating through properties, with alias resolution
    */
   @SuppressWarnings("rawtypes")
   private Path getPath(Root<E> root, String propertyPath) {
     String[] parts = propertyPath.split("\\.");
     Path path = root;
 
-    for (String part : parts) {
-      path = path.get(part);
+    for (int i = 0; i < parts.length; i++) {
+      if (i == 0 && aliasJoins.containsKey(parts[i])) {
+        path = aliasJoins.get(parts[i]);
+      } else {
+        path = path.get(parts[i]);
+      }
     }
 
     return path;
@@ -597,8 +619,8 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaQuery<E> cq = cb.createQuery(entityClass);
     Root<E> root = cq.from(entityClass);
 
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
     applyOrderBy(cb, cq, root);
 
     Query<E> query = session.createQuery(cq);
@@ -645,7 +667,7 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   public Projection getProjection() {
-    return projection.getProjection();
+    return projection != null ? projection.getProjection() : null;
   }
 
   public void setProjection(Projection projection) {

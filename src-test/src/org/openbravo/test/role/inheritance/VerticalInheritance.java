@@ -18,18 +18,17 @@
  */
 package org.openbravo.test.role.inheritance;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -47,67 +46,42 @@ import org.openbravo.model.ad.access.Role;
  * 
  */
 public class VerticalInheritance extends WeldBaseTest {
-  private final List<String> ORGANIZATIONS = Arrays.asList("F&B España - Región Norte",
-      "F&B España - Región Sur");
-  private final List<String> WINDOWS = Arrays.asList("Purchase Order", "Sales Order");
-  private final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount");
-  private final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name");
-  private final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants");
-  private final List<String> FORMS = Arrays.asList("About", "Heartbeat");
-  private final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect");
-  private final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
-      RoleInheritanceTestUtils.DUMMY_VIEW_IMPL_NAME);
-  private final List<String> PROCESSES = Arrays.asList("Create Purchase Order Lines",
-      "Grant Portal Access");
-  private final List<String> TABLES = Arrays.asList("AD_User", "C_Order");
-  private final List<String> ALERTS = Arrays.asList("Alert Taxes: Inversión del Sujeto Pasivo",
-      "CUSTOMER WITHOUT ACCOUNTING");
-  private final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete");
 
-  private final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
-      REPORTS, FORMS, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
-  private static int testCounter = 0;
-
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<String> parameterValuesRule = new ParameterCdiTestRule<String>(
-      RoleInheritanceTestUtils.ACCESS_NAMES);
-
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest String parameter;
-
-  @BeforeEach
-  public void createDummyView() {
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
     RoleInheritanceTestUtils.createDummyView();
   }
 
-  @AfterEach
-  public void removeDummyView() {
+  @Override
+  protected void afterTestExecution(ExtensionContext context) {
     RoleInheritanceTestUtils.removeDummyView();
+    super.afterTestExecution(context);
   }
 
   /**
    * Test case for vertical inheritance
    */
-  @Test
-  public void createBasicVerticalInheritance() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("accessParameters")
+  public void createBasicVerticalInheritance(String parameter, List<String> accesses) {
     Role roleA = null;
     Role roleB = null;
     Role roleC = null;
     try {
       OBContext.setAdminMode(true);
-      // Create roles
-      roleA = RoleInheritanceTestUtils.createRole("roleA", RoleInheritanceTestUtils.CLIENT_ID,
+      // Create roles with unique names to avoid constraint violations between parameterized runs
+      String suffix = "_" + parameter + "_" + System.nanoTime();
+      roleA = RoleInheritanceTestUtils.createRole("roleA" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleAId = roleA.getId();
-      roleB = RoleInheritanceTestUtils.createRole("roleB", RoleInheritanceTestUtils.CLIENT_ID,
+      roleB = RoleInheritanceTestUtils.createRole("roleB" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleBId = roleB.getId();
-      roleC = RoleInheritanceTestUtils.createRole("roleC", RoleInheritanceTestUtils.CLIENT_ID,
+      roleC = RoleInheritanceTestUtils.createRole("roleC" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleCId = roleC.getId();
 
-      List<String> accesses = ACCESSES.get(testCounter);
       // Add window accesses for template roles
       RoleInheritanceTestUtils.addAccess(parameter, roleA, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, roleB, accesses.get(1));
@@ -140,7 +114,6 @@ public class VerticalInheritance extends WeldBaseTest {
       RoleInheritanceTestUtils.removeAccesses(parameter, roleB);
       RoleInheritanceTestUtils.removeAccesses(parameter, roleC);
       OBDal.getInstance().flush();
-      testCounter++;
 
     } finally {
       // Delete roles
@@ -152,5 +125,11 @@ public class VerticalInheritance extends WeldBaseTest {
 
       OBContext.restorePreviousMode();
     }
+  }
+
+  private static Stream<Arguments> accessParameters() {
+    return IntStream.range(0, RoleInheritanceTestUtils.ACCESS_NAMES.size())
+        .mapToObj(index -> Arguments.of(RoleInheritanceTestUtils.ACCESS_NAMES.get(index),
+            InheritanceAndPropagationUtil.accesses.get(index)));
   }
 }

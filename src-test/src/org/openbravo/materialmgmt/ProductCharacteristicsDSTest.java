@@ -26,9 +26,11 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
@@ -72,6 +74,22 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
    */
   @BeforeEach
   public void setUp() throws Exception {
+    initMocks();
+  }
+
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
+    try {
+      initMocks();
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to initialize mocks", e);
+    }
+  }
+
+  private void initMocks() throws Exception {
+    // Ensure stale static mocks from previous tests are closed
+    closeStaticMocksIfNeeded();
     // Initialize mocks
     mocks = MockitoAnnotations.openMocks(this);
 
@@ -86,6 +104,9 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
     mockModelProvider = mock(ModelProvider.class);
     mockEntityAccessChecker = mock(EntityAccessChecker.class);
     mockOrgStructureProvider = mock(OrganizationStructureProvider.class);
+    Role mockRole = mock(Role.class);
+    org.openbravo.model.ad.access.User mockUser = mock(
+        org.openbravo.model.ad.access.User.class);
 
     // Configure static mocks
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
@@ -93,6 +114,11 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
     mockedModelProvider.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
 
     // Configure mock behavior
+    when(mockOBContext.getUser()).thenReturn(mockUser);
+    when(mockUser.getId()).thenReturn("0");
+    when(mockOBContext.getRole()).thenReturn(mockRole);
+    when(mockRole.getId()).thenReturn("0");
+    when(mockOBContext.isInAdministratorMode()).thenReturn(false);
     when(mockOBContext.getEntityAccessChecker()).thenReturn(mockEntityAccessChecker);
     when(mockOBContext.getOrganizationStructureProvider()).thenReturn(mockOrgStructureProvider);
   }
@@ -115,6 +141,35 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
     }
     if (mocks != null) {
       mocks.close();
+    }
+    mockedOBContext = null;
+    mockedOBDal = null;
+    mockedModelProvider = null;
+    mockOBContext = null;
+    mockOBDal = null;
+    mockModelProvider = null;
+    mockEntityAccessChecker = null;
+    mockOrgStructureProvider = null;
+    mocks = null;
+  }
+
+  private void closeStaticMocksIfNeeded() {
+    try {
+      Mockito.clearAllCaches();
+    } catch (Exception ignored) {
+      // No-op: best effort to clear stale static mocks
+    }
+    if (mockedOBContext != null) {
+      mockedOBContext.close();
+      mockedOBContext = null;
+    }
+    if (mockedOBDal != null) {
+      mockedOBDal.close();
+      mockedOBDal = null;
+    }
+    if (mockedModelProvider != null) {
+      mockedModelProvider.close();
+      mockedModelProvider = null;
     }
   }
 

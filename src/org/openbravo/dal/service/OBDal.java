@@ -30,11 +30,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.LockModeType;
 
+import java.lang.reflect.Field;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -343,7 +347,118 @@ public class OBDal implements OBNotSingleton {
    * @see Session#refresh(Object)
    */
   public void refresh(Object obj) {
-    SessionHandler.getInstance().getSession(poolName).refresh(obj);
+    Session session = SessionHandler.getInstance().getSession(poolName);
+    try {
+      session.refresh(obj);
+    } catch (Exception e) {
+      if (isCascadeEntityNotFound(e) && obj instanceof BaseOBObject) {
+        handleRefreshWithMissingCascade((BaseOBObject) obj, session);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Handles the case where session.refresh() fails because cascade REFRESH
+   * encounters associated records that were deleted (e.g., by stored procedures
+   * that delete and recreate tax lines, payment schedules, etc.).
+   *
+   * In Hibernate 6, this marks the transaction for rollback. We clear that flag
+   * and manually reload the entity.
+   */
+  private void handleRefreshWithMissingCascade(BaseOBObject bob, Session session) {
+    // Hibernate marks the transaction for rollback when EntityNotFoundException
+    // occurs. Clear the rollback-only flag so the transaction can still commit.
+    clearRollbackOnly(session);
+
+    String entityName = bob.getEntityName();
+    Object id = bob.getId();
+
+    // Evict child entities from loaded OneToMany collections. The failed cascade
+    // refresh may have left stale child entities in the session that no longer
+    // exist in the database (deleted by stored procedures). If not evicted, these
+    // cause OptimisticLockException on flush.
+    evictLoadedChildren(bob, session);
+
+    // Evict only this entity (not the entire session) and reload it.
+    session.evict(bob);
+
+    BaseOBObject fresh = (BaseOBObject) session.get(entityName, (Serializable) id);
+    if (fresh != null) {
+      bob.replaceDataFrom(fresh);
+      session.evict(fresh);
+      session.saveOrUpdate(entityName, bob);
+    }
+  }
+
+  private void evictLoadedChildren(BaseOBObject bob, Session session) {
+    evictLoadedChildren(bob, session, new java.util.HashSet<>());
+  }
+
+  private void evictLoadedChildren(BaseOBObject bob, Session session, java.util.Set<Object> visited) {
+    Object id = bob.getId();
+    if (id == null || !visited.add(id)) {
+      return;
+    }
+    for (Property p : bob.getEntity().getProperties()) {
+      if (!p.isOneToMany()) {
+        continue;
+      }
+      Object value = bob.getValue(p.getName());
+      if (value instanceof List<?> && org.hibernate.Hibernate.isInitialized(value)) {
+        for (Object child : new ArrayList<>((List<?>) value)) {
+          if (child instanceof BaseOBObject) {
+            evictLoadedChildren((BaseOBObject) child, session, visited);
+          }
+          if (child != null) {
+            try {
+              session.evict(child);
+            } catch (Exception ignored) {
+              // child may not be in the session; ignore
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private boolean isCascadeEntityNotFound(Exception e) {
+    Throwable t = e;
+    while (t != null) {
+      if (t instanceof jakarta.persistence.EntityNotFoundException
+          || t instanceof org.hibernate.UnresolvableObjectException) {
+        return true;
+      }
+      t = t.getCause();
+    }
+    return false;
+  }
+
+  /**
+   * Clears the MARKED_ROLLBACK status on the Hibernate transaction so the
+   * transaction can still be committed. This is necessary because Hibernate 6
+   * marks the transaction for rollback when EntityNotFoundException occurs
+   * during cascade refresh, even when we want to handle the error gracefully.
+   */
+  private void clearRollbackOnly(Session session) {
+    try {
+      Transaction trx = session.getTransaction();
+      if (trx != null && trx.getStatus() == TransactionStatus.MARKED_ROLLBACK) {
+        // The rollbackOnly flag is stored in TransactionDriverControlImpl,
+        // accessible via TransactionImpl.internalGetTransactionDriverControl()
+        java.lang.reflect.Method getDriver = trx.getClass()
+            .getMethod("internalGetTransactionDriverControl");
+        Object driver = getDriver.invoke(trx);
+        if (driver != null) {
+          Field rollbackOnlyField = driver.getClass().getDeclaredField("rollbackOnly");
+          rollbackOnlyField.setAccessible(true);
+          rollbackOnlyField.set(driver, false);
+        }
+      }
+    } catch (Exception ex) {
+      log.warn("Could not clear rollback-only flag on transaction", ex);
+    }
   }
 
   /**

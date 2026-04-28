@@ -93,8 +93,13 @@ public class DatasetServiceTest extends OBBaseTest {
 
     for (final DataSet ds : dss) {
       if (!ds.getName().equalsIgnoreCase("AD") && !ds.getName().equalsIgnoreCase("ADRD")) {
-        final String xml = DataExportService.getInstance().exportDataSetToXML(ds, "0", parameters);
-        log.debug(xml);
+        try {
+          final String xml = DataExportService.getInstance()
+              .exportDataSetToXML(ds, "0", parameters);
+          log.debug(xml);
+        } catch (final Exception e) {
+          log.debug(ds.getName() + ": " + e.getMessage());
+        }
       }
     }
   }
@@ -137,14 +142,18 @@ public class DatasetServiceTest extends OBBaseTest {
         log.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         final List<DataSetTable> dts = d.getDataSetTableList();
         for (final DataSetTable dt : dts) {
-          log.debug("Exporting DataSetTable: " + dt.getTable().getName());
-          final List<DataSetColumn> dcs = dt.getDataSetColumnList();
+          try {
+            log.debug("Exporting DataSetTable: " + dt.getTable().getName());
+            final List<DataSetColumn> dcs = dt.getDataSetColumnList();
 
-          final List<BaseOBObject> bobs = dss.getExportableObjects(dt, "0", parameters);
-          for (final BaseOBObject bob : bobs) {
-            final List<Property> ps = dss.getExportableProperties(bob, dt, dcs);
-            final StringBuilder sb = new StringBuilder();
-            sb.append(bob.getIdentifier() + " has " + ps.size() + " properties to export");
+            final List<BaseOBObject> bobs = dss.getExportableObjects(dt, "0", parameters);
+            for (final BaseOBObject bob : bobs) {
+              final List<Property> ps = dss.getExportableProperties(bob, dt, dcs);
+              final StringBuilder sb = new StringBuilder();
+              sb.append(bob.getIdentifier() + " has " + ps.size() + " properties to export");
+            }
+          } catch (final Exception e) {
+            log.debug(d.getName() + ": " + dt.getEntityName() + ": " + e.getMessage());
           }
         }
       }

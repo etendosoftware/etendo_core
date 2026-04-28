@@ -20,11 +20,11 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
@@ -44,7 +44,6 @@ import org.openbravo.scheduling.ProcessBundle;
  * in Openbravo ERP.
  * </p>
  */
-@RunWith(MockitoJUnitRunner.class)
 public class VariantChDescUpdateProcessTest {
 
   private static final String TEST_PRODUCT_ID = "TEST_PRODUCT_ID";
@@ -54,6 +53,7 @@ public class VariantChDescUpdateProcessTest {
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal mockOBDal;
@@ -90,6 +90,8 @@ public class VariantChDescUpdateProcessTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
@@ -122,6 +124,13 @@ public class VariantChDescUpdateProcessTest {
     }
     if (mockedOBMessageUtils != null) {
       mockedOBMessageUtils.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 

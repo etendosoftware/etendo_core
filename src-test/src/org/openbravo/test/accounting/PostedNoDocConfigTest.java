@@ -1,8 +1,5 @@
 package org.openbravo.test.accounting;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -11,7 +8,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBConfigFileProvider;
@@ -58,7 +55,6 @@ import org.openbravo.test.costing.utils.TestCostingUtils;
  * <p>These tests are specifically designed for task [EPL-534] and leave
  * residuals in the database.</p>
  */
-
 public class PostedNoDocConfigTest extends WeldBaseTest {
   private static final String ORGANIZATION_SPAIN = "B843C30461EA4501935CB1D125C9C25A";
   private static final String PRODUCT_ID = "C0E3824CC5184B7F9746D195ACAC2CCF"; // Cerveza Lager 0,5L
@@ -69,10 +65,17 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
   private static final String DB_MESSAGE_NAME = "NoDocTypeForDocument";
   private static final Logger log4j = Logger.getLogger(PostedNoDocConfigTest.class);
 
+  /**
+   * Overrides the default test user context set by {@link OBBaseTest#setUp()} to use the
+   * Spain organization with FB Group Admin role required by these tests.
+   *
+   * <p>Overriding {@code setTestUserContext()} rather than {@code setUp()} ensures that every
+   * code path that initializes the OBContext — including
+   * {@code DalCleanupExtension.beforeTestExecution()} — always ends up with the Spain context,
+   * regardless of the order in which Arquillian + JUnit 5 invokes the lifecycle methods.
+   */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
         TestConstants.Clients.FB_GRP, ORGANIZATION_SPAIN);
     VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
@@ -112,11 +115,11 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       String result = postDocument(internalConsumption, materialManagementConsumptionTable);
       OBDal.getInstance().refresh(internalConsumption);
 
-      assertEquals(OBMessageUtils.messageBD(DB_MESSAGE_NAME), result);
-      assertEquals("DT", internalConsumption.getPosted());
+      Assert.assertEquals(OBMessageUtils.messageBD(DB_MESSAGE_NAME), result);
+      Assert.assertEquals("DT", internalConsumption.getPosted());
     } catch (Exception e) {
       log4j.error(e.getMessage(), e);
-      fail(e.getMessage());
+      Assert.fail(e.getMessage());
     } finally {
       if (internalConsumption != null) {
         OBDal.getInstance().refresh(internalConsumption);
@@ -163,7 +166,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
 
       postDocument(internalConsumption, materialManagementConsumptionTable);
       OBDal.getInstance().refresh(internalConsumption);
-      assertEquals("Y", internalConsumption.getPosted());
+      Assert.assertEquals("Y", internalConsumption.getPosted());
 
       removeDocType(docTypeId);
 
@@ -172,9 +175,9 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
           internalConsumption.getEntity().getTableId(), internalConsumption.getId(),
           OBDateUtils.formatDate(internalConsumption.getMovementDate()), null);
 
-      fail("Expected an OBException to be thrown");
+      Assert.fail("Expected an OBException to be thrown");
     } catch (Exception e) {
-      assertEquals("@NoDocTypeForDocument@", e.getMessage());
+      Assert.assertEquals("@NoDocTypeForDocument@", e.getMessage());
     } finally {
       if (internalConsumption != null) {
         OBDal.getInstance().refresh(internalConsumption);
@@ -228,7 +231,6 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
     criteria.setMaxResults(1);
     return (Table) criteria.uniqueResult();
   }
-
 
   private InternalConsumption createInternalConsumption() {
     try {

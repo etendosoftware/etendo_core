@@ -36,7 +36,9 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
+import org.junit.After;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -188,6 +190,17 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
     }
   }
 
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBContext.setAdminMode(true);
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
   /**
    * Execute the test with the current data
    * <ul>
@@ -210,6 +223,7 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
       executeCopyLinesFromOrdersProcess(processingOrder, ordersFrom);
       validateGeneratedData(processingOrder);
       log.info("Test Completed successfully {}: {} ", this.testNumber, this.testDescription);
+      cleanUpCreatedTestData();
     }
 
     catch (Exception e) {

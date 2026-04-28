@@ -23,13 +23,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.weld.WeldUtils;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.report.JmxReportCache;
 import org.openbravo.client.application.report.ReportingUtils;
@@ -42,11 +40,6 @@ import net.sf.jasperreports.engine.JasperReport;
  */
 public class CompiledReportsCacheTest extends WeldBaseTest {
 
-    public ParameterCdiTestRule<Boolean> reportRule = new ParameterCdiTestRule<Boolean>(
-      Arrays.asList(Boolean.TRUE, Boolean.FALSE));
-
-  private @ParameterCdiTest Boolean isCacheEnabled;
-
   private JmxReportCache jmxReportCache;
 
   @Override
@@ -54,8 +47,10 @@ public class CompiledReportsCacheTest extends WeldBaseTest {
     return true;
   }
 
-  @Test
-  public void jrxmlCompilationShouldNotBeRetrievedFromCache() throws JRException {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void jrxmlCompilationShouldNotBeRetrievedFromCache(boolean isCacheEnabled)
+      throws JRException {
     getJmxReportCache().clearCache();
     getJmxReportCache().setEnabled(isCacheEnabled);
     String reportPath = getReportPath();

@@ -122,9 +122,12 @@ class WindowPersonalizationEventHandler extends EntityPersistenceEventObserver {
     // filter out the preferences that do not store the default view
     preferenceCriteria
         .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "OBUIAPP_DefaultSavedView"));
-    // filter out the preferences whose default view is not the one being deleted
-    preferenceCriteria
-        .add(Restrictions.eq(Preference.PROPERTY_SEARCHKEY, uiPersonalization.getId()));
-    return preferenceCriteria.list();
+    // Value (searchKey) is a CLOB in Oracle, cannot use Restrictions.eq on it.
+    // Filter in Java instead.
+    String targetId = uiPersonalization.getId();
+    return preferenceCriteria.list()
+        .stream()
+        .filter(p -> targetId.equals(p.getSearchKey()))
+        .collect(java.util.stream.Collectors.toList());
   }
 }

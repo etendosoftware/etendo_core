@@ -26,6 +26,8 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The OBProvider provides the runtime instances of model entities as well as service instances.
  * Classes are registered by their class type and it is identified if the class should be considered
@@ -37,6 +39,7 @@ import org.apache.logging.log4j.Logger;
  * @author mtaal
  */
 
+@Dependent
 public class OBProvider {
   private static final Logger log = LogManager.getLogger();
 
@@ -207,6 +210,7 @@ public class OBProvider {
     return reg.getInstance();
   }
 
+  @Dependent
   class Registration {
     private String name;
     private Class<?> instanceClass;
@@ -260,7 +264,7 @@ public class OBProvider {
 
     @Override
     public String toString() {
-      return "Class Registration " + name + " instanceClass: " + instanceClass.getName()
+      return "Class Registration " + name + " instanceClass: " + (instanceClass != null ? instanceClass.getName(): "")
           + ", singleton: " + singleton;
     }
 

@@ -18,15 +18,17 @@
  */
 package org.openbravo.test.costing;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -367,9 +369,6 @@ public class TestIssue39888 extends TestCostingBase {
 
       TestCostingUtils.assertProductTransaction(finalProduct.getId(), productTransactionAssertList,
           true);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -378,6 +377,12 @@ public class TestIssue39888 extends TestCostingBase {
     finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBDal.getInstance().rollbackAndClose();
   }
 
 }

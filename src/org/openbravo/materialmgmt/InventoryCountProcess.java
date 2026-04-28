@@ -316,7 +316,7 @@ public class InventoryCountProcess implements Process {
                   " where icl.physInventory.id = :inventoryId" +
                   "   and aset.requireAtLeastOneValue = true" +
                   "   and coalesce(p.useAttributeSetValueAs, '-') <> 'F'" +
-                  "   and coalesce(icl.attributeSetValue.id, '0') = '0' " +
+                  "   and (icl.attributeSetValue is null or icl.attributeSetValue.id = '0') " +
                   // Allow to regularize to 0 any existing Stock without attribute for this Product
                   // (this situation can happen when there is a bug in a different part of the code,
                   // but the user should be able always to zero this stock)
@@ -372,9 +372,9 @@ public class InventoryCountProcess implements Process {
                   "         from MaterialMgmtInventoryCountLine as icl2" +
                   "        where icl.physInventory = icl2.physInventory" +
                   "          and icl.product = icl2.product" +
-                  "          and coalesce(icl.attributeSetValue.id, '0') = coalesce(icl2.attributeSetValue.id, '0')" +
-                  "          and coalesce(icl.orderUOM.id, '0') = coalesce(icl2.orderUOM.id, '0')" +
-                  "          and coalesce(icl.uOM.id, '0') = coalesce(icl2.uOM.id, '0')" +
+                  "          and (icl.attributeSetValue = icl2.attributeSetValue or (icl.attributeSetValue is null and icl2.attributeSetValue is null))" +
+                  "          and (icl.orderUOM = icl2.orderUOM or (icl.orderUOM is null and icl2.orderUOM is null))" +
+                  "          and (icl.uOM = icl2.uOM or (icl.uOM is null and icl2.uOM is null))" +
                   "          and icl.storageBin = icl2.storageBin" +
                   "          and icl.lineNo <> icl2.lineNo" +
                   "     )" +

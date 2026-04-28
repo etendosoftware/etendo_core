@@ -18,10 +18,10 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -43,11 +43,11 @@ import org.openbravo.model.common.plm.ProductCharacteristicValue;
  * - @RunWith(MockitoJUnitRunner.class): This annotation is used to specify that the test runner should be MockitoJUnitRunner,
  * which initializes mocks and handles the lifecycle of the test class.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class CharacteristicsUtilsTest {
 
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBProvider> mockedOBProvider;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal mockOBDal;
@@ -84,6 +84,8 @@ public class CharacteristicsUtilsTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBProvider = mockStatic(OBProvider.class);
 
@@ -93,11 +95,11 @@ public class CharacteristicsUtilsTest {
     when(mockOBDal.createCriteria(ProductCharacteristicValue.class)).thenReturn(mockPCVCriteria);
     when(mockOBDal.createCriteria(ProductCharacteristic.class)).thenReturn(mockPCCriteria);
 
-  when(mockPCVCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockPCVCriteria);
-  when(mockPCVCriteria.setMaxResults(anyInt())).thenReturn(mockPCVCriteria);
+    when(mockPCVCriteria.add(any())).thenReturn(mockPCVCriteria);
+    when(mockPCVCriteria.setMaxResults(anyInt())).thenReturn(mockPCVCriteria);
 
-  when(mockPCCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockPCCriteria);
-  when(mockPCCriteria.setMaxResults(anyInt())).thenReturn(mockPCCriteria);
+    when(mockPCCriteria.add(any())).thenReturn(mockPCCriteria);
+    when(mockPCCriteria.setMaxResults(anyInt())).thenReturn(mockPCCriteria);
 
     when(mockProduct.getOrganization()).thenReturn(mockOrganization);
     List<ProductCharacteristic> pcList = new ArrayList<>();
@@ -113,12 +115,15 @@ public class CharacteristicsUtilsTest {
    * Cleans up the static mocks after each test.
    */
   @After
-  public void tearDown() {
+  public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();
     }
     if (mockedOBProvider != null) {
       mockedOBProvider.close();
+    }
+    if (mocks != null) {
+      mocks.close();
     }
   }
 
@@ -139,7 +144,7 @@ public class CharacteristicsUtilsTest {
     // THEN
     assertEquals(mockCharacteristicValue, result);
     verify(mockOBDal).createCriteria(ProductCharacteristicValue.class);
-  verify(mockPCVCriteria, times(2)).add(Restrictions.eq(anyString(), any()));
+    verify(mockPCVCriteria, times(2)).add(any());
     verify(mockPCVCriteria).setMaxResults(1);
     verify(mockPCVCriteria).uniqueResult();
   }
@@ -160,7 +165,7 @@ public class CharacteristicsUtilsTest {
     // THEN
     assertNull(result);
     verify(mockOBDal).createCriteria(ProductCharacteristicValue.class);
-  verify(mockPCVCriteria, times(2)).add(Restrictions.eq(anyString(), any()));
+    verify(mockPCVCriteria, times(2)).add(any());
     verify(mockPCVCriteria).setMaxResults(1);
     verify(mockPCVCriteria).uniqueResult();
   }

@@ -15,11 +15,11 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.pricing.pricelist.PriceList;
@@ -27,11 +27,11 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 /**
  * Test cases for the {@link InvoiceFromGoodsShipmentPriceListFilterExpression} class.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class InvoiceFromGoodsShipmentPriceListFilterExpressionTest {
 
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<InvoiceFromGoodsShipmentUtil> mockedInvoiceFromGoodsShipmentUtil;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal mockOBDal;
@@ -54,6 +54,8 @@ public class InvoiceFromGoodsShipmentPriceListFilterExpressionTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedInvoiceFromGoodsShipmentUtil = mockStatic(InvoiceFromGoodsShipmentUtil.class);
 
@@ -67,12 +69,15 @@ public class InvoiceFromGoodsShipmentPriceListFilterExpressionTest {
    * It closes the static mocks to ensure no interference with other tests.
    */
   @After
-  public void tearDown() {
+  public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();
     }
     if (mockedInvoiceFromGoodsShipmentUtil != null) {
       mockedInvoiceFromGoodsShipmentUtil.close();
+    }
+    if (mocks != null) {
+      mocks.close();
     }
   }
 
