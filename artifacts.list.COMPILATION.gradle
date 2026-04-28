@@ -38,7 +38,6 @@ List<String> _dependenciesListCOMPILATION = [
   'com.itextpdf:itextpdf:5.5.0',
   'com.lowagie:itext:2.1.7',
   'jfree:jfreechart:1.0.12',
-  'net.sf.jasperreports:jasperreports-pdf:7.0.3',
   'net.sf.jasperreports:jasperreports:7.0.3',
   'net.sf.jasperreports:jasperreports-servlets:7.0.3',
   'net.sf.jasperreports:jasperreports-chart-themes:7.0.3',
