@@ -60,6 +60,7 @@
     v_NoRecNotComplDelivered NUMBER:=0;
     -- Orders to process
     Cur_Order RECORD;
+    Cur_BP_DocType RECORD;
     --
     v_NextNo VARCHAR2(32);
     v_DocType_ID VARCHAR2(32);
@@ -396,35 +397,84 @@
               /**
               * Create Invoice Header ---------------------------------------
               */
-              -- Get Order DocType Info - approved from Invoice DocType
+              -- Get Order DocType Info: 3-level priority
+              -- 1. Business partner's specific doc type
+              -- 2. C_DocTypeInvoice_ID from the order's document type
+              -- 3. Organization default
               BEGIN
                 v_DocType_ID := NULL;
-                v_DocType_ID := c_bp_get_doctype(
-                  Cur_Order.AD_Client_ID,
-                  Cur_Order.AD_Org_ID,
-                  Cur_Order.C_BPartner_ID,
-                 CASE WHEN Cur_Order.IsSOTrx = 'Y' THEN 'ARI' ELSE 'API' END,
-                  'Y'
-                );
+
+                -- Step 1a: Business partner's doc type
+                FOR Cur_BP_DocType IN (
+                  SELECT bpd.c_doctype_id
+                    FROM c_bpartner_doctype bpd
+                   WHERE bpd.isactive = 'Y'
+                     AND bpd.c_bpartner_id = Cur_Order.C_BPartner_ID
+                     AND bpd.issotrx = Cur_Order.IsSOTrx
+                     AND bpd.documentcategory = 'INV'
+                     AND bpd.c_doctype_id IS NOT NULL
+                     AND COALESCE(bpd.isforceautomation, 'N') = 'Y'
+                     AND AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, bpd.ad_org_id, bpd.ad_client_id) <> -1
+                   ORDER BY AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, bpd.ad_org_id, bpd.ad_client_id) ASC
+                ) LOOP
+                  v_DocType_ID := Cur_BP_DocType.c_doctype_id;
+                  EXIT;
+                END LOOP;
+
+                -- Step 1b: Business partner's doc type fallback
                 IF v_DocType_ID IS NULL THEN
-                 BEGIN
-                   v_ResultStr := 'GetDocTypeInfo - ' || Cur_Order.C_DocType_ID;
-                   SELECT od.C_DocTypeInvoice_ID
-                   INTO v_DocType_ID
-                   FROM C_DOCTYPE od,
-                     C_DOCTYPE id
-                   WHERE od.C_DocType_ID = Cur_Order.C_DocType_ID
-                     AND od.C_DocTypeInvoice_ID = id.C_DocType_ID
-                     AND id.IsActive = 'Y';
+                  FOR Cur_BP_DocType IN (
+                    SELECT bpd.c_doctype_id
+                      FROM c_bpartner_doctype bpd
+                     WHERE bpd.isactive = 'Y'
+                       AND bpd.c_bpartner_id = Cur_Order.C_BPartner_ID
+                       AND bpd.issotrx = Cur_Order.IsSOTrx
+                       AND bpd.documentcategory = 'INV'
+                       AND bpd.c_doctype_id IS NOT NULL
+                       AND COALESCE(bpd.isforceautomation, 'N') = 'Y'
+                       AND bpd.ad_org_id = '0'
+                     ORDER BY 1
+                  ) LOOP
+                    v_DocType_ID := Cur_BP_DocType.c_doctype_id;
+                    EXIT;
+                  END LOOP;
+                END IF;
+
+                -- Step 2: C_DocTypeInvoice_ID from the order's document type
+                IF v_DocType_ID IS NULL THEN
+                  BEGIN
+                    v_ResultStr := 'GetDocTypeInfo - ' || Cur_Order.C_DocType_ID;
+                    SELECT od.C_DocTypeInvoice_ID
+                      INTO v_DocType_ID
+                      FROM C_DOCTYPE od,
+                        C_DOCTYPE id
+                     WHERE od.C_DocType_ID = Cur_Order.C_DocType_ID
+                       AND od.C_DocTypeInvoice_ID = id.C_DocType_ID
+                       AND id.IsActive = 'Y';
                   EXCEPTION
                   WHEN OTHERS THEN
                     v_DocType_ID := NULL;
                   END;
                 END IF;
+
+                -- Step 3: Organization default
+                IF v_DocType_ID IS NULL THEN
+                  BEGIN
+                    v_DocType_ID := AD_GET_DOCTYPE(
+                      Cur_Order.AD_Client_ID,
+                      Cur_Order.AD_Org_ID,
+                      CASE WHEN Cur_Order.IsSOTrx = 'Y' THEN 'ARI' ELSE 'API' END
+                    );
+                  EXCEPTION
+                  WHEN OTHERS THEN
+                    v_DocType_ID := NULL;
+                  END;
+                END IF;
+
                 IF v_DocType_ID IS NULL THEN
                   RAISE_APPLICATION_ERROR(-20000, '@NoDocumentTypeFound@');
                 END IF;
-			  END;
+              END;
               --
               Ad_Sequence_Next('C_Invoice', Cur_Order.AD_Client_ID, p_Invoice_ID) ;
               Ad_Sequence_Doctype(v_DocType_ID, Cur_Order.AD_Client_ID, 'Y', v_DocumentNo) ;
