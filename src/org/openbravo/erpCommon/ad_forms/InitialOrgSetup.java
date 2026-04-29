@@ -72,9 +72,9 @@ public class InitialOrgSetup extends HttpSecureAppServlet {
       org.openbravo.erpCommon.businessUtility.InitialOrgSetup ios = new org.openbravo.erpCommon.businessUtility.InitialOrgSetup(
           OBContext.getOBContext().getCurrentClient());
 
-      OBError obeResult = ios.createOrganization(strOrganization, strOrgUser, strOrgType,
-          strParentOrg, strcLocationId, strPassword, strModules, isTrue(strCreateAccounting),
-          fileCoAFilePath, strCurrency, bBPartner, bProduct, bProject, bCampaign, bSalesRegion);
+      OBError obeResult = ios.createOrganization(strOrganization, strOrgUser, strOrgType, strParentOrg,
+          strcLocationId, strPassword, strModules, isTrue(strCreateAccounting), fileCoAFilePath,
+          strCurrency, bBPartner, bProduct, bProject, bCampaign, bSalesRegion);
       if (!obeResult.getType().equals(OKTYPE)) {
         OBContext.getOBContext().removeWritableOrganization(ios.getOrgId());
         OBContext.getOBContext().removeFromWritableOrganization(ios.getOrgId());

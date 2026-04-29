@@ -23,12 +23,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
+import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.weld.WeldUtils;
+import org.openbravo.dal.core.DalUtil;
+import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBQuery;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
@@ -49,8 +57,23 @@ import org.openbravo.model.ad.utility.Tree;
 import org.openbravo.model.ad.utility.TreeNode;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
+import org.openbravo.model.common.enterprise.OrganizationAcctSchema;
 import org.openbravo.model.common.enterprise.OrganizationType;
 import org.openbravo.model.common.geography.Location;
+import org.openbravo.model.ad.process.ProcessInstance;
+import org.openbravo.model.financialmgmt.accounting.coa.ElementValue;
+import org.openbravo.model.financialmgmt.accounting.coa.AccountingCombination;
+import org.openbravo.model.financialmgmt.accounting.coa.AcctSchemaDefault;
+import org.openbravo.model.financialmgmt.accounting.coa.AcctSchemaElement;
+import org.openbravo.model.financialmgmt.accounting.coa.AcctSchemaGL;
+import org.openbravo.model.financialmgmt.accounting.coa.AcctSchemaTable;
+import org.openbravo.model.financialmgmt.calendar.Period;
+import org.openbravo.model.financialmgmt.calendar.Year;
+import org.openbravo.model.financialmgmt.tax.TaxCategory;
+import org.openbravo.model.financialmgmt.tax.TaxRate;
+import org.openbravo.model.financialmgmt.tax.TaxZone;
+import org.openbravo.model.financialmgmt.tax.TaxRateAccounts;
+import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.ImportResult;
 
 public class InitialOrgSetup {
@@ -67,6 +90,7 @@ public class InitialOrgSetup {
   private Client client;
   private User user;
   private Role role;
+  private List<InitialOrgSetupAccountingHandler> accountingHandlers;
 
   private static final String ACCOUNT_TREE_TABLE_ID = "188";
 
@@ -129,6 +153,9 @@ public class InitialOrgSetup {
     obResult.setType(ERRORTYPE);
     strHeaderLog.append("@ReportSummary@").append(NEW_LINE).append(NEW_LINE);
 
+    final OrganizationType orgType = getOrgType(strOrgType);
+    final boolean useAccountingHook = boCreateAccounting && requiresAccountingHook(orgType);
+
     log4j.debug("createOrganization() - Checking if user and org names duplicated.");
     obResult = checkDuplicated(strOrgUser, strOrgName);
     if (!obResult.getType().equals(OKTYPE)) {
@@ -136,13 +163,12 @@ public class InitialOrgSetup {
     }
     logEvent("@StartingOrg@" + NEW_LINE);
 
-    if (boCreateAccounting) {
-      if (fileCoAFilePath == null || fileCoAFilePath.getSize() < 1) {
-        log4j.debug("process() - Check COA");
-        obResult = coaModule(strModules);
-        if (!obResult.getType().equals(OKTYPE)) {
-          return obResult;
-        }
+    if (!useAccountingHook && boCreateAccounting
+        && (fileCoAFilePath == null || fileCoAFilePath.getSize() < 1)) {
+      log4j.debug("process() - Check COA");
+      obResult = coaModule(strModules);
+      if (!obResult.getType().equals(OKTYPE)) {
+        return obResult;
       }
     }
 
@@ -153,58 +179,25 @@ public class InitialOrgSetup {
     if (!obResult.getType().equals(OKTYPE)) {
       return obResult;
     }
-    obResult.setType(ERRORTYPE);
+
     logEvent(InitialSetupUtility.getTranslatedElement(language, "AD_Org_ID", "Organization") + "="
         + org.getName());
+    addWritableOrganizationAccess(org.getId());
 
-    String strOrgId = org.getId();
-
-    // TODO: REMOVE THESE getWritableOrganizations CALLS AS THEY SHOULD NOT BE NEEDED ONCE ARE FIXED
-    OBContext.getOBContext().getWritableOrganizations();
-    OBContext.getOBContext().addWritableOrganization(strOrgId);
-    OBContext.getOBContext().getWritableOrganizations();
-    try {
-      OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(org);
-      client = org.getClient();
-      if (strcLocationId != null && !strcLocationId.equals("")) {
-        try {
-          InitialSetupUtility.updateOrgLocation(org,
-              OBDal.getInstance().get(Location.class, strcLocationId));
-        } catch (final Exception err) {
-          return logErrorAndRollback("@CreateOrgFailed@",
-              "createOrganization() - ERROR - Organization creation process failed. Couldn't set organization location.",
-              err);
-        }
-      }
-
-    } catch (Exception e) {
-      logErrorAndRollback("@ExceptionInCommit@",
-          "createClient() - Exception occured while performing commit in database. Your data may have NOT been saved in database.",
-          e);
+    obResult = applyPostCreationBasics(strcLocationId, strOrgUser, strPassword);
+    if (!obResult.getType().equals(OKTYPE)) {
+      return obResult;
     }
 
-    if (!"".equals(strOrgUser)) {
-      log4j.debug("createOrganization() - Creating users.");
-      obResult = insertUser(strOrgUser, strPassword);
+    boolean bAccountingCreated = false;
+    if (useAccountingHook) {
+      obResult = runAccountingHook(orgType, strParentOrg, strModules, boCreateAccounting,
+          fileCoAFilePath, strCurrency);
       if (!obResult.getType().equals(OKTYPE)) {
         return obResult;
       }
-      logEvent("@AD_User_ID@ = " + strOrgUser + " / " + strOrgUser + NEW_LINE);
-    }
-    appendHeader("@CreateOrgSuccess@");
-    obResult.setType(ERRORTYPE);
-
-    log4j.debug("createOrganization() - Setting organization image");
-    obResult = addImages();
-    if (!obResult.getType().equals(OKTYPE)) {
-      logEvent(obResult.getMessage());
-    }
-    obResult.setType(ERRORTYPE);
-    logEvent(STRSEPARATOR);
-
-    boolean bAccountingCreated = false;
-    if (boCreateAccounting) {
+      bAccountingCreated = true;
+    } else if (boCreateAccounting) {
       if (fileCoAFilePath != null && fileCoAFilePath.getSize() > 0) {
         obResult = createAccounting(fileCoAFilePath, strCurrency, bBPartner, bProduct, bProject,
             bCampaign, bSalesRegion, null);
@@ -216,8 +209,7 @@ public class InitialOrgSetup {
         bAccountingCreated = true;
       } else {
         logEvent("@SkippingAccounting@." + NEW_LINE + "@ModuleMustBeProvided@");
-        log4j.debug("process() - Accounting not inserted through a file. "
-            + "It must be provided through a module, then");
+        log4j.debug("process() - Accounting not inserted through a file. It must be provided through a module, then");
       }
     } else {
       appendHeader(NEW_LINE + "@SkippingAccounting@");
@@ -238,29 +230,173 @@ public class InitialOrgSetup {
       logEvent(NEW_LINE + "@StartingReferenceData@");
       log4j.debug("process() - Starting creation of reference data");
       obResult = createReferenceData(strModules, bProduct, bBPartner, bProject, bCampaign,
-          bSalesRegion, (bAccountingCreated) ? false : boCreateAccounting, strCurrency);
+          bSalesRegion, boCreateAccounting && !bAccountingCreated, strCurrency);
       if (!obResult.getType().equals(OKTYPE)) {
         return obResult;
       }
       logEvent(NEW_LINE + "@CreateReferenceDataSuccess@");
       strHeaderLog.append(NEW_LINE + "@CreateReferenceDataSuccess@" + NEW_LINE);
     }
+
+    if (useAccountingHook) {
+      obResult = markOrganizationReady();
+      if (!obResult.getType().equals(OKTYPE)) {
+        return obResult;
+      }
+    }
+
+    return finishSuccessfulCreation();
+  }
+
+
+  private boolean requiresAccountingHook(OrganizationType orgType) {
+    return orgType != null && orgType.isLegalEntityWithAccounting();
+  }
+
+  private List<InitialOrgSetupAccountingHandler> getAccountingHandlers() {
+    if (accountingHandlers == null) {
+      try {
+        accountingHandlers = new ArrayList<>(
+            WeldUtils.getInstances(InitialOrgSetupAccountingHandler.class));
+        accountingHandlers.sort(
+            Comparator.comparingInt(InitialOrgSetupAccountingHandler::getPriority));
+      } catch (Exception e) {
+        log4j.debug("getAccountingHandlers() - Could not retrieve accounting onboarding handlers.",
+            e);
+        accountingHandlers = new ArrayList<>();
+      }
+    }
+    return accountingHandlers;
+  }
+
+  private OBError runAccountingHook(OrganizationType orgType, String strParentOrg, String strModules,
+      boolean boCreateAccounting, FileItem fileCoAFilePath, String strCurrency) {
+    final InitialOrgSetupAccountingContext context = InitialOrgSetupAccountingContext.builder()
+        .client(client)
+        .organization(org)
+        .organizationType(orgType)
+        .currencyId(strCurrency)
+        .parentOrgId(strParentOrg)
+        .selectedModules(strModules)
+        .createAccountingRequested(boCreateAccounting)
+        .hasUploadedCoAFile(fileCoAFilePath != null && fileCoAFilePath.getSize() > 0)
+        .build();
+
+    for (InitialOrgSetupAccountingHandler handler : getAccountingHandlers()) {
+      if (handler.applies(context)) {
+        OBError handlerResult = runApplicableAccountingHandler(handler, context);
+        if (handlerResult != null) {
+          return handlerResult;
+        }
+      }
+    }
+
+    return logErrorAndRollback("@CreateReferenceDataFailed@",
+        "runAccountingHook() - No accounting onboarding handler applied.", null);
+  }
+
+  private OBError runApplicableAccountingHandler(InitialOrgSetupAccountingHandler handler,
+      InitialOrgSetupAccountingContext context) {
+    final InitialOrgSetupAccountingResult result;
+    try {
+      result = handler.wire(context);
+    } catch (Exception e) {
+      return logErrorAndRollback("@CreateReferenceDataFailed@",
+          "runAccountingHook() - Exception while executing accounting onboarding handler.", e);
+    }
+    if (!result.isHandled()) {
+      return null;
+    }
+    if (!result.isSuccess()) {
+      return logErrorAndRollback("@CreateReferenceDataFailed@", result.getMessage(), null);
+    }
+    strHeaderLog.append(NEW_LINE + "@CreateAccountingSuccess@" + NEW_LINE);
+    logEvent("@CreateAccountingSuccess@");
+    logEvent(NEW_LINE + STRSEPARATOR);
+    return success();
+  }
+
+  private OBError applyPostCreationBasics(String strcLocationId, String strOrgUser,
+      String strPassword) {
+    try {
+      OBDal.getInstance().flush();
+      OBDal.getInstance().refresh(org);
+      client = org.getClient();
+      if (strcLocationId != null && !strcLocationId.equals("")) {
+        InitialSetupUtility.updateOrgLocation(org,
+            OBDal.getInstance().get(Location.class, strcLocationId));
+      }
+    } catch (Exception e) {
+      return logErrorAndRollback("@CreateOrgFailed@",
+          "applyPostCreationBasics() - Organization creation process failed while persisting base data.",
+          e);
+    }
+
+    if (!"".equals(strOrgUser)) {
+      OBError userResult = insertUser(strOrgUser, strPassword);
+      if (!userResult.getType().equals(OKTYPE)) {
+        return userResult;
+      }
+      logEvent("@AD_User_ID@ = " + strOrgUser + " / " + strOrgUser + NEW_LINE);
+    }
+
+    appendHeader("@CreateOrgSuccess@");
+    OBError imageResult = addImages();
+    if (!imageResult.getType().equals(OKTYPE)) {
+      logEvent(imageResult.getMessage());
+    }
+    logEvent(STRSEPARATOR);
+    return success();
+  }
+
+  private void addWritableOrganizationAccess(String strOrgId) {
+    OBContext.getOBContext().getWritableOrganizations();
+    OBContext.getOBContext().addWritableOrganization(strOrgId);
+    OBContext.getOBContext().getWritableOrganizations();
+  }
+
+  private OBError finishSuccessfulCreation() {
+    OBError obResult = new OBError();
     try {
       OBDal.getInstance().flush();
       OBDal.getInstance().commitAndClose();
     } catch (Exception e) {
       logErrorAndRollback("@ExceptionInCommit@",
-          "createClient() - Exception occured while performing commit in database. Your data may have NOT been saved in database.",
+          "finishSuccessfulCreation() - Exception occurred while committing organization creation.",
           e);
       obResult.setType(ERRORTYPE);
       obResult.setMessage("@ExceptionInCommit@");
+      return obResult;
     }
 
     obResult.setType(OKTYPE);
     obResult.setMessage("@" + OKTYPE + "@");
-
     return obResult;
+  }
 
+  private OBError success() {
+    OBError obResult = new OBError();
+    obResult.setType(OKTYPE);
+    return obResult;
+  }
+
+
+  private OBError markOrganizationReady() {
+    try {
+      Map<String, String> parameters = new HashMap<>();
+      parameters.put("Cascade", "N");
+      ProcessInstance pinstance = CallProcess.getInstance().call("AD_Org_Ready", org.getId(),
+          parameters);
+      if (pinstance.getResult() == 0L) {
+        return logErrorAndRollback("@CreateOrgFailed@", pinstance.getErrorMsg(), null);
+      }
+      OBDal.getInstance().flush();
+      OBDal.getInstance().refresh(org);
+      return success();
+    } catch (Exception e) {
+      return logErrorAndRollback("@CreateOrgFailed@",
+          "markOrganizationReady() - Standard ready process failed.", e);
+    }
   }
 
   private OBError createReferenceData(String strModulesProvided, boolean product, boolean partner,
@@ -803,6 +939,7 @@ public class InitialOrgSetup {
     }
     return obeResult;
   }
+
 
   public String getOrgId() {
     if (org != null) {
