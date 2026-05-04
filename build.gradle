@@ -18,6 +18,9 @@ repositories {
   maven {
     url "https://repository.jboss.org/nexus/content/repositories/public/"
   }
+  maven {
+    url "https://repo.futit.cloud/repository/maven-snapshots/"
+  }
 }
 
 final String CURRENT_VERSION = "25.4.1"
