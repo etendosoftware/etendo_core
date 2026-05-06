@@ -1108,7 +1108,8 @@ OB.APRM.AddPayment.applyBankAmountToConverted = function(form) {
   if (!convItem) return;
   if (bsl.compareTo(BigDecimal.prototype.ZERO) === 0) return;
   form._bslApplying = true;
-  convItem.setValue(Number(bsl.abs().toString()));
+  var amount = OB.APRM.AddPayment.isMultiCurrency(form) ? bsl.abs() : bsl;
+  convItem.setValue(Number(amount.toString()));
   var act = new BigDecimal(String(form.getItem('actual_payment').getValue() || 0));
   if (act.compareTo(BigDecimal.prototype.ZERO) > 0) {
     OB.APRM.AddPayment.updateConvertedAmount(null, form, true);
