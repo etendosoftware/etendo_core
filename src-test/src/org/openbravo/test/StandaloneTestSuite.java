@@ -38,6 +38,9 @@ import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
+import org.openbravo.client.kernel.KernelUtilsIntegrationTest;
+import org.openbravo.erpCommon.utility.DimensionDisplayUtilityIntegrationTest;
+import org.openbravo.erpCommon.utility.OBCurrencyUtilsIntegrationTest;
 import org.openbravo.email.ResolvedSmtpConfigTest;
 import org.openbravo.email.SmtpCascadeResolverTest;
 import org.openbravo.email.actionhandler.TestSmtpConnectionActionHandlerTest;
@@ -476,6 +479,11 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
     
+    // Core coverage — integration tests
+    OBCurrencyUtilsIntegrationTest.class,
+    DimensionDisplayUtilityIntegrationTest.class,
+    KernelUtilsIntegrationTest.class,
+
     // Email
     BPContactEmailSelectorTest.class,
     ResolvedSmtpConfigTest.class,

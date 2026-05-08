@@ -98,7 +98,18 @@ import org.openbravo.erpCommon.ad_actionButton.CreateVatRegistersTest;
 import org.openbravo.erpCommon.ad_actionButton.CreateWorkEffortTest;
 import org.openbravo.erpCommon.ad_actionButton.EditCCPMeasureValuesTest;
 import org.openbravo.erpCommon.ad_actionButton.ExportReferenceDataTest;
+import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDaoTest;
+import org.openbravo.advpaymentmngt.utility.FINUtilityTest;
+import org.openbravo.base.exception.OBSecurityExceptionTest;
+import org.openbravo.base.secureApp.LoginUtilsTest;
+import org.openbravo.client.application.process.BaseProcessActionHandlerJupiterTest;
+import org.openbravo.client.kernel.RequestContextTest;
 import org.openbravo.erpCommon.ad_callouts.AUM_ConversionRateTest;
+import org.openbravo.erpCommon.ad_callouts.SimpleCalloutCalloutInfoTest;
+import org.openbravo.erpCommon.utility.OBCurrencyUtilsTest;
+import org.openbravo.erpCommon.utility.OBDateUtilsTest;
+import org.openbravo.erpCommon.utility.SequenceIdDataTest;
+import org.openbravo.erpCommon.utility.UtilityTest;
 import org.openbravo.erpCommon.ad_callouts.BackgroundProcessClusterConfigTest;
 import org.openbravo.erpCommon.ad_callouts.BusinessPartnerDocTypeValidationTest;
 import org.openbravo.erpCommon.ad_callouts.CalloutHelperTest;
@@ -230,11 +241,19 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // advpaymentmngt.utility
     APRMSQLFunctionRegisterTest.class,
     APRM_MatchingUtilityTest.class,
+    FINUtilityTest.class,
+
+    // advpaymentmngt.dao — core coverage
+    AdvPaymentMngtDaoTest.class,
 
     // authentication
     AuthenticationExceptionTest.class,
     AuthenticationExpirationPasswordExceptionTest.class,
     AutologonAuthenticationManagerTest.class,
+
+    // base — core coverage
+    OBSecurityExceptionTest.class,
+    LoginUtilsTest.class,
 
     // base
     GenerateEntitiesTaskTest.class,
@@ -278,6 +297,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
     // client.application.process
     BaseProcessActionHandlerTest.class,
+    BaseProcessActionHandlerJupiterTest.class,
 
     // client.application.report
     BaseReportActionHandlerTest.class,
@@ -291,6 +311,9 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     DataPoolSelectionWindowInjectorTest.class,
     CalloutHttpServletResponseTest.class,
     CalloutServletConfigTest.class,
+
+    // client.kernel — core coverage
+    RequestContextTest.class,
 
     // client.kernel
     BaseActionHandlerTest.class,
@@ -351,6 +374,9 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     CreateWorkEffortTest.class,
     EditCCPMeasureValuesTest.class,
     ExportReferenceDataTest.class,
+
+    // erpCommon.ad_callouts — core coverage
+    SimpleCalloutCalloutInfoTest.class,
 
     // erpCommon.ad_callouts
     AUM_ConversionRateTest.class,
@@ -429,6 +455,12 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // erpCommon.obps
     ActivationTaskTest.class,
     ActiveInstanceProcessTest.class,
+
+    // erpCommon.utility — core coverage
+    OBDateUtilsTest.class,
+    OBCurrencyUtilsTest.class,
+    SequenceIdDataTest.class,
+    UtilityTest.class,
 
     // erpCommon.utility
     AbstractScrollableFieldProviderFilterTest.class,
