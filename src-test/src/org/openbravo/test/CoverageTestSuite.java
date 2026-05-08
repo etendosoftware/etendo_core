@@ -1,7 +1,7 @@
 package org.openbravo.test;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 import com.etendoerp.sequences.DefaultSequenceGeneratorTest;
 import com.etendoerp.sequences.dimensions.DimensionListOriginalColumnFormatTest;
@@ -210,8 +210,8 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
  * New test classes should be added here as they are generated and validated.
  * </p>
  */
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
     // com.etendoerp.sequences
     DefaultSequenceGeneratorTest.class,
     DimensionListOriginalColumnFormatTest.class,
