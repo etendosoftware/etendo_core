@@ -16,58 +16,50 @@
  */
 package org.openbravo.erpCommon.utility;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 /**
  * Unit tests for {@link SequenceIdData#getUUID()}.
  */
-@DisplayName("SequenceIdData")
 public class SequenceIdDataTest {
 
   @Test
-  @DisplayName("returns 32-character string")
-  void testLength() {
+  public void testLength() {
     assertEquals(32, SequenceIdData.getUUID().length());
   }
 
   @Test
-  @DisplayName("returns uppercase hex string")
-  void testUppercase() {
+  public void testUppercase() {
     String uuid = SequenceIdData.getUUID();
     assertEquals(uuid, uuid.toUpperCase());
   }
 
   @Test
-  @DisplayName("contains no hyphens")
-  void testNoHyphens() {
+  public void testNoHyphens() {
     assertNotNull(SequenceIdData.getUUID());
     assertTrue(!SequenceIdData.getUUID().contains("-"));
   }
 
   @Test
-  @DisplayName("contains only hex characters")
-  void testHexOnly() {
+  public void testHexOnly() {
     String uuid = SequenceIdData.getUUID();
     assertTrue(uuid.matches("[0-9A-F]{32}"));
   }
 
   @Test
-  @DisplayName("multiple calls return different UUIDs")
-  void testUniqueness() {
+  public void testUniqueness() {
     String uuid1 = SequenceIdData.getUUID();
     String uuid2 = SequenceIdData.getUUID();
     assertNotEquals(uuid1, uuid2);
   }
 
   @Test
-  @DisplayName("is a valid Openbravo UUID")
-  void testIsValidOBUUID() {
+  public void testIsValidOBUUID() {
     String uuid = SequenceIdData.getUUID();
     assertTrue(Utility.isUUIDString(uuid));
   }
