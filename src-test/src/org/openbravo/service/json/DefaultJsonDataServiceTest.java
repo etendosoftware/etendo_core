@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link DefaultJsonDataService}.
  */
 @DisplayName("DefaultJsonDataService Tests")
-class DefaultJsonDataServiceTest {
+public class DefaultJsonDataServiceTest {
 
   @Nested
   @DisplayName("convertParameterToString tests")

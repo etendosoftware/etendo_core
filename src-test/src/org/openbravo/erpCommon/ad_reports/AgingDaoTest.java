@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
  * test class focuses on the private helper methods accessed via reflection.
  */
 @DisplayName("AgingDao Tests")
-class AgingDaoTest {
+public class AgingDaoTest {
 
   private AgingDao agingDao;
 

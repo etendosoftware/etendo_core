@@ -43,7 +43,7 @@ import org.openbravo.dal.service.OBDal;
  * Unit tests for {@link ApplicationDictionaryCachedStructures}.
  */
 @DisplayName("ApplicationDictionaryCachedStructures Tests")
-class ApplicationDictionaryCachedStructuresTest {
+public class ApplicationDictionaryCachedStructuresTest {
 
   private static final String IN_DEVELOPMENT_MODULES_FIELD = "inDevelopmentModules";
   private static final String USE_CACHE_FIELD = "useCache";

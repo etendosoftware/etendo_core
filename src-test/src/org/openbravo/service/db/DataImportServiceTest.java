@@ -35,7 +35,7 @@ import org.openbravo.base.provider.OBProvider;
  * Unit tests for {@link DataImportService}.
  */
 @DisplayName("DataImportService Tests")
-class DataImportServiceTest {
+public class DataImportServiceTest {
 
   private MockedStatic<OBProvider> obProviderMock;
   private OBProvider providerInstance;

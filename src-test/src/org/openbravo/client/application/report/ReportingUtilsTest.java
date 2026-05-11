@@ -58,7 +58,7 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ReportingUtils")
-class ReportingUtilsTest {
+public class ReportingUtilsTest {
 
   private static MockedStatic<OBDal> obDalStatic;
   private static MockedStatic<OBContext> obContextStatic;
@@ -70,7 +70,7 @@ class ReportingUtilsTest {
     OBDal mockDal = mock(OBDal.class);
     obDalStatic.when(OBDal::getReadOnlyInstance).thenReturn(mockDal);
     obDalStatic.when(OBDal::getInstance).thenReturn(mockDal);
-    lenient().when(mockDal.get(any(), anyString())).thenReturn(null);
+    lenient().when(mockDal.get(anyString(), anyString())).thenReturn(null);
 
     obContextStatic = mockStatic(OBContext.class);
 

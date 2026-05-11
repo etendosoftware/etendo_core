@@ -153,28 +153,28 @@ public class FINUtilityTest extends BaseCoreTest {
   @Test
   public void testGetDaysBetweenSameDate() {
     Date now = new Date();
-    assertEquals(0L, FIN_Utility.getDaysBetween(now, now));
+    assertEquals(0L, (long) FIN_Utility.getDaysBetween(now, now));
   }
 
   @Test
   public void testGetDaysBetweenOneDayApart() {
     Date begin = DateUtils.truncate(new Date(), Calendar.DATE);
     Date end = DateUtils.addDays(begin, 1);
-    assertEquals(1L, FIN_Utility.getDaysBetween(begin, end));
+    assertEquals(1L, (long) FIN_Utility.getDaysBetween(begin, end));
   }
 
   @Test
   public void testGetDaysBetweenNegativeDays() {
     Date begin = DateUtils.truncate(new Date(), Calendar.DATE);
     Date end = DateUtils.addDays(begin, -3);
-    assertEquals(-3L, FIN_Utility.getDaysBetween(begin, end));
+    assertEquals(-3L, (long) FIN_Utility.getDaysBetween(begin, end));
   }
 
   @Test
   public void testGetDaysBetweenTenDays() {
     Date begin = DateUtils.truncate(new Date(), Calendar.DATE);
     Date end = DateUtils.addDays(begin, 10);
-    assertEquals(10L, FIN_Utility.getDaysBetween(begin, end));
+    assertEquals(10L, (long) FIN_Utility.getDaysBetween(begin, end));
   }
 
   // --- getDepositAmount tests ---

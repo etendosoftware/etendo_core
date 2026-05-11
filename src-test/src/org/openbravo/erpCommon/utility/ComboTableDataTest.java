@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link ComboTableData}.
  */
 @DisplayName("ComboTableData Tests")
-class ComboTableDataTest {
+public class ComboTableDataTest {
 
   private ComboTableData comboTableData;
 

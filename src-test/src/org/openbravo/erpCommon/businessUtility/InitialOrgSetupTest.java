@@ -50,7 +50,7 @@ import org.openbravo.model.ad.system.Language;
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("InitialOrgSetup")
-class InitialOrgSetupTest {
+public class InitialOrgSetupTest {
 
   @Mock
   private Client clientMock;
