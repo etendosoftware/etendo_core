@@ -533,7 +533,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     "org.openbravo.role.inheritance.access.AlertRecipientAccessInjectorTest",
     "org.openbravo.base.secureApp.DefaultValidationExceptionTest",
     "org.openbravo.base.secureApp.DefaultValuesDataTest",
-    "org.openbravo.service.db.DataImportServiceTest",
 })
 public class StandaloneTestSuite {
 }

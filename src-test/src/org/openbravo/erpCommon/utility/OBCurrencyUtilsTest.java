@@ -16,15 +16,16 @@
  */
 package org.openbravo.erpCommon.utility;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.openbravo.base.BaseCoreTest;
 import org.openbravo.model.common.currency.Currency;
@@ -33,31 +34,32 @@ import org.openbravo.model.common.enterprise.Organization;
 /**
  * Unit tests for {@link OBCurrencyUtils}.
  */
+@DisplayName("OBCurrencyUtils")
 public class OBCurrencyUtilsTest extends BaseCoreTest {
 
   @Test
-  public void testNullOrgId() {
+  void testNullOrgId() {
     assertNull(OBCurrencyUtils.getOrgCurrency(null));
   }
 
   @Test
-  public void testBlankOrgId() {
+  void testBlankOrgId() {
     assertNull(OBCurrencyUtils.getOrgCurrency("   "));
   }
 
   @Test
-  public void testEmptyOrgId() {
+  void testEmptyOrgId() {
     assertNull(OBCurrencyUtils.getOrgCurrency(""));
   }
 
   @Test
-  public void testOrgNotFound() {
+  void testOrgNotFound() {
     when(obDal.get(Organization.class, "UNKNOWN")).thenReturn(null);
     assertNull(OBCurrencyUtils.getOrgCurrency("UNKNOWN"));
   }
 
   @Test
-  public void testOrgWithCurrency() {
+  void testOrgWithCurrency() {
     Organization org = mock(Organization.class);
     Currency currency = mock(Currency.class);
     when(currency.getId()).thenReturn("102");
@@ -68,7 +70,7 @@ public class OBCurrencyUtilsTest extends BaseCoreTest {
   }
 
   @Test
-  public void testFallbackToLegalEntity() {
+  void testFallbackToLegalEntity() {
     Organization org = mock(Organization.class);
     when(org.getCurrency()).thenReturn(null);
     when(obDal.get(Organization.class, "ORG1")).thenReturn(org);
@@ -83,7 +85,7 @@ public class OBCurrencyUtilsTest extends BaseCoreTest {
   }
 
   @Test
-  public void testFallbackToClientBaseCurrency() {
+  void testFallbackToClientBaseCurrency() {
     Organization org = mock(Organization.class);
     when(org.getCurrency()).thenReturn(null);
     when(org.getClient()).thenReturn(client);
@@ -102,7 +104,7 @@ public class OBCurrencyUtilsTest extends BaseCoreTest {
   }
 
   @Test
-  public void testNoLegalEntityFallback() {
+  void testNoLegalEntityFallback() {
     Organization org = mock(Organization.class);
     when(org.getCurrency()).thenReturn(null);
     when(org.getClient()).thenReturn(client);

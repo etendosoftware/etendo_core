@@ -16,14 +16,16 @@
  */
 package org.openbravo.advpaymentmngt.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.BaseCoreTest;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 
@@ -32,71 +34,76 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
  * Factory methods (getNewPayment, etc.) require Hibernate entity construction
  * and are left for integration tests. This class tests constants and delegation.
  */
+@DisplayName("AdvPaymentMngtDao")
 public class AdvPaymentMngtDaoTest extends BaseCoreTest {
 
   private AdvPaymentMngtDao dao;
 
-  @Before
-  public void setUpDao() {
+  @BeforeEach
+  void setUpDao() {
     dao = new AdvPaymentMngtDao();
   }
 
-  // Payment status constants
+  @Nested
+  @DisplayName("Payment status constants")
+  class StatusConstants {
+    @Test
+    void testAwaitingPayment() {
+      assertEquals("RPAP", dao.PAYMENT_STATUS_AWAITING_PAYMENT);
+    }
 
-  @Test
-  public void testAwaitingPayment() {
-    assertEquals("RPAP", dao.PAYMENT_STATUS_AWAITING_PAYMENT);
+    @Test
+    void testPaymentMade() {
+      assertEquals("PPM", dao.PAYMENT_STATUS_PAYMENT_MADE);
+    }
+
+    @Test
+    void testCanceled() {
+      assertEquals("RPVOID", dao.PAYMENT_STATUS_CANCELED);
+    }
+
+    @Test
+    void testPaymentReceived() {
+      assertEquals("RPR", dao.PAYMENT_STATUS_PAYMENT_RECEIVED);
+    }
+
+    @Test
+    void testAwaitingExecution() {
+      assertEquals("RPAE", dao.PAYMENT_STATUS_AWAITING_EXECUTION);
+    }
+
+    @Test
+    void testPaymentCleared() {
+      assertEquals("RPPC", dao.PAYMENT_STATUS_PAYMENT_CLEARED);
+    }
+
+    @Test
+    void testDepositNotCleared() {
+      assertEquals("RDNC", dao.PAYMENT_STATUS_DEPOSIT_NOT_CLEARED);
+    }
+
+    @Test
+    void testWithdrawalNotCleared() {
+      assertEquals("PWNC", dao.PAYMENT_STATUS_WITHDRAWAL_NOT_CLEARED);
+    }
   }
 
-  @Test
-  public void testPaymentMade() {
-    assertEquals("PPM", dao.PAYMENT_STATUS_PAYMENT_MADE);
-  }
+  @Nested
+  @DisplayName("getObject")
+  class GetObject {
+    @Test
+    void testDelegatesToOBDal() {
+      FIN_Payment payment = mock(FIN_Payment.class);
+      when(obDal.get(FIN_Payment.class, "PAY1")).thenReturn(payment);
 
-  @Test
-  public void testCanceled() {
-    assertEquals("RPVOID", dao.PAYMENT_STATUS_CANCELED);
-  }
+      assertSame(payment, dao.getObject(FIN_Payment.class, "PAY1"));
+      verify(obDal).get(FIN_Payment.class, "PAY1");
+    }
 
-  @Test
-  public void testPaymentReceived() {
-    assertEquals("RPR", dao.PAYMENT_STATUS_PAYMENT_RECEIVED);
-  }
-
-  @Test
-  public void testAwaitingExecution() {
-    assertEquals("RPAE", dao.PAYMENT_STATUS_AWAITING_EXECUTION);
-  }
-
-  @Test
-  public void testPaymentCleared() {
-    assertEquals("RPPC", dao.PAYMENT_STATUS_PAYMENT_CLEARED);
-  }
-
-  @Test
-  public void testDepositNotCleared() {
-    assertEquals("RDNC", dao.PAYMENT_STATUS_DEPOSIT_NOT_CLEARED);
-  }
-
-  @Test
-  public void testWithdrawalNotCleared() {
-    assertEquals("PWNC", dao.PAYMENT_STATUS_WITHDRAWAL_NOT_CLEARED);
-  }
-
-  // getObject
-
-  @Test
-  public void testDelegatesToOBDal() {
-    FIN_Payment payment = mock(FIN_Payment.class);
-    when(obDal.get(FIN_Payment.class, "PAY1")).thenReturn(payment);
-
-    assertSame(payment, dao.getObject(FIN_Payment.class, "PAY1"));
-    verify(obDal).get(FIN_Payment.class, "PAY1");
-  }
-
-  @Test
-  public void testReturnsNullWhenNotFound() {
-    when(obDal.get(FIN_Payment.class, "NONEXISTENT")).thenReturn(null);
-    assertEquals(null, dao.getObject(FIN_Payment.class, "NONEXISTENT"));
+    @Test
+    void testReturnsNullWhenNotFound() {
+      when(obDal.get(FIN_Payment.class, "NONEXISTENT")).thenReturn(null);
+      assertEquals(null, dao.getObject(FIN_Payment.class, "NONEXISTENT"));
+    }
   }
 }

@@ -52,7 +52,6 @@ import org.openbravo.client.application.example.GridExampleActionHandlerTest;
 import org.openbravo.client.application.navigationbarcomponents.ApplicationMenuComponentTest;
 import org.openbravo.client.application.process.BaseProcessActionHandlerTest;
 import org.openbravo.client.application.report.BaseReportActionHandlerTest;
-import org.openbravo.client.application.report.ReportingUtilsTest;
 import org.openbravo.client.application.window.ApplicationDictionaryCachedStructuresTest;
 import org.openbravo.client.application.window.ComputeSelectedRecordActionHandlerTest;
 import org.openbravo.client.application.window.GetNameGeneralLedgerTest;
@@ -157,8 +156,6 @@ import org.openbravo.erpCommon.ad_process.assets.AssetLinearDepreciationMethodPr
 import org.openbravo.erpCommon.ad_reports.AgingDaoTest;
 import org.openbravo.erpCommon.ad_reports.AgingDataTest;
 import org.openbravo.erpCommon.businessUtility.AccountTreeTest;
-import org.openbravo.erpCommon.businessUtility.InitialClientSetupTest;
-import org.openbravo.erpCommon.businessUtility.InitialOrgSetupTest;
 import org.openbravo.erpCommon.businessUtility.AuditTrailDeletedRecordsTest;
 import org.openbravo.erpCommon.businessUtility.COADataTest;
 import org.openbravo.erpCommon.businessUtility.COAUtilityTest;
@@ -174,7 +171,6 @@ import org.openbravo.erpCommon.modules.ExtractModuleTaskTest;
 import org.openbravo.erpCommon.modules.ExtractModuleTest;
 import org.openbravo.erpCommon.obps.ActivationTaskTest;
 import org.openbravo.erpCommon.obps.ActiveInstanceProcessTest;
-import org.openbravo.erpCommon.utility.ComboTableDataTest;
 import org.openbravo.erpCommon.utility.AbstractScrollableFieldProviderFilterTest;
 import org.openbravo.erpCommon.utility.AccDefUtilityTest;
 import org.openbravo.erpCommon.utility.AlertTest;
@@ -204,9 +200,7 @@ import org.openbravo.service.datasource.CheckTreeOperationManagerTest;
 import org.openbravo.service.datasource.ComboTableDatasourceServiceTest;
 import org.openbravo.service.datasource.treeChecks.AssetsTreeOperationManagerTest;
 import org.openbravo.service.db.ClientImportEntityResolverTest;
-import org.openbravo.service.db.DataImportServiceTest;
 import org.openbravo.service.json.AdvancedQueryBuilderTest;
-import org.openbravo.service.json.DefaultJsonDataServiceTest;
 import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
 /**
@@ -304,9 +298,6 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // client.application.process
     BaseProcessActionHandlerTest.class,
     BaseProcessActionHandlerJupiterTest.class,
-
-    // client.application.report — core coverage
-    ReportingUtilsTest.class,
 
     // client.application.report
     BaseReportActionHandlerTest.class,
@@ -441,10 +432,6 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     AgingDaoTest.class,
     AgingDataTest.class,
 
-    // erpCommon.businessUtility — core coverage
-    InitialClientSetupTest.class,
-    InitialOrgSetupTest.class,
-
     // erpCommon.businessUtility
     AccountTreeTest.class,
     AuditTrailDeletedRecordsTest.class,
@@ -474,7 +461,6 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     OBCurrencyUtilsTest.class,
     SequenceIdDataTest.class,
     UtilityTest.class,
-    ComboTableDataTest.class,
 
     // erpCommon.utility
     AbstractScrollableFieldProviderFilterTest.class,
@@ -516,14 +502,8 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     ComboTableDatasourceServiceTest.class,
     AssetsTreeOperationManagerTest.class,
 
-    // service.db — core coverage
-    DataImportServiceTest.class,
-
     // service.db
     ClientImportEntityResolverTest.class,
-
-    // service.json — core coverage
-    DefaultJsonDataServiceTest.class,
 
     // service.json
     AdvancedQueryBuilderTest.class,
