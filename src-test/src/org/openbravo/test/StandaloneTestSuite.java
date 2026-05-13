@@ -39,6 +39,8 @@ import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.client.kernel.KernelUtilsIntegrationTest;
+import org.openbravo.client.application.report.ReportingUtilsIntegrationTest;
+import org.openbravo.service.json.DefaultJsonDataServiceIntegrationTest;
 import org.openbravo.erpCommon.utility.DimensionDisplayUtilityIntegrationTest;
 import org.openbravo.erpCommon.utility.OBCurrencyUtilsIntegrationTest;
 import org.openbravo.email.ResolvedSmtpConfigTest;
@@ -483,6 +485,8 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     OBCurrencyUtilsIntegrationTest.class,
     DimensionDisplayUtilityIntegrationTest.class,
     KernelUtilsIntegrationTest.class,
+    ReportingUtilsIntegrationTest.class,
+    DefaultJsonDataServiceIntegrationTest.class,
 
     // Email
     BPContactEmailSelectorTest.class,
@@ -533,6 +537,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     "org.openbravo.role.inheritance.access.AlertRecipientAccessInjectorTest",
     "org.openbravo.base.secureApp.DefaultValidationExceptionTest",
     "org.openbravo.base.secureApp.DefaultValuesDataTest",
+    "org.openbravo.service.db.DataImportServiceTest",
 })
 public class StandaloneTestSuite {
 }
