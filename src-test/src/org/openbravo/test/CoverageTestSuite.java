@@ -1,7 +1,7 @@
 package org.openbravo.test;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 import com.etendoerp.sequences.DefaultSequenceGeneratorTest;
 import com.etendoerp.sequences.dimensions.DimensionListOriginalColumnFormatTest;
@@ -98,7 +98,18 @@ import org.openbravo.erpCommon.ad_actionButton.CreateVatRegistersTest;
 import org.openbravo.erpCommon.ad_actionButton.CreateWorkEffortTest;
 import org.openbravo.erpCommon.ad_actionButton.EditCCPMeasureValuesTest;
 import org.openbravo.erpCommon.ad_actionButton.ExportReferenceDataTest;
+import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDaoTest;
+import org.openbravo.advpaymentmngt.utility.FINUtilityTest;
+import org.openbravo.base.exception.OBSecurityExceptionTest;
+import org.openbravo.base.secureApp.LoginUtilsTest;
+import org.openbravo.client.application.process.BaseProcessActionHandlerJupiterTest;
+import org.openbravo.client.kernel.RequestContextTest;
 import org.openbravo.erpCommon.ad_callouts.AUM_ConversionRateTest;
+import org.openbravo.erpCommon.ad_callouts.SimpleCalloutCalloutInfoTest;
+import org.openbravo.erpCommon.utility.OBCurrencyUtilsTest;
+import org.openbravo.erpCommon.utility.OBDateUtilsTest;
+import org.openbravo.erpCommon.utility.SequenceIdDataTest;
+import org.openbravo.erpCommon.utility.UtilityTest;
 import org.openbravo.erpCommon.ad_callouts.BackgroundProcessClusterConfigTest;
 import org.openbravo.erpCommon.ad_callouts.BusinessPartnerDocTypeValidationTest;
 import org.openbravo.erpCommon.ad_callouts.CalloutHelperTest;
@@ -145,6 +156,8 @@ import org.openbravo.erpCommon.ad_process.assets.AssetLinearDepreciationMethodPr
 import org.openbravo.erpCommon.ad_reports.AgingDaoTest;
 import org.openbravo.erpCommon.ad_reports.AgingDataTest;
 import org.openbravo.erpCommon.businessUtility.AccountTreeTest;
+import org.openbravo.erpCommon.businessUtility.InitialClientSetupTest;
+import org.openbravo.erpCommon.businessUtility.InitialOrgSetupTest;
 import org.openbravo.erpCommon.businessUtility.AuditTrailDeletedRecordsTest;
 import org.openbravo.erpCommon.businessUtility.COADataTest;
 import org.openbravo.erpCommon.businessUtility.COAUtilityTest;
@@ -160,6 +173,7 @@ import org.openbravo.erpCommon.modules.ExtractModuleTaskTest;
 import org.openbravo.erpCommon.modules.ExtractModuleTest;
 import org.openbravo.erpCommon.obps.ActivationTaskTest;
 import org.openbravo.erpCommon.obps.ActiveInstanceProcessTest;
+import org.openbravo.erpCommon.utility.ComboTableDataTest;
 import org.openbravo.erpCommon.utility.AbstractScrollableFieldProviderFilterTest;
 import org.openbravo.erpCommon.utility.AccDefUtilityTest;
 import org.openbravo.erpCommon.utility.AlertTest;
@@ -189,6 +203,7 @@ import org.openbravo.service.datasource.CheckTreeOperationManagerTest;
 import org.openbravo.service.datasource.ComboTableDatasourceServiceTest;
 import org.openbravo.service.datasource.treeChecks.AssetsTreeOperationManagerTest;
 import org.openbravo.service.db.ClientImportEntityResolverTest;
+import org.openbravo.service.db.DataImportServiceTest;
 import org.openbravo.service.json.AdvancedQueryBuilderTest;
 import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
@@ -199,8 +214,8 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
  * New test classes should be added here as they are generated and validated.
  * </p>
  */
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
     // com.etendoerp.sequences
     DefaultSequenceGeneratorTest.class,
     DimensionListOriginalColumnFormatTest.class,
@@ -230,11 +245,19 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // advpaymentmngt.utility
     APRMSQLFunctionRegisterTest.class,
     APRM_MatchingUtilityTest.class,
+    FINUtilityTest.class,
+
+    // advpaymentmngt.dao — core coverage
+    AdvPaymentMngtDaoTest.class,
 
     // authentication
     AuthenticationExceptionTest.class,
     AuthenticationExpirationPasswordExceptionTest.class,
     AutologonAuthenticationManagerTest.class,
+
+    // base — core coverage
+    OBSecurityExceptionTest.class,
+    LoginUtilsTest.class,
 
     // base
     GenerateEntitiesTaskTest.class,
@@ -278,6 +301,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
     // client.application.process
     BaseProcessActionHandlerTest.class,
+    BaseProcessActionHandlerJupiterTest.class,
 
     // client.application.report
     BaseReportActionHandlerTest.class,
@@ -291,6 +315,9 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     DataPoolSelectionWindowInjectorTest.class,
     CalloutHttpServletResponseTest.class,
     CalloutServletConfigTest.class,
+
+    // client.kernel — core coverage
+    RequestContextTest.class,
 
     // client.kernel
     BaseActionHandlerTest.class,
@@ -352,6 +379,9 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     EditCCPMeasureValuesTest.class,
     ExportReferenceDataTest.class,
 
+    // erpCommon.ad_callouts — core coverage
+    SimpleCalloutCalloutInfoTest.class,
+
     // erpCommon.ad_callouts
     AUM_ConversionRateTest.class,
     BackgroundProcessClusterConfigTest.class,
@@ -406,6 +436,10 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     AgingDaoTest.class,
     AgingDataTest.class,
 
+    // erpCommon.businessUtility — core coverage
+    InitialClientSetupTest.class,
+    InitialOrgSetupTest.class,
+
     // erpCommon.businessUtility
     AccountTreeTest.class,
     AuditTrailDeletedRecordsTest.class,
@@ -429,6 +463,13 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // erpCommon.obps
     ActivationTaskTest.class,
     ActiveInstanceProcessTest.class,
+
+    // erpCommon.utility — core coverage
+    OBDateUtilsTest.class,
+    OBCurrencyUtilsTest.class,
+    SequenceIdDataTest.class,
+    UtilityTest.class,
+    ComboTableDataTest.class,
 
     // erpCommon.utility
     AbstractScrollableFieldProviderFilterTest.class,
@@ -469,6 +510,9 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     CheckTreeOperationManagerTest.class,
     ComboTableDatasourceServiceTest.class,
     AssetsTreeOperationManagerTest.class,
+
+    // service.db — core coverage
+    DataImportServiceTest.class,
 
     // service.db
     ClientImportEntityResolverTest.class,
