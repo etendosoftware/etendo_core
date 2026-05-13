@@ -42,6 +42,8 @@ import org.openbravo.model.ad.utility.Tree;
 @DisplayName("InitialClientSetup")
 public class InitialClientSetupTest extends BaseCoreTest {
 
+  private static final String ERROR = "Error";
+
   // ── Constructor and getLog ────────────────────────────────────────────
 
   @Nested
@@ -160,7 +162,7 @@ public class InitialClientSetupTest extends BaseCoreTest {
         VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
         OBError result = setup.insertClient(vars, "TestClient", "TestUser", "102");
-        assertEquals("Error", result.getType());
+        assertEquals(ERROR, result.getType());
       }
     }
   }
@@ -177,7 +179,7 @@ public class InitialClientSetupTest extends BaseCoreTest {
       VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
       OBError result = setup.insertTrees(vars);
-      assertEquals("Error", result.getType());
+      assertEquals(ERROR, result.getType());
     }
   }
 
@@ -192,7 +194,7 @@ public class InitialClientSetupTest extends BaseCoreTest {
       InitialClientSetup setup = new InitialClientSetup();
 
       OBError result = setup.insertClientInfo();
-      assertEquals("Error", result.getType());
+      assertEquals(ERROR, result.getType());
     }
   }
 
@@ -207,7 +209,7 @@ public class InitialClientSetupTest extends BaseCoreTest {
       InitialClientSetup setup = new InitialClientSetup();
 
       OBError result = setup.insertRoles();
-      assertEquals("Error", result.getType());
+      assertEquals(ERROR, result.getType());
     }
   }
 
@@ -222,7 +224,7 @@ public class InitialClientSetupTest extends BaseCoreTest {
       InitialClientSetup setup = new InitialClientSetup();
 
       OBError result = setup.insertUser("user", "client", "pass", "en_US");
-      assertEquals("Error", result.getType());
+      assertEquals(ERROR, result.getType());
     }
   }
 }

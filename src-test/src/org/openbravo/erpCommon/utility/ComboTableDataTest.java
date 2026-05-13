@@ -35,6 +35,9 @@ import org.junit.jupiter.api.Test;
 @DisplayName("ComboTableData")
 public class ComboTableDataTest {
 
+  private static final String WHERE = "WHERE";
+  private static final String COL1_EQUALS_X = "col1 = 'x'";
+
   // ── Default no-arg constructor ────────────────────────────────────────
 
   @Nested
@@ -85,7 +88,7 @@ public class ComboTableDataTest {
     @DisplayName("addWhereField adds to where list")
     void addWhereField() throws Exception {
       ComboTableData ctd = new ComboTableData();
-      ctd.addWhereField("col1 = 'x'", "WHERE");
+      ctd.addWhereField(COL1_EQUALS_X, WHERE);
       List<?> whereFields = getField(ctd, "where");
       assertNotNull(whereFields);
       assertEquals(1, whereFields.size());
@@ -112,28 +115,28 @@ public class ComboTableDataTest {
     @DisplayName("null returns empty string")
     void nullReturnsEmpty() {
       ComboTableData ctd = new ComboTableData();
-      assertEquals("", ctd.parseContext(null, "WHERE"));
+      assertEquals("", ctd.parseContext(null, WHERE));
     }
 
     @Test
     @DisplayName("empty returns empty string")
     void emptyReturnsEmpty() {
       ComboTableData ctd = new ComboTableData();
-      assertEquals("", ctd.parseContext("", "WHERE"));
+      assertEquals("", ctd.parseContext("", WHERE));
     }
 
     @Test
     @DisplayName("no @ returns unchanged")
     void noAtReturnsUnchanged() {
       ComboTableData ctd = new ComboTableData();
-      assertEquals("col1 = 'x'", ctd.parseContext("col1 = 'x'", "WHERE"));
+      assertEquals(COL1_EQUALS_X, ctd.parseContext(COL1_EQUALS_X, WHERE));
     }
 
     @Test
     @DisplayName("@#User_Client@ replaced with client list placeholder")
     void userClientReplaced() {
       ComboTableData ctd = new ComboTableData();
-      String result = ctd.parseContext("client IN (@#User_Client@)", "WHERE");
+      String result = ctd.parseContext("client IN (@#User_Client@)", WHERE);
       assertTrue(result.contains(ComboTableData.CLIENT_LIST_PARAM_HOLDER));
     }
 
@@ -141,7 +144,7 @@ public class ComboTableDataTest {
     @DisplayName("@#User_Org@ replaced with org list placeholder")
     void userOrgReplaced() {
       ComboTableData ctd = new ComboTableData();
-      String result = ctd.parseContext("org IN (@#User_Org@)", "WHERE");
+      String result = ctd.parseContext("org IN (@#User_Org@)", WHERE);
       assertTrue(result.contains(ComboTableData.ORG_LIST_PARAM_HOLDER));
     }
 
@@ -149,7 +152,7 @@ public class ComboTableDataTest {
     @DisplayName("@SomeParam@ replaced with ?")
     void someParamReplaced() {
       ComboTableData ctd = new ComboTableData();
-      String result = ctd.parseContext("col = @SomeParam@", "WHERE");
+      String result = ctd.parseContext("col = @SomeParam@", WHERE);
       assertTrue(result.contains("?"));
       assertFalse(result.contains("@SomeParam@"));
     }
