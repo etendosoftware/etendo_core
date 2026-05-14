@@ -91,11 +91,12 @@ spec:
           exec:
             command:
               - bash
-              - '-c'
-              - >-
-                chmod a+x /var/run/docker.sock && rm
-                /etc/apt/sources.list.d/pgdg.list || echo 0 && apt update && apt
-                install -y curl
+              - '-lc'
+              - |
+                chmod a+x /var/run/docker.sock || true
+                rm /etc/apt/sources.list.d/pgdg.list || true
+                apt-get update -y || true
+                apt-get install -y curl || echo "Could not install curl"
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
