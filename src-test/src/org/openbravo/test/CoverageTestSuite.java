@@ -177,6 +177,7 @@ import org.openbravo.erpCommon.utility.reporting.printing.AttachContentTest;
 import org.openbravo.erpCommon.utility.reporting.printing.EmailUtilitiesTest;
 import org.openbravo.event.ADTableEventHandlerTest;
 import org.openbravo.event.ADTableNavigationEventHandlerTest;
+import org.openbravo.event.MInOutLineEventHandlerTest;
 import org.openbravo.materialmgmt.refinventory.DefaultBoxFilterProviderTest;
 import org.openbravo.materialmgmt.refinventory.DefaultProcessorProviderTest;
 import org.openbravo.portal.AccountCancelledEmailBodyTest;
@@ -450,6 +451,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // event
     ADTableEventHandlerTest.class,
     ADTableNavigationEventHandlerTest.class,
+    MInOutLineEventHandlerTest.class,
 
     // materialmgmt.refinventory
     DefaultBoxFilterProviderTest.class,
