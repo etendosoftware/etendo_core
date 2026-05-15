@@ -216,6 +216,26 @@
              RAISE_APPLICATION_ERROR(-20000, '@Inline@ '||v_Message_product||' '||'@ProductNullAndMovementQtyGreaterZero@') ;
           END IF;
 	     End ;
+       Declare
+       v_Message_product_qty_zero VARCHAR(2000);
+       Begin
+          FOR Cur_Lines IN (
+                             SELECT M.line
+                             FROM M_InOut I,
+                                  M_InOutLine M
+                             WHERE I.M_InOut_ID=M.M_InOut_ID
+                               AND I.M_INOUT_ID=v_Record_ID
+                               AND M.M_PRODUCT_ID IS NULL
+                               AND M.MOVEMENTQTY = 0
+                               AND COALESCE(M.ISDESCRIPTION, 'N') = 'N'
+                               ORDER BY M.line
+                            ) LOOP
+               v_Message_product_qty_zero := COALESCE(v_Message_product_qty_zero, '') || Cur_Lines.line || ', ';
+          END LOOP;
+          IF (v_Message_product_qty_zero IS NOT NULL) THEN
+             RAISE_APPLICATION_ERROR(-20000, '@Inline@ '||v_Message_product_qty_zero||' '||'@ProductNullAndMovementQtyZero@') ;
+          END IF;
+       End ;
 	     Declare
        v_Message_Qty VARCHAR(2000);
 	     BEGIN
