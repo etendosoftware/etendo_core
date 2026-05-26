@@ -46,10 +46,9 @@ export.database: exports database structure and data to xml files.
 <project name="etendo" default="compile.complete" basedir=".">
   <property environment="env" />
 
-  <!-- The core is in 'sources' when the property set by gradle is 'true' or is not set. -->
-  <!-- TODO: Find a better solution when the core is in sources or jar -->
+  <!-- The core is in sources when src-core exists. modules_core is optional because core modules can be resolved as JARs. -->
   <condition property="isSourceJar" >
-    <available file="modules_core/"/>
+    <available file="src-core/"/>
   </condition>
 
   <property name="source.config" location="config" />
