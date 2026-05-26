@@ -493,7 +493,7 @@ build.war: build a war file in the lib directory.
         <include name="*/config/**" />
         <exclude name="*.template" />
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/config/**" />
         <exclude name="*.template" />
       </fileset>
@@ -533,7 +533,7 @@ build.war: build a war file in the lib directory.
         <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/jboss*"/>
         <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/weld*"/>
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/lib/runtime/**" />
         <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/cdi*"/>
         <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/javax*"/>
@@ -563,7 +563,7 @@ build.war: build a war file in the lib directory.
         <include name="*/referencedata/standard/*.xml" />
         <include name="*/referencedata/accounts/COA.csv" />
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/referencedata/standard/*.xml" />
         <include name="*/referencedata/accounts/COA.csv" />
       </fileset>
@@ -622,7 +622,7 @@ build.war: build a war file in the lib directory.
         <include name="*/web/*/**" />
         <exclude name="*/web/*/skins/**" />
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/web/*/**" />
         <exclude name="*/web/*/skins/**" />
       </fileset>
@@ -654,7 +654,7 @@ build.war: build a war file in the lib directory.
       <fileset dir="${base.modules}">
         <include name="*/web/*/skins/**" />
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/web/*/skins/**" />
       </fileset>
 
@@ -669,7 +669,7 @@ build.war: build a war file in the lib directory.
       <fileset dir="${base.modules}">
         <include name="*/web/*/skins/**" />
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/web/*/skins/**" />
       </fileset>
 
