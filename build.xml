@@ -392,7 +392,7 @@ export.database: exports database structure and data to xml files.
     <dirset dir="${base.modules}">
       <include name="*/build/classes/" />
     </dirset>
-    <dirset dir="${base.modules_core}">
+    <dirset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/build/classes/" />
     </dirset>
     <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
@@ -423,7 +423,7 @@ export.database: exports database structure and data to xml files.
     <fileset dir="${base.modules}">
       <include name="*/lib/**" />
     </fileset>
-    <fileset dir="${base.modules_core}">
+    <fileset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/lib/**" />
     </fileset>
     <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
@@ -437,7 +437,7 @@ export.database: exports database structure and data to xml files.
     <dirset dir="${base.modules}">
       <include name="*/build/classes/" />
     </dirset>
-    <dirset dir="${base.modules_core}" erroronmissingdir="isSourceJar">
+    <dirset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/build/classes/" />
     </dirset>
     <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
@@ -448,28 +448,28 @@ export.database: exports database structure and data to xml files.
     <pathelement path="${build.apply.module}" />
     <pathelement path="${build}" />
     <pathelement path="${base.src}" />
-    <fileset dir="${base.lib}" erroronmissingdir="isSourceJar">
+    <fileset dir="${base.lib}" erroronmissingdir="false">
       <include name="**/*.jar" />
     </fileset>
-    <fileset dir="${build.core.lib}" erroronmissingdir="isSourceJar">
+    <fileset dir="${build.core.lib}" erroronmissingdir="false">
       <include name="openbravo-core.jar" />
     </fileset>
-    <fileset dir="${build.trl.lib}" erroronmissingdir="isSourceJar">
+    <fileset dir="${build.trl.lib}" erroronmissingdir="false">
       <include name="openbravo-trl.jar" />
     </fileset>
-    <fileset dir="${build.wad.lib}" erroronmissingdir="isSourceJar">
+    <fileset dir="${build.wad.lib}" erroronmissingdir="false">
       <include name="openbravo-wad.jar" />
     </fileset>
-    <fileset dir="${base.lib}" erroronmissingdir="isSourceJar">
+    <fileset dir="${base.lib}" erroronmissingdir="false">
       <include name="**/*.jar" />
     </fileset>
-    <fileset dir="${base.db}/lib/" erroronmissingdir="isSourceJar">
+    <fileset dir="${base.db}/lib/" erroronmissingdir="false">
       <include name="**/*.jar" />
     </fileset>
     <fileset dir="${base.modules}">
       <include name="*/lib/**" />
     </fileset>
-    <fileset dir="${base.modules_core}" erroronmissingdir="isSourceJar">
+    <fileset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/lib/**" />
     </fileset>
     <fileset dir="${extra.modules.location}" erroronmissingdir="false" >

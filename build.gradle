@@ -18,6 +18,13 @@ repositories {
   maven {
     url "https://repository.jboss.org/nexus/content/repositories/public/"
   }
+  maven {
+    url "https://repo.futit.cloud/repository/maven-snapshots/"
+    credentials {
+      username = findProperty("nexusUser") ?: System.getProperty("nexusUser") ?: ""
+      password = findProperty("nexusPassword") ?: System.getProperty("nexusPassword") ?: ""
+    }
+  }
 }
 
 final String CURRENT_VERSION = "25.4.1"
@@ -384,6 +391,7 @@ dependencies {
 }
 
 dependencies {
+  implementation("com.etendoerp:modules.core:1.0.1-SNAPSHOT")
   implementation("org.redisson:redisson-tomcat-11:3.52.0") {
     exclude group: 'javax.cache'
   }

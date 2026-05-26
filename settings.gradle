@@ -22,3 +22,10 @@ new File("${rootDir}/modules").listFiles()?.each {
         include(":modules:${it.name}")
     }
 }
+
+new File("${rootDir}/modules_core").listFiles()?.each {
+    if (it.directory && new File(it, 'build.gradle').exists() && findProject(":modules:${it.name}") == null) {
+        include(":modules:${it.name}")
+        project(":modules:${it.name}").projectDir = it
+    }
+}

@@ -154,7 +154,9 @@ build.war: build a war file in the lib directory.
       <src path="${base.src}"/>
       <src path="../build/javasqlc/src"/>
       <src path="../src-gen"/>
-      <src path="../modules_core/org.openbravo.base.weld/src/"/>
+      <src>
+        <dirset dir="../modules_core" includes="org.openbravo.base.weld/src" erroronmissingdir="false"/>
+      </src>
       <classpath refid="apply.module.compile.classpath" />
       <compilerarg value="-implicit:class" />
     </javac>
@@ -283,7 +285,7 @@ build.war: build a war file in the lib directory.
     <dirset dir="${base.modules}">
       <include name="*/src" />
     </dirset>
-    <dirset dir="${base.modules_core}" erroronmissingdir="isSourceJar">
+    <dirset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/src" />
     </dirset>
 

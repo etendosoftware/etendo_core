@@ -84,6 +84,7 @@ test-reports
 # ignore all modules
 # except those ones included in OB3 distribution
 /modules/*
+/modules_core/*/build/
 
 #ignore maven builds
 target

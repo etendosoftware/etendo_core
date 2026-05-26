@@ -29,7 +29,7 @@
     <dirset dir="${base.modules}">
       <include name="*/src-test" />
     </dirset>
-    <dirset dir="${base.modules_core}">
+    <dirset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/src-test" />
     </dirset>
   </path>
@@ -59,7 +59,7 @@
     <fileset dir="${base.modules}">
       <include name="*/lib/**" />
     </fileset>
-    <fileset dir="${base.modules_core}">
+    <fileset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/lib/**" />
     </fileset>
     <pathelement path="${base.src.test}/src"/>
