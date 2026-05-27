@@ -347,4 +347,100 @@ public class AcctServerTest {
         "record", "msg", "text", "ref", null, null, null);
     assertFalse(result);
   }
+  /** Get not calculated cost parameters. */
+
+  @Test
+  public void testGetNotCalculatedCostParameters() {
+    org.openbravo.model.materialmgmt.transaction.MaterialTransaction mockTrx =
+        org.mockito.Mockito.mock(
+            org.openbravo.model.materialmgmt.transaction.MaterialTransaction.class);
+    org.openbravo.model.common.plm.Product mockProduct =
+        org.mockito.Mockito.mock(org.openbravo.model.common.plm.Product.class);
+
+    org.mockito.Mockito.when(mockTrx.getIdentifier()).thenReturn("TrxIdentifier");
+    org.mockito.Mockito.when(mockTrx.getProduct()).thenReturn(mockProduct);
+    org.mockito.Mockito.when(mockProduct.getIdentifier()).thenReturn("ProductIdentifier");
+
+    Map<String, String> params = instance.getNotCalculatedCostParameters(mockTrx);
+
+    assertNotNull(params);
+    assertEquals(2, params.size());
+    assertEquals("TrxIdentifier", params.get("trx"));
+    assertEquals("ProductIdentifier", params.get("product"));
+  }
+  /**
+   * Is balanced when balance is zero.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testIsBalancedWhenBalanceIsZero() throws Exception {
+    AcctServer spy = org.mockito.Mockito.spy(instance);
+    org.mockito.Mockito.doReturn(BigDecimal.ZERO).when(spy).getBalance();
+    spy.MultiCurrency = false;
+    spy.ZERO = BigDecimal.ZERO;
+
+    assertTrue(spy.isBalanced());
+  }
+  /**
+   * Is balanced when balance is not zero.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testIsBalancedWhenBalanceIsNotZero() throws Exception {
+    AcctServer spy = org.mockito.Mockito.spy(instance);
+    org.mockito.Mockito.doReturn(new BigDecimal("100")).when(spy).getBalance();
+    spy.MultiCurrency = false;
+    spy.ZERO = BigDecimal.ZERO;
+
+    assertFalse(spy.isBalanced());
+  }
+  /**
+   * Is convertible when no currency.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testIsConvertibleWhenNoCurrency() throws Exception {
+    instance.C_Currency_ID = "-1";
+
+    AcctSchema mockSchema = org.mockito.Mockito.mock(AcctSchema.class);
+    org.openbravo.database.ConnectionProvider mockConn =
+        org.mockito.Mockito.mock(org.openbravo.database.ConnectionProvider.class);
+
+    assertTrue(instance.isConvertible(mockSchema, mockConn));
+  }
+  /**
+   * Get amount with null amounts.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testGetAmountWithNullAmounts() throws Exception {
+    Field amountsField = AcctServer.class.getDeclaredField("Amounts");
+    amountsField.setAccessible(true);
+    amountsField.set(instance, null);
+
+    assertNull(instance.getAmount(0));
+  }
+  /**
+   * Get conversion date with different values.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testGetConversionDateWithDifferentValues() throws Exception {
+    Method method = AcctServer.class.getDeclaredMethod("getConversionDate");
+    method.setAccessible(true);
+
+    instance.DateAcct = "2025-06-15";
+    assertEquals("2025-06-15", method.invoke(instance));
+
+    instance.DateAcct = "2020-12-31";
+    assertEquals("2020-12-31", method.invoke(instance));
+
+    instance.DateAcct = "";
+    assertEquals("", method.invoke(instance));
+  }
 }

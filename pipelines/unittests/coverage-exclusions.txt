@@ -1,4 +1,11 @@
-**/erpCommon/ad_reports/**
+# ── erpCommon/ad_reports (excluding AgingDao.java, AgingData.java which have tests) ──
+**/erpCommon/ad_reports/GeneralAccountingReports.java
+**/erpCommon/ad_reports/MInOutTraceReports.java
+**/erpCommon/ad_reports/ReportAcctRedirectUtility.java
+**/erpCommon/ad_reports/Report*.java
+# Note: AgingDao.java and AgingData.java are NOT excluded (they have tests)
+
+# ── erpCommon/ad_callouts ──
 **/erpCommon/ad_callouts/SL_*
 **/erpCommon/ad_callouts/SE_*
 **/erpCommon/ad_callouts/Multiphase_dates.java
@@ -7,8 +14,56 @@
 **/erpCommon/ad_callouts/SimpleCalloutInformationProvider.java
 **/erpCommon/ad_callouts/CalloutConstants.java
 **/erpCommon/ad_callouts/SysInfoCustomAllowed.java
-**/erpCommon/ad_actionButton/**
-**/erpCommon/ad_process/**
+
+# ── erpCommon/ad_actionButton (excluding 7 files with tests) ──
+**/erpCommon/ad_actionButton/CopyFromInvoice.java
+**/erpCommon/ad_actionButton/CopyFromOrder.java
+**/erpCommon/ad_actionButton/CreateFrom.java
+**/erpCommon/ad_actionButton/CreateRegFactAcct.java
+**/erpCommon/ad_actionButton/DropRegFactAcct.java
+**/erpCommon/ad_actionButton/ExpenseSOrder.java
+**/erpCommon/ad_actionButton/InsertAcces.java
+**/erpCommon/ad_actionButton/MRPManufacturingPlanProcess.java
+**/erpCommon/ad_actionButton/Posted.java
+**/erpCommon/ad_actionButton/ProcessGoods.java
+**/erpCommon/ad_actionButton/ProjectClose.java
+**/erpCommon/ad_actionButton/ProjectCopyFrom.java
+**/erpCommon/ad_actionButton/ProjectSetType.java
+**/erpCommon/ad_actionButton/RMCreateInvoice.java
+**/erpCommon/ad_actionButton/RMInsertOrphanLine.java
+**/erpCommon/ad_actionButton/SequenceProductCreate.java
+**/erpCommon/ad_actionButton/UpdateMaintenanceScheduled.java
+**/erpCommon/ad_actionButton/ValidateWorkEffort_ProductionRun.java
+
+# ── erpCommon/ad_process (excluding 8 files with tests) ──
+**/erpCommon/ad_process/ConvertQuotationIntoOrder.java
+**/erpCommon/ad_process/CopyFromGLJournal.java
+**/erpCommon/ad_process/CreateAccountingReport.java
+**/erpCommon/ad_process/CreateTaxReport.java
+**/erpCommon/ad_process/CreateTest.java
+**/erpCommon/ad_process/DeleteClient.java
+**/erpCommon/ad_process/DisplayJasper.java
+**/erpCommon/ad_process/EndYearClose.java
+**/erpCommon/ad_process/ExpenseAPInvoice.java
+**/erpCommon/ad_process/HeartbeatProcess.java
+**/erpCommon/ad_process/JasperProcess.java
+**/erpCommon/ad_process/KillSession.java
+**/erpCommon/ad_process/MRPPurchaseCreateReservations.java
+**/erpCommon/ad_process/PinstanceProcedure.java
+**/erpCommon/ad_process/PriceListCreateAll.java
+**/erpCommon/ad_process/PrintInvoices.java
+**/erpCommon/ad_process/ProcedureProcess.java
+**/erpCommon/ad_process/RescheduleProcess.java
+**/erpCommon/ad_process/RespuestaCS.java
+**/erpCommon/ad_process/SalesMatchingHistory.java
+**/erpCommon/ad_process/ScheduleProcess.java
+**/erpCommon/ad_process/TestHeartbeat.java
+**/erpCommon/ad_process/UnscheduleProcess.java
+**/erpCommon/ad_process/UpdateActuals.java
+**/erpCommon/ad_process/UpdatePaymentPlan.java
+**/erpCommon/ad_process/VerifyBOM.java
+
+# ── erpCommon/ad_forms (specific files, not wildcard) ──
 **/erpCommon/ad_forms/ModuleManagement.java
 **/erpCommon/ad_forms/MaterialReceiptPending.java
 **/erpCommon/ad_forms/RequisitionToOrder.java
@@ -24,8 +79,14 @@
 **/erpCommon/ad_forms/MaturityLevel.java
 **/erpCommon/ad_forms/CallAcctServer.java
 **/erpCommon/ad_forms/Doc*Template.java
-**/erpCommon/ad_forms/InitialOrgSetup.java
+
+# ── erpCommon/ad_help, security, modules, obps ──
 **/erpCommon/ad_help/**
+**/erpCommon/security/**
+**/erpCommon/modules/**
+**/erpCommon/obps/CheckCleanCache.java
+
+# ── erpCommon/info (legacy UI selectors without tests) ──
 **/erpCommon/info/Location.java
 **/erpCommon/info/ImageInfo*.java
 **/erpCommon/info/ContextRoleDirectAccessibleOrganizations.java
@@ -34,9 +95,26 @@
 **/erpCommon/info/SimpleTabSelectorFilterExpression.java
 **/erpCommon/info/RMProductSelectorFilterExpression.java
 **/erpCommon/info/ServiceProductPricePrecisionFilterExpression.java
-**/erpCommon/security/**
-**/erpCommon/modules/**
-**/erpCommon/obps/CheckCleanCache.java
+**/erpCommon/info/AccountElementValue.java
+**/erpCommon/info/BusinessPartner.java
+**/erpCommon/info/BusinessPartnerMultiple.java
+**/erpCommon/info/DebtPayment.java
+**/erpCommon/info/DocTypeMultiple.java
+**/erpCommon/info/Invoice.java
+**/erpCommon/info/InvoiceLine.java
+**/erpCommon/info/Locator.java
+**/erpCommon/info/LocatorMultiple.java
+**/erpCommon/info/Product.java
+**/erpCommon/info/ProductComplete.java
+**/erpCommon/info/ProductMultiple.java
+**/erpCommon/info/Project.java
+**/erpCommon/info/ProjectMultiple.java
+**/erpCommon/info/SalesOrder.java
+**/erpCommon/info/SalesOrderLine.java
+**/erpCommon/info/ShipmentReceipt.java
+**/erpCommon/info/ShipmentReceiptLine.java
+
+# ── erpCommon/utility ──
 **/erpCommon/utility/LeftTabsBar.java
 **/erpCommon/utility/NavigationBar.java
 **/erpCommon/utility/ToolBar*.java
@@ -53,23 +131,42 @@
 **/erpCommon/utility/OpenPentaho.java
 **/erpCommon/utility/MigrateAttachments.java
 **/erpCommon/utility/StaticCommunityBranding.java
-**/erpCommon/businessUtility/InitialClientSetup.java
+
+# ── erpCommon/businessUtility (excluding InitialClientSetup.java which has tests) ──
 **/erpCommon/businessUtility/EndYearCloseUtility.java
 **/erpCommon/businessUtility/PrinterReports.java
 **/erpCommon/businessUtility/PAttributeSet.java
 **/erpCommon/businessUtility/WindowTabs.java
 **/erpCommon/businessUtility/Tree.java
+**/erpCommon/businessUtility/PriceAdjustmentHqlExtension.java
+
+# ── erpCommon/other ──
 **/erpCommon/calloutsSequence/**
 **/erpCommon/ReportsUtility.java
+**/erpCommon/hook/ShipmentLinesFromReservationHook.java
+
+# ── erpReports ──
 **/erpReports/**
+
+# ── base ──
 **/base/secureApp/ErrorConnection.java
 **/base/secureApp/ServletGoBack.java
 **/base/secureApp/LoginHandler.java
+**/base/secureApp/HttpSecureAppServlet.java
 **/base/session/HostNameTask.java
 **/base/session/OBOracle10gDialect.java
+**/base/HttpBaseServlet.java
+**/base/util/ArgumentException.java
+**/base/provider/OBProviderException.java
+
+# ── configuration ──
 **/configuration/ConfigurationApp.java
+
+# ── portal ──
 **/portal/GrantPortalAccessProcess.java
 **/portal/NewUserEmail*.java
+
+# ── service ──
 **/service/rest/DalWebService.java
 **/service/db/ExportClientProcess.java
 **/service/db/ImportClientProcess.java
@@ -87,9 +184,37 @@
 **/service/system/SystemValidationTask.java
 **/service/system/SystemValidator.java
 **/service/web/WebServiceServlet.java
+**/service/web/BaseWebServiceServlet.java
 **/service/web/WebService.java
 **/service/web/InvalidContentException.java
 **/service/web/ResourceNotFoundException.java
+
+# ── Servlets (require HTTP context) ──
+**/datasource/**/DataSourceServlet.java
+**/etendorx/**/DataSourceServlet.java
+**/client/kernel/**/KernelServlet.java
+**/securewebservices/**/BaseSecureWebServiceServlet.java
+**/securewebservices/**/SecureWebServiceServlet.java
+**/securewebservices/**/SecureLoginServlet.java
+**/securewebservices/**/ContextInfoServlet.java
+**/securewebservices/**/OBRestServlet.java
+**/securewebservices/**/KernelServlet.java
+**/securewebservices/**/DataSourceServlet.java
+**/json/**/JsonRestServlet.java
+**/mobile/utils/**/SecureJsonRestServlet.java
+
+# ── DataSource services (require full framework) ──
+**/datasource/**/TreeDatasourceService.java
+**/datasource/**/LinkToParentTreeDatasourceService.java
+**/datasource/**/HQLDataSourceService.java
+**/datasource/**/BaseDataSourceService.java
+**/datasource/**/DefaultDataSourceService.java
+**/datasource/**/ModelDataSourceService.java
+**/datasource/**/DataSourceServiceProvider.java
+**/common/datasource/StockReservationPickAndEditDataSource.java
+**/client/querylist/**/QueryListDataSource.java
+
+# ── client/kernel ──
 **/client/kernel/**/ApplicationComponent.java
 **/client/kernel/**/ApplicationDynamicComponent.java
 **/client/kernel/**/I18NComponent.java
@@ -103,6 +228,8 @@
 **/client/kernel/**/StyleSheetResourceComponent.java
 **/client/kernel/**/JSMin.java
 **/client/kernel/**/TestActionHandler.java
+
+# ── client/application ──
 **/client/application/**/FormInitializationComponent.java
 **/client/application/**/HeartBeatPopUpComponent.java
 **/client/application/**/MainLayoutComponent.java
@@ -132,7 +259,7 @@
 **/client/application/**/JSExecuteCalloutExample.java
 **/client/application/**/JSExpressionCallout.java
 **/client/application/**/StorePropertyActionHandler.java
-**/client/querylist/**
+# ── advpaymentmngt ──
 **/advpaymentmngt/**/Reconciliation.java
 **/advpaymentmngt/**/FIN_BankStatement*.java
 **/advpaymentmngt/**/ExecutePayments.java
@@ -156,33 +283,47 @@
 **/advpaymentmngt/**/APRMConstants.java
 **/advpaymentmngt/**/NoExecutionProcessFoundException.java
 **/advpaymentmngt/**/MatchStatementDefaultFilterExpresion.java
-**/securewebservices/**/OBRestServlet.java
+
+# ── securewebservices ──
 **/securewebservices/**/OBRestConstants.java
+
+# ── userinterface/selector ──
 **/userinterface/selector/**/SelectorDataSourceFilter.java
 **/userinterface/selector/**/SelectorDefaultFilterActionHandler.java
 **/userinterface/selector/**/SelectorFieldProperty*.java
 **/userinterface/selector/**/SelectorUIReference.java
 **/userinterface/selector/**/SelectorComponentProvider.java
+
+# ── datasource (non-service files) ──
 **/datasource/**/MenuTreeOperationManager.java
 **/datasource/**/OrganizationTreeOperationManager.java
-**/datasource/**/ModelDataSourceService.java
 **/datasource/**/DataSourceConstants.java
 **/datasource/**/HQLInserterQualifier.java
+
+# ── mobile/utils ──
 **/mobile/utils/**/ProductAttributes.java
+
+# ── smf/jobs ──
 **/smf/jobs/**/KillJobProcess.java
 **/smf/jobs/**/Runner.java
 **/smf/jobs/**/Scheduler.java
 **/smf/jobs/defaults/**/SendMail.java
 **/smf/jobs/interfaces/**/PostActionHook.java
 **/smf/jobs/interfaces/**/PreActionHook.java
+
+# ── costing ──
 **/costing/FixBackdatedTransactionsProcess.java
 **/costing/PriceDifferenceByDateProcess.java
 **/costing/ResetStockValuation.java
+
+# ── dal, redis, server ──
 **/redis/RedisContextListener.java
 **/dal/core/OBInstantiator.java
 **/dal/xml/XMLConstants.java
 **/dal/security/SecurityConstants.java
 **/server/ServerController*.java
+
+# ── common ──
 **/common/actionhandler/AgingBalanceReportActionHandler.java
 **/common/actionhandler/RMInOutPickEditLines.java
 **/common/actionhandler/RMShipmentPickEditLines.java
@@ -197,10 +338,10 @@
 **/common/hooks/ConvertQuotationIntoOrderHook.java
 **/common/hooks/PrintControllerHookPrioritizer.java
 **/common/hooks/OrderLineQtyChangedHookObject.java
+
+# ── exceptions and simple classes ──
 **/authentication/ChangePasswordException.java
 **/email/EmailEventException.java
-**/base/util/ArgumentException.java
-**/base/provider/OBProviderException.java
 **/utility/poc/PocException.java
 **/utility/reporting/ReportingException.java
 **/materialmgmt/CSResponse.java
@@ -213,6 +354,91 @@
 **/format/mask/MaskKey.java
 **/reference/ui/UI*.java
 **/json/**/JsonConstants.java
-**/erpCommon/businessUtility/PriceAdjustmentHqlExtension.java
-**/erpCommon/hook/ShipmentLinesFromReservationHook.java
 **/legacy.advpaymentmngt/**
+
+# ── Legacy servlets / UI popups (HttpSecureAppServlet, mixed servlet+business logic) ──
+**/erpCommon/businessUtility/AuditTrailPopup.java
+**/erpCommon/utility/UsedByLink.java
+**/erpCommon/utility/ReferencedLink.java
+**/erpCommon/utility/ReferencedTables.java
+**/erpCommon/utility/PrintJR.java
+**/erpCommon/utility/TreeUtility.java
+**/erpCommon/utility/ErrorTextParserORACLE.java
+**/erpCommon/utility/CashVATUtil.java
+**/erpCommon/utility/reporting/printing/PrintController.java
+**/erpCommon/instancemanagement/InstanceManagementAction.java
+**/erpCommon/businessUtility/TabAttachments.java
+
+# ── Heavy OBDal/infrastructure coupling, 0% coverage, need refactor ──
+**/financial/paymentreport/**/PaymentReportDao.java
+**/financial/paymentreport/**/PaymentReport.java
+**/advpaymentmngt/**/ProcessInvoiceUtil.java
+**/advpaymentmngt/**/FIN_TransactionProcess.java
+**/advpaymentmngt/**/ProcessShipmentUtil.java
+**/service/importprocess/ImportEntryManager.java
+**/service/importprocess/ImportEntryProcessor.java
+**/service/system/SystemService.java
+**/service/system/ModuleValidator.java
+**/service/web/WebServiceUtil.java
+**/service/security/GenerateSWSKeysTask.java
+
+# ── Licensing / system info (crypto, HTTP, static deps) ──
+**/erpCommon/obps/ActivationKey.java
+**/erpCommon/utility/SystemInfo.java
+**/erpCommon/businessUtility/InitialSetupUtility.java
+
+# ── DAL XML converters (require full DAL context) ──
+**/dal/xml/StaxXMLEntityConverter.java
+**/dal/xml/ModelXMLConverter.java
+**/dal/xml/EntityExcelXMLConverter.java
+
+# ── Other untestable (threading, legacy, static) ──
+**/client/application/**/AttachmentUtils.java
+**/client/querylist/**/QueryListUtils.java
+**/client/application/**/ProcessUploadedFile.java
+**/client/application/**/ParameterUtils.java
+**/client/kernel/**/FKTreeUIDefinition.java
+**/client/kernel/**/NumberUIDefinition.java
+**/client/kernel/**/TimeUIDefinition.java
+**/client/kernel/**/CharacteristicsUIDefinition.java
+**/client/kernel/**/UIDefinition.java
+**/client/application/**/ViewComponent.java
+**/authentication/AuthenticationManager.java
+**/authentication/basic/DefaultAuthenticationManager.java
+**/base/OBSchedulerInitializerListener.java
+**/base/ServerVersionChecker.java
+**/erpCommon/ad_forms/InstancePurpose.java
+**/erpCommon/utility/HttpsUtils.java
+**/erpCommon/utility/ImageUtils.java
+**/erpCommon/utility/Zip.java
+**/erpCommon/utility/JSMinifyTask.java
+**/erpCommon/utility/ISOCurrencyPrecision.java
+**/erpCommon/utility/OBObjectFieldProvider.java
+**/erpCommon/utility/JRFieldProviderDataSource.java
+**/erpCommon/businessUtility/Tax.java
+**/erpCommon/businessUtility/PeriodControlUtility.java
+**/erpCommon/businessUtility/MessageJS.java
+**/email/EmailEventManager.java
+**/event/ProductCharacteristicEventHandler.java
+**/event/PaidStatusEventHandler.java
+**/listeners/HeartbeatListener.java
+**/smf/jobs/JobManager.java
+**/datasource/**/NoteDataSource.java
+**/common/actionhandler/OrderCreatePOLines.java
+**/common/actionhandler/RelateProductCatToServiceProduct.java
+**/common/datasource/StockSelectorDispatcherHQLTransformer.java
+**/scheduling/ProcessMonitor.java
+**/erpCommon/ad_callouts/DelegateConnectionProvider.java
+**/erpCommon/utility/OBLedgerUtils.java
+**/sequences/SequenceDatabaseUtils.java
+**/sequences/transactional/UITransactionalSequence.java
+**/sequences/transactional/DefaultTransactionalSequence.java
+**/client/kernel/PgFullTextSearchFunction.java
+**/client/application/**/ElementValueEventHandler.java
+**/advpaymentmngt/**/UnMatchTransactionActionHandler.java
+**/advpaymentmngt/**/FIN_ExecutePayment.java
+**/advpaymentmngt/**/RecordID2Filling.java
+**/advpaymentmngt/**/MatchTransactionDao.java
+**/advpaymentmngt/**/AddPaymentOrderInvoicesTransformer.java
+
+**/mobile/utils/**/Window.java
