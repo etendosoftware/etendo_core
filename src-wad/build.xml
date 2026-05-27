@@ -104,7 +104,7 @@ build: compile the project, including the xsql's files and generates the jar
     <dirset dir="../modules">
       <include name="*/src-wad" />
     </dirset>
-    <dirset dir="../modules_core" erroronmissingdir="${isSourceJar}">
+    <dirset dir="../modules_core" erroronmissingdir="false">
       <include name="*/src-wad" />
     </dirset>
     <dirset dir="${extra.modules.location}" erroronmissingdir="false" >
@@ -128,7 +128,7 @@ build: compile the project, including the xsql's files and generates the jar
           <exclude name="*/src-wad/**/*.java" />
           <exclude name="*/src-wad/**/*.xsql" />
       </fileset>
-      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="false">
         <include name="*/src-wad/**/*" />
         <exclude name="*/src-wad/**/*.java" />
         <exclude name="*/src-wad/**/*.xsql" />
