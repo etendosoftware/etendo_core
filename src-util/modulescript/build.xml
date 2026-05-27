@@ -29,7 +29,7 @@
     <dirset dir="${base.modules}">
       <include name="*/build/classes/" />
     </dirset>
-    <dirset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+    <dirset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/build/classes/" />
     </dirset>
     <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
