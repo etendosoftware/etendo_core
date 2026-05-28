@@ -62,10 +62,6 @@ public class SE_Invoice_BPartner extends SimpleCallout {
     String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
 
     boolean isSales = StringUtils.equals("Y", strIsSOTrx);
-    String applied = BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartner, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
-    if (StringUtils.isNotBlank(applied)) {
-      strDocType = applied;
-    }
 
     // Payment Method changed
     if (StringUtils.equals(strChanged, "inpfinPaymentmethodId")
@@ -78,6 +74,13 @@ public class SE_Invoice_BPartner extends SimpleCallout {
     }
 
     else {
+      // Apply document type only when Business Partner changes, not when Payment Method changes
+      String applied = BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartner, isSales,
+          "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+      if (StringUtils.isNotBlank(applied)) {
+        strDocType = applied;
+      }
+
       if (StringUtils.isEmpty(strBPartner)) {
         info.vars.removeSessionValue(info.getWindowId() + "|C_BPartner_ID");
       }
