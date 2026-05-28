@@ -40,6 +40,9 @@ import org.openbravo.base.exception.OBException;
 @DisplayName("XMLTypeConverter")
 public class XMLTypeConverterTest {
 
+  private static final String XML_DATE = "2025-01-15T10:30:00.0Z";
+  private static final String HELLO = "hello";
+
   private XMLTypeConverter converter;
   private final SimpleDateFormat xmlDateFormat = new SimpleDateFormat(
       "yyyy-MM-dd'T'HH:mm:ss.S'Z'");
@@ -66,7 +69,7 @@ public class XMLTypeConverterTest {
     @Test
     @DisplayName("Date formats correctly")
     void dateFormatsCorrectly() throws Exception {
-      Date date = xmlDateFormat.parse("2025-01-15T10:30:00.0Z");
+      Date date = xmlDateFormat.parse(XML_DATE);
       String result = converter.toXML(date);
       assertTrue(result.contains("2025"));
       assertTrue(result.contains("01"));
@@ -84,7 +87,7 @@ public class XMLTypeConverterTest {
     @Test
     @DisplayName("String returns same string")
     void stringReturnsSame() {
-      assertEquals("hello", converter.toXML("hello"));
+      assertEquals(HELLO, converter.toXML(HELLO));
       assertEquals("", converter.toXML(""));
     }
 
@@ -141,7 +144,7 @@ public class XMLTypeConverterTest {
     @Test
     @DisplayName("String class returns same string")
     void stringReturnsSame() {
-      assertEquals("hello", converter.fromXML(String.class, "hello"));
+      assertEquals(HELLO, converter.fromXML(String.class, HELLO));
     }
 
     @Test
@@ -186,14 +189,14 @@ public class XMLTypeConverterTest {
     @Test
     @DisplayName("Date parses xml format")
     void dateParses() {
-      Date result = converter.fromXML(Date.class, "2025-01-15T10:30:00.0Z");
+      Date result = converter.fromXML(Date.class, XML_DATE);
       assertNotNull(result);
     }
 
     @Test
     @DisplayName("Timestamp parses xml format")
     void timestampParses() {
-      Timestamp result = converter.fromXML(Timestamp.class, "2025-01-15T10:30:00.0Z");
+      Timestamp result = converter.fromXML(Timestamp.class, XML_DATE);
       assertNotNull(result);
     }
 

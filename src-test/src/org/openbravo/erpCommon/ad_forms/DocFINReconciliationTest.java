@@ -35,7 +35,7 @@ import org.openbravo.erpCommon.utility.FieldProviderFactory;
 /**
  * Tests for {@link DocFINReconciliation}.
  */
-@SuppressWarnings({"java:S120"})
+@SuppressWarnings({"java:S120", "java:S1176", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocFINReconciliationTest {
 

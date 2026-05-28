@@ -26,6 +26,7 @@ import org.objenesis.ObjenesisStd;
 public class AcctServerTest {
 
   private static final String GET_STR_ACCOUNT = "getStrAccount";
+  private static final String AMOUNTS_FIELD = "Amounts";
 
   private AcctServer instance;
   /**
@@ -41,7 +42,7 @@ public class AcctServerTest {
     instance = objenesis.newInstance(DocGLJournal.class);
 
     // Initialize fields that getAmount and isBalanced rely on
-    Field amountsField = AcctServer.class.getDeclaredField("Amounts");
+    Field amountsField = AcctServer.class.getDeclaredField(AMOUNTS_FIELD);
     amountsField.setAccessible(true);
     amountsField.set(instance, new String[]{"100", "200", "50", "75"});
 
@@ -115,7 +116,7 @@ public class AcctServerTest {
 
   @Test
   public void testGetAmountWithEmptyString() throws Exception {
-    Field amountsField = AcctServer.class.getDeclaredField("Amounts");
+    Field amountsField = AcctServer.class.getDeclaredField(AMOUNTS_FIELD);
     amountsField.setAccessible(true);
     amountsField.set(instance, new String[]{"", "200", "", "75"});
 
@@ -418,7 +419,7 @@ public class AcctServerTest {
 
   @Test
   public void testGetAmountWithNullAmounts() throws Exception {
-    Field amountsField = AcctServer.class.getDeclaredField("Amounts");
+    Field amountsField = AcctServer.class.getDeclaredField(AMOUNTS_FIELD);
     amountsField.setAccessible(true);
     amountsField.set(instance, null);
 

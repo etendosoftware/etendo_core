@@ -34,8 +34,15 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit tests for {@link FIN_Utility}.
  */
+@SuppressWarnings({"java:S101", "java:S112"})
 @DisplayName("FIN_Utility")
 public class FIN_UtilityTest {
+
+  private static final String AMOUNT_100 = "100.00";
+  private static final String AMOUNT_NEG_50 = "-50.00";
+  private static final String FORMAT_PATTERN = "#,##0.00";
+  private static final String VALUE2 = "value2";
+  private static final String TRXTYPE = "trxtype";
 
   // ── getMapFromStringList ─────────────────────────────────────────────
 
@@ -115,7 +122,7 @@ public class FIN_UtilityTest {
     @Test
     @DisplayName("receipt with positive amount returns amount")
     void receiptPositive() {
-      BigDecimal amt = new BigDecimal("100.00");
+      BigDecimal amt = new BigDecimal(AMOUNT_100);
       assertEquals(amt, FIN_Utility.getDepositAmount(true, amt));
     }
 
@@ -123,7 +130,7 @@ public class FIN_UtilityTest {
     @DisplayName("receipt with negative amount returns ZERO")
     void receiptNegative() {
       assertEquals(BigDecimal.ZERO,
-          FIN_Utility.getDepositAmount(true, new BigDecimal("-50.00")));
+          FIN_Utility.getDepositAmount(true, new BigDecimal(AMOUNT_NEG_50)));
     }
 
     @Test
@@ -136,14 +143,14 @@ public class FIN_UtilityTest {
     @DisplayName("payment with negative amount returns absolute value")
     void paymentNegative() {
       assertEquals(new BigDecimal("50.00"),
-          FIN_Utility.getDepositAmount(false, new BigDecimal("-50.00")));
+          FIN_Utility.getDepositAmount(false, new BigDecimal(AMOUNT_NEG_50)));
     }
 
     @Test
     @DisplayName("payment with positive amount returns ZERO")
     void paymentPositive() {
       assertEquals(BigDecimal.ZERO,
-          FIN_Utility.getDepositAmount(false, new BigDecimal("100.00")));
+          FIN_Utility.getDepositAmount(false, new BigDecimal(AMOUNT_100)));
     }
   }
 
@@ -157,14 +164,14 @@ public class FIN_UtilityTest {
     @DisplayName("receipt with negative returns absolute value")
     void receiptNegative() {
       assertEquals(new BigDecimal("50.00"),
-          FIN_Utility.getPaymentAmount(true, new BigDecimal("-50.00")));
+          FIN_Utility.getPaymentAmount(true, new BigDecimal(AMOUNT_NEG_50)));
     }
 
     @Test
     @DisplayName("receipt with positive returns ZERO")
     void receiptPositive() {
       assertEquals(BigDecimal.ZERO,
-          FIN_Utility.getPaymentAmount(true, new BigDecimal("100.00")));
+          FIN_Utility.getPaymentAmount(true, new BigDecimal(AMOUNT_100)));
     }
 
     @Test
@@ -192,7 +199,7 @@ public class FIN_UtilityTest {
     @DisplayName("formats with standard pattern")
     void formatsWithStandardPattern() {
       String result = FIN_Utility.formatNumber(
-          new BigDecimal("1234567.89"), "#,##0.00", ".", ",");
+          new BigDecimal("1234567.89"), FORMAT_PATTERN, ".", ",");
       assertEquals("1,234,567.89", result);
     }
 
@@ -200,7 +207,7 @@ public class FIN_UtilityTest {
     @DisplayName("null separators default to dot and comma")
     void nullSeparatorsDefault() {
       String result = FIN_Utility.formatNumber(
-          new BigDecimal("1000.50"), "#,##0.00", null, null);
+          new BigDecimal("1000.50"), FORMAT_PATTERN, null, null);
       assertEquals("1,000.50", result);
     }
 
@@ -208,7 +215,7 @@ public class FIN_UtilityTest {
     @DisplayName("zero formats correctly")
     void zeroFormats() {
       String result = FIN_Utility.formatNumber(
-          BigDecimal.ZERO, "#,##0.00", ".", ",");
+          BigDecimal.ZERO, FORMAT_PATTERN, ".", ",");
       assertEquals("0.00", result);
     }
   }
@@ -224,7 +231,7 @@ public class FIN_UtilityTest {
     void returnsFirstMatch() throws Exception {
       JSONObject json = new JSONObject();
       json.put("key1", "value1");
-      json.put("key2", "value2");
+      json.put("key2", VALUE2);
       assertEquals("value1", FIN_Utility.getFirstNonEmpty(json, "key1", "key2"));
     }
 
@@ -233,8 +240,8 @@ public class FIN_UtilityTest {
     void skipsBlankReturnsSecond() throws Exception {
       JSONObject json = new JSONObject();
       json.put("key1", "");
-      json.put("key2", "value2");
-      assertEquals("value2", FIN_Utility.getFirstNonEmpty(json, "key1", "key2"));
+      json.put("key2", VALUE2);
+      assertEquals(VALUE2, FIN_Utility.getFirstNonEmpty(json, "key1", "key2"));
     }
 
     @Test
@@ -255,7 +262,7 @@ public class FIN_UtilityTest {
     @DisplayName("BPD returns RCIN")
     void bpdReturnsRCIN() throws Exception {
       JSONObject json = new JSONObject();
-      json.put("trxtype", "BPD");
+      json.put(TRXTYPE, "BPD");
       assertEquals("RCIN", FIN_Utility.getDefaultAddPaymentDocument(json));
     }
 
@@ -263,7 +270,7 @@ public class FIN_UtilityTest {
     @DisplayName("BPW returns PDOUT")
     void bpwReturnsPDOUT() throws Exception {
       JSONObject json = new JSONObject();
-      json.put("trxtype", "BPW");
+      json.put(TRXTYPE, "BPW");
       assertEquals("PDOUT", FIN_Utility.getDefaultAddPaymentDocument(json));
     }
 
@@ -271,7 +278,7 @@ public class FIN_UtilityTest {
     @DisplayName("unknown type returns empty")
     void unknownReturnsEmpty() throws Exception {
       JSONObject json = new JSONObject();
-      json.put("trxtype", "OTHER");
+      json.put(TRXTYPE, "OTHER");
       assertEquals("", FIN_Utility.getDefaultAddPaymentDocument(json));
     }
 

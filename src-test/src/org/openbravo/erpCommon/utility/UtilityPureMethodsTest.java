@@ -31,8 +31,11 @@ import org.junit.jupiter.api.Test;
  * Unit tests for pure static methods in {@link Utility} that have no database
  * or framework dependencies.
  */
+@SuppressWarnings({"java:S1149"})
 @DisplayName("Utility pure methods")
 public class UtilityPureMethodsTest {
+
+  private static final String CSV_ABC = "a,b,c";
 
   // ── isID ─────────────────────────────────────────────────────────
 
@@ -104,7 +107,7 @@ public class UtilityPureMethodsTest {
     @Test
     @DisplayName("splits comma-separated string")
     void splitsCsv() {
-      Vector<String> v = Utility.getStringVector("a,b,c");
+      Vector<String> v = Utility.getStringVector(CSV_ABC);
       assertEquals(3, v.size());
       assertEquals("a", v.get(0));
       assertEquals("b", v.get(1));
@@ -188,7 +191,7 @@ public class UtilityPureMethodsTest {
       assertFalse(Utility.isElementInList("('a','b','c')", "x"));
     }
     @Test void withoutParentheses() {
-      assertTrue(Utility.isElementInList("a,b,c", "b"));
+      assertTrue(Utility.isElementInList(CSV_ABC, "b"));
     }
     @Test void quotedElement() {
       assertTrue(Utility.isElementInList("'a','b','c'", "'b'"));
@@ -203,7 +206,7 @@ public class UtilityPureMethodsTest {
     @Test
     @DisplayName("quotes unquoted items")
     void quotesUnquoted() {
-      assertEquals("'a', 'b', 'c'", Utility.stringList("a,b,c"));
+      assertEquals("'a', 'b', 'c'", Utility.stringList(CSV_ABC));
     }
 
     @Test
@@ -267,7 +270,7 @@ public class UtilityPureMethodsTest {
     @Test
     @DisplayName("splits comma-separated string")
     void splitsString() {
-      ArrayList<String> result = Utility.stringToArrayList("a,b,c");
+      ArrayList<String> result = Utility.stringToArrayList(CSV_ABC);
       assertEquals(3, result.size());
       assertEquals("a", result.get(0));
     }

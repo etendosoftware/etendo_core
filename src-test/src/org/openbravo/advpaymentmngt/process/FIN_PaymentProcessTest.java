@@ -35,9 +35,11 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 /**
  * Tests for {@link FIN_PaymentProcess}.
  */
-@SuppressWarnings({"java:S101", "java:S112"})
+@SuppressWarnings({"java:S101", "java:S112", "java:S1176"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FIN_PaymentProcessTest {
+
+  private static final String THROW_EXCEPTION_METHOD = "throwExceptionIfPaymentIsAlreadyReversed";
 
   private FIN_PaymentProcess instance;
 
@@ -62,7 +64,7 @@ public class FIN_PaymentProcessTest {
     when(mockPayment.getReversedPayment()).thenReturn(mockReversedPayment);
 
     Method method = FIN_PaymentProcess.class.getDeclaredMethod(
-        "throwExceptionIfPaymentIsAlreadyReversed", String.class, FIN_Payment.class);
+        THROW_EXCEPTION_METHOD, String.class, FIN_Payment.class);
     method.setAccessible(true);
 
     try {
@@ -82,7 +84,7 @@ public class FIN_PaymentProcessTest {
     when(mockPayment.getReversedPayment()).thenReturn(null);
 
     Method method = FIN_PaymentProcess.class.getDeclaredMethod(
-        "throwExceptionIfPaymentIsAlreadyReversed", String.class, FIN_Payment.class);
+        THROW_EXCEPTION_METHOD, String.class, FIN_Payment.class);
     method.setAccessible(true);
 
     method.invoke(instance, "RV", mockPayment);
@@ -97,7 +99,7 @@ public class FIN_PaymentProcessTest {
     when(mockPayment.getReversedPayment()).thenReturn(mockReversedPayment);
 
     Method method = FIN_PaymentProcess.class.getDeclaredMethod(
-        "throwExceptionIfPaymentIsAlreadyReversed", String.class, FIN_Payment.class);
+        THROW_EXCEPTION_METHOD, String.class, FIN_Payment.class);
     method.setAccessible(true);
 
     method.invoke(instance, "P", mockPayment);
@@ -112,7 +114,7 @@ public class FIN_PaymentProcessTest {
     when(mockPayment.getReversedPayment()).thenReturn(mockReversedPayment);
 
     Method method = FIN_PaymentProcess.class.getDeclaredMethod(
-        "throwExceptionIfPaymentIsAlreadyReversed", String.class, FIN_Payment.class);
+        THROW_EXCEPTION_METHOD, String.class, FIN_Payment.class);
     method.setAccessible(true);
 
     method.invoke(instance, null, mockPayment);
