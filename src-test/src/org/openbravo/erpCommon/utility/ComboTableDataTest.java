@@ -19,11 +19,14 @@ package org.openbravo.erpCommon.utility;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -237,6 +240,134 @@ public class ComboTableDataTest {
 
     @Test void emptyElementReturnsFalse() throws Exception {
       assertFalse(invoke(new ComboTableData(), new String[]{"a"}, ""));
+    }
+  }
+
+  // ── setParameter ─────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("setParameter")
+  class SetParameter {
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> getParametersMap(ComboTableData ctd) throws Exception {
+      Field f = ComboTableData.class.getDeclaredField("parameters");
+      f.setAccessible(true);
+      return (Map<String, String>) f.get(ctd);
+    }
+
+    @Test
+    @DisplayName("stores value with uppercased key")
+    void storesValueWithUppercasedKey() throws Exception {
+      ComboTableData ctd = new ComboTableData();
+      ctd.setParameter("myKey", "myValue");
+      Map<String, String> params = getParametersMap(ctd);
+      assertEquals("myValue", params.get("MYKEY"));
+    }
+
+    @Test
+    @DisplayName("null name throws exception")
+    void nullNameThrows() {
+      ComboTableData ctd = new ComboTableData();
+      assertThrows(Exception.class, () -> ctd.setParameter(null, "value"));
+    }
+
+    @Test
+    @DisplayName("empty name throws exception")
+    void emptyNameThrows() {
+      ComboTableData ctd = new ComboTableData();
+      assertThrows(Exception.class, () -> ctd.setParameter("", "value"));
+    }
+
+    @Test
+    @DisplayName("null value removes key")
+    void nullValueRemovesKey() throws Exception {
+      ComboTableData ctd = new ComboTableData();
+      ctd.setParameter("key1", "val1");
+      ctd.setParameter("key1", null);
+      Map<String, String> params = getParametersMap(ctd);
+      assertFalse(params.containsKey("KEY1"));
+    }
+
+    @Test
+    @DisplayName("empty value removes key")
+    void emptyValueRemovesKey() throws Exception {
+      ComboTableData ctd = new ComboTableData();
+      ctd.setParameter("key1", "val1");
+      ctd.setParameter("key1", "");
+      Map<String, String> params = getParametersMap(ctd);
+      assertFalse(params.containsKey("KEY1"));
+    }
+  }
+
+  // ── canBeCached / isAllowedCrossOrgReference ─────────────────────────
+
+  @Nested
+  @DisplayName("canBeCached and isAllowedCrossOrgReference")
+  class BooleanGetters {
+
+    @Test
+    @DisplayName("canBeCached defaults to false")
+    void canBeCachedDefault() {
+      ComboTableData ctd = new ComboTableData();
+      assertFalse(ctd.canBeCached());
+    }
+
+    @Test
+    @DisplayName("isAllowedCrossOrgReference defaults to false")
+    void isAllowedCrossOrgReferenceDefault() {
+      ComboTableData ctd = new ComboTableData();
+      assertFalse(ctd.isAllowedCrossOrgReference());
+    }
+  }
+
+  // ── getObjectName ────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("getObjectName")
+  class GetObjectName {
+
+    @Test
+    @DisplayName("default returns null")
+    void defaultReturnsNull() {
+      ComboTableData ctd = new ComboTableData();
+      assertNull(ctd.getObjectName());
+    }
+  }
+
+  // ── Multiple addField operations ─────────────────────────────────────
+
+  @Nested
+  @DisplayName("Multiple addField operations")
+  class MultipleAddFields {
+
+    @SuppressWarnings("unchecked")
+    private <T> List<T> getField(ComboTableData ctd, String fieldName) throws Exception {
+      Field f = ComboTableData.class.getDeclaredField(fieldName);
+      f.setAccessible(true);
+      return (List<T>) f.get(ctd);
+    }
+
+    @Test
+    @DisplayName("multiple select fields accumulate")
+    void multipleSelectFields() throws Exception {
+      ComboTableData ctd = new ComboTableData();
+      ctd.addSelectField("col1", "a1");
+      ctd.addSelectField("col2", "a2");
+      ctd.addSelectField("col3", "a3");
+      List<?> selectFields = getField(ctd, "select");
+      assertEquals(3, selectFields.size());
+    }
+
+    @Test
+    @DisplayName("multiple where fields accumulate")
+    void multipleWhereFields() throws Exception {
+      ComboTableData ctd = new ComboTableData();
+      ctd.addWhereField("c1 = 1", WHERE);
+      ctd.addWhereField("c2 = 2", WHERE);
+      ctd.addWhereField("c3 = 3", WHERE);
+      List<?> whereFields = getField(ctd, "where");
+      assertEquals(3, whereFields.size());
     }
   }
 }

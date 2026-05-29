@@ -19,7 +19,9 @@ import org.openbravo.advpaymentmngt.filterexpression.AddOrderOrInvoiceFilterExpr
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentDefaultValuesHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentReadOnlyLogicsHandlerTest;
 import org.openbravo.advpaymentmngt.process.FIN_DoubtfulDebtProcessTest;
+import org.openbravo.advpaymentmngt.process.FIN_PaymentProcessTest;
 import org.openbravo.advpaymentmngt.utility.APRMSQLFunctionRegisterTest;
+import org.openbravo.advpaymentmngt.utility.FIN_UtilityTest;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtilityTest;
 import org.openbravo.authentication.AuthenticationExceptionTest;
 import org.openbravo.authentication.AuthenticationExpirationPasswordExceptionTest;
@@ -131,6 +133,7 @@ import org.openbravo.erpCommon.ad_forms.DocFINBankStatementTest;
 import org.openbravo.erpCommon.ad_forms.DocFINFinAccTransactionTemplateTest;
 import org.openbravo.erpCommon.ad_forms.DocFINPaymentTemplateTest;
 import org.openbravo.erpCommon.ad_forms.DocFINReconciliationTemplateTest;
+import org.openbravo.erpCommon.ad_forms.DocFINReconciliationTest;
 import org.openbravo.erpCommon.ad_forms.DocGLJournalTemplateTest;
 import org.openbravo.erpCommon.ad_forms.DocInOutTemplateTest;
 import org.openbravo.erpCommon.ad_forms.DocInternalConsumptionTemplateTest;
@@ -205,7 +208,9 @@ import org.openbravo.service.datasource.ComboTableDatasourceServiceTest;
 import org.openbravo.service.datasource.treeChecks.AssetsTreeOperationManagerTest;
 import org.openbravo.service.db.ClientImportEntityResolverTest;
 import org.openbravo.service.db.DataImportServiceTest;
+import org.openbravo.dal.xml.XMLTypeConverterTest;
 import org.openbravo.service.json.AdvancedQueryBuilderTest;
+import org.openbravo.erpCommon.utility.UtilityPureMethodsTest;
 import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
 /**
@@ -242,11 +247,13 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
     // advpaymentmngt.process
     FIN_DoubtfulDebtProcessTest.class,
+    FIN_PaymentProcessTest.class,
 
     // advpaymentmngt.utility
     APRMSQLFunctionRegisterTest.class,
     APRM_MatchingUtilityTest.class,
     FINUtilityTest.class,
+    FIN_UtilityTest.class,
 
     // advpaymentmngt.dao — core coverage
     AdvPaymentMngtDaoTest.class,
@@ -408,6 +415,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     DocFINFinAccTransactionTemplateTest.class,
     DocFINPaymentTemplateTest.class,
     DocFINReconciliationTemplateTest.class,
+    DocFINReconciliationTest.class,
     DocGLJournalTemplateTest.class,
     DocInOutTemplateTest.class,
     DocInternalConsumptionTemplateTest.class,
@@ -521,6 +529,12 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
     // service.json
     AdvancedQueryBuilderTest.class,
+
+    // dal.xml
+    XMLTypeConverterTest.class,
+
+    // erpCommon.utility — pure methods
+    UtilityPureMethodsTest.class,
 
     // userinterface.selector
     DefaultExpressionCalloutTest.class,
