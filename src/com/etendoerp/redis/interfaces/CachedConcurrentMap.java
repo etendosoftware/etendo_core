@@ -1,7 +1,7 @@
 package com.etendoerp.redis.interfaces;
 
 import com.etendoerp.redis.RedisClient;
-import org.redisson.api.LocalCachedMapOptions;
+import org.redisson.api.options.LocalCachedMapOptions;
 
 import java.util.Collection;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class CachedConcurrentMap<K, V> implements ConcurrentMap<K, V> {
      * @param name key to use in Redis. (This is not used when Redis is not configured.)
      */
     public CachedConcurrentMap(String name) {
-        this(name, true, LocalCachedMapOptions.defaults());
+        this(name, true, LocalCachedMapOptions.name(name));
     }
 
     /**
@@ -37,7 +37,7 @@ public class CachedConcurrentMap<K, V> implements ConcurrentMap<K, V> {
      * @param localCache whether to use {@link org.redisson.api.RLocalCachedMap} or a {@link org.redisson.api.RMap}
      */
     public CachedConcurrentMap(String name, boolean localCache) {
-        this(name, localCache, localCache ? LocalCachedMapOptions.defaults() : null);
+        this(name, localCache, localCache ? LocalCachedMapOptions.name(name) : null);
     }
 
     /**
@@ -60,7 +60,8 @@ public class CachedConcurrentMap<K, V> implements ConcurrentMap<K, V> {
     public CachedConcurrentMap(String name, boolean localCache, LocalCachedMapOptions<K, V> options, Integer initialCapacity) {
         if (RedisClient.getInstance().isAvailable()) {
             if (localCache) {
-                instance = RedisClient.getInstance().getClient().getLocalCachedMap(name, options);
+                LocalCachedMapOptions<K, V> localCachedOptions = options != null ? options : LocalCachedMapOptions.name(name);
+                instance = RedisClient.getInstance().getClient().getLocalCachedMap(localCachedOptions);
             } else {
                 instance = RedisClient.getInstance().getClient().getMap(name);
             }

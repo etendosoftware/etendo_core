@@ -19,37 +19,34 @@
 
 package org.openbravo.base.session;
 
-import java.io.Serializable;
+import java.util.UUID;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.IdentifierGenerator;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.BaseOBObjectDef;
 
 /**
- * Extends the standard Hibernate UUIDGenerator. This is needed because:
+ * Implements Hibernate IdentifierGenerator. This is needed because:
  * <ul>
- * <li>the standard Hibernate UUIDGenerator will overwrite the id even if the object already has
+ * <li>the standard Hibernate UUID generation will overwrite the id even if the object already has
  * one. The goal is to try to keep an id if it has been assigned to an object. This is important in
  * case of imports.</li>
- * <li>the standard uuidgenerator will generate uuid strings of length 36 with the - as a separator,
+ * <li>the standard UUID generation can generate uuid strings of length 36 with the - as a separator,
  * the length should be 32</li>
  * </ul>
  * 
  * @author mtaal
  */
-public class DalUUIDGenerator extends UUIDGenerator {
+public class DalUUIDGenerator implements IdentifierGenerator {
 
   @Override
-  public Serializable generate(SharedSessionContractImplementor session, Object obj)
-      throws HibernateException {
+  public Object generate(SharedSessionContractImplementor session, Object obj) {
     final BaseOBObjectDef bob = (BaseOBObjectDef) obj;
     if (bob.getId() != null) {
       return ((String) bob.getId()).toUpperCase();
     }
-    String result = ((String) super.generate(session, obj)).toUpperCase();
-    result = result.replace("-", "");
+    String result = UUID.randomUUID().toString().toUpperCase().replace("-", "");
     if (result.length() != 32) {
       throw new OBException("Generating UUID of wrong length: " + result);
     }

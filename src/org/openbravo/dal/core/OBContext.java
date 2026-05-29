@@ -106,6 +106,7 @@ public class OBContext implements OBNotSingleton, Serializable {
   private transient Set<String> deactivatedOrganizations;
   private transient String userLevel;
   private transient Map<String, OrganizationStructureProvider> organizationStructureProviderByClient;
+  @SuppressWarnings("deprecation")
   private transient Map<String, AcctSchemaStructureProvider> acctSchemaStructureProviderByClient;
   private transient EntityAccessChecker entityAccessChecker;
   private transient RecordAccessChecker recordAccessChecker;
@@ -826,6 +827,7 @@ public class OBContext implements OBNotSingleton, Serializable {
   }
 
   // sets the context by reading all user information
+  @SuppressWarnings("deprecation")
   private boolean initialize(String userId, String roleId, String clientId, String orgId,
       String languageCode, String warehouseId) {
     userID = userId;
@@ -1125,10 +1127,12 @@ public class OBContext implements OBNotSingleton, Serializable {
     return orgProvider;
   }
 
+  @SuppressWarnings("deprecation")
   public AcctSchemaStructureProvider getAcctSchemaStructureProvider() {
     return getAcctSchemaStructureProvider(getCurrentClient().getId());
   }
 
+  @SuppressWarnings("deprecation")
   public AcctSchemaStructureProvider getAcctSchemaStructureProvider(String clientId) {
     AcctSchemaStructureProvider acctSchemaProvider = acctSchemaStructureProviderByClient
         .get(clientId);

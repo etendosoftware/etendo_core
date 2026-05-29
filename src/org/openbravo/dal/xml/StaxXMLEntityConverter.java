@@ -70,6 +70,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * @author mtaal
  */
 
+@SuppressWarnings("deprecation")
 public class StaxXMLEntityConverter extends BaseXMLEntityConverter implements OBNotSingleton {
   // This class should translate the
 

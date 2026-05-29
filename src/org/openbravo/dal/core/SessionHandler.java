@@ -437,6 +437,7 @@ public class SessionHandler implements OBNotSingleton {
    * @param obj
    *          the object to persist
    */
+  @SuppressWarnings("deprecation")
   public void save(String pool, Object obj) {
     if (Identifiable.class.isAssignableFrom(obj.getClass())) {
       getSession(pool).saveOrUpdate(((Identifiable) obj).getEntityName(), obj);
@@ -463,6 +464,7 @@ public class SessionHandler implements OBNotSingleton {
    * @param obj
    *          the object to remove
    */
+  @SuppressWarnings("deprecation")
   public void delete(String pool, Object obj) {
     if (Identifiable.class.isAssignableFrom(obj.getClass())) {
       getSession(pool).delete(((Identifiable) obj).getEntityName(), obj);

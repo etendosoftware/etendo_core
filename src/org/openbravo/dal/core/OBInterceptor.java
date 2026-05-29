@@ -24,14 +24,12 @@ import static org.openbravo.model.common.enterprise.Organization.PROPERTY_CLIENT
 import static org.openbravo.model.common.enterprise.Organization.PROPERTY_UPDATED;
 import static org.openbravo.model.common.enterprise.Organization.PROPERTY_UPDATEDBY;
 
-import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
 import org.hibernate.proxy.HibernateProxy;
@@ -62,7 +60,7 @@ import jakarta.enterprise.context.Dependent;
  */
 
 @Dependent
-public class OBInterceptor extends EmptyInterceptor {
+public class OBInterceptor implements Interceptor {
   private static final Logger log = LogManager.getLogger();
 
   private static final long serialVersionUID = 1L;
@@ -135,7 +133,7 @@ public class OBInterceptor extends EmptyInterceptor {
    * @see Property
    */
   @Override
-  public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames,
+  public void onDelete(Object entity, Object id, Object[] state, String[] propertyNames,
       Type[] types) {
     SecurityChecker.getInstance().checkDeleteAllowed(entity);
     if (getInterceptorListener() != null) {
@@ -166,7 +164,7 @@ public class OBInterceptor extends EmptyInterceptor {
    *         other cases
    */
   @Override
-  public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState,
+  public boolean onFlushDirty(Object entity, Object id, Object[] currentState,
       Object[] previousState, String[] propertyNames, Type[] types) {
     if (SessionHandler.isCheckingDirtySession()) {
       // onFlushDirty gets invoked on actual flushes but also when checking session dirty, in later
@@ -225,7 +223,7 @@ public class OBInterceptor extends EmptyInterceptor {
    *         other cases
    */
   @Override
-  public boolean onSave(Object entity, Serializable id, Object[] currentState,
+  public boolean onSave(Object entity, Object id, Object[] currentState,
       String[] propertyNames, Type[] types) {
     // disabled for now, checks are all done when a property is set
     // if (entity instanceof BaseOBObject) {
@@ -465,7 +463,6 @@ public class OBInterceptor extends EmptyInterceptor {
     if (getInterceptorListener() != null) {
       getInterceptorListener().afterTransactionBegin(tx);
     }
-    super.afterTransactionBegin(tx);
   }
 
   @Override
@@ -473,7 +470,6 @@ public class OBInterceptor extends EmptyInterceptor {
     if (getInterceptorListener() != null) {
       getInterceptorListener().afterTransactionCompletion(tx);
     }
-    super.afterTransactionCompletion(tx);
   }
 
   @Override
@@ -481,7 +477,6 @@ public class OBInterceptor extends EmptyInterceptor {
     if (getInterceptorListener() != null) {
       getInterceptorListener().beforeTransactionCompletion(tx);
     }
-    super.beforeTransactionCompletion(tx);
   }
 
   @SuppressWarnings({ "rawtypes" })
@@ -490,7 +485,6 @@ public class OBInterceptor extends EmptyInterceptor {
     if (getInterceptorListener() != null) {
       getInterceptorListener().preFlush(entities);
     }
-    super.preFlush(entities);
   }
 
   // allow Hibernate to determine that the object is a valid entity

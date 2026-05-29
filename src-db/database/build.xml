@@ -85,6 +85,7 @@ export.database.structure: Exports the database structure in the xml's files.
 
   <target name="update.database.java">
     <java classname="org.openbravo.ddlutils.task.AlterDatabaseJava" failonerror="true" fork="true" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg value="${bbdd.driver}"/>
       <arg value="${bbdd.owner.url}"/>
       <arg value="${bbdd.user}"/>
@@ -127,6 +128,7 @@ export.database.structure: Exports the database structure in the xml's files.
 
   <target name="export.database.structure">
     <java classname="org.openbravo.ddlutils.task.ExportDatabase" failonerror="true" fork="true" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg value="${bbdd.driver}"/>
       <arg value="${bbdd.owner.url}"/>
       <arg value="${bbdd.user}"/>
@@ -150,6 +152,7 @@ export.database.structure: Exports the database structure in the xml's files.
 
   <target name="export.sample.data">
     <java classname="org.openbravo.ddlutils.task.ExportSampledata" failonerror="true" fork="true" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg value="${bbdd.driver}"/>
       <arg value="${bbdd.owner.url}"/>
       <arg value="${bbdd.user}"/>

@@ -30,13 +30,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -159,7 +159,7 @@ public abstract class SessionFactoryController {
       setInterceptor(configuration);
 
       final Properties properties = getOpenbravoProperties();
-      bbddUser = properties.getProperty(AvailableSettings.USER);
+      bbddUser = properties.getProperty(JdbcSettings.JAKARTA_JDBC_USER);
       configuration.addProperties(properties);
 
       // second-level caching is disabled for now because not all data
@@ -235,7 +235,7 @@ public abstract class SessionFactoryController {
 //  }
 
   public void closeHibernatePool() {
-    ConnectionProvider hibernatePool = sessionFactory.getSessionFactoryOptions()
+    ConnectionProvider hibernatePool = sessionFactory.unwrap(SessionFactoryImplementor.class)
         .getServiceRegistry()
         .getService(ConnectionProvider.class);
     if (hibernatePool != null && hibernatePool instanceof DriverManagerConnectionProviderImpl) {

@@ -96,13 +96,11 @@ public class OrganizationStructureProvider implements OBNotSingleton {
             "   and t.ad_client_id = :clientId";
     //@formatter:on
 
-    @SuppressWarnings("rawtypes")
-    NativeQuery qry = OBDal.getInstance()
+    NativeQuery<Object[]> qry = OBDal.getInstance()
         .getSession()
-        .createNativeQuery(sql)
+        .createNativeQuery(sql, Object[].class)
         .setParameter("clientId", getClientId());
 
-    @SuppressWarnings("unchecked")
     List<Object[]> treeNodes = qry.list();
 
     orgNodes = new CachedConcurrentMap<>(this.getClass().getSimpleName() + ":orgNodes", false, null, treeNodes.size());

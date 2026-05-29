@@ -273,7 +273,7 @@ public class DataImportService implements OBSingleton {
           // this is done through a stored procedure
           SessionHandler.getInstance()
               .getSession()
-              .createNativeQuery("UPDATE AD_ROLE_ORGACCESS SET AD_ROLE_ID='0' where AD_ROLE_ID='0'")
+              .createNativeMutationQuery("UPDATE AD_ROLE_ORGACCESS SET AD_ROLE_ID='0' where AD_ROLE_ID='0'")
               .executeUpdate();
         }
       }
@@ -488,7 +488,7 @@ public class DataImportService implements OBSingleton {
         if (containsAdRoleOrOrgAccess) {
           SessionHandler.getInstance()
               .getSession()
-              .createNativeQuery("UPDATE AD_ROLE_ORGACCESS SET AD_ROLE_ID='0' where AD_ROLE_ID='0'")
+              .createNativeMutationQuery("UPDATE AD_ROLE_ORGACCESS SET AD_ROLE_ID='0' where AD_ROLE_ID='0'")
               .executeUpdate();
         }
       }

@@ -16,7 +16,7 @@ repositories {
   gradlePluginPortal()
   mavenCentral()
   maven {
-    url "https://repository.jboss.org/nexus/content/repositories/public/"
+    url = "https://repository.jboss.org/nexus/content/repositories/public/"
   }
 }
 
@@ -402,7 +402,7 @@ test {
   useJUnitPlatform()
   testLogging {
     events "passed", "skipped", "failed"
-    exceptionFormat "full"
+    exceptionFormat = "full"
   }
 }
 

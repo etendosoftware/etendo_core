@@ -19,12 +19,11 @@
 
 package org.openbravo.base.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.Type;
 import org.openbravo.base.session.SessionFactoryController;
@@ -69,24 +68,24 @@ public class ModelSessionFactoryController extends SessionFactoryController {
 
   // an interceptor which fails on all updates
   @Dependent
-  private class LocalInterceptor extends EmptyInterceptor {
+  private class LocalInterceptor implements Interceptor {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames,
+    public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames,
         Type[] types) {
       return false;
     }
 
     @Override
-    public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames,
+    public void onDelete(Object entity, Object id, Object[] state, String[] propertyNames,
         Type[] types) {
       Check.fail("The model session factory is not allowed to " + "remove model data.");
     }
 
     @Override
-    public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState,
+    public boolean onFlushDirty(Object entity, Object id, Object[] currentState,
         Object[] previousState, String[] propertyNames, Type[] types) {
       for (int i = 0; i < currentState.length; i++) {
         final Object current = currentState[i];
@@ -121,24 +120,24 @@ public class ModelSessionFactoryController extends SessionFactoryController {
     }
 
     @Override
-    public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames,
+    public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames,
         Type[] types) {
       Check.fail("The model session factory is not allowed to " + "create model data.");
       return false;
     }
 
     @Override
-    public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {
+    public void onCollectionRemove(Object collection, Object key) throws CallbackException {
       Check.fail("The model session factory is not allowed to " + "update model data.");
     }
 
     @Override
-    public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
+    public void onCollectionRecreate(Object collection, Object key) throws CallbackException {
       Check.fail("The model session factory is not allowed to " + "update model data.");
     }
 
     @Override
-    public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
+    public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
       Check.fail("The model session factory is not allowed to " + "update model data.");
     }
   }

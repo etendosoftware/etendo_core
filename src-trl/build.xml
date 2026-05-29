@@ -58,6 +58,7 @@ build: compile the project, including the xsql's files and generates the jar
   <target name="sqlc" depends="init">
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql ./src '${build.trl.sqlc}' null false"/>
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="trl.class.path"/>
       <syspropertyset>
         <propertyref name="java.security.egd" />

@@ -16,6 +16,7 @@ import org.openbravo.base.util.Check;
  * Hibernate 6.0 entity instantiator for Etendo DAL entities.
  * Implements the EntityInstantiator SPI (Hibernate 6.0.x).
  */
+@SuppressWarnings("deprecation")
 public class OBInstantiator implements EntityInstantiator {
 
   private static final long serialVersionUID = 1L;

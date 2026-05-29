@@ -467,8 +467,8 @@ public class GenerateEntitiesTask extends Task {
   }
 
   private Configuration getNewConfiguration() {
-    final Configuration cfg = new Configuration();
-    cfg.setObjectWrapper(new DefaultObjectWrapper());
+    final Configuration cfg = new Configuration(Configuration.VERSION_2_3_34);
+    cfg.setObjectWrapper(new DefaultObjectWrapper(Configuration.VERSION_2_3_34));
     return cfg;
   }
 

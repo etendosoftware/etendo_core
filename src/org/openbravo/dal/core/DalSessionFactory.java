@@ -75,6 +75,7 @@ public class DalSessionFactory implements SessionFactory {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
     return delegateSessionFactory.getFilterDefinition(filterName);
   }
@@ -245,6 +246,7 @@ public class DalSessionFactory implements SessionFactory {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public SessionFactoryOptions getSessionFactoryOptions() {
     return delegateSessionFactory.getSessionFactoryOptions();
   }

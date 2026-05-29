@@ -1,12 +1,18 @@
 package com.etendoerp.sequences;
 
+import java.lang.reflect.Member;
+import java.util.EnumSet;
+
 import com.etendoerp.sequences.annotations.Sequence;
 import org.hibernate.Session;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GeneratorCreationContext;
 
-public abstract class DefaultSequenceGenerator implements AnnotationValueGeneration<Sequence>  {
+public abstract class DefaultSequenceGenerator implements AnnotationBasedGenerator<Sequence>, BeforeExecutionGenerator {
     private static final long serialVersionUID = 7231888894694188218L;
     protected String propertyValue;
 
@@ -19,7 +25,7 @@ public abstract class DefaultSequenceGenerator implements AnnotationValueGenerat
     }
 
     @Override
-    public void initialize(Sequence sequence, Class<?> aClass) {
+    public void initialize(Sequence sequence, Member member, GeneratorCreationContext context) {
         this.propertyValue = sequence.propertyName();
     }
 
@@ -32,39 +38,18 @@ public abstract class DefaultSequenceGenerator implements AnnotationValueGenerat
      */
     public abstract String generateValue(Session session, Object owner);
 
-    /**
-     * Returns the in-memory generated value
-     * @return {@code true}
-     */
     @Override
-    public ValueGenerator<String> getValueGenerator() {
-        return this::generateValue;
+    public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue,
+        EventType eventType) {
+        return generateValue((Session) session, owner);
     }
 
     /**
      * Defines when this class will generate a value. By default the value will be generated only on inserts.
-     * @return The {@link GenerationTiming#INSERT} is used by default.
+     * @return The insert-only event set is used by default.
      */
     @Override
-    public GenerationTiming getGenerationTiming() {
-        return GenerationTiming.INSERT;
-    }
-
-    /**
-     * Returns false because the value is generated in-memory.
-     * @return false
-     */
-    @Override
-    public boolean referenceColumnInSql() {
-        return false;
-    }
-
-    /**
-     * Returns null because the value is generated in-memory.
-     * @return null
-     */
-    @Override
-    public String getDatabaseGeneratedReferencedColumnValue() {
-        return null;
+    public EnumSet<EventType> getEventTypes() {
+        return EventTypeSets.INSERT_ONLY;
     }
 }

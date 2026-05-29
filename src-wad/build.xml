@@ -62,6 +62,7 @@ build: compile the project, including the xsql's files and generates the jar
   <target name="sqlc" depends="init">
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql ./src/org '${build.wad.sqlc}' null false" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="wad.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -70,6 +71,7 @@ build: compile the project, including the xsql's files and generates the jar
 
   	<java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules_core}' '${build.wad.sqlc}'/src */src-wad false" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
   	  <classpath refid="wad.class.path" />
       <syspropertyset>
          <propertyref name="java.security.egd" />
@@ -78,6 +80,7 @@ build: compile the project, including the xsql's files and generates the jar
 
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${extra.modules.location}' '${build.wad.sqlc}'/src */src-wad false" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="wad.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -86,6 +89,7 @@ build: compile the project, including the xsql's files and generates the jar
 
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules}' '${build.wad.sqlc}'/src */src-wad false" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="wad.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />

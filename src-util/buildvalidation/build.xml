@@ -104,6 +104,7 @@
 
   <target name="sqlcCore" depends="init" if="checkCore">
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg line="'${base.config}'/Openbravo.properties .xsql ./src/org '${build.validation.sqlc}' null false" />
       <classpath refid="buildvalidation.class.path" />
       <syspropertyset>
@@ -117,6 +118,7 @@
 
   <target name="sqlcModules" depends="init" if="module.dir.exists" unless="checkCore">
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules}' '${base.modules}'/'${module}'/src-util/buildvalidation/src '${module}'/src-util/buildvalidation false" />
       <classpath refid="buildvalidation.class.path" />
       <syspropertyset>
@@ -130,6 +132,7 @@
 
   <target name="sqlcModulesCore" depends="init" if="module.core.dir.exists" unless="checkCore">
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules_core}' '${base.modules_core}'/'${module}'/src-util/buildvalidation/src '${module}'/src-util/buildvalidation false" />
       <classpath refid="buildvalidation.class.path" />
       <syspropertyset>
@@ -143,6 +146,7 @@
 
   <target name="sqlcExtraModule" depends="init" if="extra.module.dir.exists" unless="checkCore">
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg line="'${base.config}'/Openbravo.properties .xsql '${extra.modules.location}' '${extra.modules.location}'/'${module}'/src-util/buildvalidation/src '${module}'/src-util/buildvalidation false" />
       <classpath refid="buildvalidation.class.path" />
       <syspropertyset>
@@ -188,6 +192,7 @@
 
   <target name="buildvalidation" if="buildValidation.var">
     <java classname="org.openbravo.buildvalidation.BuildValidationHandler" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}" failonerror="yes">
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <arg value="${base.src}/../"/>
       <arg value="${module}"/>
       <arg value="${base.config}/Openbravo.properties"/>
