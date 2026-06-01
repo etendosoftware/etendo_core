@@ -202,7 +202,7 @@ OB.APRM.AddPayment.onLoad = function(view) {
 };
 
 OB.APRM.AddPayment.addNewGLItem = function(grid) {
-  var returnObject = isc.addProperties({}, grid.data[0]);
+  var returnObject = grid.data[0] ? isc.addProperties({}, grid.data[0]) : {};
   returnObject.paidOut = 0;
   returnObject.receivedIn = 0;
   return returnObject;
@@ -460,6 +460,14 @@ OB.APRM.AddPayment.refreshEditedSelectedRecordsInGrid = function(grid) {
 };
 
 OB.APRM.AddPayment.glitemsOnLoadGrid = function(grid) {
+  // splice clears rows in-place, preserving the ResultSet so updateGLItemsTotal works after manual adds.
+  if (!grid.isReady && grid.data && grid.data.allRows && grid.data.allRows.length > 0) {
+    grid.selectedIds = [];
+    grid.deselectedIds = [];
+    grid.pneSelectedRecords = [];
+    grid.data.allRows.splice(0, grid.data.allRows.length);
+    grid.markForRedraw();
+  }
   if (!grid.isReady) {
     // If Gl Items Grid contains records when first opened then section is uncollapsed
     if (grid.getSelectedRecords() && grid.getSelectedRecords().size() > 0) {
