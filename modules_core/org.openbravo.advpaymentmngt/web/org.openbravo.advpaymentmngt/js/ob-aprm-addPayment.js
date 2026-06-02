@@ -172,6 +172,11 @@ OB.APRM.AddPayment.onLoad = function(view) {
   orderInvoiceGrid.dataProperties.transformData =
     OB.APRM.AddPayment.ordInvTransformData;
   glitemGrid.removeRecordClick = OB.APRM.AddPayment.removeRecordClick;
+  // Prevent new rows from being auto-saved to the DB before the form is submitted.
+  // Without this, adding a row and then cancelling the popup would persist an orphaned
+  // FIN_PaymentDetail in the database. With autoSaveEdits=false, new rows are held in
+  // memory and only sent to the server when the form is actually submitted.
+  glitemGrid.autoSaveEdits = false;
   creditUseGrid.selectionChanged = OB.APRM.AddPayment.selectionChangedCredit;
   creditUseGrid.userSelectAllRecords = OB.APRM.AddPayment.userSelectAllRecords;
   creditUseGrid.deselectAllRecords = OB.APRM.AddPayment.deselectAllRecords;

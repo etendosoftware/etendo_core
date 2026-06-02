@@ -12,6 +12,10 @@ public class AddPaymentGLItemInjector extends HqlInserter {
   public String insertHql(Map<String, String> requestParameters,
       Map<String, Object> queryNamedParameters) {
     final String strPaymentId = requestParameters.get("fin_payment_id");
+    if (strPaymentId == null || strPaymentId.isEmpty() || "null".equals(strPaymentId)) {
+      // No valid payment ID: return no results to avoid loading GL items from unrelated payments.
+      return "1=2";
+    }
     queryNamedParameters.put("pid", strPaymentId);
     return "p.id = :pid";
   }

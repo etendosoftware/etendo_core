@@ -612,6 +612,9 @@ public class AddPaymentActionHandler extends Action {
     boolean isReceipt = payment.isReceipt();
     for (int i = 0; i < addedGLITemsArray.length(); i++) {
       JSONObject glItem = addedGLITemsArray.getJSONObject(i);
+      if (!isGLItemFromCurrentPayment(payment, glItem)) {
+        continue;
+      }
       BigDecimal glItemOutAmt = BigDecimal.ZERO;
       BigDecimal glItemInAmt = BigDecimal.ZERO;
 
@@ -656,6 +659,22 @@ public class AddPaymentActionHandler extends Action {
           OBDal.getInstance().get(GLItem.class, strGLItemId), businessPartnerGLItem, product,
           project, campaign, activity, null, costCenter, user1, user2);
     }
+  }
+
+  private boolean isGLItemFromCurrentPayment(FIN_Payment payment, JSONObject glItem)
+      throws JSONException, ServletException {
+    final String FIN_PAYMENT_DETAIL = "fin_payment_detail_id";
+    if (!glItem.has(FIN_PAYMENT_DETAIL) || glItem.get(FIN_PAYMENT_DETAIL) == JSONObject.NULL) {
+      return true;
+    }
+
+    final String paymentDetailId = glItem.getString(FIN_PAYMENT_DETAIL);
+    checkID(paymentDetailId);
+
+    FIN_PaymentDetail paymentDetail = OBDal.getInstance()
+        .get(FIN_PaymentDetail.class, paymentDetailId);
+    return paymentDetail != null && paymentDetail.getFinPayment() != null
+        && payment.getId().equals(paymentDetail.getFinPayment().getId());
   }
 
   private BaseOBObject getAccountDimension(final JSONObject glItem, final String dimension,
