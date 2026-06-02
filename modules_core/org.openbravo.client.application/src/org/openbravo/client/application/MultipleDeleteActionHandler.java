@@ -61,6 +61,7 @@ public class MultipleDeleteActionHandler extends BaseActionHandler {
   protected JSONObject execute(Map<String, Object> parameters, String data) {
 
     try {
+      OBContext.setAdminMode(true);
       final JSONObject dataObject = new JSONObject(data);
       final String entityName = dataObject.getString("entity");
       final JSONArray ids = dataObject.getJSONArray("ids");
@@ -93,6 +94,8 @@ public class MultipleDeleteActionHandler extends BaseActionHandler {
       } catch (JSONException t) {
         throw new OBException(t);
       }
+    } finally {
+      OBContext.restorePreviousMode();
     }
   }
 
