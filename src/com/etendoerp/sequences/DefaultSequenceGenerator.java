@@ -12,6 +12,10 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
 
+/**
+ * Base class for Hibernate sequence generators that produce values before statement execution.
+ * Subclasses define the actual generation strategy by implementing {@link #generateValue(Session, Object)}.
+ */
 public abstract class DefaultSequenceGenerator implements AnnotationBasedGenerator<Sequence>, BeforeExecutionGenerator {
     private static final long serialVersionUID = 7231888894694188218L;
     protected String propertyValue;
