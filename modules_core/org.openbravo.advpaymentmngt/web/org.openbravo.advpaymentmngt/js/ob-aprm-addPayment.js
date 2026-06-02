@@ -172,11 +172,19 @@ OB.APRM.AddPayment.onLoad = function(view) {
   orderInvoiceGrid.dataProperties.transformData =
     OB.APRM.AddPayment.ordInvTransformData;
   glitemGrid.removeRecordClick = OB.APRM.AddPayment.removeRecordClick;
-  // Prevent new rows from being auto-saved to the DB before the form is submitted.
-  // Without this, adding a row and then cancelling the popup would persist an orphaned
-  // FIN_PaymentDetail in the database. With autoSaveEdits=false, new rows are held in
-  // memory and only sent to the server when the form is actually submitted.
-  glitemGrid.autoSaveEdits = false;
+  // Intercept the datasource add so new GL item rows are committed locally (keeping them
+  // in allRows so totals update in real time) but never persisted to the DB before the
+  // payment form is actually submitted. Without this, adding a row and then cancelling
+  // the popup would leave an orphaned FIN_PaymentDetail in the database.
+  glitemGrid.dataSource.addData = function(newValues, callback) {
+    if (callback) {
+      var saved = isc.addProperties({}, newValues);
+      if (!saved.id) {
+        saved.id = 'glitem_new_' + new Date().getTime();
+      }
+      callback({status: 0}, saved, {});
+    }
+  };
   creditUseGrid.selectionChanged = OB.APRM.AddPayment.selectionChangedCredit;
   creditUseGrid.userSelectAllRecords = OB.APRM.AddPayment.userSelectAllRecords;
   creditUseGrid.deselectAllRecords = OB.APRM.AddPayment.deselectAllRecords;
@@ -207,7 +215,8 @@ OB.APRM.AddPayment.onLoad = function(view) {
 };
 
 OB.APRM.AddPayment.addNewGLItem = function(grid) {
-  var returnObject = grid.data[0] ? isc.addProperties({}, grid.data[0]) : {};
+  var record = grid.getRecord(0);
+  var returnObject = record ? isc.addProperties({}, record) : {};
   returnObject.paidOut = 0;
   returnObject.receivedIn = 0;
   return returnObject;
