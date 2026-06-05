@@ -23,6 +23,7 @@ package org.openbravo.modulescript;
  *             legacy module script is intentionally kept as a no-op to avoid recreating the old
  *             process request.
  */
+@SuppressWarnings("java:S1133") // intentional no-op — see class javadoc
 @Deprecated
 public class HBFix extends ModuleScript {
 

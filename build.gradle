@@ -152,7 +152,7 @@ sonar {
         property "sonar.projectVersion", "$sonarVersion"
         property "sonar.branch.name", "$sonarBranchName"
         property "sonar.scm.disabled", "true"
-        property "sonar.exclusions", "src-gen"
+        property "sonar.exclusions", "src-gen,src-util/modulescript/build/javasqlc/**"
     }
 }
 

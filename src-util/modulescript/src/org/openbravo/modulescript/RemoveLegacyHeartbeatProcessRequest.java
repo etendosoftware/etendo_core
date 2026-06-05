@@ -20,6 +20,11 @@ package org.openbravo.modulescript;
 
 import org.openbravo.database.ConnectionProvider;
 
+/**
+ * Removes the legacy Heartbeat Process Request (process ID 1005800000) created by the
+ * now-deprecated HBFix module script. Since EPL-1750, the heartbeat is managed by
+ * HeartbeatListener and no scheduler-based process request is needed.
+ */
 public class RemoveLegacyHeartbeatProcessRequest extends ModuleScript {
 
   @Override
