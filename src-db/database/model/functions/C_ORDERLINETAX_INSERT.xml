@@ -59,11 +59,13 @@
     Cur_Taxes RECORD;
   BEGIN --BODY
     v_TaxBaseAmount:=0;
-    SELECT t.ISSUMMARY, t.CASCADE, t.RATE, t.BASEAMOUNT, o.AD_CLIENT_ID, t.C_TAXBASE_ID
-    INTO v_IsSummary, v_Cascade, v_Rate, v_BaseAmount, v_Client_ID, v_C_TaxBase_ID
-    FROM C_TAX t, C_ORDER o
-    WHERE t.C_TAX_ID = p_tax_id
-    AND o.C_ORDER_ID = p_order_id;
+    SELECT ISSUMMARY, CASCADE, RATE, BASEAMOUNT, C_TAXBASE_ID
+    INTO v_IsSummary, v_Cascade, v_Rate, v_BaseAmount, v_C_TaxBase_ID
+    FROM C_TAX
+    WHERE C_TAX_ID = p_tax_id;
+    IF (p_order_id IS NOT NULL) THEN
+      SELECT AD_CLIENT_ID INTO v_Client_ID FROM C_ORDER WHERE C_ORDER_ID = p_order_id;
+    END IF;
     IF(v_BaseAmount='LNA' OR v_BaseAmount='LNATAX') THEN
       v_TaxBaseAmount:=p_LineNetAmt;
     ELSIF (v_BaseAmount='TBA' OR v_BaseAmount='TBATAX') THEN
@@ -120,7 +122,8 @@
 EXCEPTION
 WHEN OTHERS THEN
   v_ResultStr:= '@ERROR=' || SQLERRM;
-  DBMS_OUTPUT.PUT_LINE(v_ResultStr);
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  --ROLLBACK;
   RAISE;
 END C_ORDERLINETAX_INSERT
 ]]></body>
