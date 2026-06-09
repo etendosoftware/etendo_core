@@ -59,10 +59,13 @@
     Cur_Taxes RECORD;
   BEGIN --BODY
     v_TaxBaseAmount:=0;
-    SELECT ISSUMMARY, CASCADE, RATE, BASEAMOUNT, AD_CLIENT_ID, C_TAXBASE_ID
-    INTO v_IsSummary, v_Cascade, v_Rate, v_BaseAmount, v_Client_ID, v_C_TaxBase_ID
+    SELECT ISSUMMARY, CASCADE, RATE, BASEAMOUNT, C_TAXBASE_ID
+    INTO v_IsSummary, v_Cascade, v_Rate, v_BaseAmount, v_C_TaxBase_ID
     FROM C_TAX
     WHERE C_TAX_ID = p_tax_id;
+    IF (p_invoice_id IS NOT NULL) THEN
+      SELECT AD_CLIENT_ID INTO v_Client_ID FROM C_INVOICE WHERE C_INVOICE_ID = p_invoice_id;
+    END IF;
     IF(v_BaseAmount='LNA' OR v_BaseAmount='LNATAX') THEN
       v_TaxBaseAmount:=p_LineNetAmt;
     ELSIF (v_BaseAmount='TBA' OR v_BaseAmount='TBATAX') THEN
@@ -100,27 +103,22 @@
       IF(p_invoice_id IS NULL OR p_invoiceline_id IS NULL) THEN
          RAISE_APPLICATION_ERROR(-20000, '@20200@');
       END IF;
-      INSERT
-      INTO C_INVOICELINETAX (
-      C_InvoiceLineTax_ID, C_InvoiceLine_ID, C_Invoice_ID, C_Tax_ID, AD_Client_ID, AD_Org_ID,
-      IsActive, Created, CreatedBy, Updated, UpdatedBy,
-      TaxBaseAmt, TaxAmt, Line)
+      INSERT INTO C_INVOICELINETAX (
+        C_InvoiceLineTax_ID, C_InvoiceLine_ID, C_Invoice_ID, C_Tax_ID, AD_Client_ID, AD_Org_ID,
+        IsActive, Created, CreatedBy, Updated, UpdatedBy,
+        TaxBaseAmt, TaxAmt, Line)
       VALUES (
-      GET_UUID(), p_invoiceline_id, p_invoice_id, p_tax_id, v_Client_ID, p_org_id,
-      'Y', now(), p_user_id, now(), p_user_id,
-      v_TaxBaseAmount, ROUND(ROUND(v_TaxBaseAmount, p_StdPrecision) * v_Rate/100, p_StdPrecision), v_LineNo);
+        GET_UUID(), p_invoiceline_id, p_invoice_id, p_tax_id, v_Client_ID, p_org_id,
+        'Y', now(), p_user_id, now(), p_user_id,
+        v_TaxBaseAmount, ROUND(ROUND(v_TaxBaseAmount, p_StdPrecision) * v_Rate/100, p_StdPrecision), v_LineNo);
     ELSE
       FOR Cur_Taxes IN
-        (SELECT C_Tax_ID, RATE
-         FROM C_TAX
-        WHERE Parent_Tax_ID=p_tax_id
-        ORDER BY Line)
+        (SELECT C_Tax_ID, RATE FROM C_TAX WHERE Parent_Tax_ID=p_tax_id ORDER BY Line)
       LOOP
         C_INVOICELINETAX_INSERT(p_org_id, p_invoice_id, p_invoiceline_id, p_user_id, p_originaltax_id, Cur_Taxes.C_Tax_ID, p_LineNetAmt, p_AlternateTaxBaseAmt, p_StdPrecision);
       END LOOP;
     END IF;
     RETURN;
-    --<<FINISH_PROCESS>>
 EXCEPTION
 WHEN OTHERS THEN
   v_ResultStr:= '@ERROR=' || SQLERRM;
