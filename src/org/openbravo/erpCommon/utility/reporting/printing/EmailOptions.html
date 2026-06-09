@@ -98,17 +98,20 @@
 
     function validateAndSendEmail() {
       var hasError = false;
-      var toVal = document.getElementById('toEmail').value.trim();
-      if (!toVal) {
-        setEmailError('toEmail', 'Recipient email is required.');
-        hasError = true;
-      } else {
-        var invalidTo = findInvalidAddress(toVal);
-        if (invalidTo !== null) {
-          setEmailError('toEmail', '"' + invalidTo + '" is not a valid email address.');
+      var toEmailEl = document.getElementById('toEmail');
+      if (toEmailEl !== null) {
+        var toVal = toEmailEl.value.trim();
+        if (!toVal) {
+          setEmailError('toEmail', 'Recipient email is required.');
           hasError = true;
         } else {
-          setEmailError('toEmail', null);
+          var invalidTo = findInvalidAddress(toVal);
+          if (invalidTo !== null) {
+            setEmailError('toEmail', '"' + invalidTo + '" is not a valid email address.');
+            hasError = true;
+          } else {
+            setEmailError('toEmail', null);
+          }
         }
       }
       var ccEl = document.getElementById('ccEmail');
@@ -217,7 +220,8 @@
         setWindowElementFocus('firstElement');
         resizeWindow();
 
-        if (document.getElementById('toEmail').value === '') {
+        var toEmailEl = document.getElementById('toEmail');
+        if (toEmailEl && toEmailEl.value === '') {
           var warnCallback = function(paramXMLParticular, XMLHttpRequestObj) {
             if (getReadyStateHandler(XMLHttpRequestObj)) {
               try {
