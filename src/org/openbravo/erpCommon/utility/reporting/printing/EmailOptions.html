@@ -96,6 +96,22 @@
       }
     }
 
+    function validateOptionalEmail(fieldId) {
+      var el = document.getElementById(fieldId);
+      if (!el) { return false; }
+      if (!el.value.trim()) {
+        setEmailError(fieldId, null);
+        return false;
+      }
+      var invalid = findInvalidAddress(el.value);
+      if (invalid !== null) {
+        setEmailError(fieldId, '"' + invalid + '" is not a valid email address.');
+        return true;
+      }
+      setEmailError(fieldId, null);
+      return false;
+    }
+
     function validateAndSendEmail() {
       var hasError = false;
       var toEmailEl = document.getElementById('toEmail');
@@ -114,30 +130,8 @@
           }
         }
       }
-      var ccEl = document.getElementById('ccEmail');
-      if (ccEl && ccEl.value.trim()) {
-        var invalidCC = findInvalidAddress(ccEl.value);
-        if (invalidCC !== null) {
-          setEmailError('ccEmail', '"' + invalidCC + '" is not a valid email address.');
-          hasError = true;
-        } else {
-          setEmailError('ccEmail', null);
-        }
-      } else if (ccEl) {
-        setEmailError('ccEmail', null);
-      }
-      var bccEl = document.getElementById('bccEmail');
-      if (bccEl && bccEl.value.trim()) {
-        var invalidBCC = findInvalidAddress(bccEl.value);
-        if (invalidBCC !== null) {
-          setEmailError('bccEmail', '"' + invalidBCC + '" is not a valid email address.');
-          hasError = true;
-        } else {
-          setEmailError('bccEmail', null);
-        }
-      } else if (bccEl) {
-        setEmailError('bccEmail', null);
-      }
+      if (validateOptionalEmail('ccEmail')) { hasError = true; }
+      if (validateOptionalEmail('bccEmail')) { hasError = true; }
 
       if (!hasError) {
         submitThisPage('EMAIL');
