@@ -94,7 +94,7 @@ abstract class AddOrderOrInvoiceFilterExpressionHandler {
   private boolean hasDetailsWithDifferentPaymentMethods(final String paymentId) {
     //@formatter:off
     final String hql = 
-            "select coalesce(ipspm.id, opspm.id) as pm" +
+            "select distinct coalesce(ipspm.id, opspm.id) as pm" +
             "  from FIN_Payment_ScheduleDetail as psd" +
             "    join psd.paymentDetails as pd" +
             "    left join psd.orderPaymentSchedule as ops" +
@@ -102,8 +102,7 @@ abstract class AddOrderOrInvoiceFilterExpressionHandler {
             "    left join psd.invoicePaymentSchedule as ips" +
             "    left join ips.finPaymentmethod as ipspm" +
             " where pd.finPayment.id = :paymentId" +
-            "   and pd.gLItem is null" +
-            " group by coalesce(ipspm, opspm)";
+            "   and pd.gLItem is null";
   //@formatter:on
 
     final FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, paymentId);

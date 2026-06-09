@@ -172,6 +172,19 @@ OB.APRM.AddPayment.onLoad = function(view) {
   orderInvoiceGrid.dataProperties.transformData =
     OB.APRM.AddPayment.ordInvTransformData;
   glitemGrid.removeRecordClick = OB.APRM.AddPayment.removeRecordClick;
+  // Intercept the datasource add so new GL item rows are committed locally (keeping them
+  // in allRows so totals update in real time) but never persisted to the DB before the
+  // payment form is actually submitted. Without this, adding a row and then cancelling
+  // the popup would leave an orphaned FIN_PaymentDetail in the database.
+  glitemGrid.dataSource.addData = function(newValues, callback) {
+    if (callback) {
+      var saved = isc.addProperties({}, newValues);
+      if (!saved.id) {
+        saved.id = 'glitem_new_' + new Date().getTime();
+      }
+      callback({status: 0}, saved, {});
+    }
+  };
   creditUseGrid.selectionChanged = OB.APRM.AddPayment.selectionChangedCredit;
   creditUseGrid.userSelectAllRecords = OB.APRM.AddPayment.userSelectAllRecords;
   creditUseGrid.deselectAllRecords = OB.APRM.AddPayment.deselectAllRecords;
@@ -202,7 +215,8 @@ OB.APRM.AddPayment.onLoad = function(view) {
 };
 
 OB.APRM.AddPayment.addNewGLItem = function(grid) {
-  var returnObject = isc.addProperties({}, grid.data[0]);
+  var record = grid.getRecord(0);
+  var returnObject = record ? isc.addProperties({}, record) : {};
   returnObject.paidOut = 0;
   returnObject.receivedIn = 0;
   return returnObject;
@@ -460,6 +474,14 @@ OB.APRM.AddPayment.refreshEditedSelectedRecordsInGrid = function(grid) {
 };
 
 OB.APRM.AddPayment.glitemsOnLoadGrid = function(grid) {
+  // splice clears rows in-place, preserving the ResultSet so updateGLItemsTotal works after manual adds.
+  if (!grid.isReady && grid.data && grid.data.allRows && grid.data.allRows.length > 0) {
+    grid.selectedIds = [];
+    grid.deselectedIds = [];
+    grid.pneSelectedRecords = [];
+    grid.data.allRows.splice(0, grid.data.allRows.length);
+    grid.markForRedraw();
+  }
   if (!grid.isReady) {
     // If Gl Items Grid contains records when first opened then section is uncollapsed
     if (grid.getSelectedRecords() && grid.getSelectedRecords().size() > 0) {
