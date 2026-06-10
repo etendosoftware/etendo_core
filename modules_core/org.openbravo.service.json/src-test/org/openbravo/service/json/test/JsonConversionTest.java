@@ -33,7 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.Type;
 import org.junit.Test;
@@ -216,7 +216,7 @@ public class JsonConversionTest extends OBBaseTest {
   }
 
   @Dependent
-  private class LocalInterceptor extends EmptyInterceptor {
+  private class LocalInterceptor implements Interceptor {
 
     private static final long serialVersionUID = 1L;
 

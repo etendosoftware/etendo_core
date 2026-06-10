@@ -24,7 +24,7 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
 import org.hibernate.type.Type;
 import org.openbravo.base.structure.BaseOBObject;
@@ -36,7 +36,7 @@ import org.openbravo.base.structure.Traceable;
  * @author mtaal
  */
 @Dependent
-public class PersistenceEventOBInterceptor extends EmptyInterceptor {
+public class PersistenceEventOBInterceptor implements Interceptor {
 
   private static final long serialVersionUID = 1L;
 

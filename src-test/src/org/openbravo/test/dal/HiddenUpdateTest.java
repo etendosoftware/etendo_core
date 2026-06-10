@@ -21,12 +21,11 @@ package org.openbravo.test.dal;
 
 import static org.junit.Assert.fail;
 
-import java.io.Serializable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -131,48 +130,48 @@ public class HiddenUpdateTest extends OBBaseTest {
   }
 
   @Dependent
-  private class LocalInterceptor extends EmptyInterceptor {
+  private class LocalInterceptor implements Interceptor {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames,
+    public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames,
         Type[] types) {
       return false;
     }
 
     @Override
-    public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames,
+    public void onDelete(Object entity, Object id, Object[] state, String[] propertyNames,
         Type[] types) {
       fail();
     }
 
     @Override
-    public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState,
+    public boolean onFlushDirty(Object entity, Object id, Object[] currentState,
         Object[] previousState, String[] propertyNames, Type[] types) {
       fail();
       return false;
     }
 
     @Override
-    public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames,
+    public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames,
         Type[] types) {
       fail();
       return false;
     }
 
     @Override
-    public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {
+    public void onCollectionRemove(Object collection, Object key) throws CallbackException {
       fail();
     }
 
     @Override
-    public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
+    public void onCollectionRecreate(Object collection, Object key) throws CallbackException {
       fail();
     }
 
     @Override
-    public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
+    public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
       fail();
     }
   }
