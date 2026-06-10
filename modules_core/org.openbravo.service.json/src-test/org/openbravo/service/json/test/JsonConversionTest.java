@@ -246,20 +246,6 @@ public class JsonConversionTest extends OBBaseTest {
       return false;
     }
 
-    @Override
-    public void onCollectionRemove(Object collection, Object key) throws CallbackException {
-      fail();
-    }
-
-    @Override
-    public void onCollectionRecreate(Object collection, Object key) throws CallbackException {
-      fail();
-    }
-
-    @Override
-    public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
-      fail();
-    }
   }
 
 }

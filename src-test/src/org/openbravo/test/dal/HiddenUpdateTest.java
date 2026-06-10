@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.CallbackException;
+
 import org.hibernate.Interceptor;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -160,20 +160,6 @@ public class HiddenUpdateTest extends OBBaseTest {
       return false;
     }
 
-    @Override
-    public void onCollectionRemove(Object collection, Object key) throws CallbackException {
-      fail();
-    }
-
-    @Override
-    public void onCollectionRecreate(Object collection, Object key) throws CallbackException {
-      fail();
-    }
-
-    @Override
-    public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
-      fail();
-    }
   }
 
   @Dependent

@@ -128,16 +128,20 @@ public class ModelSessionFactoryController extends SessionFactoryController {
 
     @Override
     public void onCollectionRemove(Object collection, Object key) throws CallbackException {
-      Check.fail("The model session factory is not allowed to " + "update model data.");
+      denyCollectionOperation();
     }
 
     @Override
     public void onCollectionRecreate(Object collection, Object key) throws CallbackException {
-      Check.fail("The model session factory is not allowed to " + "update model data.");
+      denyCollectionOperation();
     }
 
     @Override
     public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
+      denyCollectionOperation();
+    }
+
+    private void denyCollectionOperation() {
       Check.fail("The model session factory is not allowed to " + "update model data.");
     }
   }
