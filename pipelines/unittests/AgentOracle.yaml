@@ -46,8 +46,8 @@ spec:
               - bash
               - '-c'
               - >-
-                chmod a+x /var/run/docker.sock && rm
-                /etc/apt/sources.list.d/pgdg.list || echo 0 && apt update && apt
+                chmod a+x /var/run/docker.sock 2>/dev/null || true && rm
+                /etc/apt/sources.list.d/pgdg.list 2>/dev/null || true && apt update && apt
                 install -y curl
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
