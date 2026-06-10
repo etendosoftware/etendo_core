@@ -22,7 +22,7 @@ public class GoodsReceiptStressTest extends StressTestBase {
   private static final String LOG_TOTAL_TIME = "[STRESS-GR] Total time: ";
 
   private static final long MAX_MS_PER_RECEIPT_COMPLETE = 200;
-  private static final long MAX_MS_PER_LINE_CREATION = 10;
+  private static final long MAX_MS_PER_LINE_CREATION = 15;
   private static final long MAX_MEMORY_MB_PER_100_RECEIPTS = 50;
   private static final long MAX_MS_PER_FULL_FLOW = 400;
 

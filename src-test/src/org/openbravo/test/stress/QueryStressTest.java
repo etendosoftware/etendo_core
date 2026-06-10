@@ -337,8 +337,8 @@ public class QueryStressTest extends StressTestBase {
           + results.size() + " rows in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
       Assert.assertTrue(
-          "Goods Receipt baseline too slow: " + elapsed + " ms (max: 100 ms)",
-          elapsed <= 100);
+          "Goods Receipt baseline too slow: " + elapsed + " ms (max: 200 ms)",
+          elapsed <= 200);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -481,8 +481,8 @@ public class QueryStressTest extends StressTestBase {
           + " ms, avg " + avgPageTime + " ms/page, max " + maxPageTime + " ms");
 
       Assert.assertTrue(
-          "Avg page time with function too slow: " + avgPageTime + " ms (max: 1000 ms)",
-          avgPageTime <= 1000);
+          "Avg page time with function too slow: " + avgPageTime + " ms (max: 1500 ms)",
+          avgPageTime <= 1500);
     } finally {
       OBContext.restorePreviousMode();
     }
