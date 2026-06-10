@@ -19,13 +19,9 @@
 
 package org.openbravo.test.dal;
 
-import static org.junit.Assert.fail;
-
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.hibernate.Interceptor;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -33,7 +29,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.type.Type;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -44,6 +39,7 @@ import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.xml.EntityXMLConverter;
+import org.openbravo.test.base.NoWriteInterceptor;
 import org.openbravo.test.base.OBBaseTest;
 
 import jakarta.enterprise.context.Dependent;
@@ -125,41 +121,8 @@ public class HiddenUpdateTest extends OBBaseTest {
 
     @Override
     protected void setInterceptor(Configuration configuration) {
-      configuration.setInterceptor(new LocalInterceptor());
+      configuration.setInterceptor(new NoWriteInterceptor());
     }
-  }
-
-  @Dependent
-  private class LocalInterceptor implements Interceptor {
-
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames,
-        Type[] types) {
-      return false;
-    }
-
-    @Override
-    public void onDelete(Object entity, Object id, Object[] state, String[] propertyNames,
-        Type[] types) {
-      fail();
-    }
-
-    @Override
-    public boolean onFlushDirty(Object entity, Object id, Object[] currentState,
-        Object[] previousState, String[] propertyNames, Type[] types) {
-      fail();
-      return false;
-    }
-
-    @Override
-    public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames,
-        Type[] types) {
-      fail();
-      return false;
-    }
-
   }
 
   @Dependent
