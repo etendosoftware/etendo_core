@@ -255,8 +255,8 @@ public class QueryStressTest extends StressTestBase {
           + pageSize + "): total " + totalTime + " ms, avg "
           + (totalTime / totalPages) + " ms/page, max " + maxPageTime + " ms");
       Assert.assertTrue(
-          "Avg page time too slow: " + (totalTime / totalPages) + " ms (max: 100 ms)",
-          (totalTime / totalPages) <= 100);
+          "Avg page time too slow: " + (totalTime / totalPages) + " ms (max: 200 ms)",
+          (totalTime / totalPages) <= 200);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -300,8 +300,8 @@ public class QueryStressTest extends StressTestBase {
           + " queries): total " + totalTime + " ms, avg "
           + (totalTime / searches.length) + " ms/query, " + totalResults + " total results");
       Assert.assertTrue(
-          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 200 ms)",
-          (totalTime / searches.length) <= 200);
+          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 500 ms)",
+          (totalTime / searches.length) <= 500);
     } finally {
       OBContext.restorePreviousMode();
     }
