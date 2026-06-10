@@ -4,6 +4,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.jboss.jandex.IndexView;
 
+@SuppressWarnings("removal")
 public class NonTRXMetadataContributor implements MetadataContributor {
 
     @Override

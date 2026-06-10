@@ -63,6 +63,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * @author mtaal
  */
 
+@SuppressWarnings("deprecation")
 public class XMLEntityConverter extends BaseXMLEntityConverter {
   // This class should translate the
 

@@ -24,19 +24,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.type.Type;
 import org.junit.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -55,6 +50,7 @@ import org.openbravo.model.common.currency.Currency;
 import org.openbravo.service.json.DataResolvingMode;
 import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.service.json.JsonToDataConverter;
+import org.openbravo.test.base.NoWriteInterceptor;
 import org.openbravo.test.base.OBBaseTest;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -212,54 +208,7 @@ public class JsonConversionTest extends OBBaseTest {
   private class LocalSessionFactoryController extends DalSessionFactoryController {
     @Override
     protected void setInterceptor(Configuration configuration) {
-      configuration.setInterceptor(new LocalInterceptor());
-    }
-  }
-
-  @Dependent
-  private class LocalInterceptor extends EmptyInterceptor {
-
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames,
-        Type[] types) {
-      return false;
-    }
-
-    @Override
-    public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames,
-        Type[] types) {
-      fail();
-    }
-
-    @Override
-    public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState,
-        Object[] previousState, String[] propertyNames, Type[] types) {
-      fail();
-      return false;
-    }
-
-    @Override
-    public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames,
-        Type[] types) {
-      fail();
-      return false;
-    }
-
-    @Override
-    public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {
-      fail();
-    }
-
-    @Override
-    public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
-      fail();
-    }
-
-    @Override
-    public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
-      fail();
+      configuration.setInterceptor(new NoWriteInterceptor());
     }
   }
 

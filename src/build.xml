@@ -107,6 +107,7 @@ build.war: build a war file in the lib directory.
   <target name="trl.clean" if="translation">
     <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' clean" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="project.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -117,6 +118,7 @@ build.war: build a war file in the lib directory.
   <target name="trl.remove.unused" if="translation">
     <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' remove" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="project.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -144,6 +146,7 @@ build.war: build a war file in the lib directory.
     <mkdir dir="${build.apply.module}" />
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql . '${build.sqlc}'/src" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <jvmarg value="-Dsqlc.listOfFiles=ApplyModule_data.xsql,PInstanceProcess_data.xsql,Translation_data.xsql,MessageBD_data.xsql"/>
       <classpath refid="project.class.path" />
       <syspropertyset>
@@ -165,6 +168,7 @@ build.war: build a war file in the lib directory.
   <target name="sqlcExtraModules">
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${extra.modules.location}' '${build.sqlc}'/src */src" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
       <classpath refid="project.class.path" />
       <syspropertyset>
@@ -173,6 +177,7 @@ build.war: build a war file in the lib directory.
     </java>
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules}' '${build.sqlc}'/src */src" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
       <classpath refid="project.class.path" />
       <syspropertyset>
@@ -190,6 +195,7 @@ build.war: build a war file in the lib directory.
   <target name="sqlc" depends="sqlcExtraModules" if="isSourceJar">
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql . '${build.sqlc}'/src" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="project.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -197,6 +203,7 @@ build.war: build a war file in the lib directory.
     </java>
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules_core}' '${build.sqlc}'/src */src" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
       <classpath refid="project.class.path" />
       <syspropertyset>
@@ -224,8 +231,10 @@ build.war: build a war file in the lib directory.
 		is a source older than the last updated time of the Application Dictionary then the sources need to be regenerated.		
 	-->
   <target name="generate.entities.quick" depends="compile.src.gen">
+    <delete quiet="true" file="${build}/META-INF/services/org.hibernate.service.spi.ServiceContributor" />
     <java classname="org.openbravo.base.gen.GenerateEntitiesTask" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.src}' '${friendlyWarnings}'" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="project.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -374,6 +383,7 @@ build.war: build a war file in the lib directory.
   <target name="wad" depends="init, wadvalidation">
     <java classname="org.openbravo.wad.Wad" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}' '${tab}' '${build.AD}/org/openbravo/erpWindows' '${build.AD}/org/openbravo/erpCommon' '${build.sqlc}/src' '${webTab}' '${build.AD}/org/openbravo/erpCommon/ad_actionButton' '${base.design}' '${base.translate.structure}' 'dummyValueUnused' '..' '${attach.path}' '${web.url}' '${base.src}' '${complete}' '${module}' 'noquick' '${wad.generateAllClassic250Windows}' '${exclude.cdi}'" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="wad.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -385,6 +395,7 @@ build.war: build a war file in the lib directory.
   <target name="wad.quick" depends="init, wadvalidation">
     <java classname="org.openbravo.wad.Wad" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}' '${tab}' '${build.AD}/org/openbravo/erpWindows' '${build.AD}/org/openbravo/erpCommon' '${build.sqlc}/src' '${webTab}' '${build.AD}/org/openbravo/erpCommon/ad_actionButton' '${base.design}' '${base.translate.structure}' 'dummyValueUnused' '..' '${attach.path}' '${web.url}' '${base.src}' '${complete}' '${module}' 'quick' '${wad.generateAllClassic250Windows}' '${exclude.cdi}'" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="wad.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
@@ -680,6 +691,7 @@ build.war: build a war file in the lib directory.
 
     <java classname="org.openbravo.translate.RTLSkin" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="${base.context}/web/skins/rtl ${base.context}/web/skins/ltr" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="project.class.path" />
     </java>
 
@@ -755,6 +767,7 @@ build.war: build a war file in the lib directory.
   <target name="translate" if="translation">
     <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' '${basedir}/..'" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="project.class.path" />
       <syspropertyset>
         <propertyref name="java.security.egd" />

@@ -239,7 +239,7 @@ public class OBQuery<E extends BaseOBObject> {
    * @return a new Hibernate Query object. Note that it does not have an specific type because
    *     delete queries can not be typed.
    */
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "deprecation" })
   public Query deleteQuery() {
     final String qryStr = createQueryString();
     String whereClause;

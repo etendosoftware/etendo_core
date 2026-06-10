@@ -1006,6 +1006,7 @@ export.database: exports database structure and data to xml files.
     <echo message="applying modules" />
     <java classname="org.openbravo.erpCommon.modules.ApplyModuleTask" fork="true" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.src}' '${friendlyWarnings}' '${forceRefData}'" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath refid="apply.module.runtime.classpath" />
     </java>
     <delete includeEmptyDirs="true"  dir="${build.apply.module}" />
@@ -1224,6 +1225,7 @@ export.database: exports database structure and data to xml files.
   <target name="UIrebuild" depends="core.lib">
     <java classname="org.openbravo.base.BuildTask" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' ${logFileName}" />
+      <sysproperty key="log4j.configurationFile" file="${base.config}/log4j2.xml" />
       <classpath>
         <pathelement path="${base.config}"/>
         <pathelement path="${build.core.lib}/openbravo-core.jar" />

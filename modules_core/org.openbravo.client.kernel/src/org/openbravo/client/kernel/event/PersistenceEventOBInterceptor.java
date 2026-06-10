@@ -18,14 +18,13 @@
  */
 package org.openbravo.client.kernel.event;
 
-import java.io.Serializable;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
 import org.hibernate.type.Type;
 import org.openbravo.base.structure.BaseOBObject;
@@ -37,7 +36,7 @@ import org.openbravo.base.structure.Traceable;
  * @author mtaal
  */
 @Dependent
-public class PersistenceEventOBInterceptor extends EmptyInterceptor {
+public class PersistenceEventOBInterceptor implements Interceptor {
 
   private static final long serialVersionUID = 1L;
 
@@ -57,7 +56,7 @@ public class PersistenceEventOBInterceptor extends EmptyInterceptor {
   private Event<TransactionCompletedEvent> transactionCompletedEventProducer;
 
   @Override
-  public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames,
+  public void onDelete(Object entity, Object id, Object[] state, String[] propertyNames,
       Type[] types) {
     final EntityDeleteEvent entityEvent = new EntityDeleteEvent();
     entityEvent.setTargetInstance((BaseOBObject) entity);
@@ -69,7 +68,7 @@ public class PersistenceEventOBInterceptor extends EmptyInterceptor {
   }
 
   @Override
-  public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState,
+  public boolean onFlushDirty(Object entity, Object id, Object[] currentState,
       Object[] previousState, String[] propertyNames, Type[] types) {
     if (isNew(entity)) {
       return sendNewEvent(entity, id, currentState, propertyNames, types);
@@ -79,12 +78,12 @@ public class PersistenceEventOBInterceptor extends EmptyInterceptor {
   }
 
   @Override
-  public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames,
+  public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames,
       Type[] types) {
     return sendNewEvent(entity, id, state, propertyNames, types);
   }
 
-  private boolean sendNewEvent(Object entity, Serializable id, Object[] state,
+  private boolean sendNewEvent(Object entity, Object id, Object[] state,
       String[] propertyNames, Type[] types) {
     final EntityNewEvent entityEvent = new EntityNewEvent();
     entityEvent.setTargetInstance((BaseOBObject) entity);
@@ -96,7 +95,7 @@ public class PersistenceEventOBInterceptor extends EmptyInterceptor {
     return entityEvent.isStateUpdated();
   }
 
-  private boolean sendUpdateEvent(Object entity, Serializable id, Object[] currentState,
+  private boolean sendUpdateEvent(Object entity, Object id, Object[] currentState,
       Object[] previousState, String[] propertyNames, Type[] types) {
     final EntityUpdateEvent entityEvent = new EntityUpdateEvent();
     entityEvent.setTargetInstance((BaseOBObject) entity);

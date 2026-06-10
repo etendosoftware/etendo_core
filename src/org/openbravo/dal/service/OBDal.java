@@ -367,6 +367,7 @@ public class OBDal implements OBNotSingleton {
    * In Hibernate 6, this marks the transaction for rollback. We clear that flag
    * and manually reload the entity.
    */
+  @SuppressWarnings("deprecation")
   private void handleRefreshWithMissingCascade(BaseOBObject bob, Session session) {
     // Hibernate marks the transaction for rollback when EntityNotFoundException
     // occurs. Clear the rollback-only flag so the transaction can still commit.
