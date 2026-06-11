@@ -1627,7 +1627,7 @@ The Pricing Tab displays the List, Standard and Limit prices for each price list
 <!--252-->  <TABLENAME><![CDATA[C_TaxCategory]]></TABLENAME>
 <!--252-->  <CLASSNAME><![CDATA[TaxCategory]]></CLASSNAME>
 <!--252-->  <ISVIEW><![CDATA[N]]></ISVIEW>
-<!--252-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--252-->  <ACCESSLEVEL><![CDATA[7]]></ACCESSLEVEL>
 <!--252-->  <AD_WINDOW_ID><![CDATA[138]]></AD_WINDOW_ID>
 <!--252-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
 <!--252-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
@@ -1773,7 +1773,7 @@ The Pricing Tab displays the List, Standard and Limit prices for each price list
 <!--261-->  <TABLENAME><![CDATA[C_Tax]]></TABLENAME>
 <!--261-->  <CLASSNAME><![CDATA[TaxRate]]></CLASSNAME>
 <!--261-->  <ISVIEW><![CDATA[N]]></ISVIEW>
-<!--261-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--261-->  <ACCESSLEVEL><![CDATA[7]]></ACCESSLEVEL>
 <!--261-->  <AD_WINDOW_ID><![CDATA[137]]></AD_WINDOW_ID>
 <!--261-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
 <!--261-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
@@ -2967,7 +2967,7 @@ Employee defines a Business Partner who is an Employee of this organization.  If
 <!--348-->  <TABLENAME><![CDATA[C_TaxCategory_Trl]]></TABLENAME>
 <!--348-->  <CLASSNAME><![CDATA[TaxCategoryTrl]]></CLASSNAME>
 <!--348-->  <ISVIEW><![CDATA[N]]></ISVIEW>
-<!--348-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--348-->  <ACCESSLEVEL><![CDATA[7]]></ACCESSLEVEL>
 <!--348-->  <AD_WINDOW_ID><![CDATA[138]]></AD_WINDOW_ID>
 <!--348-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
 <!--348-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
@@ -4079,7 +4079,7 @@ Run Synchronize Terminology to update menu translation. You need only to transla
 <!--546-->  <TABLENAME><![CDATA[C_Tax_Trl]]></TABLENAME>
 <!--546-->  <CLASSNAME><![CDATA[TaxTrl]]></CLASSNAME>
 <!--546-->  <ISVIEW><![CDATA[N]]></ISVIEW>
-<!--546-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--546-->  <ACCESSLEVEL><![CDATA[7]]></ACCESSLEVEL>
 <!--546-->  <AD_WINDOW_ID><![CDATA[137]]></AD_WINDOW_ID>
 <!--546-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
 <!--546-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
@@ -6757,7 +6757,7 @@ This tab is used to indicate the different toolsets used in the selected process
 <!--800150-->  <TABLENAME><![CDATA[C_Tax_Zone]]></TABLENAME>
 <!--800150-->  <CLASSNAME><![CDATA[TaxZone]]></CLASSNAME>
 <!--800150-->  <ISVIEW><![CDATA[N]]></ISVIEW>
-<!--800150-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--800150-->  <ACCESSLEVEL><![CDATA[7]]></ACCESSLEVEL>
 <!--800150-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
 <!--800150-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
 <!--800150-->  <ISHIGHVOLUME><![CDATA[N]]></ISHIGHVOLUME>
