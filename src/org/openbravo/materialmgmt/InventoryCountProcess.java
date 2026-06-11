@@ -229,7 +229,7 @@ public class InventoryCountProcess implements Process {
             "   , e.orderQuantity - COALESCE(" + "e.quantityOrderBook, 0)" +
             "   , e.orderUOM" +
             "   , e" +
-            "   , to_timestamp(to_char(:currentDate), to_char('DD-MM-YYYY HH24:MI:SS'))" +
+            "   , :currentDate" +
             "   from MaterialMgmtInventoryCountLine as e" +
             "     , ADUser as u" +
             "     , AttributeSetInstance as asi" +
@@ -249,13 +249,12 @@ public class InventoryCountProcess implements Process {
     //@formatter:on
 
     try {
-      final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
       OBDal.getInstance()
           .getSession()
           .createQuery(hqlInsert)
           .setParameter("invId", inventory.getId())
           .setParameter("userId", OBContext.getOBContext().getUser().getId())
-          .setParameter("currentDate", dateFormatter.format(new Date()))
+          .setParameter("currentDate", new Date())
           .executeUpdate();
 
       if (!"C".equals(inventory.getInventoryType()) && !"O".equals(inventory.getInventoryType())) {
@@ -399,7 +398,8 @@ public class InventoryCountProcess implements Process {
   }
 
   private void checkOrganizationAllowsTransactions(final Organization org) {
-    if (!org.getOrganizationType().isTransactionsAllowed()) {
+    final Organization managedOrg = OBDal.getInstance().get(Organization.class, org.getId());
+    if (!managedOrg.getOrganizationType().isTransactionsAllowed()) {
       throw new OBException(OBMessageUtils.parseTranslation("@OrgHeaderNotTransAllowed@"));
     }
   }
