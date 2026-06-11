@@ -115,6 +115,7 @@ public class PrintController extends HttpSecureAppServlet {
   private static final String TAB = "tab";
   private static final String INP_TAB_ID = "inpTabId";
   private static final String ATTRIBUTESETINSTANCE_TABID = "AttributeSetInstance.tabId";
+  private static final String SESSION_POC_DATA = "pocData";
   private static JSONObject hookParams;
   private static PrintControllerHookManager hookManager;
   private final MutableBoolean hooking = new MutableBoolean(false);
@@ -394,7 +395,7 @@ public class PrintController extends HttpSecureAppServlet {
             throw new ServletException(
                 Utility.messageBD(this, "NoCustomerEmail", vars.getLanguage()));
           }
-          PocData[] pocData = (PocData[]) vars.getSessionObject("pocData" + fullDocumentIdentifier);
+          PocData[] pocData = (PocData[]) vars.getSessionObject(SESSION_POC_DATA + fullDocumentIdentifier);
           int nrOfEmailsSend = 0;
           for (final PocData documentData : pocData) {
             getEnvironentInformation(pocData, checks);
@@ -468,13 +469,13 @@ public class PrintController extends HttpSecureAppServlet {
           if (nrOfEmailsSend > 0 && pocData.length > 0) {
             persistLastUsedContact(vars, pocData[0].bpartnerId);
           }
-          vars.removeSessionValue("pocData" + fullDocumentIdentifier);
+          vars.removeSessionValue(SESSION_POC_DATA + fullDocumentIdentifier);
           createPrintStatusPage(response, vars, nrOfEmailsSend);
         } else if (vars.commandIn("UPDATE_TEMPLATE")) {
           JSONObject o = new JSONObject();
           try {
             PocData[] pocData = (PocData[]) vars
-                .getSessionObject("pocData" + fullDocumentIdentifier);
+                .getSessionObject(SESSION_POC_DATA + fullDocumentIdentifier);
             final String templateId = vars.getRequestGlobalVariable("templates", "templates");
             final String documentId = pocData[0].documentId;
             final Report report = new Report(documentType, documentId, vars.getLanguage(),
@@ -504,7 +505,8 @@ public class PrintController extends HttpSecureAppServlet {
           out.println(o.toString());
           out.close();
         } else if (vars.commandIn("GET_BP_CONTACTS")) {
-          JSONObject result = buildBPContactsJson(vars);
+          PocData[] pocDataForContacts = (PocData[]) vars.getSessionObject(SESSION_POC_DATA + fullDocumentIdentifier);
+          JSONObject result = buildBPContactsJson(vars, pocDataForContacts);
           writeJsonResponse(response, result);
 
         } else if (vars.commandIn("UPDATE_EMAILCONFIG")) {
@@ -572,14 +574,33 @@ public class PrintController extends HttpSecureAppServlet {
    * @param vars the current request variables containing the {@code bpartnerId} parameter
    * @return a {@link JSONObject} with a {@code contacts} array, or an {@code error} flag on failure
    */
-  protected JSONObject buildBPContactsJson(VariablesSecureApp vars) {
+  protected JSONObject buildBPContactsJson(VariablesSecureApp vars, PocData[] pocData) {
     JSONObject result = new JSONObject();
     try {
-      String bpartnerId = vars.getStringParameter("bpartnerId");
-      List<User> contacts = BPContactEmailSelector.getBPContactsWithEmail(bpartnerId);
       JSONArray contactsArray = new JSONArray();
-      for (User contact : contacts) {
-        contactsArray.put(buildContactJson(contact));
+      if (isMultiCustomer(pocData)) {
+        List<String> seenEmails = new ArrayList<>();
+        for (PocData doc : pocData) {
+          if (StringUtils.isBlank(doc.contactEmail) || seenEmails.contains(doc.contactEmail)) {
+            continue;
+          }
+          seenEmails.add(doc.contactEmail);
+          JSONObject json = new JSONObject();
+          json.put("contactId", StringUtils.defaultString(doc.contactUserId));
+          json.put("name", StringUtils.defaultString(doc.contactName));
+          json.put("email", doc.contactEmail);
+          json.put("isDefault", false);
+          json.put("isActive", true);
+          contactsArray.put(json);
+        }
+      } else {
+        String bpartnerId = pocData != null && pocData.length > 0
+            ? pocData[0].bpartnerId
+            : vars.getStringParameter("bpartnerId");
+        List<User> contacts = BPContactEmailSelector.getBPContactsWithEmail(bpartnerId);
+        for (User contact : contacts) {
+          contactsArray.put(buildContactJson(contact));
+        }
       }
       result.put("contacts", contactsArray);
     } catch (Exception e) {
@@ -587,6 +608,19 @@ public class PrintController extends HttpSecureAppServlet {
       result = buildErrorJson();
     }
     return result;
+  }
+
+  private static boolean isMultiCustomer(PocData[] pocData) {
+    if (pocData == null || pocData.length == 0) {
+      return false;
+    }
+    String firstEmail = pocData[0].contactEmail;
+    for (int i = 1; i < pocData.length; i++) {
+      if (!StringUtils.equals(firstEmail, pocData[i].contactEmail)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -1397,7 +1431,9 @@ public class PrintController extends HttpSecureAppServlet {
     xmlDocument.setParameter("inpArchive", vars.getStringParameter("inpArchive"));
     xmlDocument.setParameter("fromName", "");
     String toName;
-    if (selectedContact != null) {
+    if (numberOfCustomers > 1) {
+      toName = StringUtils.EMPTY;
+    } else if (selectedContact != null) {
       toName = getContactField(selectedContact, User::getName);
     } else if (pocData.length > 0) {
       toName = pocData[0].contactName;
@@ -1418,7 +1454,7 @@ public class PrintController extends HttpSecureAppServlet {
       xmlDocument.setParameter("multiDocType", "Y");
     }
 
-    vars.setSessionObject("pocData" + fullDocumentIdentifier, pocData);
+    vars.setSessionObject(SESSION_POC_DATA + fullDocumentIdentifier, pocData);
     response.setContentType("text/html; charset=UTF-8");
     final PrintWriter out = response.getWriter();
     out.println(xmlDocument.print());

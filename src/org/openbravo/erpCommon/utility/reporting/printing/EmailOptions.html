@@ -153,6 +153,8 @@
       if (validateOptionalEmail('bccEmail')) { hasError = true; }
 
       if (!hasError) {
+        var overlay = document.getElementById('sendingOverlay');
+        if (overlay) { overlay.style.display = 'flex'; }
         submitThisPage('EMAIL');
       }
     }
@@ -184,6 +186,7 @@
     var ccEmailOrig;
     var bccEmailOrig;
     var replyToEmailOrig;
+    var isMultiCustomerMode = false;
 
     function onLoadDo(){
     modifyInputFile('inpFile');
@@ -214,7 +217,7 @@
             document.getElementById('bcc_bottomMargin').style.display = '';
         }
 
-        this.windowTables = new Array(
+        windowTables = new Array(
           new windowTableId('client')
         );
         setWindowTableParentElement();
@@ -261,6 +264,15 @@
         if(document.getElementById('useDefault').value=='Y'){
           document.getElementById('emailConfigSelector').style.display = 'none';
           document.getElementById('emailConfigToUse').style.display = 'none';
+        }
+        isMultiCustomerMode = document.getElementById('multipleCustomer') !== null;
+        if (isMultiCustomerMode) {
+          var toInput = document.getElementById('toEmail');
+          if (toInput) {
+            toInput.readOnly = true;
+            toInput.style.backgroundColor = '#f0f0f0';
+            toInput.style.cursor = 'default';
+          }
         }
         checkSendReady();
     }
@@ -325,21 +337,35 @@
       submitXmlHttpRequest(callback, document.frmMain, 'GET_BP_CONTACTS', 'PrintOptions.html', false);
     }
 
+    function getToEmails() {
+      var toField = document.getElementById('toEmail');
+      if (!toField || !toField.value.trim()) { return []; }
+      return toField.value.split(/[;,]/).map(function(a) { return a.trim().toLowerCase(); }).filter(Boolean);
+    }
+
     function renderContactList(contacts, filter) {
       var tbody = document.getElementById('contactSelectorBody');
       tbody.innerHTML = '';
       var lowerFilter = filter.toLowerCase();
+      var currentEmails = isMultiCustomerMode ? getToEmails() : [];
       for (var c of contacts) {
         if (filter && c.name.toLowerCase().indexOf(lowerFilter) === -1
             && c.email.toLowerCase().indexOf(lowerFilter) === -1) {
           continue;
         }
+        var isSelected = isMultiCustomerMode && currentEmails.indexOf(c.email.toLowerCase()) !== -1;
         var tr = document.createElement('tr');
         tr.style.cursor = 'pointer';
+        tr.style.backgroundColor = isSelected ? '#d0e8ff' : '';
         tr.setAttribute('data-email', c.email);
         tr.setAttribute('data-contactid', c.contactId);
-        tr.onmouseover = function() { this.style.backgroundColor = '#d0e4f7'; };
-        tr.onmouseout  = function() { this.style.backgroundColor = ''; };
+        tr.setAttribute('data-selected', isSelected ? 'true' : 'false');
+        tr.onmouseover = function() {
+          if (this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor = '#d0e4f7'; }
+        };
+        tr.onmouseout = function() {
+          this.style.backgroundColor = this.getAttribute('data-selected') === 'true' ? '#d0e8ff' : '';
+        };
         tr.onclick = function() { selectContact(this.getAttribute('data-contactid'), this.getAttribute('data-email')); };
         var badge;
         if (c.isDefault) {
@@ -349,7 +375,8 @@
         } else {
           badge = ' (inactive)';
         }
-        tr.innerHTML = '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.name) + badge + '</td>'
+        var checkmark = isSelected ? ' <span style="color:#1a7; font-weight:bold;">&#10003;</span>' : '';
+        tr.innerHTML = '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.name) + badge + checkmark + '</td>'
                      + '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.email) + '</td>';
         tbody.appendChild(tr);
       }
@@ -367,10 +394,26 @@
 
     function selectContact(contactId, email) {
       var toField = document.getElementById('toEmail');
+      if (isMultiCustomerMode) {
+        var addresses = getToEmails();
+        var idx = addresses.indexOf(email.trim().toLowerCase());
+        if (idx !== -1) {
+          addresses.splice(idx, 1);
+        } else {
+          addresses.push(email.trim());
+        }
+        toField.value = addresses.join('; ');
+        manageFieldValueChange('toEmail');
+        checkSendReady();
+        if (bpContactsCache) {
+          renderContactList(bpContactsCache, document.getElementById('contactSelectorFilter').value || '');
+        }
+        return;
+      }
       var current = toField.value.trim();
       if (current.length > 0) {
-        var addresses = current.split(/[;,]/).map(function(a) { return a.trim(); });
-        if (addresses.indexOf(email.trim()) === -1) {
+        var parts = current.split(/[;,]/).map(function(a) { return a.trim(); });
+        if (parts.indexOf(email.trim()) === -1) {
           toField.value = current.replace(/[;,\s]+$/, '') + '; ' + email;
         }
       } else {
@@ -652,7 +695,7 @@
 </div>
 
 <table cellspacing="0" cellpadding="0" width="100%">
-    <tr>
+    <tr style="display:none">
       <td>
         <table cellspacing="0" cellpadding="0" class="Popup_ContentPane_NavBar">
           <tr class="Popup_NavBar_bg"><td></td>
@@ -667,7 +710,7 @@
       </td>
     </tr>
 
-    <tr>
+    <tr style="display:none">
         <td>
         <table cellspacing="0" cellpadding="0"
             class="Popup_ContentPane_SeparatorBar">
@@ -1040,5 +1083,10 @@
 
 </table>
 </form>
+<div id="sendingOverlay" style="display:none; position:fixed; inset:0; background:rgba(80,80,80,0.45); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:#fff; border-radius:4px; padding:18px 30px; box-shadow:0 2px 10px rgba(0,0,0,0.35); font-size:14px; color:#444; pointer-events:none;">
+    Sending&#8230;
+  </div>
+</div>
 </body>
 </html>
