@@ -217,9 +217,10 @@
             document.getElementById('bcc_bottomMargin').style.display = '';
         }
 
-        windowTables = new Array(
+        var windowTables = new Array(
           new windowTableId('client')
         );
+        window.windowTables = windowTables;
         setWindowTableParentElement();
         enableShortcuts('popup');
         setBrowserAutoComplete(false);
@@ -293,8 +294,8 @@
     function manageFieldValueChange(field) {
         var fieldName = field.substring(0, field.length-5)+'Name';
         if (document.getElementById(field) && document.getElementById(fieldName)) {
-            currentValue = document.getElementById(field).value;
-            originalValue = window[field + 'Orig'];
+            var currentValue = document.getElementById(field).value;
+            var originalValue = window[field + 'Orig'];
             if (originalValue !== currentValue) {
                 document.getElementById(fieldName).style.display = 'none';
             } else {
@@ -343,49 +344,51 @@
       return toField.value.split(/[;,]/).map(function(a) { return a.trim().toLowerCase(); }).filter(Boolean);
     }
 
+    function buildContactRow(c, isSelected) {
+      var tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.style.backgroundColor = isSelected ? '#d0e8ff' : '';
+      tr.setAttribute('data-email', c.email || '');
+      tr.setAttribute('data-contactid', c.contactId);
+      tr.setAttribute('data-selected', isSelected ? 'true' : 'false');
+      tr.onmouseover = function() {
+        if (this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor = '#d0e4f7'; }
+      };
+      tr.onmouseout = function() {
+        this.style.backgroundColor = this.getAttribute('data-selected') === 'true' ? '#d0e8ff' : '';
+      };
+      tr.onclick = function() { selectContact(this.getAttribute('data-contactid'), this.getAttribute('data-email')); };
+      var badge = '';
+      if (c.isDefault) {
+        badge = ' &#9733;';
+      } else if (!c.isActive) {
+        badge = ' (inactive)';
+      }
+      var checkmark = isSelected ? ' <span style="color:#1a7;font-weight:bold;">&#10003;</span>' : '';
+      tr.innerHTML = '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.name || '') + badge + checkmark + '</td>'
+                   + '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.email || '') + '</td>';
+      return tr;
+    }
+
     function renderContactList(contacts, filter) {
       var tbody = document.getElementById('contactSelectorBody');
       tbody.innerHTML = '';
       var lowerFilter = filter.toLowerCase();
       var currentEmails = isMultiCustomerMode ? getToEmails() : [];
+      if (!contacts) { return; }
       for (var c of contacts) {
-        if (filter && c.name.toLowerCase().indexOf(lowerFilter) === -1
-            && c.email.toLowerCase().indexOf(lowerFilter) === -1) {
+        if (filter && (c.name || '').toLowerCase().indexOf(lowerFilter) === -1
+            && (c.email || '').toLowerCase().indexOf(lowerFilter) === -1) {
           continue;
         }
-        var isSelected = isMultiCustomerMode && currentEmails.indexOf(c.email.toLowerCase()) !== -1;
-        var tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.style.backgroundColor = isSelected ? '#d0e8ff' : '';
-        tr.setAttribute('data-email', c.email);
-        tr.setAttribute('data-contactid', c.contactId);
-        tr.setAttribute('data-selected', isSelected ? 'true' : 'false');
-        tr.onmouseover = function() {
-          if (this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor = '#d0e4f7'; }
-        };
-        tr.onmouseout = function() {
-          this.style.backgroundColor = this.getAttribute('data-selected') === 'true' ? '#d0e8ff' : '';
-        };
-        tr.onclick = function() { selectContact(this.getAttribute('data-contactid'), this.getAttribute('data-email')); };
-        var badge;
-        if (c.isDefault) {
-          badge = ' &#9733;';
-        } else if (c.isActive) {
-          badge = '';
-        } else {
-          badge = ' (inactive)';
-        }
-        var checkmark = isSelected ? ' <span style="color:#1a7; font-weight:bold;">&#10003;</span>' : '';
-        tr.innerHTML = '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.name) + badge + checkmark + '</td>'
-                     + '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.email) + '</td>';
-        tbody.appendChild(tr);
+        var isSelected = isMultiCustomerMode && c.email && currentEmails.indexOf(c.email.toLowerCase()) !== -1;
+        tbody.appendChild(buildContactRow(c, isSelected));
       }
       if (tbody.children.length === 0) {
         tbody.innerHTML = '<tr><td colspan="2" class="DataGrid_Body_Cell" style="padding:4px;font-style:italic;">No contacts found</td></tr>';
       }
       var scrollArea = document.getElementById('contactScrollArea');
-      var visibleRows = tbody.children.length;
-      if (visibleRows > 3) {
+      if (tbody.children.length > 3) {
         scrollArea.style.maxHeight = '115px';
       } else {
         scrollArea.style.maxHeight = '';
@@ -593,6 +596,7 @@
     var callback = function (paramXMLParticular, XMLHttpRequestObj) {
         var o, fileName;
         if (getReadyStateHandler(XMLHttpRequestObj)) {
+          var strText = '';
           try {
             if (XMLHttpRequestObj.responseText) {
               strText = XMLHttpRequestObj.responseText;
@@ -611,8 +615,8 @@
           }
         }
         return true;
-      },
-    frm = document.frmMain;
+      };
+    var frm = document.frmMain;
 
     return submitXmlHttpRequest(callback, frm, 'UPDATE_TEMPLATE', 'PrintOptions.html', false);
   }
@@ -620,6 +624,7 @@
     var callback = function (paramXMLParticular, XMLHttpRequestObj) {
       var o, fileName;
       if (getReadyStateHandler(XMLHttpRequestObj)) {
+        var strText = '';
         try {
           if (XMLHttpRequestObj.responseText) {
             strText = XMLHttpRequestObj.responseText;
@@ -633,8 +638,8 @@
         }
       }
       return true;
-    },
-    frm = document.frmMain;
+    };
+    var frm = document.frmMain;
     return submitXmlHttpRequest(callback, frm, 'UPDATE_EMAILCONFIG', 'PrintOptions.html', false);
    }
 
@@ -726,7 +731,14 @@
 
         <div style="margin: 10px;" id="client">
 
-        <table cellspacing="0" cellpadding="0 style="height: 150px; overflow: auto;" class="form_table">
+        <table style="height: 150px; overflow: auto;" class="form_table" aria-label="Email document options">
+                    <caption style="display:none;">Email document options</caption>
+                    <tr style="display:none;">
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                    </tr>
 
                     <tr id=emailConfigSelector>
                         <td class="TitleCell"><span class="LabelText">Use default email configration</span></td>
