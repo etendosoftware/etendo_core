@@ -41,6 +41,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Matcher;
 
+import com.etendoerp.email.spi.EmailSenderDispatcher;
+
 public class EmailUtilities {
     private static final Logger log4j = LogManager.getLogger();
 
@@ -115,7 +117,7 @@ public class EmailUtilities {
 
         // Cascade resolution: User → Organization → Client
         ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
-        if (resolvedConfig == null) {
+        if (resolvedConfig == null && !EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
             throw new ServletException(
                 "No sender defined: Please configure SMTP at User, Organization or Client level to complete the email configuration.");
         }
@@ -236,7 +238,8 @@ public class EmailUtilities {
             EmailManager.sendEmail(mailConfig, email);
         } catch (Exception exception) {
             log4j.error("Error sending mail via {} SMTP config (id={})",
-                mailConfig.getLevel(), mailConfig.getConfigId(), exception);
+                mailConfig != null ? mailConfig.getLevel() : "<none>",
+                mailConfig != null ? mailConfig.getConfigId() : "<none>", exception);
             throw new ServletException("Problems while sending the email: "
                 + exception.getMessage(), exception);
         } finally {

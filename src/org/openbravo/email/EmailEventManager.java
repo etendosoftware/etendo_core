@@ -36,6 +36,8 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.poc.EmailInfo;
 import org.openbravo.erpCommon.utility.poc.EmailManager;
 
+import com.etendoerp.email.spi.EmailSenderDispatcher;
+
 /**
  * This singleton class, is in charge of generating events to send emails.
  * 
@@ -74,7 +76,7 @@ public class EmailEventManager {
       throws EmailEventException {
     final ResolvedSmtpConfig mailConfig = SmtpCascadeResolver.resolve();
 
-    if (mailConfig == null) {
+    if (mailConfig == null && !EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
       log.warn("Couldn't find email configuration at any level (User/Organization/Client)");
       throw new EmailEventException(
           OBMessageUtils.getI18NMessage("EmailConfigurationNotFound", null));
@@ -84,8 +86,13 @@ public class EmailEventManager {
       boolean sent = false;
       for (EmailEventContentGenerator gen : getValidEmailGenerators(event, data)) {
         sent = true;
-        log.debug("sending email for event {} with generator {} using {} SMTP config (id={})",
-            event, gen, mailConfig.getLevel(), mailConfig.getConfigId());
+        if (mailConfig != null) {
+          log.debug("sending email for event {} with generator {} using {} SMTP config (id={})",
+              event, gen, mailConfig.getLevel(), mailConfig.getConfigId());
+        } else {
+          log.debug("sending email for event {} with generator {} through an alternative"
+              + " email sender (no SMTP configuration found)", event, gen);
+        }
 
         final EmailInfo email = new EmailInfo.Builder() //
             .setSubject(gen.getSubject(data, event)) //

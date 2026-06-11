@@ -90,6 +90,8 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 
+import com.etendoerp.email.spi.EmailSenderDispatcher;
+
 @SuppressWarnings("serial")
 public class PrintController extends HttpSecureAppServlet {
   private static final String DOCUMENT_ID = "documentId";
@@ -340,7 +342,8 @@ public class PrintController extends HttpSecureAppServlet {
                   && request.getServletPath().toLowerCase().indexOf(PRINT_OPTIONS_PATH) == -1) {
                 ResolvedSmtpConfig resolvedForCheck = SmtpCascadeResolver.resolve();
                 boolean hasSender = resolvedForCheck != null
-                    || StringUtils.isNotEmpty(senderAddress);
+                    || StringUtils.isNotEmpty(senderAddress)
+                    || EmailSenderDispatcher.hasAlternativeSenderConfigured();
                 if (!hasSender) {
                   reportNoSenderError(response, vars);
                 }
@@ -1185,7 +1188,9 @@ public class PrintController extends HttpSecureAppServlet {
       if (resolvedConfig != null) {
         fromEmail = resolvedConfig.getFromAddress();
         fromEmailId = resolvedConfig.getConfigId();
-      } else {
+      } else if (!EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
+        // With an alternative email sender configured, the actual sender address is
+        // resolved by that sender at send time, so the from field is left empty here
         reportNoSenderError(response, vars);
       }
     } finally {
