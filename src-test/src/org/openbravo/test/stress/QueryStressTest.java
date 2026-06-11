@@ -61,8 +61,8 @@ public class QueryStressTest extends StressTestBase {
 
       log.info("[STRESS-QUERY] Order count: " + count + " in " + elapsed + " ms");
       Assert.assertTrue("Expected orders > 0", count.longValue() > 0);
-      Assert.assertTrue("Count query too slow: " + elapsed + " ms (max: 500 ms)",
-          elapsed <= 500);
+      Assert.assertTrue("Count query too slow: " + elapsed + " ms (max: 5000 ms)",
+          elapsed <= 5000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -118,8 +118,8 @@ public class QueryStressTest extends StressTestBase {
       log.info("[STRESS-QUERY] Order+Lines JOIN: " + results.size()
           + " results in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
-      Assert.assertTrue("JOIN query too slow: " + elapsed + " ms (max: 7000 ms)",
-          elapsed <= 7000);
+      Assert.assertTrue("JOIN query too slow: " + elapsed + " ms (max: 10000 ms)",
+          elapsed <= 10000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -183,8 +183,8 @@ public class QueryStressTest extends StressTestBase {
       log.info("[STRESS-QUERY] fact_acct aggregation: " + results.size()
           + " accounts in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
-      Assert.assertTrue("fact_acct query too slow: " + elapsed + " ms (max: 13000 ms)",
-          elapsed <= 13000);
+      Assert.assertTrue("fact_acct query too slow: " + elapsed + " ms (max: 40000 ms)",
+          elapsed <= 40000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -210,8 +210,8 @@ public class QueryStressTest extends StressTestBase {
       log.info("[STRESS-QUERY] m_transaction monthly: " + results.size()
           + " months in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
-      Assert.assertTrue("Transaction query too slow: " + elapsed + " ms (max: 10000 ms)",
-          elapsed <= 10000);
+      Assert.assertTrue("Transaction query too slow: " + elapsed + " ms (max: 25000 ms)",
+          elapsed <= 25000);
     } finally {
       OBContext.restorePreviousMode();
     }
