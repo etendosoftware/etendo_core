@@ -66,6 +66,10 @@ public class Column extends ModelObject {
   private String valueMin;
   private String valueMax;
   private String sqlLogic;
+  private char computationMode = 'N';
+  private String computationFunction;
+  private char refreshMode;
+  private int computationSequenceNumber;
   private Boolean isTransient;
   private String isTransientCondition;
   private Integer position;
@@ -559,6 +563,38 @@ public class Column extends ModelObject {
 
   public void setSqlLogic(String sqlLogic) {
     this.sqlLogic = sqlLogic;
+  }
+
+  public char getComputationMode() {
+    return computationMode;
+  }
+
+  public void setComputationMode(char computationMode) {
+    this.computationMode = computationMode;
+  }
+
+  public String getComputationFunction() {
+    return computationFunction;
+  }
+
+  public void setComputationFunction(String computationFunction) {
+    this.computationFunction = computationFunction;
+  }
+
+  public char getRefreshMode() {
+    return refreshMode;
+  }
+
+  public void setRefreshMode(char refreshMode) {
+    this.refreshMode = refreshMode;
+  }
+
+  public int getComputationSequenceNumber() {
+    return computationSequenceNumber;
+  }
+
+  public void setComputationSequenceNumber(int computationSequenceNumber) {
+    this.computationSequenceNumber = computationSequenceNumber;
   }
 
   /**

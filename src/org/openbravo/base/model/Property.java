@@ -101,6 +101,10 @@ public class Property {
   private Property translationProperty;
 
   private String sqlLogic;
+  private char computationMode = 'N';
+  private String computationFunction;
+  private char refreshMode;
+  private int computationSequenceNumber;
   private String help;
   private Boolean isDeprecated;
 
@@ -205,6 +209,10 @@ public class Property {
     setFieldLength(fromColumn.getFieldLength());
     setAllowedValues(fromColumn.getAllowedValues());
     setSqlLogic(fromColumn.getSqlLogic());
+    setComputationMode(fromColumn.getComputationMode());
+    setComputationFunction(fromColumn.getComputationFunction());
+    setRefreshMode(fromColumn.getRefreshMode());
+    setComputationSequenceNumber(fromColumn.getComputationSequenceNumber());
     final String columnname = fromColumn.getColumnName().toLowerCase();
     if (columnname.equals("line") || columnname.equals("seqno") || columnname.equals("lineno")) {
       setOrderByProperty(true);
@@ -1392,6 +1400,42 @@ public class Property {
 
   public void setSqlLogic(String sqlLogic) {
     this.sqlLogic = sqlLogic;
+  }
+
+  public char getComputationMode() {
+    return computationMode;
+  }
+
+  public void setComputationMode(char computationMode) {
+    this.computationMode = computationMode;
+  }
+
+  public String getComputationFunction() {
+    return computationFunction;
+  }
+
+  public void setComputationFunction(String computationFunction) {
+    this.computationFunction = computationFunction;
+  }
+
+  public char getRefreshMode() {
+    return refreshMode;
+  }
+
+  public void setRefreshMode(char refreshMode) {
+    this.refreshMode = refreshMode;
+  }
+
+  public int getComputationSequenceNumber() {
+    return computationSequenceNumber;
+  }
+
+  public void setComputationSequenceNumber(int computationSequenceNumber) {
+    this.computationSequenceNumber = computationSequenceNumber;
+  }
+
+  public boolean isStoredComputed() {
+    return computationMode == 'S';
   }
 
   /**
