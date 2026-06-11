@@ -114,7 +114,7 @@ public class EmailManager {
    * @return the decrypted password, or the original value if decryption is not applicable or fails
    * @throws ServletException if an unexpected servlet-level error occurs
    */
-  protected static String safeDecrypt(String password) throws ServletException {
+  public static String safeDecrypt(String password) throws ServletException {
     if (StringUtils.isBlank(password)) {
       return password;
     }
@@ -144,13 +144,13 @@ public class EmailManager {
         headerExtras, timeoutMillis.intValue());
   }
 
-  protected static Long getSmtpConnectionTimeout(EmailServerConfiguration configuration) {
+  public static Long getSmtpConnectionTimeout(EmailServerConfiguration configuration) {
     return (configuration != null && configuration.getSmtpConnectionTimeout() != null)
         ? TimeUnit.SECONDS.toMillis(configuration.getSmtpConnectionTimeout())
         : DEFAULT_SMTP_TIMEOUT;
   }
 
-  protected static void sendEmail(String host, boolean auth, String username, String password,
+  public static void sendEmail(String host, boolean auth, String username, String password,
       String connSecurity, int port, String senderAddress, String senderName, String recipientTO,
       String recipientCC, String recipientBCC, String replyTo, String subject, String content,
       String contentType, List<File> attachments, Date sentDate, List<String> headerExtras,
