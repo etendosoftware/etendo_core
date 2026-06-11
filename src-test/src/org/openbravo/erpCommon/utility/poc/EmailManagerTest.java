@@ -19,6 +19,7 @@ package org.openbravo.erpCommon.utility.poc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -58,6 +60,9 @@ import org.openbravo.email.ResolvedSmtpConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.utils.FormatUtilities;
+
+import com.etendoerp.email.spi.EmailSendContext;
+import com.etendoerp.email.spi.EmailSenderDispatcher;
 
 /**
  * Unit tests for {@link EmailManager}.
@@ -589,6 +594,52 @@ public class EmailManagerTest {
     assertThrows(PocException.class, () ->
         manager.sendSimpleEmail(session, INVALID_ADDRESS, SIMPLE_TO,
             null, TEST_SUBJECT, TEST_BODY, null));
+  }
+
+  /**
+   * Verifies that {@link EmailManager#sendEmail(EmailServerConfiguration, EmailInfo)} builds
+   * an {@link EmailSendContext} carrying the configuration record and the email, and routes
+   * it through the {@link EmailSenderDispatcher}.
+   * @throws Exception if an unexpected error occurs during mock setup or verification
+   */
+  @Test
+  void testSendEmailWithServerConfigDispatchesContext() throws Exception {
+    EmailServerConfiguration conf = mock(EmailServerConfiguration.class);
+    EmailInfo email = new EmailInfo.Builder().setRecipientTO(RECIPIENT_TO).build();
+    try (MockedStatic<EmailSenderDispatcher> mockedDispatcher =
+        mockStatic(EmailSenderDispatcher.class)) {
+      EmailManager.sendEmail(conf, email);
+      ArgumentCaptor<EmailSendContext> contextCaptor =
+          ArgumentCaptor.forClass(EmailSendContext.class);
+      mockedDispatcher.verify(() -> EmailSenderDispatcher.dispatch(contextCaptor.capture()));
+      EmailSendContext context = contextCaptor.getValue();
+      assertSame(conf, context.getSmtpConfig());
+      assertSame(email, context.getEmail());
+      assertNull(context.getResolvedSmtpConfig());
+    }
+  }
+
+  /**
+   * Verifies that {@link EmailManager#sendEmail(ResolvedSmtpConfig, EmailInfo)} builds an
+   * {@link EmailSendContext} carrying the resolved configuration and the email, and routes
+   * it through the {@link EmailSenderDispatcher}.
+   * @throws Exception if an unexpected error occurs during mock setup or verification
+   */
+  @Test
+  void testSendEmailWithResolvedConfigDispatchesContext() throws Exception {
+    ResolvedSmtpConfig conf = mock(ResolvedSmtpConfig.class);
+    EmailInfo email = new EmailInfo.Builder().setRecipientTO(RECIPIENT_TO).build();
+    try (MockedStatic<EmailSenderDispatcher> mockedDispatcher =
+        mockStatic(EmailSenderDispatcher.class)) {
+      EmailManager.sendEmail(conf, email);
+      ArgumentCaptor<EmailSendContext> contextCaptor =
+          ArgumentCaptor.forClass(EmailSendContext.class);
+      mockedDispatcher.verify(() -> EmailSenderDispatcher.dispatch(contextCaptor.capture()));
+      EmailSendContext context = contextCaptor.getValue();
+      assertSame(conf, context.getResolvedSmtpConfig());
+      assertSame(email, context.getEmail());
+      assertNull(context.getSmtpConfig());
+    }
   }
 
   /**
