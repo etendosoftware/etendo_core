@@ -24,6 +24,10 @@
 <title>Email options</title>
     <link rel="shortcut icon" href="../../../../../web/images/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" href="../../../../../web/skins/Default/Openbravo_ERP_250.css" id="paramCSS" />
+    <style type="text/css">
+      #sendButton:disabled { opacity: 0.4; cursor: not-allowed; }
+      #sendButton:disabled * { pointer-events: none; }
+    </style>
     <script language="JavaScript" type="text/javascript" id="paramDirectory">
       var baseDirectory = "../../../../../web/";
       </script>      
@@ -94,6 +98,21 @@
         errEl.style.display = 'none';
         document.getElementById(fieldId).style.borderColor = '';
       }
+    }
+
+    function checkSendReady() {
+      var toEl = document.getElementById('toEmail');
+      var replyToEl = document.getElementById('replyToEmail');
+      var subjectRow = document.getElementById('emailField03Subject');
+      var subjectEl = document.getElementById('emailSubject');
+      var templatesEl = document.getElementById('templates');
+      var toOk = !toEl || toEl.value.trim().length > 0;
+      var replyToOk = !replyToEl || replyToEl.value.trim().length > 0;
+      var subjectHidden = subjectRow && subjectRow.style.display === 'none';
+      var subjectOk = subjectHidden || !subjectEl || subjectEl.value.trim().length > 0;
+      var templateOk = !templatesEl || templatesEl.value.length > 0;
+      var btn = document.getElementById('sendButton');
+      if (btn) { btn.disabled = !(toOk && replyToOk && subjectOk && templateOk); }
     }
 
     function validateOptionalEmail(fieldId) {
@@ -243,6 +262,7 @@
           document.getElementById('emailConfigSelector').style.display = 'none';
           document.getElementById('emailConfigToUse').style.display = 'none';
         }
+        checkSendReady();
     }
 
     function onResizeDo(){
@@ -359,6 +379,7 @@
       document.getElementById('toContactId').value = contactId;
       manageFieldValueChange('toEmail');
       document.getElementById('contactSelectorPanel').style.display = 'none';
+      checkSendReady();
     }
 
     function filterContacts() {
@@ -502,6 +523,7 @@
       manageFieldValueChange('toEmail');
       setEmailError('toEmail', null);
       hideSuggestions();
+      checkSendReady();
     }
 
     function storeDoc(){
@@ -537,7 +559,7 @@
           if (!o.error) {
             document.getElementById('emailSubject').value = o.subject;
             document.getElementById('emailBody').innerHTML = o.body;
-
+            checkSendReady();
             if (o.filename){
               fileName = document.getElementById('fileDocName');
               fileName.removeChild(fileName.childNodes[0]);
@@ -564,6 +586,7 @@
         if (!o.error) {
           document.getElementById('emailSubject').value = o.subject;
           document.getElementById('emailBody').innerHTML = o.body;
+          checkSendReady();
         }
       }
       return true;
@@ -700,6 +723,7 @@
                                     maxlength="200" name="toEmail" id="toEmail" value=""
                                     onkeyup="onToEmailKeyup(event);"
                                     onchange="manageFieldValueChange(this.id);"
+                                    oninput="checkSendReady();"
                                     onblur="setTimeout(hideSuggestions, 200);"
                                     autocomplete="off"
                                     required="true">
@@ -811,6 +835,7 @@
                                     class="dojoValidateValid required TextBox_btn_TwoCells_width"
                                     maxlength="200" name="replyToEmail" id="replyToEmail" value=""
                                     onkeyup="manageFieldValueChange(this.id);" onchange="manageFieldValueChange(this.id);"
+                                    oninput="checkSendReady();"
                                     required="true"><span class="LabelText" name="replyToName" id="replyToName" value="" style="padding-left: 10px"></span>
                                     
                         </td>
@@ -837,6 +862,7 @@
                             <input style="width: 100%;" type="text" dojoType="openbravo:ValidationTextBox"
                                         class="dojoValidateValid required TextBox_btn_TwoCells_width"
                                         maxlength="200" name="emailSubject" id="emailSubject" value=""
+                                        oninput="checkSendReady();"
                                         required="true">
                         </td>
                         <td rowspan="5">
@@ -956,8 +982,9 @@
                     <tr>
                         <td class="Button_RightAlign_ContentCell" style="padding-top: 30px">
                             <div>
-                <button type="button" 
-                  class="ButtonLink" 
+                <button type="button"
+                  id="sendButton"
+                  class="ButtonLink"
                   onclick="validateAndSendEmail();return false;"
                   onfocus="buttonEvent('onfocus', this); window.status='Send'; return true;" 
                   onblur="buttonEvent('onblur', this);" 

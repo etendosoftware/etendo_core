@@ -1364,8 +1364,21 @@ public class PrintController extends HttpSecureAppServlet {
       xmlDocument.setParameter("emailSubject", vars.getStringParameter("emailSubject"));
       xmlDocument.setParameter("emailBody", vars.getStringParameter("emailBody"));
     } else {
-      String toEmail = getContactField(selectedContact, User::getEmail);
-      String toContactId = getContactField(selectedContact, User::getId);
+      String toEmail;
+      String toContactId;
+      if (numberOfCustomers > 1) {
+        List<String> emails = new ArrayList<>();
+        for (String email : customerMap.keySet()) {
+          if (StringUtils.isNotBlank(email)) {
+            emails.add(email);
+          }
+        }
+        toEmail = String.join("; ", emails);
+        toContactId = "";
+      } else {
+        toEmail = getContactField(selectedContact, User::getEmail);
+        toContactId = getContactField(selectedContact, User::getId);
+      }
       xmlDocument.setParameter("fromEmailId", fromEmailId);
       xmlDocument.setParameter("fromEmail", fromEmail);
       xmlDocument.setParameter(PARAM_TO_EMAIL, toEmail);
@@ -1574,16 +1587,15 @@ public class PrintController extends HttpSecureAppServlet {
     checks.put("moreThanOneCustomer", Boolean.valueOf(moreThanOneCustomer));
     checks.put("moreThanOnesalesRep", Boolean.valueOf(moreThanOnesalesRep));
 
-    // check the number of customer and the number of
-    // sales Rep. to choose one of the 3 possibilities
-    // 1.- n customer n sales rep (hide "To" and "Reply-to" inputs)
-    // 2.- n customers 1 sales rep (hide "To" input)
-    // 3.- 1 customer n sales rep (hide Reply-to inputs)
-    // 4.- Otherwise show both
+    // "To" field is always visible; Reply-to is hidden when routing across multiple sales reps.
+    // 1.- n customers, n sales reps → hide Reply-to
+    // 2.- n customers, 1 sales rep  → hide "by X sales reps" label fragments
+    // 3.- 1 customer,  n sales reps → hide Reply-to
+    // 4.- 1 customer,  1 sales rep  → hide "multiple customers" info row
     if (moreThanOneCustomer && moreThanOnesalesRep) {
-      discard = new String[] { "to", "to_bottomMargin", "replyTo", "replyTo_bottomMargin" };
+      discard = new String[] { "replyTo", "replyTo_bottomMargin" };
     } else if (moreThanOneCustomer) {
-      discard = new String[] { "to", "to_bottomMargin", "multSalesRep", "multSalesRepCount" };
+      discard = new String[] { "multSalesRep", "multSalesRepCount" };
     } else if (moreThanOnesalesRep) {
       discard = new String[] { "replyTo", "replyTo_bottomMargin" };
     } else {
