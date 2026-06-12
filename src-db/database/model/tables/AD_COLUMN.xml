@@ -306,6 +306,5 @@
       <check name="AD_COLUMN_ISUPDATEABLE_CHK"><![CDATA[ISUPDATEABLE IN ('Y', 'N')]]></check>
       <check name="AD_COLUMN_USEDSEQ_CHK"><![CDATA[ISUSEDSEQUENCE IN ('Y', 'N')]]></check>
       <check name="AD_COLUMN_COMPUTATIONMODE_CHK"><![CDATA[COMPUTATION_MODE IN ('N', 'V', 'S')]]></check>
-      <check name="AD_COLUMN_REFRESHMODE_CHK"><![CDATA[REFRESH_MODE IS NULL OR REFRESH_MODE IN ('S', 'Q', 'M')]]></check>
     </table>
   </database>
