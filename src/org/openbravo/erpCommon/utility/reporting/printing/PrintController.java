@@ -342,8 +342,7 @@ public class PrintController extends HttpSecureAppServlet {
                   && request.getServletPath().toLowerCase().indexOf(PRINT_OPTIONS_PATH) == -1) {
                 ResolvedSmtpConfig resolvedForCheck = SmtpCascadeResolver.resolve();
                 boolean hasSender = resolvedForCheck != null
-                    || StringUtils.isNotEmpty(senderAddress)
-                    || EmailSenderDispatcher.hasAlternativeSenderConfigured();
+                    || hasFallbackEmailSender(senderAddress);
                 if (!hasSender) {
                   reportNoSenderError(response, vars);
                 }
@@ -1188,10 +1187,8 @@ public class PrintController extends HttpSecureAppServlet {
       if (resolvedConfig != null) {
         fromEmail = resolvedConfig.getFromAddress();
         fromEmailId = resolvedConfig.getConfigId();
-      } else if (!EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
-        // With an alternative email sender configured, the actual sender address is
-        // resolved by that sender at send time, so the from field is left empty here
-        reportNoSenderError(response, vars);
+      } else {
+        reportNoSenderErrorIfNoAlternative(response, vars);
       }
     } finally {
       OBContext.restorePreviousMode();
@@ -1503,6 +1500,34 @@ public class PrintController extends HttpSecureAppServlet {
       }
     }
     return hasMoreThanOneLanguage;
+  }
+
+  /**
+   * Returns whether an email sender is available besides the cascade-resolved SMTP
+   * configuration: either a legacy per-document sender address or an alternative
+   * {@link com.etendoerp.email.spi.EmailSender} configured by a module.
+   * @param senderAddress the legacy sender address resolved for the document, may be empty
+   * @return {@code true} if a fallback email sender exists
+   */
+  private static boolean hasFallbackEmailSender(String senderAddress) {
+    return StringUtils.isNotEmpty(senderAddress)
+        || EmailSenderDispatcher.hasAlternativeSenderConfigured();
+  }
+
+  /**
+   * Reports the missing-sender error unless an alternative email sender module is
+   * configured. With an alternative sender available, the from field is simply left empty:
+   * the actual sender address is resolved by that sender at send time.
+   * @param response the HTTP response used to render the close-popup page
+   * @param vars the session variables, used to resolve the active tab and language
+   * @throws IOException if writing the response fails
+   * @throws ServletException thrown after the error is reported, to stop processing
+   */
+  private void reportNoSenderErrorIfNoAlternative(HttpServletResponse response,
+      VariablesSecureApp vars) throws IOException, ServletException {
+    if (!EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
+      reportNoSenderError(response, vars);
+    }
   }
 
   /**

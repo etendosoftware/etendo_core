@@ -159,6 +159,10 @@ public class EmailSendContext {
       return this;
     }
 
+    /**
+     * Creates the immutable {@link EmailSendContext} with the values set on this builder.
+     * @return a new context instance
+     */
     public EmailSendContext build() {
       return new EmailSendContext(client, organization, smtpConfig, resolvedSmtpConfig, email);
     }

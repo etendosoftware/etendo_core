@@ -48,9 +48,15 @@ public interface EmailSender {
   /**
    * Sends the resolved message. Transport failures must be propagated as exceptions; the
    * dispatcher never retries with another sender, to avoid double sends.
+   * <p>
+   * The generic {@code throws Exception} is deliberate: it mirrors the legacy
+   * {@code EmailManager.sendEmail} contract so each transport propagates its own exception
+   * types unchanged and existing callers observe exactly the same failures as before.
+   * </p>
    * @param context the send context carrying the message and client/organization information
    * @throws Exception if the message cannot be delivered
    */
+  @SuppressWarnings("java:S112")
   void send(EmailSendContext context) throws Exception;
 
   /**

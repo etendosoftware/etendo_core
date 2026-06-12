@@ -101,7 +101,7 @@ public class EmailManager {
    * @return the decrypted password, or the original value if decryption is not applicable or fails
    * @throws ServletException if an unexpected servlet-level error occurs
    */
-  public static String safeDecrypt(String password) throws ServletException {
+  protected static String safeDecrypt(String password) throws ServletException {
     if (StringUtils.isBlank(password)) {
       return password;
     }
@@ -133,26 +133,13 @@ public class EmailManager {
         headerExtras, timeoutMillis.intValue());
   }
 
-  /**
-   * Resolves the SMTP connection timeout in milliseconds for the given configuration,
-   * falling back to the default (10 minutes) when the configuration or its timeout is
-   * {@code null}.
-   * @param configuration the SMTP server configuration, may be {@code null}
-   * @return the timeout in milliseconds
-   */
-  public static Long getSmtpConnectionTimeout(EmailServerConfiguration configuration) {
+  protected static Long getSmtpConnectionTimeout(EmailServerConfiguration configuration) {
     return (configuration != null && configuration.getSmtpConnectionTimeout() != null)
         ? TimeUnit.SECONDS.toMillis(configuration.getSmtpConnectionTimeout())
         : DEFAULT_SMTP_TIMEOUT;
   }
 
-  /**
-   * Low-level SMTP transport: builds the MIME message and delivers it through the given
-   * server. Used by {@link com.etendoerp.email.spi.DefaultSmtpEmailSender} and by the
-   * deprecated direct-parameter entry points; it performs no configuration resolution and
-   * does not participate in the {@link EmailSenderDispatcher} selection.
-   */
-  public static void sendEmail(String host, boolean auth, String username, String password,
+  protected static void sendEmail(String host, boolean auth, String username, String password,
       String connSecurity, int port, String senderAddress, String senderName, String recipientTO,
       String recipientCC, String recipientBCC, String replyTo, String subject, String content,
       String contentType, List<File> attachments, Date sentDate, List<String> headerExtras,

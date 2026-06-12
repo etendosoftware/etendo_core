@@ -95,6 +95,7 @@ public class EmailSenderDispatcherTest {
 
       @Override
       public void send(EmailSendContext context) {
+        // intentionally empty: this fake only exercises the selection logic, never the send
       }
     };
 
@@ -172,6 +173,7 @@ public class EmailSenderDispatcherTest {
 
       @Override
       public void send(EmailSendContext context) {
+        // intentionally empty: this fake only exercises the selection logic, never the send
       }
 
       @Override

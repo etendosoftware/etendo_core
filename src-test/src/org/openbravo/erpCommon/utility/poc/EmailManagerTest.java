@@ -61,6 +61,7 @@ import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.utils.FormatUtilities;
 
+import com.etendoerp.email.spi.DefaultSmtpEmailSender;
 import com.etendoerp.email.spi.EmailSendContext;
 import com.etendoerp.email.spi.EmailSenderDispatcher;
 
@@ -639,6 +640,76 @@ public class EmailManagerTest {
       assertSame(conf, context.getResolvedSmtpConfig());
       assertSame(email, context.getEmail());
       assertNull(context.getSmtpConfig());
+    }
+  }
+
+  /**
+   * Verifies that {@link DefaultSmtpEmailSender} prefers the cascade-resolved configuration
+   * when the context carries both configuration flavors, delegating to the low-level SMTP
+   * transport with the resolved values.
+   * @throws Exception if an unexpected error occurs during mock setup or verification
+   */
+  @Test
+  void testDefaultSenderPrefersResolvedConfigOverServerConfig() throws Exception {
+    ResolvedSmtpConfig resolved = buildResolvedConfig(
+        SMTP_HOST, SMTP_PORT, CONNECTION_SECURITY, true, SMTP_ACCOUNT, ENCRYPTED_PASSWORD,
+        FROM_ADDRESS, FROM_NAME, CONFIG_REPLY_TO, TIMEOUT_SECONDS);
+    EmailServerConfiguration serverConf = mock(EmailServerConfiguration.class);
+    EmailInfo email = new EmailInfo.Builder().setRecipientTO(RECIPIENT_TO).build();
+    EmailSendContext context = new EmailSendContext.Builder()
+        .setSmtpConfig(serverConf)
+        .setResolvedSmtpConfig(resolved)
+        .setEmail(email)
+        .build();
+    mockedFormatUtils.when(() -> FormatUtilities.encryptDecrypt(ENCRYPTED_PASSWORD, false))
+        .thenReturn(DECRYPTED_PASSWORD);
+    try (MockedStatic<EmailManager> mockedManager = mockStatic(EmailManager.class)) {
+      mockedManager.when(() -> EmailManager.safeDecrypt(any())).thenCallRealMethod();
+      new DefaultSmtpEmailSender().send(context);
+      int expectedTimeoutMillis = (int) TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS);
+      mockedManager.verify(() -> EmailManager.sendEmail(
+          eq(SMTP_HOST), eq(true), eq(SMTP_ACCOUNT), eq(DECRYPTED_PASSWORD),
+          eq(CONNECTION_SECURITY), eq(SMTP_PORT), eq(FROM_ADDRESS), eq(FROM_NAME),
+          eq(RECIPIENT_TO), isNull(), isNull(), eq(CONFIG_REPLY_TO),
+          isNull(), isNull(), isNull(), anyList(), isNull(), anyList(),
+          eq(expectedTimeoutMillis)));
+    }
+  }
+
+  /**
+   * Verifies that {@link DefaultSmtpEmailSender} sends through the low-level SMTP transport
+   * with the values of an {@link EmailServerConfiguration} record, decrypting the stored
+   * password and converting the configured timeout from seconds to milliseconds.
+   * @throws Exception if an unexpected error occurs during mock setup or verification
+   */
+  @Test
+  void testDefaultSenderSendsServerConfigThroughSmtpTransport() throws Exception {
+    EmailServerConfiguration conf = mock(EmailServerConfiguration.class);
+    when(conf.getSmtpServer()).thenReturn(SMTP_HOST);
+    when(conf.isSMTPAuthentification()).thenReturn(true);
+    when(conf.getSmtpServerAccount()).thenReturn(SMTP_ACCOUNT);
+    when(conf.getSmtpServerPassword()).thenReturn(ENCRYPTED_PASSWORD);
+    when(conf.getSmtpConnectionSecurity()).thenReturn(CONNECTION_SECURITY);
+    when(conf.getSmtpPort()).thenReturn((long) SMTP_PORT);
+    when(conf.getSmtpServerSenderAddress()).thenReturn(FROM_ADDRESS);
+    when(conf.getFromName()).thenReturn(FROM_NAME);
+    when(conf.getSmtpConnectionTimeout()).thenReturn(TIMEOUT_SECONDS);
+    mockedFormatUtils.when(() -> FormatUtilities.encryptDecrypt(ENCRYPTED_PASSWORD, false))
+        .thenReturn(DECRYPTED_PASSWORD);
+    EmailInfo email = new EmailInfo.Builder().setRecipientTO(RECIPIENT_TO).build();
+    EmailSendContext context = new EmailSendContext.Builder()
+        .setSmtpConfig(conf)
+        .setEmail(email)
+        .build();
+    try (MockedStatic<EmailManager> mockedManager = mockStatic(EmailManager.class)) {
+      new DefaultSmtpEmailSender().send(context);
+      int expectedTimeoutMillis = (int) TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS);
+      mockedManager.verify(() -> EmailManager.sendEmail(
+          eq(SMTP_HOST), eq(true), eq(SMTP_ACCOUNT), eq(DECRYPTED_PASSWORD),
+          eq(CONNECTION_SECURITY), eq(SMTP_PORT), eq(FROM_ADDRESS), eq(FROM_NAME),
+          eq(RECIPIENT_TO), isNull(), isNull(), isNull(),
+          isNull(), isNull(), isNull(), anyList(), isNull(), anyList(),
+          eq(expectedTimeoutMillis)));
     }
   }
 

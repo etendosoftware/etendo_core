@@ -36,14 +36,13 @@ import org.openbravo.utils.FormatUtilities;
  * <p>
  * The configuration validation, password decryption and timeout resolution previously
  * performed by {@code EmailManager} before sending live here now; the low-level SMTP
- * transport itself remains in
- * {@link EmailManager#sendEmail(String, boolean, String, String, String, int, String,
- * String, String, String, String, String, String, String, String, java.util.List,
- * java.util.Date, java.util.List, int)}.
+ * transport itself remains in {@code EmailManager}. This class extends
+ * {@link EmailManager} solely to reach that protected legacy transport without widening
+ * the {@code EmailManager} API.
  * </p>
  */
 @ApplicationScoped
-public class DefaultSmtpEmailSender implements EmailSender {
+public class DefaultSmtpEmailSender extends EmailManager implements EmailSender {
 
   private static final long DEFAULT_SMTP_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(10);
 
@@ -127,13 +126,15 @@ public class DefaultSmtpEmailSender implements EmailSender {
   private void sendWithServerConfig(EmailServerConfiguration conf, EmailInfo email)
       throws Exception {
     String decryptedPassword = FormatUtilities.encryptDecrypt(conf.getSmtpServerPassword(), false);
-    Long timeoutMillis = EmailManager.getSmtpConnectionTimeout(conf);
+    long timeoutMillis = conf.getSmtpConnectionTimeout() != null
+        ? TimeUnit.SECONDS.toMillis(conf.getSmtpConnectionTimeout())
+        : DEFAULT_SMTP_TIMEOUT_MILLIS;
     EmailManager.sendEmail(conf.getSmtpServer(), conf.isSMTPAuthentification(),
         conf.getSmtpServerAccount(), decryptedPassword, conf.getSmtpConnectionSecurity(),
         conf.getSmtpPort().intValue(), conf.getSmtpServerSenderAddress(), conf.getFromName(),
         email.getRecipientTO(), email.getRecipientCC(), email.getRecipientBCC(),
         email.getReplyTo(), email.getSubject(), email.getContent(), email.getContentType(),
         email.getAttachments(), email.getSentDate(), email.getHeaderExtras(),
-        timeoutMillis.intValue());
+        (int) timeoutMillis);
   }
 }
