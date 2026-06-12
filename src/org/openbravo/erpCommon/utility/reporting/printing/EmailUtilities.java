@@ -146,18 +146,36 @@ public class EmailUtilities {
                 .setSentDate(new Date())
                 .build();
 
-        log4j.debug("From: {}", resolvedConfig.getFromAddress());
-        log4j.debug("Recipient TO (contact email): {}", email.getRecipientTO());
-        log4j.debug("Recipient CC: {}", email.getRecipientCC());
-        log4j.debug("Recipient BCC (user email): {}", email.getRecipientBCC());
-        log4j.debug("Reply-to (sales rep email): {}", email.getReplyTo());
-
-        log4j.info("Sending email using {} SMTP config (id={})", resolvedConfig.getLevel(), resolvedConfig.getConfigId());
+        logEmailDispatch(resolvedConfig, email);
         sendEmail(resolvedConfig, email, attachments);
 
         // Store the email in the database
         saveEmail(connectionProvider, vars.getClient(), vars.getUser(),  email,report, documentData.documentId);
 
+    }
+
+    /**
+     * Logs the email about to be dispatched. The resolved SMTP configuration may be
+     * {@code null} when an alternative email sender handles the message; in that case the
+     * sender address is resolved by that sender at send time and is not logged here.
+     * @param resolvedConfig the cascade-resolved SMTP configuration, may be {@code null}
+     * @param email the email about to be sent
+     */
+    private static void logEmailDispatch(ResolvedSmtpConfig resolvedConfig, EmailInfo email) {
+        if (resolvedConfig != null) {
+            log4j.debug("From: {}", resolvedConfig.getFromAddress());
+        }
+        log4j.debug("Recipient TO (contact email): {}", email.getRecipientTO());
+        log4j.debug("Recipient CC: {}", email.getRecipientCC());
+        log4j.debug("Recipient BCC (user email): {}", email.getRecipientBCC());
+        log4j.debug("Reply-to (sales rep email): {}", email.getReplyTo());
+        if (resolvedConfig != null) {
+            log4j.info("Sending email using {} SMTP config (id={})", resolvedConfig.getLevel(),
+                resolvedConfig.getConfigId());
+        } else {
+            log4j.info("Sending email through an alternative email sender"
+                + " (no SMTP configuration found)");
+        }
     }
 
     private static Collection<? extends File> getDocumentAttachments(String documentId) throws IOException {

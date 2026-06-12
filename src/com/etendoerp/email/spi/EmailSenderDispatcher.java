@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.enterprise.context.ApplicationScoped;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.weld.WeldUtils;
@@ -40,6 +42,7 @@ import org.openbravo.base.weld.WeldUtils;
  * transport (avoiding double sends).
  * </p>
  */
+@ApplicationScoped
 public class EmailSenderDispatcher {
 
   private static final Logger log = LogManager.getLogger();
