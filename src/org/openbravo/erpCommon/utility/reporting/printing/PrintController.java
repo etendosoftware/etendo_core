@@ -342,7 +342,7 @@ public class PrintController extends HttpSecureAppServlet {
                   && request.getServletPath().toLowerCase().indexOf(PRINT_OPTIONS_PATH) == -1) {
                 ResolvedSmtpConfig resolvedForCheck = SmtpCascadeResolver.resolve();
                 boolean hasSender = resolvedForCheck != null
-                    || hasFallbackEmailSender(senderAddress);
+                    || StringUtils.isNotEmpty(senderAddress);
                 if (!hasSender) {
                   reportNoSenderError(response, vars);
                 }
@@ -1188,7 +1188,7 @@ public class PrintController extends HttpSecureAppServlet {
         fromEmail = resolvedConfig.getFromAddress();
         fromEmailId = resolvedConfig.getConfigId();
       } else {
-        reportNoSenderErrorIfNoAlternative(response, vars);
+        reportNoSenderError(response, vars);
       }
     } finally {
       OBContext.restorePreviousMode();
@@ -1503,44 +1503,24 @@ public class PrintController extends HttpSecureAppServlet {
   }
 
   /**
-   * Returns whether an email sender is available besides the cascade-resolved SMTP
-   * configuration: either a legacy per-document sender address or an alternative
-   * {@link com.etendoerp.email.spi.EmailSender} configured by a module.
-   * @param senderAddress the legacy sender address resolved for the document, may be empty
-   * @return {@code true} if a fallback email sender exists
-   */
-  private static boolean hasFallbackEmailSender(String senderAddress) {
-    return StringUtils.isNotEmpty(senderAddress)
-        || EmailSenderDispatcher.hasAlternativeSenderConfigured();
-  }
-
-  /**
-   * Reports the missing-sender error unless an alternative email sender module is
-   * configured. With an alternative sender available, the from field is simply left empty:
-   * the actual sender address is resolved by that sender at send time.
+   * Reports a "no sender configured" error by setting an {@link OBError} message on the current
+   * tab and closing the popup while refreshing the parent record. This ensures the error is
+   * displayed inline on the record (in red) rather than as a generic popup dialog.
+   * <p>
+   * When an alternative {@link com.etendoerp.email.spi.EmailSender} is configured by a
+   * module, no error is reported and processing continues: the actual sender address is
+   * resolved by that sender at send time, so a missing SMTP configuration is not an error.
+   * </p>
    * @param response the HTTP response used to render the close-popup page
    * @param vars the session variables, used to resolve the active tab and language
    * @throws IOException if writing the response fails
    * @throws ServletException thrown after the error is reported, to stop processing
    */
-  private void reportNoSenderErrorIfNoAlternative(HttpServletResponse response,
-      VariablesSecureApp vars) throws IOException, ServletException {
-    if (!EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
-      reportNoSenderError(response, vars);
-    }
-  }
-
-  /**
-   * Reports a "no sender configured" error by setting an {@link OBError} message on the current
-   * tab and closing the popup while refreshing the parent record. This ensures the error is
-   * displayed inline on the record (in red) rather than as a generic popup dialog.
-   * @param response the HTTP response used to render the close-popup page
-   * @param vars the session variables, used to resolve the active tab and language
-   * @throws IOException if writing the response fails
-   * @throws ServletException always thrown after the error is reported, to stop processing
-   */
   private void reportNoSenderError(HttpServletResponse response, VariablesSecureApp vars)
       throws IOException, ServletException {
+    if (EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
+      return;
+    }
     final OBError on = new OBError();
     on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
     on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));
