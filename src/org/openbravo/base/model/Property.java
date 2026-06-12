@@ -104,7 +104,7 @@ public class Property {
   private char computationMode = 'N';
   private String computationFunction;
   private String refreshMode;
-  private int computationSequenceNumber;
+  private Integer computationSequenceNumber;
   private String help;
   private Boolean isDeprecated;
 
@@ -1426,11 +1426,11 @@ public class Property {
     this.refreshMode = refreshMode;
   }
 
-  public int getComputationSequenceNumber() {
+  public Integer getComputationSequenceNumber() {
     return computationSequenceNumber;
   }
 
-  public void setComputationSequenceNumber(int computationSequenceNumber) {
+  public void setComputationSequenceNumber(Integer computationSequenceNumber) {
     this.computationSequenceNumber = computationSequenceNumber;
   }
 
