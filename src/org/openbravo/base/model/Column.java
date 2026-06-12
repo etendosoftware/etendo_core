@@ -68,7 +68,7 @@ public class Column extends ModelObject {
   private String sqlLogic;
   private char computationMode = 'N';
   private String computationFunction;
-  private char refreshMode;
+  private String refreshMode;
   private int computationSequenceNumber;
   private Boolean isTransient;
   private String isTransientCondition;
@@ -581,11 +581,11 @@ public class Column extends ModelObject {
     this.computationFunction = computationFunction;
   }
 
-  public char getRefreshMode() {
+  public String getRefreshMode() {
     return refreshMode;
   }
 
-  public void setRefreshMode(char refreshMode) {
+  public void setRefreshMode(String refreshMode) {
     this.refreshMode = refreshMode;
   }
 
