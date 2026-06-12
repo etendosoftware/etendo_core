@@ -239,7 +239,7 @@
       </column>
       <column name="COMPUTATION_SEQUENCE_NUMBER" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
         <default><![CDATA[0]]></default>
-        <onCreateDefault/>
+        <onCreateDefault><![CDATA[0]]></onCreateDefault>
       </column>
       <foreign-key foreignTable="AD_CALLOUT" name="AD_COLUMN_AD_CALLOUT">
         <reference local="AD_CALLOUT_ID" foreign="AD_CALLOUT_ID"/>
