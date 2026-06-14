@@ -53,9 +53,6 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
     + "WHERE  d.isactive = 'Y' AND c.isactive = 'Y' AND c.computation_mode = 'S' "
     + "ORDER  BY c.computation_sequence_number, d.ad_column_comp_dependency_id";
 
-  private static final String QUERY_COL_NAME =
-      "SELECT columnname FROM ad_column WHERE ad_column_id = ?";
-
   private static final String QUERY_DEPLOYED =
       "SELECT proname FROM pg_proc WHERE proname LIKE 'ad_scd_%_trf'";
 
@@ -92,7 +89,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         cp.getPreparedStatement(
             buildFunctionDdl(funcName, resolverSql, columnId, refreshMode, seqNo)).execute();
 
-        String eventClause = buildEventClause(cp, insertEvent, updateEvent, deleteEvent,
+        String eventClause = buildEventClause(insertEvent, updateEvent, deleteEvent,
             watchedCols);
 
         cp.getPreparedStatement(
@@ -149,7 +146,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         + "      REFRESH_MODE, COMPUTATION_SEQUENCE_NUMBER\n"
         + "    ) VALUES (\n"
         + "      get_uuid(), '0', '0', 'Y', NOW(), '0', NOW(), '0',\n"
-        + "      '" + columnId + "', v_target_id, pg_current_xact_id()::bigint,\n"
+        + "      '" + columnId + "', v_target_id, pg_current_xact_id()::text::bigint,\n"
         + "      '" + refreshMode + "', " + seqNo + "\n"
         + "    ) ON CONFLICT DO NOTHING;\n"
         + "  END LOOP;\n"
@@ -158,34 +155,32 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         + "$$ LANGUAGE plpgsql";
   }
 
-  private String buildEventClause(ConnectionProvider cp,
-      String insertEvent, String updateEvent, String deleteEvent,
-      String watchedCols) throws Exception {
+  /**
+   * Builds the {@code AFTER ...} event clause for the trigger.
+   *
+   * {@code WATCHED_COLUMNS} is a case-insensitive, comma-delimited list of source-table column
+   * <i>names</i> (not AD_COLUMN_IDs). When present alongside an UPDATE event, the trigger is
+   * narrowed to {@code AFTER UPDATE OF col1, col2} so it only fires when one of those columns
+   * actually changes. Names are lowercased to match PostgreSQL's default identifier folding.
+   */
+  private String buildEventClause(String insertEvent, String updateEvent, String deleteEvent,
+      String watchedCols) {
     List<String> parts = new ArrayList<>();
     if ("Y".equals(insertEvent)) {
       parts.add("INSERT");
     }
     if ("Y".equals(updateEvent)) {
+      List<String> colNames = new ArrayList<>();
       if (watchedCols != null && !watchedCols.isBlank()) {
-        List<String> colNames = new ArrayList<>();
-        for (String colId : watchedCols.split(",")) {
-          String trimmed = colId.trim();
-          if (trimmed.isEmpty()) {
-            continue;
+        for (String colName : watchedCols.split(",")) {
+          String trimmed = colName.trim();
+          if (!trimmed.isEmpty()) {
+            colNames.add(trimmed.toLowerCase());
           }
-          PreparedStatement ps = cp.getPreparedStatement(QUERY_COL_NAME);
-          ps.setString(1, trimmed);
-          ResultSet rs = ps.executeQuery();
-          if (rs.next()) {
-            colNames.add(rs.getString(1).toLowerCase());
-          }
-          cp.releasePreparedStatement(ps);
         }
-        if (!colNames.isEmpty()) {
-          parts.add("UPDATE OF " + String.join(", ", colNames));
-        } else {
-          parts.add("UPDATE");
-        }
+      }
+      if (!colNames.isEmpty()) {
+        parts.add("UPDATE OF " + String.join(", ", colNames));
       } else {
         parts.add("UPDATE");
       }
