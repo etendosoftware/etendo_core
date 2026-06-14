@@ -225,10 +225,6 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault><![CDATA['Y']]></onCreateDefault>
       </column>
-      <column name="COMPUTATION_MODE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
-        <default><![CDATA[N]]></default>
-        <onCreateDefault><![CDATA[CASE WHEN SQL_LOGIC IS NULL THEN 'N' ELSE 'V' END]]></onCreateDefault>
-      </column>
       <column name="COMPUTATION_FUNCTION" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
         <default/>
         <onCreateDefault/>
@@ -240,6 +236,10 @@
       <column name="COMPUTATION_SEQUENCE_NUMBER" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
         <default><![CDATA[0]]></default>
         <onCreateDefault><![CDATA[0]]></onCreateDefault>
+      </column>
+      <column name="COMPUTATION_MODE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault><![CDATA[CASE WHEN SQLLOGIC IS NULL THEN 'N' ELSE 'V' END]]></onCreateDefault>
       </column>
       <foreign-key foreignTable="AD_CALLOUT" name="AD_COLUMN_AD_CALLOUT">
         <reference local="AD_CALLOUT_ID" foreign="AD_CALLOUT_ID"/>
@@ -305,6 +305,5 @@
       <check name="AD_COLUMN_ISTRANSLATED_CHK"><![CDATA[ISTRANSLATED IN ('Y', 'N')]]></check>
       <check name="AD_COLUMN_ISUPDATEABLE_CHK"><![CDATA[ISUPDATEABLE IN ('Y', 'N')]]></check>
       <check name="AD_COLUMN_USEDSEQ_CHK"><![CDATA[ISUSEDSEQUENCE IN ('Y', 'N')]]></check>
-      <check name="AD_COLUMN_COMPUTATIONMODE_CHK"><![CDATA[COMPUTATION_MODE IN ('N', 'V', 'S')]]></check>
     </table>
   </database>

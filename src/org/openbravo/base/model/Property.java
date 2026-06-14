@@ -101,7 +101,7 @@ public class Property {
   private Property translationProperty;
 
   private String sqlLogic;
-  private char computationMode = 'N';
+  private String computationMode = "N";
   private String computationFunction;
   private String refreshMode;
   private Integer computationSequenceNumber;
@@ -1402,11 +1402,11 @@ public class Property {
     this.sqlLogic = sqlLogic;
   }
 
-  public char getComputationMode() {
+  public String getComputationMode() {
     return computationMode;
   }
 
-  public void setComputationMode(char computationMode) {
+  public void setComputationMode(String computationMode) {
     this.computationMode = computationMode;
   }
 
@@ -1435,7 +1435,7 @@ public class Property {
   }
 
   public boolean isStoredComputed() {
-    return computationMode == 'S';
+    return "S".equals(computationMode);
   }
 
   /**

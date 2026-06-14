@@ -112,7 +112,11 @@ BEGIN
         COALESCE(:NEW.AllowSorting, '.') != COALESCE(:OLD.AllowSorting, '.') OR
         COALESCE(:NEW.AllowFiltering, '.') != COALESCE(:OLD.AllowFiltering, '.') OR
         :NEW.Allowed_Cross_Org_Link != :OLD.Allowed_Cross_Org_Link OR
-        :NEW.is_Child_Property_In_Parent != :OLD.is_Child_Property_In_Parent) THEN
+        :NEW.is_Child_Property_In_Parent != :OLD.is_Child_Property_In_Parent OR
+        COALESCE(:NEW.Computation_Mode , '.') != COALESCE(:OLD.Computation_Mode , '.') OR
+        COALESCE(:NEW.Computation_Function , '.') != COALESCE(:OLD.Computation_Function , '.') OR
+        COALESCE(:NEW.Refresh_Mode , '.') != COALESCE(:OLD.Refresh_Mode , '.') OR
+        COALESCE(:NEW.Computation_Sequence_Number , 0) != COALESCE(:OLD.Computation_Sequence_Number , 0)) THEN
       RAISE_APPLICATION_ERROR(-20000, '@20532@');
     END IF;
   END IF;
@@ -182,6 +186,10 @@ BEGIN
         COALESCE(:NEW.AllowFiltering             ,'.') = COALESCE(:OLD.AllowFiltering             ,'.')AND
         :NEW.Allowed_Cross_Org_Link                    = :OLD.Allowed_Cross_Org_Link                   AND
         :NEW.is_Child_Property_In_Parent               = :OLD.is_Child_Property_In_Parent              AND
+        COALESCE(:NEW.COMPUTATION_MODE           ,'.') = COALESCE(:OLD.COMPUTATION_MODE           ,'.')AND
+        COALESCE(:NEW.COMPUTATION_FUNCTION       ,'.') = COALESCE(:OLD.COMPUTATION_FUNCTION       ,'.')AND
+        COALESCE(:NEW.REFRESH_MODE               ,'.') = COALESCE(:OLD.REFRESH_MODE               ,'.')AND
+        COALESCE(:NEW.COMPUTATION_SEQUENCE_NUMBER, 0 ) = COALESCE(:OLD.COMPUTATION_SEQUENCE_NUMBER, 0 )AND
         COALESCE(:OLD.ISEXCLUDEAUDIT		,'.') != COALESCE(:NEW.ISEXCLUDEAUDIT		,'.')) THEN
       
 		:NEW.UPDATED := :OLD.UPDATED;

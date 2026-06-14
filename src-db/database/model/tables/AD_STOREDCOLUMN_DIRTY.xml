@@ -45,7 +45,7 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="REFRESH_MODE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+      <column name="REFRESH_MODE" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
@@ -62,11 +62,10 @@
       <foreign-key foreignTable="AD_ORG" name="AD_STOREDCOLDIRTY_AD_ORG">
         <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
-      <unique name="AD_STOREDCOLDIRTY_DEDUP">
-        <unique-column name="AD_COLUMN_ID"/>
-        <unique-column name="TARGET_RECORD_ID"/>
-        <unique-column name="TRANSACTION_ID"/>
-      </unique>
+      <index name="AD_STOREDCOLDIRTY_QUEUE" unique="false">
+        <index-column name="CREATED"/>
+        <whereClause><![CDATA[REFRESH_MODE='Q']]></whereClause>
+      </index>
       <index name="AD_STOREDCOLDIRTY_SENTINEL" unique="true">
         <index-column name="AD_COLUMN_ID"/>
         <index-column name="TRANSACTION_ID"/>
@@ -75,12 +74,13 @@
       <index name="AD_STOREDCOLDIRTY_SYNC" unique="false">
         <index-column name="TRANSACTION_ID"/>
         <index-column name="COMPUTATION_SEQUENCE_NUMBER"/>
-        <whereClause><![CDATA[REFRESH_MODE = 'S']]></whereClause>
+        <whereClause><![CDATA[REFRESH_MODE='S']]></whereClause>
       </index>
-      <index name="AD_STOREDCOLDIRTY_QUEUE" unique="false">
-        <index-column name="CREATED"/>
-        <whereClause><![CDATA[REFRESH_MODE = 'Q']]></whereClause>
-      </index>
+      <unique name="AD_STOREDCOLDIRTY_DEDUP">
+        <unique-column name="AD_COLUMN_ID"/>
+        <unique-column name="TARGET_RECORD_ID"/>
+        <unique-column name="TRANSACTION_ID"/>
+      </unique>
       <check name="AD_STOREDCOLDIRTY_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
       <check name="AD_STOREDCOLDIRTY_REFMODE_CHK"><![CDATA[REFRESH_MODE IN ('S', 'Q', 'M')]]></check>
     </table>

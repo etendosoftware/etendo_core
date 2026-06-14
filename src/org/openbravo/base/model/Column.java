@@ -66,7 +66,7 @@ public class Column extends ModelObject {
   private String valueMin;
   private String valueMax;
   private String sqlLogic;
-  private char computationMode = 'N';
+  private String computationMode;
   private String computationFunction;
   private String refreshMode;
   private Integer computationSequenceNumber;
@@ -565,11 +565,11 @@ public class Column extends ModelObject {
     this.sqlLogic = sqlLogic;
   }
 
-  public char getComputationMode() {
+  public String getComputationMode() {
     return computationMode;
   }
 
-  public void setComputationMode(char computationMode) {
+  public void setComputationMode(String computationMode) {
     this.computationMode = computationMode;
   }
 

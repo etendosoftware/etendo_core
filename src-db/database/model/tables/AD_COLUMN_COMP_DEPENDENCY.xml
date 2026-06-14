@@ -61,7 +61,7 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault><![CDATA['N']]></onCreateDefault>
       </column>
-      <column name="WATCHED_COLUMNS" primaryKey="false" required="false" type="VARCHAR" size="2000" autoIncrement="false">
+      <column name="WATCHED_COLUMNS" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
@@ -87,9 +87,9 @@
       <index name="AD_COLCOMP_DEP_COLUMN_IDX" unique="false">
         <index-column name="AD_COLUMN_ID"/>
       </index>
-      <check name="AD_COLCOMP_DEP_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
-      <check name="AD_COLCOMP_DEP_INSERT_CHK"><![CDATA[INSERT_EVENT IN ('Y', 'N')]]></check>
-      <check name="AD_COLCOMP_DEP_UPDATE_CHK"><![CDATA[UPDATE_EVENT IN ('Y', 'N')]]></check>
       <check name="AD_COLCOMP_DEP_DELETE_CHK"><![CDATA[DELETE_EVENT IN ('Y', 'N')]]></check>
+      <check name="AD_COLCOMP_DEP_INSERT_CHK"><![CDATA[INSERT_EVENT IN ('Y', 'N')]]></check>
+      <check name="AD_COLCOMP_DEP_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="AD_COLCOMP_DEP_UPDATE_CHK"><![CDATA[UPDATE_EVENT IN ('Y', 'N')]]></check>
     </table>
   </database>
