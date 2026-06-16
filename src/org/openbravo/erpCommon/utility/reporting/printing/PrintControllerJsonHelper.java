@@ -26,39 +26,49 @@ final class PrintControllerJsonHelper {
   static JSONObject buildBPContactsJson(VariablesSecureApp vars, PocData[] pocData) {
     JSONObject result = new JSONObject();
     try {
-      JSONArray contacts = new JSONArray();
-      if (isMultiCustomer(pocData)) {
-        List<String> seenEmails = new ArrayList<>();
-        for (PocData doc : pocData) {
-          if (StringUtils.isBlank(doc.contactEmail) || seenEmails.contains(doc.contactEmail)) {
-            continue;
-          }
-          seenEmails.add(doc.contactEmail);
-          JSONObject json = new JSONObject();
-          json.put("contactId", StringUtils.defaultString(doc.contactUserId));
-          json.put("name", StringUtils.defaultString(doc.contactName));
-          json.put("email", doc.contactEmail);
-          json.put("isDefault", false);
-          json.put("isActive", true);
-          contacts.put(json);
-        }
-      } else {
-        String bpartnerId = pocData != null && pocData.length > 0
-            ? pocData[0].bpartnerId
-            : vars.getStringParameter("bpartnerId");
-        List<User> bpContacts = BPContactEmailSelector.getBPContactsWithEmail(bpartnerId);
-        if (bpContacts != null) {
-          for (User contact : bpContacts) {
-            contacts.put(buildContactJson(contact));
-          }
-        }
-      }
+      JSONArray contacts = isMultiCustomer(pocData)
+          ? buildMultiCustomerContacts(pocData)
+          : buildSingleCustomerContacts(vars, pocData);
       result.put("contacts", contacts);
     } catch (Exception exception) {
       log.error("Error building BP contacts JSON", exception);
       result = buildErrorJson();
     }
     return result;
+  }
+
+  private static JSONArray buildMultiCustomerContacts(PocData[] pocData) throws JSONException {
+    JSONArray contacts = new JSONArray();
+    List<String> seenEmails = new ArrayList<>();
+    for (PocData doc : pocData) {
+      if (StringUtils.isBlank(doc.contactEmail) || seenEmails.contains(doc.contactEmail)) {
+        continue;
+      }
+      seenEmails.add(doc.contactEmail);
+      JSONObject json = new JSONObject();
+      json.put("contactId", StringUtils.defaultString(doc.contactUserId));
+      json.put("name", StringUtils.defaultString(doc.contactName));
+      json.put("email", doc.contactEmail);
+      json.put("isDefault", false);
+      json.put("isActive", true);
+      contacts.put(json);
+    }
+    return contacts;
+  }
+
+  private static JSONArray buildSingleCustomerContacts(VariablesSecureApp vars, PocData[] pocData)
+      throws JSONException {
+    JSONArray contacts = new JSONArray();
+    String bpartnerId = pocData != null && pocData.length > 0
+        ? pocData[0].bpartnerId
+        : vars.getStringParameter("bpartnerId");
+    List<User> bpContacts = BPContactEmailSelector.getBPContactsWithEmail(bpartnerId);
+    if (bpContacts != null) {
+      for (User contact : bpContacts) {
+        contacts.put(buildContactJson(contact));
+      }
+    }
+    return contacts;
   }
 
   static JSONObject buildErrorJson() {
@@ -92,7 +102,7 @@ final class PrintControllerJsonHelper {
 
   private static JSONObject buildContactJson(User contact) throws JSONException {
     JSONObject contactJson = new JSONObject();
-    contactJson.put("id", contact.getId());
+    contactJson.put("contactId", contact.getId());
     contactJson.put("name", contact.getName());
     contactJson.put("email", contact.getEmail());
     contactJson.put("isDefault", false);

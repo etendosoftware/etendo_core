@@ -46,7 +46,6 @@ final class PrintControllerEmailSupport {
     if (pocData == null) {
       return new String[0];
     }
-    String[] discard;
     final Map<String, PocData> customerMap = new HashMap<>();
     final Map<String, PocData> salesRepMap = new HashMap<>();
     for (final PocData documentData : pocData) {
@@ -65,15 +64,7 @@ final class PrintControllerEmailSupport {
     checks.put(PrintController.CHECK_MORE_THAN_ONE_CUSTOMER, Boolean.valueOf(moreThanOneCustomer));
     checks.put(PrintController.CHECK_MORE_THAN_ONE_SALES_REP, Boolean.valueOf(moreThanOneSalesRep));
 
-    if (moreThanOneCustomer && moreThanOneSalesRep) {
-      discard = new String[] { "replyTo", "replyTo_bottomMargin" };
-    } else if (moreThanOneCustomer) {
-      discard = new String[] { "multSalesRep", "multSalesRepCount" };
-    } else if (moreThanOneSalesRep) {
-      discard = new String[] { "replyTo", "replyTo_bottomMargin" };
-    } else {
-      discard = new String[] { "multipleCustomer", "multipleCustomer_bottomMargin" };
-    }
+    String[] discard = selectDiscardTags(moreThanOneCustomer, moreThanOneSalesRep);
 
     if (differentDocTypesCount > 1) {
       return appendDiscard(discard, "discardSelect");
@@ -85,7 +76,19 @@ final class PrintControllerEmailSupport {
   }
 
   static boolean hasSingleAttachmentDoc(Map<String, Report> reports) {
-    return reports.size() == 1;
+    return reports != null && reports.size() == 1;
+  }
+
+  private static String[] selectDiscardTags(boolean moreThanOneCustomer, boolean moreThanOneSalesRep) {
+    if (moreThanOneCustomer && moreThanOneSalesRep) {
+      return new String[] { "replyTo", "replyTo_bottomMargin" };
+    } else if (moreThanOneCustomer) {
+      return new String[] { "multSalesRep", "multSalesRepCount" };
+    } else if (moreThanOneSalesRep) {
+      return new String[] { "replyTo", "replyTo_bottomMargin", "multiCustomerFlag" };
+    } else {
+      return new String[] { "multipleCustomer", "multipleCustomer_bottomMargin", "multiCustomerFlag" };
+    }
   }
 
   private static String[] appendDiscard(String[] discard, String value) {

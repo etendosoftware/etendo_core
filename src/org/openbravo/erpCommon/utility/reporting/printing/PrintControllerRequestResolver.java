@@ -28,7 +28,7 @@ final class PrintControllerRequestResolver {
       return buildContext(vars, DocumentType.SHIPMENT, "PRINTSHIPMENTS", ".inpmInoutId");
     }
     if (servletPath.indexOf("payments") != -1) {
-      return buildContext(vars, DocumentType.PAYMENT, "PRINTPAYMENT", ".inpfinPaymentId");
+      return buildContext(vars, DocumentType.PAYMENT, "PRINTPAYMENTS", ".inpfinPaymentId");
     }
     return new RequestContext(DocumentType.UNKNOWN, null, null);
   }

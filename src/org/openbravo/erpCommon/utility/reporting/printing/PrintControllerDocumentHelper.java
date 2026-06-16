@@ -41,6 +41,9 @@ final class PrintControllerDocumentHelper {
   }
 
   static String getFilenameForReports(Collection<Report> reports) {
+    if (reports == null) {
+      return "";
+    }
     String filename = "";
     for (Report report : reports) {
       filename = report.getFilename();
@@ -57,21 +60,24 @@ final class PrintControllerDocumentHelper {
       if (i > 0) {
         strIds.append("', '");
       }
-      strIds.append(documentIds[i]);
+      strIds.append(sanitizeDocumentIdentifier(documentIds[i]));
     }
     strIds.append("'");
 
     PrintControllerData[] printControllerData;
-    if (strTable.equals("C_INVOICE")) {
+    if ("C_INVOICE".equals(strTable)) {
       printControllerData = PrintControllerData.selectInvoices(controller, strIds.toString());
-    } else if (strTable.equals("C_ORDER")) {
+    } else if ("C_ORDER".equals(strTable)) {
       printControllerData = PrintControllerData.selectOrders(controller, strIds.toString());
-    } else if (strTable.equals("FIN_PAYMENT")) {
+    } else if ("FIN_PAYMENT".equals(strTable)) {
       printControllerData = PrintControllerData.selectPayments(controller, strIds.toString());
     } else {
       return documentIds;
     }
 
+    if (printControllerData == null) {
+      return documentIds;
+    }
     String[] documentIdsOrdered = new String[printControllerData.length];
     for (int i = 0; i < printControllerData.length; i++) {
       documentIdsOrdered[i] = printControllerData[i].getField("Id");

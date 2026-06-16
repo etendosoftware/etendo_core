@@ -195,9 +195,9 @@ final class PrintControllerEmailOptionsBuilder {
     DocumentMapsResult result = new DocumentMapsResult();
     AttachContent attachedContent = result.attachedContent;
     boolean onlyOneAttachedDoc = PrintControllerEmailSupport.hasSingleAttachmentDoc(context.reports);
+    PrintControllerEmailSupport.updateEnvironmentInfo(pocData, context.checks);
     for (PocData documentData : pocData) {
       String customer = documentData.contactEmail;
-      PrintControllerEmailSupport.updateEnvironmentInfo(pocData, context.checks);
       if (context.checks.get(PrintController.CHECK_MORE_THAN_ONE_DOCUMENT)) {
         validateCustomer(documentData, customer);
       }
@@ -215,18 +215,18 @@ final class PrintControllerEmailOptionsBuilder {
 
   private void validateCustomer(PocData documentData, String customer)
       throws IOException, ServletException {
-    if (customer == null || customer.length() == 0) {
+    if (documentData.contactUserId == null || documentData.contactUserId.length() == 0) {
       showInfoAndClose("NoContact", "@docNum@", documentData.ourreference);
-    } else if (documentData.contactEmail == null || documentData.contactEmail.equals("")) {
+    } else if (customer == null || customer.length() == 0) {
       showInfoAndClose("NoEmail", "@customer@", documentData.contactName);
     }
   }
 
   private void validateSalesRep(PocData documentData, String salesRep)
       throws IOException, ServletException {
-    if (salesRep == null || salesRep.length() == 0) {
+    if (documentData.salesrepUserId == null || documentData.salesrepUserId.length() == 0) {
       showInfoAndClose("NoSenderDocument", null, null);
-    } else if (documentData.salesrepEmail == null || documentData.salesrepEmail.equals("")) {
+    } else if (salesRep == null || salesRep.length() == 0) {
       showInfoAndClose("NoEmailSender", "@salesRep@", documentData.salesrepName);
     }
   }
@@ -255,6 +255,9 @@ final class PrintControllerEmailOptionsBuilder {
   private void updateDocumentState(DocumentMapsResult result, PocData documentData,
       AttachContent attachedContent, boolean onlyOneAttachedDoc) throws ServletException {
     Report report = context.reports.get(documentData.documentId);
+    if (report == null) {
+      return;
+    }
     if (report.isDraft()) {
       if (result.draftDocumentIds.length() > 0) {
         result.draftDocumentIds += ",";
@@ -314,8 +317,10 @@ final class PrintControllerEmailOptionsBuilder {
           attachments.toArray(new AttachContent[attachments.size()]));
     }
     if (pocData.length >= 1) {
-      xmlDocument.setData("reportEmail", "liststructure",
-          context.reports.get(pocData[0].documentId).getTemplate());
+      Report emailReport = context.reports.get(pocData[0].documentId);
+      if (emailReport != null) {
+        xmlDocument.setData("reportEmail", "liststructure", emailReport.getTemplate());
+      }
     }
   }
 
@@ -323,7 +328,7 @@ final class PrintControllerEmailOptionsBuilder {
       EmailDefinitionResult emailConfig, FromAddress fromAddress) throws ServletException {
     EmailFormData formData = new EmailFormData();
     PocData[] currentUserInfo = PocData.getContactDetailsForUser(controller, vars.getUser());
-    if (StringUtils.isNotBlank(currentUserInfo[0].userEmail)) {
+    if (currentUserInfo.length > 0 && StringUtils.isNotBlank(currentUserInfo[0].userEmail)) {
       formData.bccEmail = currentUserInfo[0].userEmail;
       formData.bccName = currentUserInfo[0].userName;
     }
@@ -391,7 +396,7 @@ final class PrintControllerEmailOptionsBuilder {
         formData.numberOfCustomers));
     xmlDocument.setParameter("ccName", "");
     xmlDocument.setParameter("bccName", formData.bccName);
-    xmlDocument.setParameter("replyToName", pocData[0].salesrepName);
+    xmlDocument.setParameter("replyToName", pocData.length > 0 ? pocData[0].salesrepName : StringUtils.EMPTY);
     xmlDocument.setParameter("multCusCount", String.valueOf(formData.numberOfCustomers));
     xmlDocument.setParameter("multSalesRepCount", String.valueOf(formData.numberOfSalesReps));
     if (!emailConfig.hasMultiple) {
@@ -491,6 +496,9 @@ final class PrintControllerEmailOptionsBuilder {
       BusinessPartner businessPartner = OBDal.getInstance()
           .get(BusinessPartner.class, report.getBPartnerId());
       Language language = businessPartner.getLanguage();
+      if (language == null) {
+        continue;
+      }
       if (currentLanguage == null) {
         currentLanguage = language;
       } else if (!currentLanguage.getId().equals(language.getId())) {

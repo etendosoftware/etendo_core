@@ -262,7 +262,7 @@ final class PrintControllerCommandHandler {
     if (documentData.contactEmail != null) {
       documentData.contactEmail = documentData.contactEmail.replace("\r", "").replace("\n", "");
     }
-    String senderAddress = vars.getStringParameter("fromEmail").replace("\r", "").replace("\n", "");
+    String senderAddress = StringUtils.defaultString(vars.getStringParameter("fromEmail")).replace("\r", "").replace("\n", "");
     context.checks.put("differentDocTypes", controller.differentDocTypes.size() > 1);
     @SuppressWarnings("unchecked")
     List<AttachContent> attachments = (List<AttachContent>) request.getSession()

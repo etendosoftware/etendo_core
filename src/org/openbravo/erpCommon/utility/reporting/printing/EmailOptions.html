@@ -266,7 +266,7 @@
           document.getElementById('emailConfigSelector').style.display = 'none';
           document.getElementById('emailConfigToUse').style.display = 'none';
         }
-        isMultiCustomerMode = document.getElementById('multipleCustomer') !== null;
+        isMultiCustomerMode = document.getElementById('multiCustomerFlag') !== null;
         if (isMultiCustomerMode) {
           var toInput = document.getElementById('toEmail');
           if (toInput) {
@@ -844,7 +844,7 @@
                     <tr id="multipleCustomer">
                         <td>
                         </td>
-                        <td class="LabelText"><span id="multCustomer">This email will be sent to </span>&nbsp;<span id="multCusCount" name="multCusCount"></span>&nbsp;<span id="multCustomer"> customers</span><span id="multSalesRep"><span>&nbsp;</span> by <span>&nbsp;</span></span><span id="multSalesRepCount" name="multSalesRepCount" ></span><span id="multSalesRep"><span>&nbsp;</span> sales reps</span>.</td>
+                        <td class="LabelText"><span id="multCustomer">This email will be sent to </span>&nbsp;<span id="multCusCount" name="multCusCount"></span>&nbsp;<span id="multCustomer"> customers</span><span id="multSalesRep"><span>&nbsp;</span> by <span>&nbsp;</span></span><span id="multSalesRepCount" name="multSalesRepCount" ></span><span id="multSalesRep"><span>&nbsp;</span> sales reps</span>.<span id="multiCustomerFlag" style="display:none;"></span></td>
                     </tr>
                     <tr id="multipleCustomer_bottomMargin"style="height: 8px">
                     </tr>
