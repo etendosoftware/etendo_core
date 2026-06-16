@@ -77,51 +77,60 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       deployEngine(cp);
 
       // Half 2: per-dependency enqueue triggers.
-      Set<String> activeDepIds = new HashSet<>();
-
+      // Drain the dependency rows into memory and release the cursor BEFORE issuing any DDL.
+      // Each DDL statement below commits on this connection; with the default
+      // CLOSE_CURSORS_AT_COMMIT holdability, deploying inside the open ResultSet would close the
+      // cursor after the first row and silently skip the rest. Materialising first avoids that.
+      List<DepRow> deps = new ArrayList<>();
       PreparedStatement psDeps = cp.getPreparedStatement(QUERY_DEPS);
       ResultSet rs = psDeps.executeQuery();
       while (rs.next()) {
-        String depId       = rs.getString("ad_column_comp_dependency_id").toLowerCase();
-        String columnId    = rs.getString("ad_column_id");
-        String insertEvent = rs.getString("insert_event");
-        String updateEvent = rs.getString("update_event");
-        String deleteEvent = rs.getString("delete_event");
-        String watchedCols = rs.getString("watched_columns");
-        String resolverSql = rs.getString("target_id_resolver_sql");
-        String sourceTable = rs.getString("source_table").toLowerCase();
-        String refreshMode = rs.getString("refresh_mode");
-        int    seqNo       = rs.getInt("computation_sequence_number");
+        DepRow row = new DepRow();
+        row.depId       = rs.getString("ad_column_comp_dependency_id").toLowerCase();
+        row.columnId    = rs.getString("ad_column_id");
+        row.insertEvent = rs.getString("insert_event");
+        row.updateEvent = rs.getString("update_event");
+        row.deleteEvent = rs.getString("delete_event");
+        row.watchedCols = rs.getString("watched_columns");
+        row.resolverSql = rs.getString("target_id_resolver_sql");
+        row.sourceTable = rs.getString("source_table").toLowerCase();
+        row.refreshMode = rs.getString("refresh_mode");
+        row.seqNo       = rs.getInt("computation_sequence_number");
+        deps.add(row);
+      }
+      cp.releasePreparedStatement(psDeps);
 
-        if (refreshMode == null) {
+      Set<String> activeDepIds = new HashSet<>();
+      for (DepRow row : deps) {
+        if (row.refreshMode == null) {
           log.warn("Skipping SCD dependency {} — target column {} has no REFRESH_MODE set",
-              depId, columnId);
+              row.depId, row.columnId);
           continue;
         }
 
-        activeDepIds.add(depId);
-        String funcName    = "ad_scd_" + depId + "_trf";
-        String triggerName = "ad_scd_" + depId + "_trg";
+        activeDepIds.add(row.depId);
+        String funcName    = "ad_scd_" + row.depId + "_trf";
+        String triggerName = "ad_scd_" + row.depId + "_trg";
 
-        List<String> watchedColNames = parseWatchedColumns(watchedCols);
+        List<String> watchedColNames = parseWatchedColumns(row.watchedCols);
 
         cp.getPreparedStatement(
-            buildFunctionDdl(funcName, resolverSql, columnId, refreshMode, seqNo, watchedColNames))
+            buildFunctionDdl(funcName, row.resolverSql, row.columnId, row.refreshMode, row.seqNo,
+                watchedColNames))
             .execute();
 
-        String eventClause = buildEventClause(insertEvent, updateEvent, deleteEvent,
+        String eventClause = buildEventClause(row.insertEvent, row.updateEvent, row.deleteEvent,
             watchedColNames);
 
         cp.getPreparedStatement(
-            "DROP TRIGGER IF EXISTS " + triggerName + " ON " + sourceTable).execute();
+            "DROP TRIGGER IF EXISTS " + triggerName + " ON " + row.sourceTable).execute();
         cp.getPreparedStatement(
             "CREATE TRIGGER " + triggerName
-            + " AFTER " + eventClause + " ON " + sourceTable
+            + " AFTER " + eventClause + " ON " + row.sourceTable
             + " FOR EACH ROW EXECUTE FUNCTION " + funcName + "()").execute();
 
-        log.info("Deployed SCD trigger {} on table {}", triggerName, sourceTable);
+        log.info("Deployed SCD trigger {} on table {}", triggerName, row.sourceTable);
       }
-      cp.releasePreparedStatement(psDeps);
 
       dropOrphanedFunctions(cp, activeDepIds);
 
@@ -410,5 +419,25 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       parts.add("DELETE");
     }
     return String.join(" OR ", parts);
+  }
+
+  /**
+   * Holds one {@code AD_COLUMN_COMP_DEPENDENCY} row, materialised from {@link #QUERY_DEPS} before any
+   * DDL is issued. The dependency cursor must be fully drained and released first: every DDL
+   * {@code execute()} commits on the shared connection, and under the default
+   * {@code CLOSE_CURSORS_AT_COMMIT} holdability that commit would close an open ResultSet, dropping
+   * every dependency after the first.
+   */
+  private static final class DepRow {
+    String depId;
+    String columnId;
+    String insertEvent;
+    String updateEvent;
+    String deleteEvent;
+    String watchedCols;
+    String resolverSql;
+    String sourceTable;
+    String refreshMode;
+    int seqNo;
   }
 }
