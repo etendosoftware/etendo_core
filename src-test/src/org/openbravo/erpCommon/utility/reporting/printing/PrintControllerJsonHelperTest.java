@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.utility.reporting.printing;
+package org.openbravo.erpCommon.utility.reporting.printing; //NOSONAR
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -67,7 +67,10 @@ public class PrintControllerJsonHelperTest {
   // -------------------------------------------------------------------------
   // buildBPContactsJson — multi-customer path (2+ distinct bpartnerIds)
   // -------------------------------------------------------------------------
-  /** Multi-customer mode returns one contact entry per unique email. */
+  /**
+   * Multi-customer mode returns one contact entry per unique email.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_multiCustomer_returnsOneContactPerUniqueEmail() throws JSONException {
     PocData doc1 = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
@@ -81,7 +84,10 @@ public class PrintControllerJsonHelperTest {
     assertEquals(ALICE_EMAIL, contacts.getJSONObject(0).getString(KEY_EMAIL));
     assertEquals(BOB_EMAIL, contacts.getJSONObject(1).getString(KEY_EMAIL));
   }
-  /** Duplicate email addresses across customers are deduplicated. */
+  /**
+   * Duplicate email addresses across customers are deduplicated.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_multiCustomer_duplicateEmailDeduped() throws JSONException {
     PocData doc1 = pocData("bp1", "u1", ALICE_NAME, "shared@test.com");
@@ -92,7 +98,10 @@ public class PrintControllerJsonHelperTest {
 
     assertEquals(1, result.getJSONArray(KEY_CONTACTS).length());
   }
-  /** Contacts with blank email are skipped in multi-customer mode. */
+  /**
+   * Contacts with blank email are skipped in multi-customer mode.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_multiCustomer_blankEmailSkipped() throws JSONException {
     PocData doc1 = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
@@ -103,7 +112,10 @@ public class PrintControllerJsonHelperTest {
 
     assertEquals(1, result.getJSONArray(KEY_CONTACTS).length());
   }
-  /** Contact JSON object contains contactId, name, email, isDefault, and isActive fields. */
+  /**
+   * Contact JSON object contains contactId, name, email, isDefault, and isActive fields.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_multiCustomer_contactJsonFields() throws JSONException {
     PocData doc1 = pocData("bp1", "uid1", ALICE_NAME, ALICE_EMAIL);
@@ -123,7 +135,10 @@ public class PrintControllerJsonHelperTest {
   // -------------------------------------------------------------------------
   // buildBPContactsJson — single-customer path (all same bpartnerId)
   // -------------------------------------------------------------------------
-  /** Single customer delegates contact loading to BPContactEmailSelector. */
+  /**
+   * Single customer delegates contact loading to BPContactEmailSelector.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_singleCustomer_returnsBPContactsFromSelector() throws JSONException {
     PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
@@ -140,7 +155,10 @@ public class PrintControllerJsonHelperTest {
     assertEquals("u1", contacts.getJSONObject(0).getString("contactId"));
     assertEquals(ALICE_EMAIL, contacts.getJSONObject(0).getString(KEY_EMAIL));
   }
-  /** Null pocData falls back to bpartnerId from the vars session parameter. */
+  /**
+   * Null pocData falls back to bpartnerId from the vars session parameter.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_nullPocData_fallsBackToVarsParameter() throws JSONException {
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
@@ -154,7 +172,10 @@ public class PrintControllerJsonHelperTest {
 
     assertEquals(1, result.getJSONArray(KEY_CONTACTS).length());
   }
-  /** Null contact list from selector returns empty contacts array. */
+  /**
+   * Null contact list from selector returns empty contacts array.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_singleCustomer_nullContactList_returnsEmptyContacts() throws JSONException {
     PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
@@ -167,7 +188,10 @@ public class PrintControllerJsonHelperTest {
 
     assertEquals(0, result.getJSONArray(KEY_CONTACTS).length());
   }
-  /** Empty contact list from selector returns empty contacts array. */
+  /**
+   * Empty contact list from selector returns empty contacts array.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_singleCustomer_emptyContactList_returnsEmptyContacts() throws JSONException {
     PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
@@ -180,7 +204,10 @@ public class PrintControllerJsonHelperTest {
 
     assertEquals(0, result.getJSONArray(KEY_CONTACTS).length());
   }
-  /** Multiple contacts from selector are all included in the response. */
+  /**
+   * Multiple contacts from selector are all included in the response.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildBPContactsJson_singleCustomer_multipleContacts_allReturned() throws JSONException {
     PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
@@ -199,7 +226,10 @@ public class PrintControllerJsonHelperTest {
   // -------------------------------------------------------------------------
   // buildErrorJson
   // -------------------------------------------------------------------------
-  /** buildErrorJson returns a JSON object with error set to true. */
+  /**
+   * buildErrorJson returns a JSON object with error set to true.
+   * @throws JSONException if JSON construction fails
+   */
   @Test
   public void testBuildErrorJson_returnsObjectWithErrorTrue() throws JSONException {
     JSONObject error = PrintControllerJsonHelper.buildErrorJson();

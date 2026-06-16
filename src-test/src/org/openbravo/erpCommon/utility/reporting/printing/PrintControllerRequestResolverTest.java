@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.utility.reporting.printing;
+package org.openbravo.erpCommon.utility.reporting.printing; //NOSONAR
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -42,42 +42,60 @@ public class PrintControllerRequestResolverTest {
   // -------------------------------------------------------------------------
   // resolve — document type routing
   // -------------------------------------------------------------------------
-  /** Quotations servlet path resolves to QUOTATION document type. */
+  /**
+   * Quotations servlet path resolves to QUOTATION document type.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_quotationsPath_returnsQuotationContext() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve("/PrintQuotations", "doc1");
     assertEquals(DocumentType.QUOTATION, ctx.documentType);
     assertEquals("PRINTQUOTATIONS", ctx.sessionValuePrefix);
   }
-  /** Orders servlet path resolves to SALESORDER document type. */
+  /**
+   * Orders servlet path resolves to SALESORDER document type.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_ordersPath_returnsSalesOrderContext() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve("/PrintOrders", "doc1");
     assertEquals(DocumentType.SALESORDER, ctx.documentType);
     assertEquals("PRINTORDERS", ctx.sessionValuePrefix);
   }
-  /** Invoices servlet path resolves to SALESINVOICE document type. */
+  /**
+   * Invoices servlet path resolves to SALESINVOICE document type.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_invoicesPath_returnsSalesInvoiceContext() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve(PATH_INVOICES, "doc1");
     assertEquals(DocumentType.SALESINVOICE, ctx.documentType);
     assertEquals("PRINTINVOICES", ctx.sessionValuePrefix);
   }
-  /** Shipments servlet path resolves to SHIPMENT document type. */
+  /**
+   * Shipments servlet path resolves to SHIPMENT document type.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_shipmentsPath_returnsShipmentContext() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve("/PrintShipments", "doc1");
     assertEquals(DocumentType.SHIPMENT, ctx.documentType);
     assertEquals("PRINTSHIPMENTS", ctx.sessionValuePrefix);
   }
-  /** Payments servlet path resolves to PAYMENT document type. */
+  /**
+   * Payments servlet path resolves to PAYMENT document type.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_paymentsPath_returnsPaymentContext() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve("/PrintPayments", "doc1");
     assertEquals(DocumentType.PAYMENT, ctx.documentType);
     assertEquals("PRINTPAYMENTS", ctx.sessionValuePrefix);
   }
-  /** Unknown servlet path resolves to UNKNOWN with null prefix and document ID. */
+  /**
+   * Unknown servlet path resolves to UNKNOWN with null prefix and document ID.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_unknownPath_returnsUnknownContext() throws ServletException {
     HttpServletRequest request = mockRequest("/SomeOtherServlet");
@@ -90,7 +108,10 @@ public class PrintControllerRequestResolverTest {
     assertNull(ctx.sessionValuePrefix);
     assertNull(ctx.documentId);
   }
-  /** Path matching is case-insensitive. */
+  /**
+   * Path matching is case-insensitive.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_pathMatchIsCaseInsensitive() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve("/PRINTINVOICES", "doc1");
@@ -100,7 +121,10 @@ public class PrintControllerRequestResolverTest {
   // -------------------------------------------------------------------------
   // buildContext — session key fallback (_R → plain)
   // -------------------------------------------------------------------------
-  /** When the _R session key has a value it is used as the document ID. */
+  /**
+   * When the _R session key has a value it is used as the document ID.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_rSuffixKeyHasValue_usesRSuffixValue() throws ServletException {
     HttpServletRequest request = mockRequest(PATH_INVOICES);
@@ -112,7 +136,10 @@ public class PrintControllerRequestResolverTest {
 
     assertEquals("invoice-R-id", ctx.documentId);
   }
-  /** When the _R key is empty the plain session key is used as fallback. */
+  /**
+   * When the _R key is empty the plain session key is used as fallback.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_rSuffixKeyEmpty_fallsBackToPlainKey() throws ServletException {
     HttpServletRequest request = mockRequest(PATH_INVOICES);
@@ -125,7 +152,10 @@ public class PrintControllerRequestResolverTest {
 
     assertEquals("invoice-plain-id", ctx.documentId);
   }
-  /** The resolved document ID is propagated into the RequestContext. */
+  /**
+   * The resolved document ID is propagated into the RequestContext.
+   * @throws ServletException if the request cannot be resolved
+   */
   @Test
   public void testResolve_documentIdPropagatedInContext() throws ServletException {
     PrintControllerRequestResolver.RequestContext ctx = resolve("/PrintOrders", "order-42");

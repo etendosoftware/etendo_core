@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.utility.reporting.printing;
+package org.openbravo.erpCommon.utility.reporting.printing; //NOSONAR
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
