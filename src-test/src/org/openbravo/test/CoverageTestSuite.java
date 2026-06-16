@@ -191,11 +191,18 @@ import org.openbravo.erpCommon.utility.poc.EmailInfoTest;
 import org.openbravo.erpCommon.utility.poc.EmailManagerTest;
 import org.openbravo.erpCommon.utility.poc.EmailTypeTest;
 import org.openbravo.erpCommon.utility.reporting.printing.AttachContentTest;
+import org.openbravo.erpCommon.utility.reporting.printing.BPContactEmailSelectorTest;
 import org.openbravo.erpCommon.utility.reporting.printing.EmailUtilitiesTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerCommandHandlerTest;
 import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerDocumentHelperTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerEmailOptionsBuilderTest;
 import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerEmailSupportTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerHookSupportTest;
 import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerJsonHelperTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerPreferenceHelperTest;
 import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerRequestResolverTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintServletsTest;
 import org.openbravo.event.ADTableEventHandlerTest;
 import org.openbravo.event.ADTableNavigationEventHandlerTest;
 import org.openbravo.event.MInOutLineEventHandlerTest;
@@ -499,11 +506,18 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     EmailManagerTest.class,
     EmailTypeTest.class,
     AttachContentTest.class,
+    BPContactEmailSelectorTest.class,
     EmailUtilitiesTest.class,
+    PrintControllerCommandHandlerTest.class,
     PrintControllerDocumentHelperTest.class,
+    PrintControllerEmailOptionsBuilderTest.class,
     PrintControllerEmailSupportTest.class,
+    PrintControllerHookSupportTest.class,
     PrintControllerJsonHelperTest.class,
+    PrintControllerPreferenceHelperTest.class,
     PrintControllerRequestResolverTest.class,
+    PrintControllerTest.class,
+    PrintServletsTest.class,
 
     // event
     ADTableEventHandlerTest.class,
