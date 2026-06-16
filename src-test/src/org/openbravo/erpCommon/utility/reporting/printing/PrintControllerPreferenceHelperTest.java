@@ -17,8 +17,6 @@
 package org.openbravo.erpCommon.utility.reporting.printing; //NOSONAR
 
 import static org.junit.Assert.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -49,7 +47,6 @@ public class PrintControllerPreferenceHelperTest {
     OBContext obContextMock = mock(OBContext.class);
 
     when(vars.getSessionValue(PrintController.INP_TAB_ID)).thenReturn("nonexistent-tab-id");
-    when(obDalMock.get(any(), anyString())).thenReturn(null);
 
     try (MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
         MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
