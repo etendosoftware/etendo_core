@@ -31,24 +31,37 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 
-@SuppressWarnings({ "java:S120" })
+/**
+ * Tests for {@link PrintControllerEmailSupport}.
+ */
+@SuppressWarnings({"java:S100", "java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PrintControllerEmailSupportTest {
+
+  private static final String BP1_ID = "bp1";
+  private static final String BP2_ID = "bp2";
+  private static final String CONTACT_EMAIL = "c@a.com";
+  private static final String CONTACT1_EMAIL = "c1@a.com";
+  private static final String CONTACT2_EMAIL = "c2@a.com";
+  private static final String SALESREP_EMAIL = "s@a.com";
+  private static final String SALESREP1_EMAIL = "s1@a.com";
+  private static final String SALESREP2_EMAIL = "s2@a.com";
+  private static final String MULTI_CUSTOMER_FLAG = "multiCustomerFlag";
 
   // -------------------------------------------------------------------------
   // updateEnvironmentInfo
   // -------------------------------------------------------------------------
-
+  /** Null pocData does nothing to the checks map. */
   @Test
   public void testUpdateEnvironmentInfo_nullPocData_doesNothing() {
     HashMap<String, Boolean> checks = new HashMap<>();
     PrintControllerEmailSupport.updateEnvironmentInfo(null, checks);
     assertTrue(checks.isEmpty());
   }
-
+  /** Single document sets all multi-flags to false. */
   @Test
   public void testUpdateEnvironmentInfo_singleDocument_allChecksFalse() {
-    PocData doc = pocData("bp1", "c@a.com", "s@a.com");
+    PocData doc = pocData(BP1_ID, CONTACT_EMAIL, SALESREP_EMAIL);
     HashMap<String, Boolean> checks = new HashMap<>();
 
     PrintControllerEmailSupport.updateEnvironmentInfo(new PocData[]{ doc }, checks);
@@ -57,11 +70,11 @@ public class PrintControllerEmailSupportTest {
     assertFalse(checks.get(PrintController.CHECK_MORE_THAN_ONE_CUSTOMER));
     assertFalse(checks.get(PrintController.CHECK_MORE_THAN_ONE_SALES_REP));
   }
-
+  /** Two different bpartner IDs sets moreThanOneCustomer to true. */
   @Test
   public void testUpdateEnvironmentInfo_twoDifferentCustomers_moreThanOneCustomerTrue() {
-    PocData doc1 = pocData("bp1", "c1@a.com", "s@a.com");
-    PocData doc2 = pocData("bp2", "c2@a.com", "s@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT1_EMAIL, SALESREP_EMAIL);
+    PocData doc2 = pocData(BP2_ID, CONTACT2_EMAIL, SALESREP_EMAIL);
     HashMap<String, Boolean> checks = new HashMap<>();
 
     PrintControllerEmailSupport.updateEnvironmentInfo(new PocData[]{ doc1, doc2 }, checks);
@@ -70,11 +83,11 @@ public class PrintControllerEmailSupportTest {
     assertTrue(checks.get(PrintController.CHECK_MORE_THAN_ONE_CUSTOMER));
     assertFalse(checks.get(PrintController.CHECK_MORE_THAN_ONE_SALES_REP));
   }
-
+  /** Two different salesrep emails sets moreThanOneSalesRep to true. */
   @Test
   public void testUpdateEnvironmentInfo_twoDifferentSalesReps_moreThanOneSalesRepTrue() {
-    PocData doc1 = pocData("bp1", "c@a.com", "s1@a.com");
-    PocData doc2 = pocData("bp1", "c@a.com", "s2@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT_EMAIL, SALESREP1_EMAIL);
+    PocData doc2 = pocData(BP1_ID, CONTACT_EMAIL, SALESREP2_EMAIL);
     HashMap<String, Boolean> checks = new HashMap<>();
 
     PrintControllerEmailSupport.updateEnvironmentInfo(new PocData[]{ doc1, doc2 }, checks);
@@ -83,10 +96,10 @@ public class PrintControllerEmailSupportTest {
     assertFalse(checks.get(PrintController.CHECK_MORE_THAN_ONE_CUSTOMER));
     assertTrue(checks.get(PrintController.CHECK_MORE_THAN_ONE_SALES_REP));
   }
-
+  /** Null elements in the array are skipped without error. */
   @Test
   public void testUpdateEnvironmentInfo_nullElementInArray_isSkipped() {
-    PocData doc = pocData("bp1", "c@a.com", "s@a.com");
+    PocData doc = pocData(BP1_ID, CONTACT_EMAIL, SALESREP_EMAIL);
     HashMap<String, Boolean> checks = new HashMap<>();
 
     PrintControllerEmailSupport.updateEnvironmentInfo(new PocData[]{ doc, null }, checks);
@@ -95,11 +108,11 @@ public class PrintControllerEmailSupportTest {
     assertFalse(checks.get(PrintController.CHECK_MORE_THAN_ONE_CUSTOMER));
     assertFalse(checks.get(PrintController.CHECK_MORE_THAN_ONE_SALES_REP));
   }
-
+  /** Null email fields do not throw a NullPointerException. */
   @Test
   public void testUpdateEnvironmentInfo_nullEmailFields_doesNotThrow() {
-    PocData doc1 = pocData("bp1", null, null);
-    PocData doc2 = pocData("bp1", null, null);
+    PocData doc1 = pocData(BP1_ID, null, null);
+    PocData doc2 = pocData(BP1_ID, null, null);
     HashMap<String, Boolean> checks = new HashMap<>();
 
     PrintControllerEmailSupport.updateEnvironmentInfo(new PocData[]{ doc1, doc2 }, checks);
@@ -112,7 +125,7 @@ public class PrintControllerEmailSupportTest {
   // -------------------------------------------------------------------------
   // getHiddenTags
   // -------------------------------------------------------------------------
-
+  /** Null pocData returns an empty discard array. */
   @Test
   public void testGetHiddenTags_nullPocData_returnsEmptyArray() {
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -121,10 +134,10 @@ public class PrintControllerEmailSupportTest {
     assertNotNull(result);
     assertEquals(0, result.length);
   }
-
+  /** Single customer and single salesrep discards multipleCustomer row, flag, and view tag. */
   @Test
   public void testGetHiddenTags_singleCustomerSingleSalesRep_noAttachment_discardMultipleCustomerAndView() {
-    PocData doc = pocData("bp1", "c@a.com", "s@a.com");
+    PocData doc = pocData(BP1_ID, CONTACT_EMAIL, SALESREP_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -132,14 +145,14 @@ public class PrintControllerEmailSupportTest {
 
     assertContains(result, "multipleCustomer");
     assertContains(result, "multipleCustomer_bottomMargin");
-    assertContains(result, "multiCustomerFlag");
+    assertContains(result, MULTI_CUSTOMER_FLAG);
     assertContains(result, "view");
   }
-
+  /** More than one customer but single salesrep discards the salesrep count tags. */
   @Test
   public void testGetHiddenTags_moreThanOneCustomer_singleSalesRep_discardsSalesRepTags() {
-    PocData doc1 = pocData("bp1", "c1@a.com", "s@a.com");
-    PocData doc2 = pocData("bp2", "c2@a.com", "s@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT1_EMAIL, SALESREP_EMAIL);
+    PocData doc2 = pocData(BP2_ID, CONTACT2_EMAIL, SALESREP_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -148,11 +161,11 @@ public class PrintControllerEmailSupportTest {
     assertContains(result, "multSalesRep");
     assertContains(result, "multSalesRepCount");
   }
-
+  /** Single customer with more than one salesrep discards replyTo and multiCustomerFlag. */
   @Test
   public void testGetHiddenTags_singleCustomer_moreThanOneSalesRep_discardsReplyToAndFlag() {
-    PocData doc1 = pocData("bp1", "c@a.com", "s1@a.com");
-    PocData doc2 = pocData("bp1", "c@a.com", "s2@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT_EMAIL, SALESREP1_EMAIL);
+    PocData doc2 = pocData(BP1_ID, CONTACT_EMAIL, SALESREP2_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -160,13 +173,13 @@ public class PrintControllerEmailSupportTest {
 
     assertContains(result, "replyTo");
     assertContains(result, "replyTo_bottomMargin");
-    assertContains(result, "multiCustomerFlag");
+    assertContains(result, MULTI_CUSTOMER_FLAG);
   }
-
+  /** Multi-customer mode keeps multiCustomerFlag in the DOM. */
   @Test
   public void testGetHiddenTags_moreThanOneCustomer_doesNotDiscardMultiCustomerFlag() {
-    PocData doc1 = pocData("bp1", "c1@a.com", "s@a.com");
-    PocData doc2 = pocData("bp2", "c2@a.com", "s@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT1_EMAIL, SALESREP_EMAIL);
+    PocData doc2 = pocData(BP2_ID, CONTACT2_EMAIL, SALESREP_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -174,14 +187,14 @@ public class PrintControllerEmailSupportTest {
 
     for (String tag : result) {
       assertFalse("multiCustomerFlag must not be discarded in multi-customer mode",
-          "multiCustomerFlag".equals(tag));
+          MULTI_CUSTOMER_FLAG.equals(tag));
     }
   }
-
+  /** More than one customer and more than one salesrep discards replyTo. */
   @Test
   public void testGetHiddenTags_moreThanOneCustomerAndSalesRep_discardsReplyTo() {
-    PocData doc1 = pocData("bp1", "c1@a.com", "s1@a.com");
-    PocData doc2 = pocData("bp2", "c2@a.com", "s2@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT1_EMAIL, SALESREP1_EMAIL);
+    PocData doc2 = pocData(BP2_ID, CONTACT2_EMAIL, SALESREP2_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -190,10 +203,10 @@ public class PrintControllerEmailSupportTest {
     assertContains(result, "replyTo");
     assertContains(result, "replyTo_bottomMargin");
   }
-
+  /** More than one distinct document type appends the discardSelect tag. */
   @Test
   public void testGetHiddenTags_differentDocTypesCountGreaterThanOne_appendsDiscardSelect() {
-    PocData doc = pocData("bp1", "c@a.com", "s@a.com");
+    PocData doc = pocData(BP1_ID, CONTACT_EMAIL, SALESREP_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     String[] result = PrintControllerEmailSupport.getHiddenTags(
@@ -201,10 +214,10 @@ public class PrintControllerEmailSupportTest {
 
     assertContains(result, "discardSelect");
   }
-
+  /** Attached content prevents the view tag from being discarded. */
   @Test
   public void testGetHiddenTags_withAttachedContent_doesNotAppendView() {
-    PocData doc = pocData("bp1", "c@a.com", "s@a.com");
+    PocData doc = pocData(BP1_ID, CONTACT_EMAIL, SALESREP_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     List<AttachContent> content = Arrays.asList(mock(AttachContent.class));
 
@@ -215,11 +228,11 @@ public class PrintControllerEmailSupportTest {
       assertFalse("view tag should not be present", "view".equals(tag));
     }
   }
-
+  /** getHiddenTags populates the checks map with the customer and salesrep flags. */
   @Test
   public void testGetHiddenTags_updatesChecksMap() {
-    PocData doc1 = pocData("bp1", "c1@a.com", "s@a.com");
-    PocData doc2 = pocData("bp2", "c2@a.com", "s@a.com");
+    PocData doc1 = pocData(BP1_ID, CONTACT1_EMAIL, SALESREP_EMAIL);
+    PocData doc2 = pocData(BP2_ID, CONTACT2_EMAIL, SALESREP_EMAIL);
     HashMap<String, Boolean> checks = new HashMap<>();
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 

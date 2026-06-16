@@ -37,17 +37,26 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.model.ad.access.User;
 
-@SuppressWarnings({ "java:S120" })
+/**
+ * Tests for {@link PrintControllerJsonHelper}.
+ */
+@SuppressWarnings({"java:S100", "java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PrintControllerJsonHelperTest {
 
-  private MockedStatic<BPContactEmailSelector> bpContactSelectorStatic;
+  private static final String ALICE_NAME = "Alice";
+  private static final String ALICE_EMAIL = "a@test.com";
+  private static final String BOB_EMAIL = "b@test.com";
+  private static final String KEY_CONTACTS = "contacts";
+  private static final String KEY_EMAIL = "email";
 
+  private MockedStatic<BPContactEmailSelector> bpContactSelectorStatic;
+  /** Sets up static mock for BPContactEmailSelector. */
   @Before
   public void setUp() {
     bpContactSelectorStatic = mockStatic(BPContactEmailSelector.class);
   }
-
+  /** Closes static mock after each test. */
   @After
   public void tearDown() {
     if (bpContactSelectorStatic != null) {
@@ -58,55 +67,55 @@ public class PrintControllerJsonHelperTest {
   // -------------------------------------------------------------------------
   // buildBPContactsJson — multi-customer path (2+ distinct bpartnerIds)
   // -------------------------------------------------------------------------
-
+  /** Multi-customer mode returns one contact entry per unique email. */
   @Test
   public void testBuildBPContactsJson_multiCustomer_returnsOneContactPerUniqueEmail() throws JSONException {
-    PocData doc1 = pocData("bp1", "u1", "Alice", "a@test.com");
-    PocData doc2 = pocData("bp2", "u2", "Bob", "b@test.com");
+    PocData doc1 = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
+    PocData doc2 = pocData("bp2", "u2", "Bob", BOB_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc1, doc2 });
 
-    JSONArray contacts = result.getJSONArray("contacts");
+    JSONArray contacts = result.getJSONArray(KEY_CONTACTS);
     assertEquals(2, contacts.length());
-    assertEquals("a@test.com", contacts.getJSONObject(0).getString("email"));
-    assertEquals("b@test.com", contacts.getJSONObject(1).getString("email"));
+    assertEquals(ALICE_EMAIL, contacts.getJSONObject(0).getString(KEY_EMAIL));
+    assertEquals(BOB_EMAIL, contacts.getJSONObject(1).getString(KEY_EMAIL));
   }
-
+  /** Duplicate email addresses across customers are deduplicated. */
   @Test
   public void testBuildBPContactsJson_multiCustomer_duplicateEmailDeduped() throws JSONException {
-    PocData doc1 = pocData("bp1", "u1", "Alice", "shared@test.com");
+    PocData doc1 = pocData("bp1", "u1", ALICE_NAME, "shared@test.com");
     PocData doc2 = pocData("bp2", "u2", "Alice2", "shared@test.com");
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc1, doc2 });
 
-    assertEquals(1, result.getJSONArray("contacts").length());
+    assertEquals(1, result.getJSONArray(KEY_CONTACTS).length());
   }
-
+  /** Contacts with blank email are skipped in multi-customer mode. */
   @Test
   public void testBuildBPContactsJson_multiCustomer_blankEmailSkipped() throws JSONException {
-    PocData doc1 = pocData("bp1", "u1", "Alice", "a@test.com");
+    PocData doc1 = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
     PocData doc2 = pocData("bp2", "u2", "NoEmail", "");
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc1, doc2 });
 
-    assertEquals(1, result.getJSONArray("contacts").length());
+    assertEquals(1, result.getJSONArray(KEY_CONTACTS).length());
   }
-
+  /** Contact JSON object contains contactId, name, email, isDefault, and isActive fields. */
   @Test
   public void testBuildBPContactsJson_multiCustomer_contactJsonFields() throws JSONException {
-    PocData doc1 = pocData("bp1", "uid1", "Alice", "a@test.com");
-    PocData doc2 = pocData("bp2", "uid2", "Bob", "b@test.com");
+    PocData doc1 = pocData("bp1", "uid1", ALICE_NAME, ALICE_EMAIL);
+    PocData doc2 = pocData("bp2", "uid2", "Bob", BOB_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc1, doc2 });
 
-    JSONObject first = result.getJSONArray("contacts").getJSONObject(0);
+    JSONObject first = result.getJSONArray(KEY_CONTACTS).getJSONObject(0);
     assertEquals("uid1", first.getString("contactId"));
-    assertEquals("Alice", first.getString("name"));
-    assertEquals("a@test.com", first.getString("email"));
+    assertEquals(ALICE_NAME, first.getString("name"));
+    assertEquals(ALICE_EMAIL, first.getString(KEY_EMAIL));
     assertEquals(false, first.getBoolean("isDefault"));
     assertEquals(true, first.getBoolean("isActive"));
   }
@@ -114,41 +123,41 @@ public class PrintControllerJsonHelperTest {
   // -------------------------------------------------------------------------
   // buildBPContactsJson — single-customer path (all same bpartnerId)
   // -------------------------------------------------------------------------
-
+  /** Single customer delegates contact loading to BPContactEmailSelector. */
   @Test
   public void testBuildBPContactsJson_singleCustomer_returnsBPContactsFromSelector() throws JSONException {
-    PocData doc = pocData("bp1", "u1", "Alice", "a@test.com");
+    PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    User contact = mockUser("u1", "Alice", "a@test.com");
+    User contact = mockUser("u1", ALICE_NAME, ALICE_EMAIL);
     bpContactSelectorStatic
         .when(() -> BPContactEmailSelector.getBPContactsWithEmail("bp1"))
         .thenReturn(Collections.singletonList(contact));
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc });
 
-    JSONArray contacts = result.getJSONArray("contacts");
+    JSONArray contacts = result.getJSONArray(KEY_CONTACTS);
     assertEquals(1, contacts.length());
     assertEquals("u1", contacts.getJSONObject(0).getString("contactId"));
-    assertEquals("a@test.com", contacts.getJSONObject(0).getString("email"));
+    assertEquals(ALICE_EMAIL, contacts.getJSONObject(0).getString(KEY_EMAIL));
   }
-
+  /** Null pocData falls back to bpartnerId from the vars session parameter. */
   @Test
   public void testBuildBPContactsJson_nullPocData_fallsBackToVarsParameter() throws JSONException {
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     when(vars.getStringParameter("bpartnerId")).thenReturn("bp-from-vars");
-    User contact = mockUser("u2", "Bob", "b@test.com");
+    User contact = mockUser("u2", "Bob", BOB_EMAIL);
     bpContactSelectorStatic
         .when(() -> BPContactEmailSelector.getBPContactsWithEmail("bp-from-vars"))
         .thenReturn(Collections.singletonList(contact));
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, null);
 
-    assertEquals(1, result.getJSONArray("contacts").length());
+    assertEquals(1, result.getJSONArray(KEY_CONTACTS).length());
   }
-
+  /** Null contact list from selector returns empty contacts array. */
   @Test
   public void testBuildBPContactsJson_singleCustomer_nullContactList_returnsEmptyContacts() throws JSONException {
-    PocData doc = pocData("bp1", "u1", "Alice", "a@test.com");
+    PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     bpContactSelectorStatic
         .when(() -> BPContactEmailSelector.getBPContactsWithEmail("bp1"))
@@ -156,12 +165,12 @@ public class PrintControllerJsonHelperTest {
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc });
 
-    assertEquals(0, result.getJSONArray("contacts").length());
+    assertEquals(0, result.getJSONArray(KEY_CONTACTS).length());
   }
-
+  /** Empty contact list from selector returns empty contacts array. */
   @Test
   public void testBuildBPContactsJson_singleCustomer_emptyContactList_returnsEmptyContacts() throws JSONException {
-    PocData doc = pocData("bp1", "u1", "Alice", "a@test.com");
+    PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     bpContactSelectorStatic
         .when(() -> BPContactEmailSelector.getBPContactsWithEmail("bp1"))
@@ -169,28 +178,28 @@ public class PrintControllerJsonHelperTest {
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc });
 
-    assertEquals(0, result.getJSONArray("contacts").length());
+    assertEquals(0, result.getJSONArray(KEY_CONTACTS).length());
   }
-
+  /** Multiple contacts from selector are all included in the response. */
   @Test
   public void testBuildBPContactsJson_singleCustomer_multipleContacts_allReturned() throws JSONException {
-    PocData doc = pocData("bp1", "u1", "Alice", "a@test.com");
+    PocData doc = pocData("bp1", "u1", ALICE_NAME, ALICE_EMAIL);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    User c1 = mockUser("u1", "Alice", "a@test.com");
-    User c2 = mockUser("u2", "Bob", "b@test.com");
+    User c1 = mockUser("u1", ALICE_NAME, ALICE_EMAIL);
+    User c2 = mockUser("u2", "Bob", BOB_EMAIL);
     bpContactSelectorStatic
         .when(() -> BPContactEmailSelector.getBPContactsWithEmail("bp1"))
         .thenReturn(Arrays.asList(c1, c2));
 
     JSONObject result = PrintControllerJsonHelper.buildBPContactsJson(vars, new PocData[]{ doc });
 
-    assertEquals(2, result.getJSONArray("contacts").length());
+    assertEquals(2, result.getJSONArray(KEY_CONTACTS).length());
   }
 
   // -------------------------------------------------------------------------
   // buildErrorJson
   // -------------------------------------------------------------------------
-
+  /** buildErrorJson returns a JSON object with error set to true. */
   @Test
   public void testBuildErrorJson_returnsObjectWithErrorTrue() throws JSONException {
     JSONObject error = PrintControllerJsonHelper.buildErrorJson();
