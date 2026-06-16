@@ -192,6 +192,10 @@ import org.openbravo.erpCommon.utility.poc.EmailManagerTest;
 import org.openbravo.erpCommon.utility.poc.EmailTypeTest;
 import org.openbravo.erpCommon.utility.reporting.printing.AttachContentTest;
 import org.openbravo.erpCommon.utility.reporting.printing.EmailUtilitiesTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerDocumentHelperTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerEmailSupportTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerJsonHelperTest;
+import org.openbravo.erpCommon.utility.reporting.printing.PrintControllerRequestResolverTest;
 import org.openbravo.event.ADTableEventHandlerTest;
 import org.openbravo.event.ADTableNavigationEventHandlerTest;
 import org.openbravo.event.MInOutLineEventHandlerTest;
@@ -496,6 +500,10 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     EmailTypeTest.class,
     AttachContentTest.class,
     EmailUtilitiesTest.class,
+    PrintControllerDocumentHelperTest.class,
+    PrintControllerEmailSupportTest.class,
+    PrintControllerJsonHelperTest.class,
+    PrintControllerRequestResolverTest.class,
 
     // event
     ADTableEventHandlerTest.class,
