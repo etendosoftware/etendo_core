@@ -27,7 +27,6 @@ import static org.mockito.Mockito.mockStatic;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +35,9 @@ import javax.servlet.ServletException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -58,6 +59,9 @@ public class EmailUtilitiesTest {
   private static final String NO_SALES_REP_EMAIL = "NoSalesRepEmail";
   private static final String DEFAULT_TEST_COM = "default@test.com";
   private static final String ALT_TEST_COM = "alt@test.com";
+
+  @Rule
+  public TemporaryFolder tempFolder = new TemporaryFolder();
 
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
   /** Sets up test fixtures. */
@@ -171,7 +175,7 @@ public class EmailUtilitiesTest {
    * @throws IOException if temp file creation or deletion fails */
   @Test
   public void testDeleteTemporaryAttachments_existingFile_isDeleted() throws IOException {
-    File tempFile = File.createTempFile("eut-test", ".tmp");
+    File tempFile = tempFolder.newFile("eut-test.tmp");
     assertTrue(tempFile.exists());
 
     EmailUtilities.deleteTemporaryAttachments(Collections.singletonList(tempFile));
@@ -180,26 +184,22 @@ public class EmailUtilitiesTest {
   }
 
   /** A non-existent path is silently skipped.
-   * @throws IOException if temp file creation fails */
+   * @throws IOException if temp file creation or deletion fails */
   @Test
   public void testDeleteTemporaryAttachments_nonExistentFile_isSkipped() throws IOException {
-    File ghost = File.createTempFile("ghost-eut", ".tmp");
+    File ghost = tempFolder.newFile("ghost-eut.tmp");
     Files.delete(ghost.toPath());
     assertFalse(ghost.exists());
     EmailUtilities.deleteTemporaryAttachments(Collections.singletonList(ghost));
   }
 
   /** A directory is not deleted; only files are removed.
-   * @throws IOException if temp dir creation or cleanup fails */
+   * @throws IOException if temp dir creation fails */
   @Test
   public void testDeleteTemporaryAttachments_directory_isSkipped() throws IOException {
-    Path tempDir = Files.createTempDirectory("eut-dir-test");
-    try {
-      EmailUtilities.deleteTemporaryAttachments(Collections.singletonList(tempDir.toFile()));
-      assertTrue("Directory should still exist", tempDir.toFile().exists());
-    } finally {
-      Files.deleteIfExists(tempDir);
-    }
+    File tempDir = tempFolder.newFolder("eut-dir-test");
+    EmailUtilities.deleteTemporaryAttachments(Collections.singletonList(tempDir));
+    assertTrue("Directory should still exist", tempDir.exists());
   }
 
   // -------------------------------------------------------------------------
@@ -259,7 +259,7 @@ public class EmailUtilitiesTest {
   @Test
   public void testSendEmail_resolvedConfig_success_deletesAttachments()
       throws ServletException, IOException {
-    File tempFile = File.createTempFile("eut-send-test", ".tmp");
+    File tempFile = tempFolder.newFile("eut-send-test.tmp");
     List<File> files = new ArrayList<>();
     files.add(tempFile);
 
@@ -275,7 +275,7 @@ public class EmailUtilitiesTest {
   @Test
   public void testSendEmail_resolvedConfig_emailManagerThrows_rethrowsServletException()
       throws IOException {
-    File tempFile = File.createTempFile("eut-fail-test", ".tmp");
+    File tempFile = tempFolder.newFile("eut-fail-test.tmp");
     List<File> files = new ArrayList<>();
     files.add(tempFile);
 
