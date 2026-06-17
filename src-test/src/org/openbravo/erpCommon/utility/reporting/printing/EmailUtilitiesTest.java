@@ -60,6 +60,7 @@ public class EmailUtilitiesTest {
   private static final String DEFAULT_TEST_COM = "default@test.com";
   private static final String ALT_TEST_COM = "alt@test.com";
 
+  /** JUnit rule that provides a temporary directory cleaned up automatically after each test. */
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
 
