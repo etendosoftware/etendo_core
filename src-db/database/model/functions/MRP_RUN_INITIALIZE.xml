@@ -203,7 +203,7 @@ BEGIN --BODY
         SELECT MRP_CHECK_PLANNINGMETHOD(cur_product.mrp_planningmethod_id,
                                         (CASE o.issotrx WHEN 'Y' THEN 'SO' ELSE 'PO' END),
                                         TO_NUMBER(COALESCE(ol.datepromised, ol.dateordered, o.dateordered) - p_planningdate), p_timehorizon) AS weighting,
-              (ol.qtyordered - COALESCE(ol.qtydelivered, 0) - COALESCE(sum(matchpo.qty), 0) - COALESCE(SUM(rs.quantity - COALESCE(rs.releasedqty, 0)), 0) - (COALESCE(res.reservedqty, 0) - COALESCE(res.releasedqty, 0))) AS qty,
+              (ol.qtyordered - (CASE WHEN o.issotrx = 'Y' THEN COALESCE(ol.qtydelivered, 0) ELSE 0 END) - COALESCE(sum(matchpo.qty), 0) - COALESCE(SUM(rs.quantity - COALESCE(rs.releasedqty, 0)), 0) - (COALESCE(res.reservedqty, 0) - COALESCE(res.releasedqty, 0))) AS qty,
               ol.c_orderline_id, GREATEST(COALESCE(ol.datepromised, ol.dateordered, o.dateordered), p_planningdate) AS planningdate,
               COALESCE(ol.dateordered, o.dateordered) AS dateordered,
               o.issotrx
@@ -227,7 +227,7 @@ BEGIN --BODY
            AND AD_ISORGINCLUDED(w.ad_org_id, p_org_id, p_client_id) > -1
          GROUP BY o.issotrx, ol.datepromised, ol.dateordered, o.dateordered, ol.qtyordered,
                   ol.qtydelivered, res.reservedqty, res.releasedqty, ol.c_orderline_id, dt.docsubtypeso
-         HAVING ol.qtyordered <> (COALESCE(ol.qtydelivered, 0) + COALESCE(sum(matchpo.qty), 0))
+         HAVING ol.qtyordered <> ((CASE WHEN o.issotrx = 'Y' THEN COALESCE(ol.qtydelivered, 0) ELSE 0 END) + COALESCE(sum(matchpo.qty), 0))
             AND ((o.issotrx = 'N' AND ol.qtyordered - COALESCE(sum(matchpo.qty), 0) > COALESCE(sum(rs.quantity - COALESCE(rs.releasedqty, 0)), 0))
              OR (o.issotrx = 'Y' AND dt.docsubtypeso <> 'OB' AND ol.qtyordered - COALESCE(ol.qtydelivered, 0) > COALESCE(res.reservedqty, 0) - COALESCE(res.releasedqty, 0)))
     ) LOOP
