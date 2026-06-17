@@ -16,6 +16,7 @@
  */
 package org.openbravo.erpCommon.utility.reporting.printing; //NOSONAR
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,9 +24,13 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 
+import javax.servlet.ServletException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.objenesis.ObjenesisStd;
+import org.openbravo.erpCommon.utility.reporting.DocumentType;
 import org.openbravo.erpCommon.utility.reporting.Report;
 
 /**
@@ -133,6 +138,11 @@ public class PrintControllerDocumentHelperTest {
   // -------------------------------------------------------------------------
   // getFilenameForReports
   // -------------------------------------------------------------------------
+  /** Null collection returns an empty string (null guard). */
+  @Test
+  public void testGetFilename_null_returnsEmpty() {
+    assertEquals("", PrintControllerDocumentHelper.getFilenameForReports(null));
+  }
   /** Empty collection returns an empty string. */
   @Test
   public void testGetFilename_emptyCollection_returnsEmpty() {
@@ -157,5 +167,40 @@ public class PrintControllerDocumentHelperTest {
     when(r3.getFilename()).thenReturn("last.pdf");
     assertEquals("last.pdf",
         PrintControllerDocumentHelper.getFilenameForReports(Arrays.asList(r1, r2, r3)));
+  }
+
+  // -------------------------------------------------------------------------
+  // orderByDocumentNo
+  // -------------------------------------------------------------------------
+
+  /**
+   * DocumentType.SHIPMENT uses table M_INOUT which has no DB query branch; the original
+   * array is returned unchanged without any database call.
+   * @throws ServletException never thrown in this code path
+   */
+  @Test
+  public void testOrderByDocumentNo_shipmentType_returnsOriginalArray() throws ServletException {
+    PrintController controller = new ObjenesisStd().newInstance(PrintController.class);
+    String[] ids = { "SHIP-001", "SHIP-002" };
+
+    String[] result = PrintControllerDocumentHelper.orderByDocumentNo(
+        controller, DocumentType.SHIPMENT, ids);
+
+    assertArrayEquals(ids, result);
+  }
+
+  /**
+   * A single-element array for a non-DB document type is returned as-is.
+   * @throws ServletException never thrown in this code path
+   */
+  @Test
+  public void testOrderByDocumentNo_singleShipmentId_returnsSameArray() throws ServletException {
+    PrintController controller = new ObjenesisStd().newInstance(PrintController.class);
+    String[] ids = { "SHIP-999" };
+
+    String[] result = PrintControllerDocumentHelper.orderByDocumentNo(
+        controller, DocumentType.SHIPMENT, ids);
+
+    assertArrayEquals(ids, result);
   }
 }
