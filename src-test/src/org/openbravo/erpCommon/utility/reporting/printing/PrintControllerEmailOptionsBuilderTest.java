@@ -58,14 +58,22 @@ import org.openbravo.xmlEngine.XmlDocument;
  * Tests for {@link PrintControllerEmailOptionsBuilder}: {@code Context} value object,
  * and private helper methods exercised through reflection.
  */
-@SuppressWarnings({"java:S100", "java:S120"})
+@SuppressWarnings({"java:S100", "java:S120", "java:S1820", "java:S1872"})
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class PrintControllerEmailOptionsBuilderTest {
+public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
   private static final String DOC_ID = "DOC-001";
   private static final String FULL_ID = "DOC-001C_INVOICE";
   private static final String CONTACT_NAME = "Alice Smith";
   private static final String CONTACT_EMAIL = "alice@example.com";
+  private static final String LANG_EN_US = "en_US";
+  private static final String DEF_ID = "def-001";
+  private static final String USER_ID = "USER-001";
+  private static final String BP_ID_VALUE = "BP-001";
+  private static final String METHOD_MORE_THAN_ONE_LANG = "moreThanOneLanguageDefined";
+  private static final String METHOD_RESOLVE_CONTACT = "resolvePreselectedContact";
+  private static final String PARAM_CLOSED = "closed";
+  private static final String FIELD_CONTEXT = "context";
 
   // -------------------------------------------------------------------------
   // instantiation smoke test
@@ -218,7 +226,7 @@ public class PrintControllerEmailOptionsBuilderTest {
   }
 
   private static String invokeResolveToName(User contact, PocData[] pocData,
-      int numberOfCustomers) throws Exception {
+      int numberOfCustomers) throws ReflectiveOperationException {
     PrintControllerEmailOptionsBuilder builder =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
@@ -228,7 +236,7 @@ public class PrintControllerEmailOptionsBuilderTest {
   }
 
   private static String invokeGetContactField(User contact,
-      PrintControllerEmailOptionsBuilder.FieldExtractor getter) throws Exception {
+      PrintControllerEmailOptionsBuilder.FieldExtractor getter) throws ReflectiveOperationException {
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
         "getContactField", User.class, PrintControllerEmailOptionsBuilder.FieldExtractor.class);
     m.setAccessible(true);
@@ -266,9 +274,9 @@ public class PrintControllerEmailOptionsBuilderTest {
   @Test
   public void testGetOptionsList_oneItem_notSelected_noSelectedAttr() throws Exception {
     EmailDefinition def = mock(EmailDefinition.class);
-    when(def.getId()).thenReturn("def-001");
+    when(def.getId()).thenReturn(DEF_ID);
     when(def.getSubject()).thenReturn("Invoice");
-    when(def.getLanguage()).thenReturn("en_US");
+    when(def.getLanguage()).thenReturn(LANG_EN_US);
 
     String result = invokeGetOptionsList(Collections.singletonList(def), "other-id", false);
 
@@ -283,11 +291,11 @@ public class PrintControllerEmailOptionsBuilderTest {
   @Test
   public void testGetOptionsList_oneItem_selected_hasSelectedAttr() throws Exception {
     EmailDefinition def = mock(EmailDefinition.class);
-    when(def.getId()).thenReturn("def-001");
+    when(def.getId()).thenReturn(DEF_ID);
     when(def.getSubject()).thenReturn("Invoice");
-    when(def.getLanguage()).thenReturn("en_US");
+    when(def.getLanguage()).thenReturn(LANG_EN_US);
 
-    String result = invokeGetOptionsList(Collections.singletonList(def), "def-001", false);
+    String result = invokeGetOptionsList(Collections.singletonList(def), DEF_ID, false);
 
     assertTrue(result.contains("selected=\"selected\""));
     assertTrue(result.contains("value=\"def-001\""));
@@ -306,7 +314,7 @@ public class PrintControllerEmailOptionsBuilderTest {
     PrintControllerEmailOptionsBuilder builder = builderWithReports(Collections.emptyMap());
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "moreThanOneLanguageDefined");
+        METHOD_MORE_THAN_ONE_LANG);
     m.setAccessible(true);
     boolean result = (Boolean) m.invoke(builder);
 
@@ -321,13 +329,13 @@ public class PrintControllerEmailOptionsBuilderTest {
   public void testMoreThanOneLanguageDefined_singleDefinition_returnsFalse() throws Exception {
     Report mockReport = mock(Report.class);
     when(mockReport.getEmailDefinitions()).thenReturn(
-        Collections.singletonMap("en_US", mock(EmailDefinition.class)));
+        Collections.singletonMap(LANG_EN_US, mock(EmailDefinition.class)));
 
     PrintControllerEmailOptionsBuilder builder = builderWithReports(
         Collections.singletonMap("DOC001", mockReport));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "moreThanOneLanguageDefined");
+        METHOD_MORE_THAN_ONE_LANG);
     m.setAccessible(true);
     boolean result = (Boolean) m.invoke(builder);
 
@@ -342,7 +350,7 @@ public class PrintControllerEmailOptionsBuilderTest {
   public void testMoreThanOneLanguageDefined_multipleDefinitions_returnsTrue() throws Exception {
     Report mockReport = mock(Report.class);
     Map<String, EmailDefinition> defs = new HashMap<>();
-    defs.put("en_US", mock(EmailDefinition.class));
+    defs.put(LANG_EN_US, mock(EmailDefinition.class));
     defs.put("es_ES", mock(EmailDefinition.class));
     when(mockReport.getEmailDefinitions()).thenReturn(defs);
 
@@ -350,7 +358,7 @@ public class PrintControllerEmailOptionsBuilderTest {
         Collections.singletonMap("DOC001", mockReport));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "moreThanOneLanguageDefined");
+        METHOD_MORE_THAN_ONE_LANG);
     m.setAccessible(true);
     boolean result = (Boolean) m.invoke(builder);
 
@@ -374,9 +382,9 @@ public class PrintControllerEmailOptionsBuilderTest {
         Collections.emptyMap());
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "resolvePreselectedContact", PocData[].class);
+        METHOD_RESOLVE_CONTACT, PocData[].class);
     m.setAccessible(true);
-    User result = (User) m.invoke(builder, new Object[]{ new PocData[]{ new PocData() } });
+    User result = (User) m.invoke(builder, (Object) new PocData[]{ new PocData() });
 
     assertNull(result);
   }
@@ -394,9 +402,9 @@ public class PrintControllerEmailOptionsBuilderTest {
         Collections.emptyMap());
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "resolvePreselectedContact", PocData[].class);
+        METHOD_RESOLVE_CONTACT, PocData[].class);
     m.setAccessible(true);
-    User result = (User) m.invoke(builder, new Object[]{ new PocData[0] });
+    User result = (User) m.invoke(builder, (Object) new PocData[0]);
 
     assertNull(result);
   }
@@ -409,24 +417,24 @@ public class PrintControllerEmailOptionsBuilderTest {
   public void testResolvePreselectedContact_withBestContact_returnsContact() throws Exception {
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     when(vars.commandIn("ADD", "DEL")).thenReturn(false);
-    when(vars.getUser()).thenReturn("USER-001");
+    when(vars.getUser()).thenReturn(USER_ID);
 
     User expectedContact = mock(User.class);
     PocData poc = new PocData();
-    poc.bpartnerId = "BP-001";
+    poc.bpartnerId = BP_ID_VALUE;
 
     PrintControllerEmailOptionsBuilder builder = builderWithVarsAndReports(vars,
         Collections.emptyMap());
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "resolvePreselectedContact", PocData[].class);
+        METHOD_RESOLVE_CONTACT, PocData[].class);
     m.setAccessible(true);
 
     try (MockedStatic<BPContactEmailSelector> selector = mockStatic(BPContactEmailSelector.class)) {
-      selector.when(() -> BPContactEmailSelector.selectBestContact("BP-001", "USER-001"))
+      selector.when(() -> BPContactEmailSelector.selectBestContact(BP_ID_VALUE, USER_ID))
           .thenReturn(expectedContact);
 
-      User result = (User) m.invoke(builder, new Object[]{ new PocData[]{ poc } });
+      User result = (User) m.invoke(builder, (Object) new PocData[]{ poc });
 
       assertSame(expectedContact, result);
     }
@@ -441,23 +449,23 @@ public class PrintControllerEmailOptionsBuilderTest {
     PrintController ctrl = mock(PrintController.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     when(vars.commandIn("ADD", "DEL")).thenReturn(false);
-    when(vars.getUser()).thenReturn("USER-001");
+    when(vars.getUser()).thenReturn(USER_ID);
 
     PocData poc = new PocData();
-    poc.bpartnerId = "BP-001";
+    poc.bpartnerId = BP_ID_VALUE;
 
     PrintControllerEmailOptionsBuilder builder = builderWithControllerVarsAndReports(ctrl, vars,
         Collections.emptyMap());
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
-        "resolvePreselectedContact", PocData[].class);
+        METHOD_RESOLVE_CONTACT, PocData[].class);
     m.setAccessible(true);
 
     try (MockedStatic<BPContactEmailSelector> selector = mockStatic(BPContactEmailSelector.class)) {
       selector.when(() -> BPContactEmailSelector.selectBestContact(any(), any()))
           .thenThrow(new RuntimeException("selector error"));
 
-      User result = (User) m.invoke(builder, new Object[]{ new PocData[]{ poc } });
+      User result = (User) m.invoke(builder, (Object) new PocData[]{ poc });
 
       assertNull(result);
     }
@@ -490,11 +498,11 @@ public class PrintControllerEmailOptionsBuilderTest {
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
     setBuilderField(b, "controller", ctrl);
     setBuilderField(b, "vars", vars);
-    setBuilderField(b, "context", buildContext(reports));
+    setBuilderField(b, FIELD_CONTEXT, buildContext(reports));
     return b;
   }
 
-  private static void setBuilderField(Object target, String name, Object value) throws Exception {
+  private static void setBuilderField(Object target, String name, Object value) throws ReflectiveOperationException {
     Field f = PrintControllerEmailOptionsBuilder.class.getDeclaredField(name);
     f.setAccessible(true);
     f.set(target, value);
@@ -521,7 +529,7 @@ public class PrintControllerEmailOptionsBuilderTest {
   @Test
   public void testHandleClosedPopup_notClosed_returnsEarly() throws Exception {
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    when(vars.getStringParameter("closed")).thenReturn("");
+    when(vars.getStringParameter(PARAM_CLOSED)).thenReturn("");
     HttpServletRequest request = mock(HttpServletRequest.class);
     XmlDocument xmlDoc = mock(XmlDocument.class);
 
@@ -529,7 +537,7 @@ public class PrintControllerEmailOptionsBuilderTest {
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
     setBuilderField(builder, "vars", vars);
     setBuilderField(builder, "request", request);
-    setBuilderField(builder, "context", buildContext(Collections.emptyMap()));
+    setBuilderField(builder, FIELD_CONTEXT, buildContext(Collections.emptyMap()));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
         "handleClosedPopup", XmlDocument.class);
@@ -546,7 +554,7 @@ public class PrintControllerEmailOptionsBuilderTest {
   @Test
   public void testHandleClosedPopup_closed_setsParameterAndRemovesSession() throws Exception {
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    when(vars.getStringParameter("closed")).thenReturn("yes");
+    when(vars.getStringParameter(PARAM_CLOSED)).thenReturn("yes");
     HttpServletRequest request = mock(HttpServletRequest.class);
     HttpSession session = mock(HttpSession.class);
     when(request.getSession()).thenReturn(session);
@@ -556,14 +564,14 @@ public class PrintControllerEmailOptionsBuilderTest {
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
     setBuilderField(builder, "vars", vars);
     setBuilderField(builder, "request", request);
-    setBuilderField(builder, "context", buildContext(Collections.emptyMap()));
+    setBuilderField(builder, FIELD_CONTEXT, buildContext(Collections.emptyMap()));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
         "handleClosedPopup", XmlDocument.class);
     m.setAccessible(true);
     m.invoke(builder, xmlDoc);
 
-    verify(xmlDoc).setParameter("closed", "yes");
+    verify(xmlDoc).setParameter(PARAM_CLOSED, "yes");
     verify(session).removeAttribute(PrintController.SESSION_FILES);
   }
 
@@ -683,7 +691,7 @@ public class PrintControllerEmailOptionsBuilderTest {
     throw new IllegalStateException("EmailFormData inner class not found");
   }
 
-  private static Method getFillInitialRecipientDataMethod() throws Exception {
+  private static Method getFillInitialRecipientDataMethod() throws ReflectiveOperationException {
     Class<?> efd = getEmailFormDataClass();
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
         "fillInitialRecipientData", efd, Map.class, PocData[].class, EmailDefinition.class);
@@ -692,13 +700,13 @@ public class PrintControllerEmailOptionsBuilderTest {
   }
 
   private static void setFormDataField(Object formData, String name, Object value)
-      throws Exception {
+      throws ReflectiveOperationException {
     Field f = getEmailFormDataClass().getDeclaredField(name);
     f.setAccessible(true);
     f.set(formData, value);
   }
 
-  private static Object getFormDataField(Object formData, String name) throws Exception {
+  private static Object getFormDataField(Object formData, String name) throws ReflectiveOperationException {
     Field f = getEmailFormDataClass().getDeclaredField(name);
     f.setAccessible(true);
     return f.get(formData);

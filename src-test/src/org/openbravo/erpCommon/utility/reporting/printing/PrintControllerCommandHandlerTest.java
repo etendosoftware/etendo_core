@@ -59,6 +59,8 @@ public class PrintControllerCommandHandlerTest {
   private static final String SESSION_PREFIX = "PRINTINVOICES";
   private static final String FULL_IDENTIFIER = "DOC001C_INVOICE";
   private static final String DOC_ID = "DOC001";
+  private static final String SUFFIX_DOCUMENTS = ".Documents";
+  private static final String PATH_SEND_HTML = "/send.html";
 
   /** Context constructor stores all provided fields. */
   @Test
@@ -113,7 +115,7 @@ public class PrintControllerCommandHandlerTest {
   public void testCreateContext_singleId_buildsContextCorrectly() throws ServletException {
     PrintController controller = mock(PrintController.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    when(vars.getSessionObject(SESSION_PREFIX + ".Documents")).thenReturn(null);
+    when(vars.getSessionObject(SESSION_PREFIX + SUFFIX_DOCUMENTS)).thenReturn(null);
 
     PrintControllerCommandHandler.Context ctx = PrintControllerCommandHandler.createContext(
         controller, vars, DocumentType.SALESINVOICE, SESSION_PREFIX, DOC_ID);
@@ -134,7 +136,7 @@ public class PrintControllerCommandHandlerTest {
   public void testCreateContext_multipleIds_setsMultiReports() throws ServletException {
     PrintController controller = mock(PrintController.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    when(vars.getSessionObject(SESSION_PREFIX + ".Documents")).thenReturn(null);
+    when(vars.getSessionObject(SESSION_PREFIX + SUFFIX_DOCUMENTS)).thenReturn(null);
 
     PrintControllerCommandHandler.createContext(
         controller, vars, DocumentType.SALESINVOICE, SESSION_PREFIX, "ID001,ID002,ID003");
@@ -150,7 +152,7 @@ public class PrintControllerCommandHandlerTest {
   public void testCreateContext_checksMapInitialisedToFalse() throws ServletException {
     PrintController controller = mock(PrintController.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    when(vars.getSessionObject(SESSION_PREFIX + ".Documents")).thenReturn(null);
+    when(vars.getSessionObject(SESSION_PREFIX + SUFFIX_DOCUMENTS)).thenReturn(null);
 
     PrintControllerCommandHandler.Context ctx = PrintControllerCommandHandler.createContext(
         controller, vars, DocumentType.SALESORDER, SESSION_PREFIX, DOC_ID);
@@ -167,7 +169,7 @@ public class PrintControllerCommandHandlerTest {
   public void testCreateContext_sanitizesDocumentId() throws ServletException {
     PrintController controller = mock(PrintController.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
-    when(vars.getSessionObject(SESSION_PREFIX + ".Documents")).thenReturn(null);
+    when(vars.getSessionObject(SESSION_PREFIX + SUFFIX_DOCUMENTS)).thenReturn(null);
 
     PrintControllerCommandHandler.Context ctx = PrintControllerCommandHandler.createContext(
         controller, vars, DocumentType.SALESINVOICE, SESSION_PREFIX, "'ID001'");
@@ -297,7 +299,7 @@ public class PrintControllerCommandHandlerTest {
     HttpServletResponse resp = mock(HttpServletResponse.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     when(vars.commandIn("ADD")).thenReturn(true);
-    when(req.getServletPath()).thenReturn("/send.html");
+    when(req.getServletPath()).thenReturn(PATH_SEND_HTML);
 
     PrintControllerCommandHandler handler = new PrintControllerCommandHandler(
         ctrl, req, resp, vars, makeContext(new String[]{ DOC_ID }, DocumentType.SALESINVOICE));
@@ -464,7 +466,7 @@ public class PrintControllerCommandHandlerTest {
   @Test
   public void testIsPrintPath_sendHtml_returnsFalse() throws Exception {
     HttpServletRequest req = mock(HttpServletRequest.class);
-    when(req.getServletPath()).thenReturn("/send.html");
+    when(req.getServletPath()).thenReturn(PATH_SEND_HTML);
 
     assertFalse(invokeBooleanReflection(req, "isPrintPath"));
   }
@@ -476,7 +478,7 @@ public class PrintControllerCommandHandlerTest {
   @Test
   public void testIsSendPath_sendHtml_returnsTrue() throws Exception {
     HttpServletRequest req = mock(HttpServletRequest.class);
-    when(req.getServletPath()).thenReturn("/send.html");
+    when(req.getServletPath()).thenReturn(PATH_SEND_HTML);
 
     assertTrue(invokeBooleanReflection(req, "isSendPath"));
   }

@@ -1,4 +1,20 @@
-package org.openbravo.erpCommon.utility.reporting.printing;
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Etendo License
+ * (the "License"), you may not use this file except in compliance with
+ * the License.
+ * You may obtain a copy of the License at
+ * https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing rights
+ * and limitations under the License.
+ * All portions are Copyright © 2021–2026 FUTIT SERVICES, S.L
+ * All Rights Reserved.
+ * Contributor(s): Futit Services S.L.
+ *************************************************************************
+ */
+package org.openbravo.erpCommon.utility.reporting.printing; //NOSONAR
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,7 +51,7 @@ import org.openbravo.erpCommon.utility.reporting.DocumentType;
  * Tests for {@link EmailUtilities}.
  * Focuses on the testable static utility method getEmailValue.
  */
-@SuppressWarnings({"java:S120"})
+@SuppressWarnings({"java:S100", "java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class EmailUtilitiesTest {
 
@@ -164,10 +180,12 @@ public class EmailUtilitiesTest {
   }
 
   /** A non-existent path is silently skipped.
-   * @throws IOException never in this code path */
+   * @throws IOException if temp file creation fails */
   @Test
   public void testDeleteTemporaryAttachments_nonExistentFile_isSkipped() throws IOException {
-    File ghost = new File("/nonexistent/path/ghost.tmp");
+    File ghost = File.createTempFile("ghost-eut", ".tmp");
+    Files.delete(ghost.toPath());
+    assertFalse(ghost.exists());
     EmailUtilities.deleteTemporaryAttachments(Collections.singletonList(ghost));
   }
 
