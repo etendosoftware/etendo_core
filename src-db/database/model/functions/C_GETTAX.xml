@@ -149,9 +149,10 @@
           (SELECT t.C_Tax_ID
           FROM C_Tax t
           INNER JOIN AD_Org o
-            ON(t.AD_Client_ID = o.AD_Client_ID)
+            ON(t.AD_Client_ID = o.AD_Client_ID OR t.AD_Client_ID = '0')
           WHERE t.ISTAXEXEMPT = 'Y'
-            AND AD_ISORGINCLUDED(p_Org_ID, t.AD_Org_ID, t.AD_Client_ID) <> '-1'
+            AND (AD_ISORGINCLUDED(p_Org_ID, t.AD_Org_ID, t.AD_Client_ID) <> '-1'
+                 OR (t.AD_Client_ID = '0' AND t.AD_Org_ID = '0'))
             AND t.ValidFrom <= p_shipDate
             AND t.isActive = 'Y'
             AND (t.sopotype = CASE WHEN (p_issotrx = 'Y') 
@@ -234,12 +235,13 @@
             AND(t.To_Country_ID = lt.C_Country_ID OR(t.To_Country_ID IS NULL))
             AND(t.To_Region_ID = lt.C_Region_ID   OR(t.To_Region_ID IS NULL))
             AND t.ValidFrom <= p_shipDate
-            AND ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
+            AND (ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
+                 OR (t.ad_client_id = '0' AND t.ad_org_id = '0'))
          --   AND ((t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (v_BPTaxCategory IS NULL))
             AND ((t.C_BP_TaxCategory_ID IS NOT NULL AND t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (t.C_BP_TaxCategory_ID IS NULL))
             AND (SoPoType = 'B' OR (SoPoType =(case when p_IsSOTrx='Y' then 'S' else 'P' end)))
             AND (t.isCashVAT = v_IsCashVAT OR (t.isCashVAT = 'N' and (t.isWithholdingTax = 'Y' or t.rate=0)))
-          ORDER BY ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id),t.C_BP_TaxCategory_ID, t.IsDefault DESC,t.C_Country_ID, t.To_Country_ID, t.C_Region_ID, t.To_Region_ID, t.ValidFrom DESC
+          ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 1 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID, t.IsDefault DESC,t.C_Country_ID, t.To_Country_ID, t.C_Region_ID, t.To_Region_ID, t.ValidFrom DESC
           )
         LOOP
           v_TaxID := SEL1.C_Tax_ID;
@@ -278,12 +280,13 @@
               AND t.To_Country_ID IS NULL
               AND t.To_Region_ID IS NULL
               AND t.ValidFrom <= p_shipDate
-              AND ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
+              AND (ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
+                   OR (t.ad_client_id = '0' AND t.ad_org_id = '0'))
               --AND ((t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (v_BPTaxCategory IS NULL))
               AND ((t.C_BP_TaxCategory_ID IS NOT NULL AND t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (t.C_BP_TaxCategory_ID IS NULL))
               AND (SoPoType = 'B' OR (SoPoType =(case when p_IsSOTrx='Y' then 'S' else 'P' end)))
               AND (t.isCashVAT = v_IsCashVAT OR (t.isCashVAT = 'N' and (t.isWithholdingTax = 'Y' or t.rate=0)))
-            ORDER BY ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id),t.C_BP_TaxCategory_ID,t.IsDefault DESC,t.C_Country_ID, t.C_Region_ID, t.ValidFrom DESC
+            ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 1 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID,t.IsDefault DESC,t.C_Country_ID, t.C_Region_ID, t.ValidFrom DESC
             )
           LOOP
             v_TaxID := SEL2.C_Tax_ID;
@@ -295,7 +298,7 @@
             (SELECT t.C_Tax_ID,t.C_BP_TaxCategory_ID, SoPoType
             FROM C_Tax t,
               C_Location lf
-            WHERE t.AD_Client_ID = lf.AD_Client_ID
+            WHERE (t.AD_Client_ID = lf.AD_Client_ID OR t.AD_Client_ID = '0')
               AND lf.C_Location_ID = v_billFrom
               AND t.IsDefault = 'Y'
               AND t.ValidFrom <= p_shipDate
@@ -303,9 +306,10 @@
               AND ((t.C_BP_TaxCategory_ID IS NOT NULL AND t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (t.C_BP_TaxCategory_ID IS NULL))
               AND (SoPoType = 'B' OR (SoPoType =(case when p_IsSOTrx='Y' then 'S' else 'P' end)))
               AND t.isActive = 'Y'
-              AND ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
+              AND (ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
+                   OR (t.ad_client_id = '0' AND t.ad_org_id = '0'))
               AND (t.isCashVAT = v_IsCashVAT OR (t.isCashVAT = 'N' and (t.isWithholdingTax = 'Y' or t.rate=0)))
-            ORDER BY ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id),t.C_BP_TaxCategory_ID, t.ValidFrom DESC
+            ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 1 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID, t.ValidFrom DESC
             )
           LOOP
             v_TaxID := SEL3.C_Tax_ID;
