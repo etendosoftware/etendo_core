@@ -241,7 +241,7 @@
             AND ((t.C_BP_TaxCategory_ID IS NOT NULL AND t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (t.C_BP_TaxCategory_ID IS NULL))
             AND (SoPoType = 'B' OR (SoPoType =(case when p_IsSOTrx='Y' then 'S' else 'P' end)))
             AND (t.isCashVAT = v_IsCashVAT OR (t.isCashVAT = 'N' and (t.isWithholdingTax = 'Y' or t.rate=0)))
-          ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 1 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID, t.IsDefault DESC,t.C_Country_ID, t.To_Country_ID, t.C_Region_ID, t.To_Region_ID, t.ValidFrom DESC
+          ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 9999 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID, t.IsDefault DESC,t.C_Country_ID, t.To_Country_ID, t.C_Region_ID, t.To_Region_ID, t.ValidFrom DESC
           )
         LOOP
           v_TaxID := SEL1.C_Tax_ID;
@@ -286,7 +286,7 @@
               AND ((t.C_BP_TaxCategory_ID IS NOT NULL AND t.C_BP_TaxCategory_ID = v_BPTaxCategory) OR (t.C_BP_TaxCategory_ID IS NULL))
               AND (SoPoType = 'B' OR (SoPoType =(case when p_IsSOTrx='Y' then 'S' else 'P' end)))
               AND (t.isCashVAT = v_IsCashVAT OR (t.isCashVAT = 'N' and (t.isWithholdingTax = 'Y' or t.rate=0)))
-            ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 1 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID,t.IsDefault DESC,t.C_Country_ID, t.C_Region_ID, t.ValidFrom DESC
+            ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 9999 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID,t.IsDefault DESC,t.C_Country_ID, t.C_Region_ID, t.ValidFrom DESC
             )
           LOOP
             v_TaxID := SEL2.C_Tax_ID;
@@ -309,7 +309,7 @@
               AND (ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) <> -1
                    OR (t.ad_client_id = '0' AND t.ad_org_id = '0'))
               AND (t.isCashVAT = v_IsCashVAT OR (t.isCashVAT = 'N' and (t.isWithholdingTax = 'Y' or t.rate=0)))
-            ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 1 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID, t.ValidFrom DESC
+            ORDER BY (CASE WHEN t.ad_client_id = '0' THEN 9999 ELSE ad_isorgincluded(p_org_id, t.ad_org_id,t.ad_client_id) END),t.C_BP_TaxCategory_ID, t.ValidFrom DESC
             )
           LOOP
             v_TaxID := SEL3.C_Tax_ID;
