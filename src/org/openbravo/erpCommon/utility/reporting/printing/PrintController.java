@@ -90,6 +90,8 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 
+import com.etendoerp.email.spi.EmailSenderDispatcher;
+
 @SuppressWarnings("serial")
 public class PrintController extends HttpSecureAppServlet {
   private static final String DOCUMENT_ID = "documentId";
@@ -1504,13 +1506,21 @@ public class PrintController extends HttpSecureAppServlet {
    * Reports a "no sender configured" error by setting an {@link OBError} message on the current
    * tab and closing the popup while refreshing the parent record. This ensures the error is
    * displayed inline on the record (in red) rather than as a generic popup dialog.
+   * <p>
+   * When an alternative {@link com.etendoerp.email.spi.EmailSender} is configured by a
+   * module, no error is reported and processing continues: the actual sender address is
+   * resolved by that sender at send time, so a missing SMTP configuration is not an error.
+   * </p>
    * @param response the HTTP response used to render the close-popup page
    * @param vars the session variables, used to resolve the active tab and language
    * @throws IOException if writing the response fails
-   * @throws ServletException always thrown after the error is reported, to stop processing
+   * @throws ServletException thrown after the error is reported, to stop processing
    */
   private void reportNoSenderError(HttpServletResponse response, VariablesSecureApp vars)
       throws IOException, ServletException {
+    if (EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
+      return;
+    }
     final OBError on = new OBError();
     on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
     on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));

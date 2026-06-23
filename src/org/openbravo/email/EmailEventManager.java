@@ -36,6 +36,8 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.poc.EmailInfo;
 import org.openbravo.erpCommon.utility.poc.EmailManager;
 
+import com.etendoerp.email.spi.EmailSenderDispatcher;
+
 /**
  * This singleton class, is in charge of generating events to send emails.
  * 
@@ -73,19 +75,13 @@ public class EmailEventManager {
   public boolean sendEmail(String event, final String recipient, Object data)
       throws EmailEventException {
     final ResolvedSmtpConfig mailConfig = SmtpCascadeResolver.resolve();
-
-    if (mailConfig == null) {
-      log.warn("Couldn't find email configuration at any level (User/Organization/Client)");
-      throw new EmailEventException(
-          OBMessageUtils.getI18NMessage("EmailConfigurationNotFound", null));
-    }
+    checkEmailTransportAvailable(mailConfig);
 
     try {
       boolean sent = false;
       for (EmailEventContentGenerator gen : getValidEmailGenerators(event, data)) {
         sent = true;
-        log.debug("sending email for event {} with generator {} using {} SMTP config (id={})",
-            event, gen, mailConfig.getLevel(), mailConfig.getConfigId());
+        logSendingEmail(event, gen, mailConfig);
 
         final EmailInfo email = new EmailInfo.Builder() //
             .setSubject(gen.getSubject(data, event)) //
@@ -119,6 +115,40 @@ public class EmailEventManager {
     } catch (Exception e) {
       log.error("Failed to send email for event {}.", event, e);
       throw new EmailEventException(e);
+    }
+  }
+
+  /**
+   * Ensures that some email transport is available: either an SMTP configuration resolved
+   * by the cascade or an alternative {@link com.etendoerp.email.spi.EmailSender} configured
+   * by a module. Preserves the historical failure when no transport exists at all.
+   * @param mailConfig the cascade-resolved SMTP configuration, may be {@code null}
+   * @throws EmailEventException if no SMTP configuration and no alternative sender exist
+   */
+  private void checkEmailTransportAvailable(ResolvedSmtpConfig mailConfig)
+      throws EmailEventException {
+    if (mailConfig == null && !EmailSenderDispatcher.hasAlternativeSenderConfigured()) {
+      log.warn("Couldn't find email configuration at any level (User/Organization/Client)");
+      throw new EmailEventException(
+          OBMessageUtils.getI18NMessage("EmailConfigurationNotFound", null));
+    }
+  }
+
+  /**
+   * Logs which generator is about to send an email for the given event, including the SMTP
+   * configuration used or noting that an alternative sender will handle the message.
+   * @param event the email event being processed
+   * @param gen the content generator producing the email
+   * @param mailConfig the cascade-resolved SMTP configuration, may be {@code null}
+   */
+  private void logSendingEmail(String event, EmailEventContentGenerator gen,
+      ResolvedSmtpConfig mailConfig) {
+    if (mailConfig != null) {
+      log.debug("sending email for event {} with generator {} using {} SMTP config (id={})",
+          event, gen, mailConfig.getLevel(), mailConfig.getConfigId());
+    } else {
+      log.debug("sending email for event {} with generator {} through an alternative"
+          + " email sender (no SMTP configuration found)", event, gen);
     }
   }
 

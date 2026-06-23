@@ -50,6 +50,9 @@ import org.openbravo.email.ResolvedSmtpConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.utils.FormatUtilities;
 
+import com.etendoerp.email.spi.EmailSendContext;
+import com.etendoerp.email.spi.EmailSenderDispatcher;
+
 public class EmailManager {
   private static Logger log4j = LogManager.getLogger();
   private static final Long DEFAULT_SMTP_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
@@ -57,7 +60,12 @@ public class EmailManager {
   /**
    * Sends an email using the given SMTP Server configuration and the email definition contained in
    * the email parameter.
-   * 
+   * <p>
+   * The send is routed through the {@link EmailSenderDispatcher}, so a module providing a
+   * configured {@link com.etendoerp.email.spi.EmailSender} with a higher priority can take
+   * over the transport. With no alternative sender installed and configured, the message is
+   * delivered over SMTP exactly as before.
+   * </p>
    * @param conf
    *          The SMTP Server configuration
    * @param email
@@ -65,47 +73,26 @@ public class EmailManager {
    * @throws Exception
    */
   public static void sendEmail(EmailServerConfiguration conf, EmailInfo email) throws Exception {
-
-    String decryptedPassword = FormatUtilities.encryptDecrypt(conf.getSmtpServerPassword(), false);
-    Long timeoutMillis = getSmtpConnectionTimeout(conf);
-
-    sendEmail(conf.getSmtpServer(), conf.isSMTPAuthentification(), conf.getSmtpServerAccount(),
-        decryptedPassword, conf.getSmtpConnectionSecurity(), conf.getSmtpPort().intValue(),
-        conf.getSmtpServerSenderAddress(), conf.getFromName(), email.getRecipientTO(),
-        email.getRecipientCC(), email.getRecipientBCC(), email.getReplyTo(), email.getSubject(),
-        email.getContent(), email.getContentType(), email.getAttachments(), email.getSentDate(),
-        email.getHeaderExtras(), timeoutMillis.intValue());
+    EmailSenderDispatcher.dispatch(EmailSendContext.create(conf, null, email));
   }
 
   /**
    * Sends an email using a {@link ResolvedSmtpConfig} obtained from the cascade resolver.
    * This is the preferred method when the cascade resolution (User → Organization → Client)
    * has already been performed by {@link org.openbravo.email.SmtpCascadeResolver}.
-   * @param conf The resolved SMTP configuration
+   * <p>
+   * The send is routed through the {@link EmailSenderDispatcher}; see
+   * {@link #sendEmail(EmailServerConfiguration, EmailInfo)}. The configuration may be
+   * {@code null} when no SMTP configuration exists at any level: in that case an alternative
+   * sender handles the message, or a configuration error is raised by the default SMTP
+   * sender.
+   * </p>
+   * @param conf The resolved SMTP configuration, may be {@code null}
    * @param email The data of the email being sent
    * @throws Exception if password decryption or email sending fails
    */
   public static void sendEmail(ResolvedSmtpConfig conf, EmailInfo email) throws Exception {
-    if (StringUtils.isBlank(conf.getHost())) {
-      throw new ServletException("SMTP Host is not configured in the "
-          + conf.getLevel() + " email configuration (id=" + conf.getConfigId()
-          + "). Please complete the SMTP setup.");
-    }
-    if (StringUtils.isBlank(conf.getFromAddress())) {
-      throw new ServletException("SMTP From Address (sender) is not configured in the "
-          + conf.getLevel() + " email configuration (id=" + conf.getConfigId()
-          + "). Please complete the SMTP setup.");
-    }
-    String decryptedPassword = safeDecrypt(conf.getPassword());
-    long timeoutMillis = conf.getTimeoutSeconds() != null
-        ? TimeUnit.SECONDS.toMillis(conf.getTimeoutSeconds())
-        : DEFAULT_SMTP_TIMEOUT;
-    sendEmail(conf.getHost(), conf.isAuth(), conf.getAccount(), decryptedPassword,
-        conf.getConnectionSecurity(), conf.getPort(), conf.getFromAddress(), conf.getFromName(),
-        email.getRecipientTO(), email.getRecipientCC(), email.getRecipientBCC(),
-        email.getReplyTo() != null ? email.getReplyTo() : conf.getReplyTo(),
-        email.getSubject(), email.getContent(), email.getContentType(), email.getAttachments(),
-        email.getSentDate(), email.getHeaderExtras(), (int) timeoutMillis);
+    EmailSenderDispatcher.dispatch(EmailSendContext.create(null, conf, email));
   }
 
   /**
@@ -127,7 +114,9 @@ public class EmailManager {
   }
 
   /**
-   * @deprecated Use {@link #sendEmail(EmailServerConfiguration, EmailInfo)} instead.
+   * @deprecated Use {@link #sendEmail(EmailServerConfiguration, EmailInfo)} instead. This
+   *             overload sends directly over SMTP and does not participate in the
+   *             {@link EmailSenderDispatcher} selection.
    */
   @Deprecated
   public static void sendEmail(String host, boolean auth, String username, String password,
