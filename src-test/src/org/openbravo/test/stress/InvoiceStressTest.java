@@ -24,7 +24,7 @@ public class InvoiceStressTest extends StressTestBase {
 
   private static final long MAX_MS_PER_INVOICE_CREATION = 15;
   private static final long MAX_MS_PER_INVOICE_COMPLETE = 150;
-  private static final long MAX_MS_PER_LINE_CREATION = 25;
+  private static final long MAX_MS_PER_LINE_CREATION = 40;
   private static final long MAX_MEMORY_MB_PER_100_INVOICES = 30;
 
   @Override

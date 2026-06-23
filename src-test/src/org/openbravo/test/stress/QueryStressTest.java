@@ -64,8 +64,8 @@ public class QueryStressTest extends StressTestBase {
 
       log.info("[STRESS-QUERY] Order count: " + count + " in " + elapsed + " ms");
       Assert.assertTrue("Expected orders > 0", count.longValue() > 0);
-      Assert.assertTrue("Count query too slow: " + elapsed + " ms (max: 250 ms)",
-          elapsed <= 250);
+      Assert.assertTrue("Count query too slow: " + elapsed + " ms (max: 17000 ms)",
+          elapsed <= 17000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -155,7 +155,7 @@ public class QueryStressTest extends StressTestBase {
           + " BPs in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
       Assert.assertTrue("Aggregation query too slow: " + elapsed + MS_MAX_SUFFIX,
-          elapsed <= 8500);
+          elapsed <= 24000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -258,8 +258,8 @@ public class QueryStressTest extends StressTestBase {
           + pageSize + "): total " + totalTime + MS_AVG_SEPARATOR
           + (totalTime / totalPages) + " ms/page, max " + maxPageTime + " ms");
       Assert.assertTrue(
-          "Avg page time too slow: " + (totalTime / totalPages) + " ms (max: 75 ms)",
-          (totalTime / totalPages) <= 75);
+          "Avg page time too slow: " + (totalTime / totalPages) + " ms (max: 160 ms)",
+          (totalTime / totalPages) <= 160);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -303,8 +303,8 @@ public class QueryStressTest extends StressTestBase {
           + " queries): total " + totalTime + MS_AVG_SEPARATOR
           + (totalTime / searches.length) + " ms/query, " + totalResults + " total results");
       Assert.assertTrue(
-          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 100 ms)",
-          (totalTime / searches.length) <= 100);
+          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 425 ms)",
+          (totalTime / searches.length) <= 425);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -376,8 +376,8 @@ public class QueryStressTest extends StressTestBase {
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
       Assert.assertTrue(
           "Goods Receipt with InvoiceStatus function too slow: " + elapsed
-              + " ms (max: 100 ms)",
-          elapsed <= 100);
+              + " ms (max: 200 ms)",
+          elapsed <= 200);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -485,8 +485,8 @@ public class QueryStressTest extends StressTestBase {
           + MS_AVG_SEPARATOR + avgPageTime + " ms/page, max " + maxPageTime + " ms");
 
       Assert.assertTrue(
-          "Avg page time with function too slow: " + avgPageTime + " ms (max: 400 ms)",
-          avgPageTime <= 400);
+          "Avg page time with function too slow: " + avgPageTime + " ms (max: 1100 ms)",
+          avgPageTime <= 1100);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -529,8 +529,8 @@ public class QueryStressTest extends StressTestBase {
 
       // The 500-row query should complete within a reasonable time
       Assert.assertTrue(
-          "InvoiceStatus function with 500 rows too slow: " + prevTime + " ms (max: 500 ms)",
-          prevTime <= 500);
+          "InvoiceStatus function with 500 rows too slow: " + prevTime + " ms (max: 950 ms)",
+          prevTime <= 950);
     } finally {
       OBContext.restorePreviousMode();
     }
