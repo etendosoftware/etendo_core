@@ -762,10 +762,10 @@ public class QueryStressTest extends StressTestBase {
 
     log.info("[STRESS-QUERY] === SEQUENTIAL vs CONCURRENT COMPARISON ===");
     log.info("[STRESS-QUERY] " + totalQueries + " queries");
-    log.info("[STRESS-QUERY] Sequential: " + seqTime + " ms ("
+    log.info("[STRESS-QUERY] Sequential: " + seqTime + MS_PER_ROW_SEPARATOR
         + (totalQueries * 1000L / Math.max(seqTime, 1)) + " queries/sec)");
     log.info("[STRESS-QUERY] Concurrent (" + threadCount + " threads): "
-        + concTime + " ms ("
+        + concTime + MS_PER_ROW_SEPARATOR
         + (completed.get() * 1000L / Math.max(concTime, 1)) + " queries/sec)");
     log.info(String.format("[STRESS-QUERY] Speedup: %.2fx", speedup));
 
