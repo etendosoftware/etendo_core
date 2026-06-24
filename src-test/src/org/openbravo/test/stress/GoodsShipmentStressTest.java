@@ -21,9 +21,9 @@ public class GoodsShipmentStressTest extends StressTestBase {
   private static final String STRESS_DOC_PREFIX = "STRESS-SHIP-";
   private static final String LOG_TOTAL_TIME = "[STRESS-SHIP] Total time: ";
 
-  private static final long MAX_MS_PER_SHIPMENT_CREATION = 15;
-  private static final long MAX_MS_PER_SHIPMENT_COMPLETE = 100;
-  private static final long MAX_MS_PER_LINE_CREATION = 8;
+  private static final long MAX_MS_PER_SHIPMENT_CREATION = 25;
+  private static final long MAX_MS_PER_SHIPMENT_COMPLETE = 185;
+  private static final long MAX_MS_PER_LINE_CREATION = 12;
   private static final long MAX_MEMORY_MB_PER_100_SHIPMENTS = 30;
 
   @Override

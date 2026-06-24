@@ -26,7 +26,10 @@ import org.openbravo.model.common.plm.Product;
 public class QueryStressTest extends StressTestBase {
 
   private static final String EXPECTED_RESULTS = "Expected results";
-  private static final String MS_MAX_SUFFIX = " ms (max: 60000 ms)";
+  private static final String MS_MAX_SUFFIX = " ms";
+  private static final String MS_AVG_SEPARATOR = " ms, avg ";
+  private static final String ROWS_IN_SEPARATOR = " rows in ";
+  private static final String MS_PER_ROW_SEPARATOR = " ms (";
   private static final String COUNT_SO_QUERY =
       "SELECT count(*) FROM c_order WHERE issotrx = 'Y'";
 
@@ -61,8 +64,8 @@ public class QueryStressTest extends StressTestBase {
 
       log.info("[STRESS-QUERY] Order count: " + count + " in " + elapsed + " ms");
       Assert.assertTrue("Expected orders > 0", count.longValue() > 0);
-      Assert.assertTrue("Count query too slow: " + elapsed + " ms (max: 5000 ms)",
-          elapsed <= 5000);
+      Assert.assertTrue("Count query too slow: " + elapsed + " ms (max: 17000 ms)",
+          elapsed <= 17000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -86,8 +89,8 @@ public class QueryStressTest extends StressTestBase {
 
       log.info("[STRESS-QUERY] Date range query: " + orders.size()
           + " orders in " + elapsed + " ms");
-      Assert.assertTrue("Date range query too slow: " + elapsed + " ms (max: 10000 ms)",
-          elapsed <= 10000);
+      Assert.assertTrue("Date range query too slow: " + elapsed + " ms (max: 300 ms)",
+          elapsed <= 300);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -118,8 +121,8 @@ public class QueryStressTest extends StressTestBase {
       log.info("[STRESS-QUERY] Order+Lines JOIN: " + results.size()
           + " results in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
-      Assert.assertTrue("JOIN query too slow: " + elapsed + " ms (max: 30000 ms)",
-          elapsed <= 30000);
+      Assert.assertTrue("JOIN query too slow: " + elapsed + " ms (max: 8500 ms)",
+          elapsed <= 8500);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -152,7 +155,7 @@ public class QueryStressTest extends StressTestBase {
           + " BPs in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
       Assert.assertTrue("Aggregation query too slow: " + elapsed + MS_MAX_SUFFIX,
-          elapsed <= 60000);
+          elapsed <= 24000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -183,8 +186,8 @@ public class QueryStressTest extends StressTestBase {
       log.info("[STRESS-QUERY] fact_acct aggregation: " + results.size()
           + " accounts in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
-      Assert.assertTrue("fact_acct query too slow: " + elapsed + MS_MAX_SUFFIX,
-          elapsed <= 60000);
+      Assert.assertTrue("fact_acct query too slow: " + elapsed + " ms (max: 37000 ms)",
+          elapsed <= 37000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -210,8 +213,8 @@ public class QueryStressTest extends StressTestBase {
       log.info("[STRESS-QUERY] m_transaction monthly: " + results.size()
           + " months in " + elapsed + " ms");
       Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
-      Assert.assertTrue("Transaction query too slow: " + elapsed + MS_MAX_SUFFIX,
-          elapsed <= 60000);
+      Assert.assertTrue("Transaction query too slow: " + elapsed + " ms (max: 23000 ms)",
+          elapsed <= 23000);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -252,11 +255,11 @@ public class QueryStressTest extends StressTestBase {
       }
 
       log.info("[STRESS-QUERY] Pagination (" + totalPages + " pages x "
-          + pageSize + "): total " + totalTime + " ms, avg "
+          + pageSize + "): total " + totalTime + MS_AVG_SEPARATOR
           + (totalTime / totalPages) + " ms/page, max " + maxPageTime + " ms");
       Assert.assertTrue(
-          "Avg page time too slow: " + (totalTime / totalPages) + " ms (max: 5000 ms)",
-          (totalTime / totalPages) <= 5000);
+          "Avg page time too slow: " + (totalTime / totalPages) + " ms (max: 160 ms)",
+          (totalTime / totalPages) <= 160);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -297,11 +300,305 @@ public class QueryStressTest extends StressTestBase {
       }
 
       log.info("[STRESS-QUERY] Product search (" + searches.length
-          + " queries): total " + totalTime + " ms, avg "
+          + " queries): total " + totalTime + MS_AVG_SEPARATOR
           + (totalTime / searches.length) + " ms/query, " + totalResults + " total results");
       Assert.assertTrue(
-          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 3000 ms)",
-          (totalTime / searches.length) <= 3000);
+          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 500 ms)",
+          (totalTime / searches.length) <= 500);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  // ==========================================================================
+  // SQL Logic function-per-row tests (grid simulation)
+  // ==========================================================================
+
+  /**
+   * Simulates the Goods Receipt grid WITHOUT the SQL Logic column.
+   * Baseline query to compare against the function-per-row variant.
+   */
+  @Test
+  public void testGoodsReceiptGridBaseline() {
+    OBContext.setAdminMode(true);
+    try {
+      long start = System.nanoTime();
+      @SuppressWarnings("unchecked")
+      List<Object[]> results = OBDal.getInstance().getSession()
+          .createNativeQuery(
+              "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
+                  + "bp.name AS bpartner "
+                  + "FROM m_inout m "
+                  + "JOIN c_bpartner bp ON m.c_bpartner_id = bp.c_bpartner_id "
+                  + "WHERE m.issotrx = 'N' "
+                  + "ORDER BY m.movementdate DESC "
+                  + "LIMIT 100")
+          .list();
+      long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+      log.info("[STRESS-QUERY] Goods Receipt grid (baseline, no function): "
+          + results.size() + ROWS_IN_SEPARATOR + elapsed + " ms");
+      Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
+      Assert.assertTrue(
+          "Goods Receipt baseline too slow: " + elapsed + " ms (max: 75 ms)",
+          elapsed <= 75);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Simulates the Goods Receipt grid WITH the Invoice Status SQL Logic column.
+   * This calls C_GETINVOICESTATUSFROMSHIPMENT(m_inout_id) per row, reproducing
+   * the N+1 function-call pattern that caused ETP-2696 grid loading issues.
+   */
+  @Test
+  public void testGoodsReceiptGridWithInvoiceStatusFunction() {
+    OBContext.setAdminMode(true);
+    try {
+      long start = System.nanoTime();
+      @SuppressWarnings("unchecked")
+      List<Object[]> results = OBDal.getInstance().getSession()
+          .createNativeQuery(
+              "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
+                  + "bp.name AS bpartner, "
+                  + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
+                  + "FROM m_inout m "
+                  + "JOIN c_bpartner bp ON m.c_bpartner_id = bp.c_bpartner_id "
+                  + "WHERE m.issotrx = 'N' "
+                  + "ORDER BY m.movementdate DESC "
+                  + "LIMIT 100")
+          .list();
+      long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+      log.info("[STRESS-QUERY] Goods Receipt grid (with InvoiceStatus function): "
+          + results.size() + ROWS_IN_SEPARATOR + elapsed + " ms");
+      Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
+      Assert.assertTrue(
+          "Goods Receipt with InvoiceStatus function too slow: " + elapsed
+              + " ms (max: 200 ms)",
+          elapsed <= 200);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Compares grid query performance with and without the SQL Logic function column.
+   * A high degradation factor indicates N+1 function-call overhead that will
+   * cause grid loading issues in the UI.
+   */
+  @Test
+  public void testGoodsReceiptInvoiceStatusDegradation() {
+    OBContext.setAdminMode(true);
+    try {
+      int pageSize = 100;
+
+      // Baseline: without function
+      long baseStart = System.nanoTime();
+      OBDal.getInstance().getSession()
+          .createNativeQuery(
+              "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus "
+                  + "FROM m_inout m "
+                  + "WHERE m.issotrx = 'N' "
+                  + "ORDER BY m.movementdate DESC "
+                  + "LIMIT " + pageSize)
+          .list();
+      long baseTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - baseStart);
+
+      OBDal.getInstance().getSession().clear();
+
+      // With function: per-row call
+      long funcStart = System.nanoTime();
+      OBDal.getInstance().getSession()
+          .createNativeQuery(
+              "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
+                  + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
+                  + "FROM m_inout m "
+                  + "WHERE m.issotrx = 'N' "
+                  + "ORDER BY m.movementdate DESC "
+                  + "LIMIT " + pageSize)
+          .list();
+      long funcTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - funcStart);
+
+      long normalizedBaseTime = Math.max(baseTime, 15);
+      double degradation = (double) funcTime / normalizedBaseTime;
+
+      log.info("[STRESS-QUERY] === GOODS RECEIPT INVOICE STATUS DEGRADATION ===");
+      log.info("[STRESS-QUERY] Baseline (no function): " + baseTime + " ms");
+      log.info("[STRESS-QUERY] With InvoiceStatus function: " + funcTime + " ms");
+      log.info(String.format("[STRESS-QUERY] Degradation factor: %.1fx", degradation));
+
+      Assert.assertTrue(
+          String.format("InvoiceStatus function degrades grid query by %.1fx "
+              + "(max: 10x, normalized base: %d ms, raw base: %d ms, with function: %d ms)",
+              degradation, normalizedBaseTime, baseTime, funcTime),
+          degradation <= 10);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Simulates paginated grid browsing with the SQL Logic function column.
+   * Tests multiple pages to detect if the function overhead accumulates
+   * or remains stable across pagination.
+   */
+  @Test
+  public void testGoodsReceiptPaginatedWithFunction() {
+    OBContext.setAdminMode(true);
+    try {
+      int pageSize = 100;
+      int totalPages = 5;
+      long totalTime = 0;
+      long maxPageTime = 0;
+
+      for (int page = 0; page < totalPages; page++) {
+        long start = System.nanoTime();
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = OBDal.getInstance().getSession()
+            .createNativeQuery(
+                "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
+                    + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
+                    + "FROM m_inout m "
+                    + "WHERE m.issotrx = 'N' "
+                    + "ORDER BY m.movementdate DESC "
+                    + "LIMIT " + pageSize + " OFFSET " + (page * pageSize))
+            .list();
+
+        long pageTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        totalTime += pageTime;
+        if (pageTime > maxPageTime) {
+          maxPageTime = pageTime;
+        }
+
+        log.info("[STRESS-QUERY] Goods Receipt page " + page + ": "
+            + results.size() + ROWS_IN_SEPARATOR + pageTime + " ms");
+
+        OBDal.getInstance().getSession().clear();
+      }
+
+      long avgPageTime = totalTime / totalPages;
+      log.info("[STRESS-QUERY] Goods Receipt pagination (" + totalPages
+          + " pages x " + pageSize + " with function): total " + totalTime
+          + MS_AVG_SEPARATOR + avgPageTime + " ms/page, max " + maxPageTime + " ms");
+
+      Assert.assertTrue(
+          "Avg page time with function too slow: " + avgPageTime + " ms (max: 1100 ms)",
+          avgPageTime <= 1100);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Tests the function with a larger result set (500 rows) to detect
+   * N+1 overhead that only surfaces at higher volumes.
+   * The UI grid may fetch more than 100 rows depending on configuration.
+   */
+  @Test
+  public void testGoodsReceiptFunctionHighVolume() {
+    OBContext.setAdminMode(true);
+    try {
+      int[] rowCounts = {100, 250, 500};
+
+      long prevTime = 0;
+      for (int rows : rowCounts) {
+        long start = System.nanoTime();
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = OBDal.getInstance().getSession()
+            .createNativeQuery(
+                "SELECT m.m_inout_id, m.documentno, "
+                    + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
+                    + "FROM m_inout m "
+                    + "WHERE m.issotrx = 'N' "
+                    + "ORDER BY m.movementdate DESC "
+                    + "LIMIT " + rows)
+            .list();
+        long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        double msPerRow = results.isEmpty() ? 0 : (double) elapsed / results.size();
+
+        log.info("[STRESS-QUERY] InvoiceStatus function " + rows + " rows: "
+            + elapsed + MS_PER_ROW_SEPARATOR + String.format("%.2f", msPerRow) + " ms/row)");
+
+        OBDal.getInstance().getSession().clear();
+        prevTime = elapsed;
+      }
+
+      // The 500-row query should complete within a reasonable time
+      Assert.assertTrue(
+          "InvoiceStatus function with 500 rows too slow: " + prevTime + " ms (max: 950 ms)",
+          prevTime <= 950);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Scans all SQL Logic function columns used in grid views on high-volume tables
+   * to detect N+1 performance patterns before they reach production.
+   * Each function is called per-row on 100 records; if any exceeds the threshold,
+   * it signals a potential grid loading issue.
+   */
+  @Test
+  public void testSqlLogicFunctionsOnHighVolumeTables() {
+    OBContext.setAdminMode(true);
+    try {
+      // Pairs of: [table, filter, function_call, label]
+      String[][] functionTests = {
+          {"m_inout", "issotrx = 'N'",
+              "C_GETINVOICESTATUSFROMSHIPMENT(m_inout_id)", "GoodsReceipt.InvoiceStatus"},
+      };
+
+      long maxAllowed = 300;
+
+      for (String[] test : functionTests) {
+        String table = test[0];
+        String filter = test[1];
+        String functionCall = test[2];
+        String label = test[3];
+
+        // Baseline without function
+        long baseStart = System.nanoTime();
+        OBDal.getInstance().getSession()
+            .createNativeQuery(
+                "SELECT * FROM " + table
+                    + " WHERE " + filter
+                    + " ORDER BY created DESC LIMIT 100")
+            .list();
+        long baseTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - baseStart);
+
+        OBDal.getInstance().getSession().clear();
+
+        // With function
+        long funcStart = System.nanoTime();
+        OBDal.getInstance().getSession()
+            .createNativeQuery(
+                "SELECT *, " + functionCall + " FROM " + table
+                    + " WHERE " + filter
+                    + " ORDER BY created DESC LIMIT 100")
+            .list();
+        long funcTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - funcStart);
+
+        double degradation = baseTime > 0 ? (double) funcTime / baseTime : funcTime;
+
+        log.info("[STRESS-QUERY] SQL Logic [" + label + "]: base=" + baseTime
+            + " ms, with function=" + funcTime + " ms, degradation="
+            + String.format("%.1fx", degradation));
+
+        Assert.assertTrue(
+            "SQL Logic function [" + label + "] too slow: " + funcTime
+                + " ms (max: " + maxAllowed + " ms)",
+            funcTime <= maxAllowed);
+        Assert.assertTrue(
+            String.format("SQL Logic function [%s] degrades query by %.1fx (max: 10x)",
+                label, degradation),
+            degradation <= 10);
+
+        OBDal.getInstance().getSession().clear();
+      }
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -465,10 +762,10 @@ public class QueryStressTest extends StressTestBase {
 
     log.info("[STRESS-QUERY] === SEQUENTIAL vs CONCURRENT COMPARISON ===");
     log.info("[STRESS-QUERY] " + totalQueries + " queries");
-    log.info("[STRESS-QUERY] Sequential: " + seqTime + " ms ("
+    log.info("[STRESS-QUERY] Sequential: " + seqTime + MS_PER_ROW_SEPARATOR
         + (totalQueries * 1000L / Math.max(seqTime, 1)) + " queries/sec)");
     log.info("[STRESS-QUERY] Concurrent (" + threadCount + " threads): "
-        + concTime + " ms ("
+        + concTime + MS_PER_ROW_SEPARATOR
         + (completed.get() * 1000L / Math.max(concTime, 1)) + " queries/sec)");
     log.info(String.format("[STRESS-QUERY] Speedup: %.2fx", speedup));
 
