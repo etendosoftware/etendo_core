@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.invoice.Invoice;
@@ -43,6 +44,7 @@ public class EndToEndStressTest extends StressTestBase {
   }
 
   @After
+  @AfterEach
   public void cleanUp() {
     runCleanup(() -> {
       String prefix = STRESS_DOC_PREFIX + "%";

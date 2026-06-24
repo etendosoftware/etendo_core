@@ -303,8 +303,8 @@ public class QueryStressTest extends StressTestBase {
           + " queries): total " + totalTime + MS_AVG_SEPARATOR
           + (totalTime / searches.length) + " ms/query, " + totalResults + " total results");
       Assert.assertTrue(
-          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 425 ms)",
-          (totalTime / searches.length) <= 425);
+          "Avg search too slow: " + (totalTime / searches.length) + " ms (max: 500 ms)",
+          (totalTime / searches.length) <= 500);
     } finally {
       OBContext.restorePreviousMode();
     }

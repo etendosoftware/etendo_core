@@ -17,6 +17,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
@@ -61,6 +63,7 @@ public class ConcurrentStressTest extends StressTestBase {
 
   @Override
   @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     // Commit and release the connection so child threads can use the pool
@@ -68,6 +71,7 @@ public class ConcurrentStressTest extends StressTestBase {
   }
 
   @After
+  @AfterEach
   public void cleanUp() {
     OBContext.setOBContext(CLIENT_USER_ID, CLIENT_ROLE_ID, CLIENT_CLIENT_ID, CLIENT_ORG_ID);
     runCleanup(() -> {
