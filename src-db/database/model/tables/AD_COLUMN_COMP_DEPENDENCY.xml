@@ -61,11 +61,11 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault><![CDATA['N']]></onCreateDefault>
       </column>
-      <column name="WATCHED_COLUMNS" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
+      <column name="TARGET_ID_RESOLVER_SQL" primaryKey="false" required="false" type="VARCHAR" size="4000" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="TARGET_ID_RESOLVER_SQL" primaryKey="false" required="true" type="VARCHAR" size="4000" autoIncrement="false">
+      <column name="TARGET_LINK_COLUMN_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
@@ -83,6 +83,9 @@
       </foreign-key>
       <foreign-key foreignTable="AD_TABLE" name="AD_COLCOMP_DEP_SOURCE_TBL">
         <reference local="SOURCE_TABLE_ID" foreign="AD_TABLE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_COLUMN" name="AD_COLCOMP_DEP_TGT_LINK_COL">
+        <reference local="TARGET_LINK_COLUMN_ID" foreign="AD_COLUMN_ID"/>
       </foreign-key>
       <index name="AD_COLCOMP_DEP_COLUMN_IDX" unique="false">
         <index-column name="AD_COLUMN_ID"/>

@@ -1,6 +1,6 @@
 # EPL-1807 — Phase 3 Plan: Deferred Recalculation Engine
 
-Branch: `epic/ETP-3504`. Do not push.
+Branch: `epic/EPL-1807`. Do not push.
 
 ## Context
 

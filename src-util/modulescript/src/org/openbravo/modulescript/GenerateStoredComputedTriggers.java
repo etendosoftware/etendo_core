@@ -21,8 +21,10 @@ package org.openbravo.modulescript;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -57,13 +59,28 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
 
   private static final String QUERY_DEPS =
       "SELECT d.ad_column_comp_dependency_id, d.ad_column_id, d.insert_event, "
-    + "       d.update_event, d.delete_event, d.watched_columns, d.target_id_resolver_sql, "
+    + "       d.update_event, d.delete_event, d.target_id_resolver_sql, "
+    + "       lc.columnname AS target_link_column, lc.isparent AS target_link_isparent, "
     + "       t.tablename AS source_table, c.refresh_mode, c.computation_sequence_number "
     + "FROM   ad_column_comp_dependency d "
     + "JOIN   ad_table  t ON t.ad_table_id  = d.source_table_id "
     + "JOIN   ad_column c ON c.ad_column_id = d.ad_column_id "
+    + "LEFT   JOIN ad_column lc ON lc.ad_column_id = d.target_link_column_id "
     + "WHERE  d.isactive = 'Y' AND c.isactive = 'Y' AND c.computation_mode = 'S' "
     + "ORDER  BY c.computation_sequence_number, d.ad_column_comp_dependency_id";
+
+  /**
+   * Loads watched-column names from the {@code AD_COMPDEP_WATCHED_COL} child table, joined to
+   * {@code AD_COLUMN} for the physical column name. Grouped by dependency id in
+   * {@link #loadWatchedColumns}. Replaces the former
+   * {@code AD_COLUMN_COMP_DEPENDENCY.WATCHED_COLUMNS} comma-delimited string.
+   */
+  private static final String QUERY_WATCHED =
+      "SELECT w.ad_column_comp_dependency_id, c.columnname "
+    + "FROM   ad_compdep_watched_col w "
+    + "JOIN   ad_column c ON c.ad_column_id = w.ad_column_id "
+    + "WHERE  w.isactive = 'Y' AND c.isactive = 'Y' "
+    + "ORDER  BY w.ad_column_comp_dependency_id, w.seqno, c.columnname";
 
   private static final String QUERY_DEPLOYED =
       "SELECT proname FROM pg_proc WHERE proname LIKE 'ad_scd_%_trf'";
@@ -86,19 +103,23 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       ResultSet rs = psDeps.executeQuery();
       while (rs.next()) {
         DepRow row = new DepRow();
-        row.depId       = rs.getString("ad_column_comp_dependency_id").toLowerCase();
-        row.columnId    = rs.getString("ad_column_id");
-        row.insertEvent = rs.getString("insert_event");
-        row.updateEvent = rs.getString("update_event");
-        row.deleteEvent = rs.getString("delete_event");
-        row.watchedCols = rs.getString("watched_columns");
-        row.resolverSql = rs.getString("target_id_resolver_sql");
-        row.sourceTable = rs.getString("source_table").toLowerCase();
-        row.refreshMode = rs.getString("refresh_mode");
-        row.seqNo       = rs.getInt("computation_sequence_number");
+        row.depId          = rs.getString("ad_column_comp_dependency_id").toLowerCase();
+        row.columnId       = rs.getString("ad_column_id");
+        row.insertEvent    = rs.getString("insert_event");
+        row.updateEvent    = rs.getString("update_event");
+        row.deleteEvent    = rs.getString("delete_event");
+        row.resolverSql    = rs.getString("target_id_resolver_sql");
+        row.linkColumn     = rs.getString("target_link_column");
+        row.linkIsParent   = rs.getString("target_link_isparent");
+        row.sourceTable    = rs.getString("source_table").toLowerCase();
+        row.refreshMode    = rs.getString("refresh_mode");
+        row.seqNo          = rs.getInt("computation_sequence_number");
         deps.add(row);
       }
       cp.releasePreparedStatement(psDeps);
+
+      // Materialise watched columns (child table) before any DDL, same cursor discipline as deps.
+      Map<String, List<String>> watchedByDep = loadWatchedColumns(cp);
 
       Set<String> activeDepIds = new HashSet<>();
       for (DepRow row : deps) {
@@ -108,14 +129,22 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
           continue;
         }
 
+        String resolverSql = resolveResolverSql(row);
+        if (resolverSql == null) {
+          log.warn("Skipping SCD dependency {} — neither TARGET_ID_RESOLVER_SQL nor "
+              + "TARGET_LINK_COLUMN_ID is set", row.depId);
+          continue;
+        }
+
         activeDepIds.add(row.depId);
         String funcName    = "ad_scd_" + row.depId + "_trf";
         String triggerName = "ad_scd_" + row.depId + "_trg";
 
-        List<String> watchedColNames = parseWatchedColumns(row.watchedCols);
+        List<String> watchedColNames =
+            watchedByDep.getOrDefault(row.depId, new ArrayList<>());
 
         cp.getPreparedStatement(
-            buildFunctionDdl(funcName, row.resolverSql, row.columnId, row.refreshMode, row.seqNo,
+            buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode, row.seqNo,
                 watchedColNames))
             .execute();
 
@@ -380,20 +409,51 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   }
 
   /**
-   * Parses {@code WATCHED_COLUMNS} — a case-insensitive, comma-delimited list of source-table column
-   * <i>names</i> — into a list of lowercased names matching PostgreSQL's default identifier folding.
+   * Materialises every active {@code AD_COMPDEP_WATCHED_COL} row into a map keyed by lowercased
+   * dependency id, with the watched-column <i>names</i> lowercased to match PostgreSQL's default
+   * identifier folding and ordered by {@code SEQNO}. Like {@link #QUERY_DEPS}, the cursor is fully
+   * drained and released before the caller issues any DDL, because every DDL {@code execute()}
+   * commits on the shared connection and would otherwise close an open ResultSet.
    */
-  private List<String> parseWatchedColumns(String watchedCols) {
-    List<String> names = new ArrayList<>();
-    if (watchedCols != null && !watchedCols.isBlank()) {
-      for (String colName : watchedCols.split(",")) {
-        String trimmed = colName.trim();
-        if (!trimmed.isEmpty()) {
-          names.add(trimmed.toLowerCase());
-        }
-      }
+  private Map<String, List<String>> loadWatchedColumns(ConnectionProvider cp) throws Exception {
+    Map<String, List<String>> byDep = new HashMap<>();
+    PreparedStatement ps = cp.getPreparedStatement(QUERY_WATCHED);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next()) {
+      String depId = rs.getString("ad_column_comp_dependency_id").toLowerCase();
+      String colName = rs.getString("columnname").toLowerCase();
+      byDep.computeIfAbsent(depId, k -> new ArrayList<>()).add(colName);
     }
-    return names;
+    cp.releasePreparedStatement(ps);
+    return byDep;
+  }
+
+  /**
+   * Resolves the SQL whose rows are the target record ids to enqueue. Exactly one of two declarative
+   * sources is expected per dependency:
+   * <ul>
+   *   <li>{@code TARGET_ID_RESOLVER_SQL} — used verbatim when set (escape hatch for complex links).</li>
+   *   <li>{@code TARGET_LINK_COLUMN_ID} — a source→target FK; the resolver is <i>rendered</i> here
+   *       from the FK column name. An immutable parent FK ({@code IsParent='Y'}) renders the compact
+   *       {@code COALESCE(NEW.fk, OLD.fk)} form; a mutable FK renders the {@code UNION} form so a
+   *       re-pointed row refreshes both the old and the new target.</li>
+   * </ul>
+   * Returns {@code null} when neither source is set, signalling the caller to skip the dependency.
+   */
+  private String resolveResolverSql(DepRow row) {
+    if (row.resolverSql != null && !row.resolverSql.isBlank()) {
+      return row.resolverSql;
+    }
+    if (row.linkColumn != null && !row.linkColumn.isBlank()) {
+      String fk = row.linkColumn.toLowerCase();
+      if ("Y".equals(row.linkIsParent)) {
+        return "SELECT COALESCE(NEW." + fk + ", OLD." + fk + ") FROM dual";
+      }
+      return "SELECT NEW." + fk + " FROM dual WHERE NEW." + fk + " IS NOT NULL\n"
+          + "  UNION\n"
+          + "  SELECT OLD." + fk + " FROM dual WHERE OLD." + fk + " IS NOT NULL";
+    }
+    return null;
   }
 
   /**
@@ -434,8 +494,9 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
     String insertEvent;
     String updateEvent;
     String deleteEvent;
-    String watchedCols;
     String resolverSql;
+    String linkColumn;
+    String linkIsParent;
     String sourceTable;
     String refreshMode;
     int seqNo;
