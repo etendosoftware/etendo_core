@@ -53,10 +53,22 @@ import org.openbravo.database.ConnectionProvider;
  * {@code export.database} via {@code src-db/database/model/excludeFilter.xml} so they never drift into
  * the model. Orphaned per-dependency functions (whose dependency row was removed) are dropped
  * automatically.</p>
+ *
+ * <p><b>Oracle support</b> (Phase 5). Oracle has no deferred constraint-trigger firing and no
+ * {@code pg_current_xact_id()}, so the synchronous ({@code 'S'}) drain cannot exist. Instead of
+ * rejecting {@code 'S'} columns on Oracle they are <b>silently downgraded to {@code 'Q'}</b>: the
+ * per-dependency enqueue triggers are still created (in Oracle PL/SQL) and always write
+ * {@code Refresh_Mode='Q'}, and the async Java {@code StoredColumnQueueProcessor} is the only drain.
+ * On Oracle the engine PL/pgSQL functions and the {@code ad_scd_dirty_aiu} constraint trigger are
+ * <b>not</b> deployed at all — the recompute runs entirely in Java (workstream C2). Dialect is
+ * detected via {@link ConnectionProvider#getRDBMS()} ({@code "POSTGRE"} / {@code "ORACLE"}).</p>
  */
 public class GenerateStoredComputedTriggers extends ModuleScript {
 
   private static final Logger log = LogManager.getLogger();
+
+  /** True when deploying against Oracle; selects the Oracle-dialect enqueue DDL and skips the PG engine. */
+  private boolean oracle;
 
   private static final String QUERY_DEPS =
       "SELECT d.ad_column_comp_dependency_id, d.ad_column_id, d.insert_event, "
@@ -75,8 +87,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   /**
    * Loads watched-column names from the {@code AD_COMPDEP_WATCHED_COL} child table, joined to
    * {@code AD_COLUMN} for the physical column name. Grouped by dependency id in
-   * {@link #loadWatchedColumns}. Replaces the former
-   * {@code AD_COLUMN_COMP_DEPENDENCY.WATCHED_COLUMNS} comma-delimited string.
+   * {@link #loadWatchedColumns}. This child table is the sole source of watched columns.
    */
   private static final String QUERY_WATCHED =
       "SELECT w.ad_column_comp_dependency_id, c.columnname "
@@ -87,6 +98,15 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
 
   private static final String QUERY_DEPLOYED =
       "SELECT proname FROM pg_proc WHERE proname LIKE 'ad_scd_%_trf'";
+
+  /**
+   * Oracle equivalent of {@link #QUERY_DEPLOYED}: the per-dependency enqueue trigger names already
+   * present. Oracle emits an inline-body trigger (no standalone function), so the deployed unit is the
+   * {@code ad_scd_<depId>_trg} trigger itself rather than a {@code _trf} function. Names come back
+   * upper-cased from {@code user_triggers}; the caller lower-cases and strips prefix/suffix.
+   */
+  private static final String QUERY_DEPLOYED_ORACLE =
+      "SELECT lower(trigger_name) FROM user_triggers WHERE lower(trigger_name) LIKE 'ad_scd_%_trg'";
 
   /**
    * Row-count ceiling for an inline synchronous initial population of a {@code REFRESH_MODE='S'}
@@ -101,8 +121,10 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   public void execute() {
     try {
       ConnectionProvider cp = getConnectionProvider();
+      oracle = "ORACLE".equals(cp.getRDBMS());
 
       // Half 1: static recalculation engine (functions + deferred constraint trigger).
+      // On Oracle there is no synchronous drain, so no engine PL/SQL is deployed at all.
       deployEngine(cp);
 
       // Half 2: per-dependency enqueue triggers.
@@ -179,20 +201,24 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         List<String> watchedColNames =
             watchedByDep.getOrDefault(row.depId, new ArrayList<>());
 
-        cp.getPreparedStatement(
-            buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode, row.seqNo,
-                watchedColNames))
-            .execute();
-
         String eventClause = buildEventClause(row.insertEvent, row.updateEvent, row.deleteEvent,
             watchedColNames);
 
-        cp.getPreparedStatement(
-            "DROP TRIGGER IF EXISTS " + triggerName + " ON " + row.sourceTable).execute();
-        cp.getPreparedStatement(
-            "CREATE TRIGGER " + triggerName
-            + " AFTER " + eventClause + " ON " + row.sourceTable
-            + " FOR EACH ROW EXECUTE FUNCTION " + funcName + "()").execute();
+        if (oracle) {
+          deployOracleTrigger(cp, triggerName, row, resolverSql, eventClause, watchedColNames);
+        } else {
+          cp.getPreparedStatement(
+              buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode, row.seqNo,
+                  watchedColNames))
+              .execute();
+
+          cp.getPreparedStatement(
+              "DROP TRIGGER IF EXISTS " + triggerName + " ON " + row.sourceTable).execute();
+          cp.getPreparedStatement(
+              "CREATE TRIGGER " + triggerName
+              + " AFTER " + eventClause + " ON " + row.sourceTable
+              + " FOR EACH ROW EXECUTE FUNCTION " + funcName + "()").execute();
+        }
 
         log.info("Deployed SCD trigger {} on table {}", triggerName, row.sourceTable);
       }
@@ -220,6 +246,15 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
    * </ul>
    */
   private void deployEngine(ConnectionProvider cp) throws Exception {
+    if (oracle) {
+      // Oracle: no synchronous drain exists (no deferred constraint triggers, no
+      // pg_current_xact_id()), and the recompute runs in Java (workstream C2), so the engine deploys
+      // ZERO PL/SQL functions and no ad_scd_dirty_aiu / ad_scd_process_dirty. Every column drains
+      // through the async Java StoredColumnQueueProcessor.
+      log.info("Oracle detected — skipping PL/pgSQL SCD engine; async Java drain is the only path");
+      return;
+    }
+
     cp.getPreparedStatement(RECOMPUTE_FN).execute();
     cp.getPreparedStatement(PROCESS_DIRTY_FN).execute();
     cp.getPreparedStatement(REBUILD_FN).execute();
@@ -380,6 +415,10 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
 
   private void dropOrphanedFunctions(ConnectionProvider cp, Set<String> activeDepIds)
       throws Exception {
+    if (oracle) {
+      dropOrphanedOracleTriggers(cp, activeDepIds);
+      return;
+    }
     PreparedStatement psDeployed = cp.getPreparedStatement(QUERY_DEPLOYED);
     ResultSet rsDep = psDeployed.executeQuery();
     while (rsDep.next()) {
@@ -395,6 +434,37 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   }
 
   /**
+   * Oracle counterpart of {@link #dropOrphanedFunctions}. Oracle has no standalone enqueue function,
+   * so the deployed unit is the {@code ad_scd_<depId>_trg} trigger; orphans are found via
+   * {@code user_triggers} and dropped by name (swallowing ORA-04080 in case of a concurrent drop).
+   */
+  private void dropOrphanedOracleTriggers(ConnectionProvider cp, Set<String> activeDepIds)
+      throws Exception {
+    List<String> orphanTriggers = new ArrayList<>();
+    PreparedStatement psDeployed = cp.getPreparedStatement(QUERY_DEPLOYED_ORACLE);
+    ResultSet rsDep = psDeployed.executeQuery();
+    while (rsDep.next()) {
+      String trigName = rsDep.getString(1);
+      // strip "ad_scd_" prefix (7 chars) and "_trg" suffix (4 chars)
+      String depId = trigName.substring(7, trigName.length() - 4);
+      if (!activeDepIds.contains(depId)) {
+        orphanTriggers.add(trigName);
+      }
+    }
+    cp.releasePreparedStatement(psDeployed);
+    for (String trigName : orphanTriggers) {
+      try {
+        cp.getPreparedStatement("DROP TRIGGER " + trigName).execute();
+        log.info("Dropped orphaned SCD trigger {}", trigName);
+      } catch (Exception e) {
+        if (!isOracleTriggerMissing(e)) {
+          throw e;
+        }
+      }
+    }
+  }
+
+  /**
    * Returns the set of dependency ids whose enqueue function {@code ad_scd_<depId>_trf} already exists
    * in the database, captured before any (re)deploy this run. Used to distinguish a first activation
    * (no function existed) from a routine re-run (function already present). The prefix/suffix stripping
@@ -402,12 +472,14 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
    */
   private Set<String> loadDeployedDepIds(ConnectionProvider cp) throws Exception {
     Set<String> deployed = new HashSet<>();
-    PreparedStatement ps = cp.getPreparedStatement(QUERY_DEPLOYED);
+    PreparedStatement ps =
+        cp.getPreparedStatement(oracle ? QUERY_DEPLOYED_ORACLE : QUERY_DEPLOYED);
     ResultSet rs = ps.executeQuery();
     while (rs.next()) {
-      String proname = rs.getString(1);
-      // strip "ad_scd_" prefix (7 chars) and "_trf" suffix (4 chars)
-      deployed.add(proname.substring(7, proname.length() - 4));
+      String name = rs.getString(1);
+      // PG:     strip "ad_scd_" prefix (7 chars) and "_trf" suffix (4 chars)
+      // Oracle: strip "ad_scd_" prefix (7 chars) and "_trg" suffix (4 chars)
+      deployed.add(name.substring(7, name.length() - 4));
     }
     cp.releasePreparedStatement(ps);
     return deployed;
@@ -451,6 +523,15 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         continue;
       }
       if ("S".equals(mode)) {
+        if (oracle) {
+          // Oracle deploys no PL/pgSQL engine (no ad_scd_rebuild) and silently downgrades 'S' to the
+          // async path: enqueue a sentinel and let StoredColumnQueueProcessor recompute in Java.
+          insertSentinel(cp, pop);
+          log.info("SCD column {} first-activated (REFRESH_MODE='S', Oracle) — deferred to the async "
+              + "queue (null-sentinel); run StoredColumnQueueProcessor to complete population",
+              pop.columnId);
+          continue;
+        }
         long rowCount = countRows(cp, pop.targetTable);
         if (rowCount <= LARGE_TABLE_THRESHOLD) {
           // Inline synchronous rebuild — single DO block so the LOCAL guard survives the call.
@@ -502,6 +583,26 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
    * idempotent across re-runs within the same transaction.
    */
   private void insertSentinel(ConnectionProvider cp, ColumnPopulation pop) throws Exception {
+    if (oracle) {
+      // Oracle: SYSDATE for timestamps, NULL TRANSACTION_ID (no pg_current_xact_id()), and a MERGE
+      // against the sentinel key (column + NULL target, not ignored) for the idempotency that
+      // ON CONFLICT DO NOTHING provides on PostgreSQL.
+      cp.getPreparedStatement(
+          "MERGE INTO AD_STOREDCOLUMN_DIRTY d\n"
+        + "USING dual ON (d.AD_COLUMN_ID = '" + pop.columnId + "'\n"
+        + "              AND d.TARGET_RECORD_ID IS NULL AND d.IS_IGNORED = 'N')\n"
+        + "WHEN NOT MATCHED THEN INSERT (\n"
+        + "  AD_STOREDCOLUMN_DIRTY_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,\n"
+        + "  CREATED, CREATEDBY, UPDATED, UPDATEDBY,\n"
+        + "  AD_COLUMN_ID, TARGET_RECORD_ID, TRANSACTION_ID,\n"
+        + "  REFRESH_MODE, COMPUTATION_SEQUENCE_NUMBER\n"
+        + ") VALUES (\n"
+        + "  get_uuid(), '0', '0', 'Y', SYSDATE, '0', SYSDATE, '0',\n"
+        + "  '" + pop.columnId + "', NULL, NULL,\n"
+        + "  'Q', " + pop.seqNo + "\n"
+        + ")").execute();
+      return;
+    }
     cp.getPreparedStatement(
         "INSERT INTO AD_STOREDCOLUMN_DIRTY (\n"
       + "  AD_STOREDCOLUMN_DIRTY_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,\n"
@@ -584,6 +685,133 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         + "  RETURN COALESCE(NEW, OLD);\n"
         + "END;\n"
         + "$$ LANGUAGE plpgsql";
+  }
+
+  /**
+   * Deploys one Oracle-dialect per-dependency enqueue trigger (Phase 5, workstream C1).
+   *
+   * <p>Oracle has no standalone-function-plus-{@code EXECUTE FUNCTION} split, so the whole enqueue
+   * body is inlined in a {@code CREATE OR REPLACE TRIGGER … BEGIN … END;}. The differences from the
+   * PostgreSQL form ({@link #buildFunctionDdl}) are:</p>
+   * <ul>
+   *   <li>{@code NEW.}/{@code OLD.} correlation → {@code :NEW.}/{@code :OLD.} (the only resolver
+   *       rewrite — see {@link #toOracleResolver}); {@code TG_OP} → {@code INSERTING} /
+   *       {@code UPDATING} / {@code DELETING}.</li>
+   *   <li>{@code NOW()} → {@code SYSDATE}; {@code get_uuid()} is portable.</li>
+   *   <li>The recursion guard is Etendo's session-scoped global trigger-disable
+   *       ({@code AD_IsTriggerEnabled()}='N'), reused instead of a PG GUC (workstream C3). There is no
+   *       {@code my.scd_refreshing} on Oracle — the same disable covers both the global-import and the
+   *       engine-refresh cases.</li>
+   *   <li>Dedup is a {@code MERGE} on {@code (AD_COLUMN_ID, TARGET_RECORD_ID)} among non-dead-lettered
+   *       rows ({@code IS_IGNORED='N'}) instead of {@code INSERT … ON CONFLICT}; {@code TRANSACTION_ID}
+   *       stays {@code NULL} (only the PG {@code 'S'} drain reads it) so there is no per-transaction
+   *       dedup.</li>
+   *   <li>{@code Refresh_Mode} is a <b>forced literal {@code 'Q'}</b> — a column configured {@code 'S'}
+   *       silently behaves as queued on Oracle.</li>
+   *   <li>Drop-by-name catching {@code ORA-04080} (trigger does not exist) replaces
+   *       {@code DROP TRIGGER IF EXISTS}.</li>
+   * </ul>
+   */
+  private void deployOracleTrigger(ConnectionProvider cp, String triggerName, DepRow row,
+      String resolverSql, String eventClause, List<String> watchedColNames) throws Exception {
+    // Drop-by-name; Oracle has no IF EXISTS for triggers, so swallow ORA-04080 (does not exist).
+    try {
+      cp.getPreparedStatement("DROP TRIGGER " + triggerName).execute();
+    } catch (Exception e) {
+      if (!isOracleTriggerMissing(e)) {
+        throw e;
+      }
+    }
+
+    String oracleResolver = toOracleResolver(resolverSql);
+
+    StringBuilder watchedGuard = new StringBuilder();
+    if (!watchedColNames.isEmpty()) {
+      List<String> changed = new ArrayList<>();
+      for (String col : watchedColNames) {
+        // DECODE-based NULL-safe inequality: 1 when the two values differ (either side NULL counts).
+        changed.add("DECODE(:NEW." + col + ", :OLD." + col + ", 1, 0) = 0");
+      }
+      watchedGuard
+          .append("  IF UPDATING AND NOT (\n")
+          .append("    ").append(String.join("\n    OR ", changed)).append("\n")
+          .append("  ) THEN\n")
+          .append("    RETURN;\n")
+          .append("  END IF;\n");
+    }
+
+    String ddl =
+        "CREATE OR REPLACE TRIGGER " + triggerName + "\n"
+      + "AFTER " + eventClause + " ON " + row.sourceTable + "\n"
+      + "FOR EACH ROW\n"
+      + "DECLARE\n"
+      + "  v_target_id VARCHAR2(32);\n"
+      + "  CURSOR c_targets IS\n"
+      + "    " + oracleResolver + ";\n"
+      + "BEGIN\n"
+      // C3: reuse Etendo's global trigger-disable — set by the Java processor while it recomputes.
+      + "  IF AD_IsTriggerEnabled() = 'N' THEN\n"
+      + "    RETURN;\n"
+      + "  END IF;\n"
+      + watchedGuard
+      + "  OPEN c_targets;\n"
+      + "  LOOP\n"
+      + "    FETCH c_targets INTO v_target_id;\n"
+      + "    EXIT WHEN c_targets%NOTFOUND;\n"
+      + "    CONTINUE WHEN v_target_id IS NULL;\n"
+      // Reset dead-letter bookkeeping so a genuine new source change gets a clean retry.
+      + "    DELETE FROM ad_storedcolumn_dirty\n"
+      + "     WHERE ad_column_id = '" + row.columnId + "' AND target_record_id = v_target_id\n"
+      + "       AND is_ignored = 'Y';\n"
+      // Dedup on (column, target) among live rows; TRANSACTION_ID stays NULL on Oracle. Forced 'Q'.
+      + "    MERGE INTO ad_storedcolumn_dirty d\n"
+      + "    USING (SELECT '" + row.columnId + "' AS ad_column_id, v_target_id AS target_record_id\n"
+      + "             FROM dual) s\n"
+      + "    ON (d.ad_column_id = s.ad_column_id\n"
+      + "        AND d.target_record_id = s.target_record_id\n"
+      + "        AND d.is_ignored = 'N')\n"
+      + "    WHEN NOT MATCHED THEN INSERT (\n"
+      + "      ad_storedcolumn_dirty_id, ad_client_id, ad_org_id, isactive,\n"
+      + "      created, createdby, updated, updatedby,\n"
+      + "      ad_column_id, target_record_id, transaction_id,\n"
+      + "      refresh_mode, computation_sequence_number\n"
+      + "    ) VALUES (\n"
+      + "      get_uuid(), '0', '0', 'Y', SYSDATE, '0', SYSDATE, '0',\n"
+      + "      s.ad_column_id, s.target_record_id, NULL,\n"
+      + "      'Q', " + row.seqNo + "\n"
+      + "    );\n"
+      + "  END LOOP;\n"
+      + "  CLOSE c_targets;\n"
+      + "END;";
+
+    cp.getPreparedStatement(ddl).execute();
+  }
+
+  /**
+   * Applies the single sanctioned Oracle dialect rewrite to a portable resolver: the correlation
+   * prefixes {@code NEW.}/{@code OLD.} become {@code :NEW.}/{@code :OLD.} (case-insensitive,
+   * dot-qualified). Nothing else is rewritten — {@code FROM dual} and the rest of the body are
+   * already portable. The rewritten SQL is used verbatim as the trigger's cursor query; the target id
+   * is read positionally (first column) via {@code FETCH … INTO}, so the resolver's output column name
+   * is irrelevant and need not be aliased.
+   */
+  private String toOracleResolver(String resolverSql) {
+    return resolverSql
+        .replaceAll("(?i)\\bNEW\\.", ":NEW.")
+        .replaceAll("(?i)\\bOLD\\.", ":OLD.");
+  }
+
+  /** True when the exception chain indicates ORA-04080 (trigger to drop does not exist). */
+  private boolean isOracleTriggerMissing(Exception e) {
+    Throwable t = e;
+    while (t != null) {
+      String m = t.getMessage();
+      if (m != null && m.contains("ORA-04080")) {
+        return true;
+      }
+      t = t.getCause();
+    }
+    return false;
   }
 
   /**
