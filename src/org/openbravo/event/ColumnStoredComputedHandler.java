@@ -18,7 +18,6 @@ package org.openbravo.event;
 
 import javax.enterprise.event.Observes;
 
-import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -27,6 +26,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.datamodel.Column;
+import org.openbravo.modulescript.StoredComputedValidator;
 
 /**
  * Enforces the definition invariants of a stored computed column (EPL-1807): when
@@ -47,7 +47,6 @@ import org.openbravo.model.ad.datamodel.Column;
  * services, imports).</p>
  */
 public class ColumnStoredComputedHandler extends EntityPersistenceEventObserver {
-  private static final String STORED_COMPUTED = "S";
   private static final Entity[] ENTITIES = {
       ModelProvider.getInstance().getEntity(Column.ENTITY_NAME) };
 
@@ -81,15 +80,11 @@ public class ColumnStoredComputedHandler extends EntityPersistenceEventObserver 
    *           function or computation sequence number
    */
   private void validateStoredComputedDefinition(Column column) {
-    if (!STORED_COMPUTED.equals(column.getComputationMode())) {
-      return;
-    }
-    boolean hasSqlLogic = StringUtils.isNotBlank(column.getSqllogic());
-    boolean hasFunction = StringUtils.isNotBlank(column.getComputationFunction());
-    Long seq = column.getComputationSequenceNumber();
-    boolean hasSequence = seq != null && seq > 0;
-    if (hasSqlLogic || !hasFunction || !hasSequence) {
-      throw new OBException(OBMessageUtils.messageBD("ETGO_StoredComputedColDef"));
+    String code = StoredComputedValidator.checkShape(column.getComputationMode(),
+        column.getSqllogic(), column.getComputationFunction(),
+        column.getComputationSequenceNumber());
+    if (code != null) {
+      throw new OBException(OBMessageUtils.messageBD(code));
     }
   }
 }

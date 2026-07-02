@@ -96,6 +96,49 @@ Warn (not fail) on sequential scans or `STABLE` rather than `IMMUTABLE` function
 - Consistency check detects stale stored values.
 - Tests cover: insert, update, delete dependencies; bulk update deduplication; rebuild; consistency check failure.
 
+### 3.6 Build-time validation rules (Phase 5b)
+
+The generic requirements in §3.2 are realised at build time by `StoredComputedValidator`
+(run via the `ValidateStoredComputedColumns` ModuleScript on every `update.database`, and
+re-run as Gate 0 inside `GenerateStoredComputedTriggers`). Each rule below has a stable code,
+a severity, and defined PostgreSQL / Oracle coverage. `HARD` (`ERROR`) rules abort the build;
+`SOFT` (`WARN`) rules are logged only. The whole set is collected into one aggregated report
+(errors first, then warnings) and thrown as a single `BuildException`. Enforcement is governed
+by the `ETGO_SCD_VALIDATION` toggle (default `enforce`; `warn` downgrades everything to a log —
+see `OPERATIONS.md`).
+
+Only two rules reuse existing `AD_MESSAGE` keys (they also fire in the runtime DAL observer):
+`ETGO_StoredComputedColDef` (V1–V3) and `ETGO_CompDepTargetXor` (V11). All other codes are
+build-only English constants — **no new `AD_MESSAGE` rows and no new UUIDs** are introduced.
+
+| Rule | Check | Severity | Code | PostgreSQL | Oracle |
+|------|-------|----------|------|------------|--------|
+| V1 | Stored column (`Computation_Mode='S'`) must have empty `SQLLogic` | HARD | `ETGO_StoredComputedColDef` | ✅ | ✅ |
+| V2 | Stored column must have a `Computation_Function` | HARD | `ETGO_StoredComputedColDef` | ✅ | ✅ |
+| V3 | Stored column must have `Computation_Sequence_Number > 0` | HARD | `ETGO_StoredComputedColDef` | ✅ | ✅ |
+| V4 | Computation function must exist in the database | HARD | `ETGO_ScdFunctionMissing` | ✅ | ✅ (existence only) |
+| V5 | Function arity must be 1; the single arg should be a string/ID type | HARD (arity≠1) / SOFT (non-string arg) | `ETGO_ScdFunctionSignature` | ✅ | ⏭️ skipped (no signature introspection) |
+| V6 | Function return type compatible with column reference family | HARD (void/trigger/record) / SOFT (family mismatch) | `ETGO_ScdFunctionReturnType` | ✅ | ⏭️ skipped |
+| V7 | Function should be `IMMUTABLE`/`STABLE`, not `VOLATILE` | SOFT | `ETGO_ScdFunctionVolatile` | ✅ | ⏭️ skipped |
+| V8 | Active stored column must have ≥1 active dependency row | HARD | `ETGO_ScdNoDependencies` | ✅ | ✅ |
+| V9 | Update-event dependency must declare ≥1 watched column | HARD | `ETGO_ScdUpdateNoWatched` | ✅ | ✅ |
+| V10 | Watched column must belong to the dependency's source table | HARD | `ETGO_ScdWatchedColumnTable` | ✅ | ✅ |
+| V11 | Dependency must set exactly one of `target_id_resolver_sql` / `target_link_column_id` | HARD | `ETGO_CompDepTargetXor` | ✅ | ✅ |
+| V14 | No dependency cycle among stored computed columns | HARD (unordered) / SOFT (sequence-ordered) | `ETGO_ScdDependencyCycle` | ✅ | ✅ |
+| V15 | Deployed triggers/functions must match current metadata | HARD (missing) / SOFT (drift) | `ETGO_ScdTriggerMissing` / `ETGO_ScdTriggerDrift` | ✅ (presence + body) | ✅ presence only (no body drift) |
+| V16 | FK/watched columns should have a supporting index | SOFT | `ETGO_ScdMissingIndex` | ✅ (`pg_index`) | ✅ (`user_ind_columns`) |
+
+**Oracle degradations.** Oracle function introspection is existence-only, so V4 fires but
+V5–V7 are skipped (no reliable arity/return-type/volatility catalog for the deployed PL/SQL).
+V15 on Oracle verifies trigger presence but not body drift. Catalog/index introspection
+failures are best-effort: they log a warning and skip rather than aborting the build; only
+genuine query failures inside a HARD check are wrapped and rethrown.
+
+**Shared pure logic.** `checkShape(...)` (V1–V3) and `findCycles(...)` (V14) take only
+String/primitive/collection arguments — no DAL types — so the same code backs both the
+build-time JDBC path and the runtime DAL observer (`ColumnStoredComputedHandler`), guaranteeing
+the UI/API save guard and the build gate never diverge.
+
 ---
 
 ## 4. Proposed Solution
@@ -630,3 +673,15 @@ Largest phase — delivers the working end-to-end synchronous refresh.
 - Schema Forge pipeline changes: `resolve-curated.js`, `push-to-neo.js`, `generate-frontend.js`, `validate-pipeline.js` rule F11.
 
 **Exit:** `Refresh_Mode = Q` column accumulates dirty rows, background processor resolves them, consistency check detects corrupted values.
+
+---
+
+### Phase 5b — Build-time definition validation
+
+- Implement `StoredComputedValidator` (`src-util/modulescript/`) with rules V1–V16 (§3.6), shared pure `checkShape`/`findCycles` used by both the build gate and the runtime DAL observer.
+- Run it on every `update.database` via the `ValidateStoredComputedColumns` ModuleScript, and re-run it as Gate 0 (definitions) + Gate 1 (deployment drift) inside `GenerateStoredComputedTriggers`.
+- Collect all violations into one aggregated report and throw a single `BuildException`; hard failures abort before any DDL.
+- Add the `ETGO_SCD_VALIDATION` toggle (`enforce` default / `warn` escape hatch), resolved from JVM system property then environment variable.
+- Reuse only the two existing `AD_MESSAGE` keys (`ETGO_StoredComputedColDef`, `ETGO_CompDepTargetXor`); all other codes are build-only constants — no new AD messages or UUIDs.
+
+**Exit:** each hard rule (V1–V16) has a fixture confirming the build aborts with the correct code; `warn` mode logs the same findings without aborting; the DAL observer and the build gate agree on V1–V3 and V14 via the shared pure methods.

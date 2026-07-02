@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tools.ant.BuildException;
 import org.openbravo.database.ConnectionProvider;
 
 /**
@@ -123,9 +124,17 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       ConnectionProvider cp = getConnectionProvider();
       oracle = "ORACLE".equals(cp.getRDBMS());
 
+      // Gate 0: validate every stored computed definition before deploying anything. In enforce mode
+      // this throws its own aggregated BuildException (preserved by the catch below) and no objects
+      // are deployed against an invalid definition set; in warn mode it only logs.
+      StoredComputedValidator.assertDefinitionsValid(cp);
+
       // Half 1: static recalculation engine (functions + deferred constraint trigger).
       // On Oracle there is no synchronous drain, so no engine PL/SQL is deployed at all.
       deployEngine(cp);
+
+      // Objects (re)deployed this run, for the post-deploy drift check (V15).
+      List<StoredComputedValidator.DeployedDep> deployed = new ArrayList<>();
 
       // Half 2: per-dependency enqueue triggers.
       // Drain the dependency rows into memory and release the cursor BEFORE issuing any DDL.
@@ -230,11 +239,12 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
 
         if (oracle) {
           deployOracleTrigger(cp, triggerName, row, resolverSql, eventClause, watchedColNames);
+          // Oracle deploys only the inline trigger; drift check degrades to presence (no DDL).
+          deployed.add(new StoredComputedValidator.DeployedDep(row.depId, row.sourceTable, null));
         } else {
-          cp.getPreparedStatement(
-              buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode, row.seqNo,
-                  watchedColNames))
-              .execute();
+          String functionDdl = buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode,
+              row.seqNo, watchedColNames);
+          cp.getPreparedStatement(functionDdl).execute();
 
           cp.getPreparedStatement(
               "DROP TRIGGER IF EXISTS " + triggerName + " ON " + row.sourceTable).execute();
@@ -242,6 +252,9 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
               "CREATE TRIGGER " + triggerName
               + " AFTER " + eventClause + " ON " + row.sourceTable
               + " FOR EACH ROW EXECUTE FUNCTION " + funcName + "()").execute();
+          // Capture the freshly rendered function DDL for the post-deploy body-drift comparison.
+          deployed.add(
+              new StoredComputedValidator.DeployedDep(row.depId, row.sourceTable, functionDdl));
         }
 
         log.info("Deployed SCD trigger {} on table {}", triggerName, row.sourceTable);
@@ -252,6 +265,14 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       // Initial population for columns activated for the first time this run.
       populateNewColumns(cp, populations);
 
+      // Gate 1: verify what we just deployed is actually present (and, on PG, not drifted). Missing
+      // objects are hard; body drift is a warning. Applies the ETGO_SCD_VALIDATION toggle.
+      StoredComputedValidator.finishOrThrow(
+          StoredComputedValidator.checkDeploymentDrift(cp, oracle, deployed));
+
+    } catch (BuildException be) {
+      // Preserve the validator's aggregated report — handleError would replace it with a generic one.
+      throw be;
     } catch (Exception e) {
       handleError(e);
     }

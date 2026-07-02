@@ -112,3 +112,44 @@ according to the column's refresh mode:
 - **`'Q'`** → enqueues one null sentinel; the next queue-processor run does the full rebuild
   off-line.
 - **`'M'`** → does nothing; run **Rebuild Stored Column** when ready.
+
+## Build-time validation (`update.database`) and the `ETGO_SCD_VALIDATION` toggle
+
+Phase 5b adds a whole-DB validation gate that runs on every `update.database`, before any
+trigger DDL is applied. It is implemented by the `ValidateStoredComputedColumns` ModuleScript
+(delegating to `StoredComputedValidator`) and re-run as **Gate 0** inside
+`GenerateStoredComputedTriggers`, so a broken definition aborts the build *before* it can
+deploy inconsistent database objects. It validates definition shape, computation-function
+existence/signature/return-type/volatility, dependency completeness, target-resolver XOR,
+dependency cycles, deployed-trigger drift, and supporting FK indexes (rules V1–V16 — see
+`REQUIREMENTS.md §3.6`). The check is **read-only and idempotent**: it inspects catalog and
+AD metadata but never writes.
+
+By default the gate is **enforcing**: any hard (`ERROR`) violation prints the aggregated
+report and aborts `update.database` with a `BuildException`. Soft (`WARN`) findings are always
+logged but never block.
+
+The `ETGO_SCD_VALIDATION` toggle controls whether hard violations block the build:
+
+| Value | Behaviour |
+|-------|-----------|
+| `enforce` (default) | Hard violations abort `update.database`; warnings are logged. |
+| `warn` | **All** violations — hard and soft — are logged as warnings; the build proceeds. Escape hatch only. |
+
+Resolution order (first match wins): JVM system property `-DETGO_SCD_VALIDATION=…`, then the
+`ETGO_SCD_VALIDATION` environment variable. Any value other than `warn` (case-insensitive),
+and the absence of the toggle entirely, means **enforce**.
+
+```bash
+# One-off warn-only build (does not block on hard violations):
+./gradlew update.database -DETGO_SCD_VALIDATION=warn
+# or:
+ETGO_SCD_VALIDATION=warn ./gradlew update.database
+```
+
+Use `warn` only to unblock an emergency build while a definition defect is being fixed, or to
+survey the full violation set on a legacy database before committing to enforcement. Restore
+the default (`enforce`, i.e. unset the toggle) as soon as the reported definitions are fixed —
+running with `warn` permanently defeats the guard and lets inconsistent stored computed columns
+reach production. The aggregated report lists every violation at once (errors first, then
+warnings), so a single `warn` run surfaces the complete backlog to work through.
