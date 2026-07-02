@@ -28,6 +28,20 @@ package org.openbravo.erpCommon.utility;
  *     separately under {@code src-util/modulescript/}), whose own {@code checkShape} delegates here.</li>
  * </ul>
  *
+ * <p>This class is the core-{@code src/} (webapp / DAL classpath) home of the shape checks, extracted
+ * here so the DAL observer can reach them without an illegal core&nbsp;&rarr;&nbsp;modulescript
+ * dependency. It enforces only the <b>shape</b> subset of the catalogue; the full V-catalogue
+ * (V4–V11, V14–V16 and the composite-PK target rule) lives in the modulescript
+ * {@code StoredComputedValidator}, whose class javadoc holds the canonical Rule index.</p>
+ *
+ * <p><b>Validation checks performed here</b> (worded to match the Rule index in
+ * {@code StoredComputedValidator} so the two never drift):</p>
+ * <ul>
+ *   <li><b>V1–V3</b> — shape of a {@code Computation_Mode='S'} column, all HARD under
+ *       {@link #ETGO_StoredComputedColDef}: <b>V1</b> SQLLogic must be blank, <b>V2</b>
+ *       Computation_Function must be set, <b>V3</b> Computation_Sequence_Number must be &gt; 0.</li>
+ * </ul>
+ *
  * <p>The class is intentionally kept free of any DB, Ant or DAL types (only {@code java.*}) so it is
  * callable from every layer.</p>
  */
