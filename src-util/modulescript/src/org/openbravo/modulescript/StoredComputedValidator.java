@@ -52,10 +52,48 @@ import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
  *       runtime DAL guard {@code ColumnStoredComputedHandler} (no DB, no DAL types).</li>
  *   <li>{@link #findCycles(Map, Map)} — the pure three-color DFS cycle detector.</li>
  *   <li>{@link #assertDefinitionsValid(ConnectionProvider)} — the JDBC entry point that runs
- *       V1–V11 + V14 + V16 over every {@code Computation_Mode='S' AND IsActive='Y'} column and, when
- *       any hard rule is violated, throws its own aggregated {@link BuildException}.</li>
- *   <li>{@link #checkDeploymentDrift(ConnectionProvider, boolean, List)} — V15, invoked at the end
- *       of {@code GenerateStoredComputedTriggers.execute()} (post-deploy).</li>
+ *       V1–V11 + V14 + V16 (all the definition-time shape, function, dependency, cycle and index
+ *       rules catalogued in the Rule index below) over every
+ *       {@code Computation_Mode='S' AND IsActive='Y'} column and, when any hard rule is violated,
+ *       throws its own aggregated {@link BuildException}.</li>
+ *   <li>{@link #checkDeploymentDrift(ConnectionProvider, boolean, List)} — V15 (post-deploy trigger
+ *       drift), invoked at the end of {@code GenerateStoredComputedTriggers.execute()}.</li>
+ * </ul>
+ *
+ * <p><b>Rule index.</b> The {@code Vn} codes below are opaque labels; here is what each one actually
+ * enforces. Severity <b>(HARD)</b> is an ERROR that stops the build in {@code enforce} mode;
+ * <b>(WARN)</b> is only ever logged. Codes <b>V12 and V13 are intentionally unassigned</b> (reserved
+ * gaps — no rule was ever numbered with them), so their absence is deliberate, not an omission.</p>
+ * <ul>
+ *   <li><b>V1–V3</b> — shape of a {@code Computation_Mode='S'} column, all HARD under
+ *       {@link #ETGO_StoredComputedColDef} (see {@link #checkShape(String, String, String, Long)}):
+ *       <b>V1</b> SQLLogic must be blank, <b>V2</b> Computation_Function must be set, <b>V3</b>
+ *       Computation_Sequence_Number must be &gt; 0.</li>
+ *   <li><b>Composite-PK target</b> (unnumbered, HARD, {@link #ETGO_ScdCompositePkTarget}) — rejects a
+ *       stored computed column whose target table has a composite (multi-column) primary key, which
+ *       the single-PK recompute engine cannot resolve.</li>
+ *   <li><b>V4–V7</b> — computation-function correctness: <b>V4</b> the function must exist (HARD,
+ *       {@link #ETGO_ScdFunctionMissing}); <b>V5</b> it must take exactly one argument, the
+ *       target-row primary key — HARD when the argument count is wrong, WARN when that single
+ *       argument is non-textual ({@link #ETGO_ScdFunctionSignature}); <b>V6</b> its return type must
+ *       be usable — HARD for void/trigger/record, WARN on a type-family mismatch against the column's
+ *       AD reference ({@link #ETGO_ScdFunctionReturnType}); <b>V7</b> it should be side-effect free —
+ *       WARN when the PG function is declared VOLATILE ({@link #ETGO_ScdFunctionVolatile}).</li>
+ *   <li><b>V8–V11</b> — dependency correctness, all HARD: <b>V8</b> every stored computed column needs
+ *       at least one active dependency ({@link #ETGO_ScdNoDependencies}); <b>V9</b> a dependency
+ *       declaring an UPDATE event needs at least one active watched column
+ *       ({@link #ETGO_ScdUpdateNoWatched}); <b>V10</b> each watched column must live on the
+ *       dependency's source table ({@link #ETGO_ScdWatchedColumnTable}); <b>V11</b> exactly one of
+ *       Target_ID_Resolver_SQL / Target_Link_Column must be set ({@link #ETGO_CompDepTargetXor}).</li>
+ *   <li><b>V14</b> — dependency-cycle detection among stored computed columns
+ *       ({@link #ETGO_ScdDependencyCycle}): a cycle broken by a strictly increasing
+ *       Computation_Sequence_Number is WARN (ordered refresh), any other cycle is HARD.</li>
+ *   <li><b>V15</b> — post-deploy trigger drift ({@link #checkDeploymentDrift(ConnectionProvider,
+ *       boolean, List)}): a missing deployed trigger/function is HARD
+ *       ({@link #ETGO_ScdTriggerMissing}); a PG function body that differs from the freshly generated
+ *       DDL is WARN ({@link #ETGO_ScdTriggerDrift}, a re-run self-heals).</li>
+ *   <li><b>V16</b> — FK-index performance advisory (WARN, {@link #ETGO_ScdMissingIndex}): no index
+ *       leads with a dependency's Target_Link_Column on its source table.</li>
  * </ul>
  *
  * <p><b>Rollout toggle.</b> {@code ETGO_SCD_VALIDATION} (JVM system property first, then environment
@@ -299,9 +337,10 @@ public final class StoredComputedValidator {
   }
 
   /**
-   * Runs V1–V11, V14 and V16 and returns every violation found (hard and warn), without applying the
-   * toggle or throwing. Separated from {@link #assertDefinitionsValid} so tests can inspect the raw
-   * result.
+   * Runs V1–V11, V14 and V16 (every definition-time rule in the class Rule index: shape, function,
+   * dependency, cycle and FK-index checks) and returns every violation found (hard and warn), without
+   * applying the toggle or throwing. Separated from {@link #assertDefinitionsValid} so tests can
+   * inspect the raw result.
    */
   public static List<Violation> collectDefinitionViolations(ConnectionProvider cp) {
     boolean oracle = isOracle(cp);
@@ -390,7 +429,7 @@ public final class StoredComputedValidator {
     Map<String, FnInfo> byFn = new HashMap<>();
     for (ColInfo c : columns) {
       if (!isNotBlank(c.fn)) {
-        continue; // V2 already flags a missing function
+        continue; // V2 (Computation_Function must be set) already flags a missing function
       }
       String key = c.fn.toLowerCase();
       FnInfo info = byFn.get(key);
