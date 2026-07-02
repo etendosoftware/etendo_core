@@ -67,7 +67,11 @@ public class StoredComputedValidatorTest {
     when(cp.getRDBMS()).thenReturn("POSTGRESQL");
 
     PreparedStatement keyPs = mock(PreparedStatement.class);
-    when(keyPs.executeQuery()).thenReturn(keycountResultSet(keycounts));
+    // Materialize the keycount ResultSet BEFORE opening the outer stub: keycountResultSet() itself
+    // opens when(...) stubs, and doing so inside an unfinished when(keyPs.executeQuery()) call would
+    // trip Mockito's UnfinishedStubbingException.
+    ResultSet keyRs = keycountResultSet(keycounts);
+    when(keyPs.executeQuery()).thenReturn(keyRs);
 
     ResultSet emptyRs = mock(ResultSet.class);
     when(emptyRs.next()).thenReturn(false);
