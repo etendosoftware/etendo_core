@@ -19,9 +19,6 @@
 package org.openbravo.erpCommon.ad_process;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,19 +30,24 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 
 /**
- * Manual, user-startable process that fully rebuilds one stored computed column by calling the
- * idempotent engine function {@code ad_scd_rebuild(column_id)}.
+ * Manual, user-startable process that fully rebuilds one stored computed column by recomputing every
+ * target row through the shared Java engine {@link StoredColumnRecomputer#rebuild}.
  *
  * <p>It is the operator entry point for post-migration repair and on-demand initial population —
  * complementary to the automatic first-activation population done by
- * {@code GenerateStoredComputedTriggers} and the async {@link StoredColumnQueueProcessor}. Because
- * {@code ad_scd_rebuild} re-derives every target row from its current dependencies, running it again
- * is always safe.</p>
+ * {@code GenerateStoredComputedTriggers} and the async {@link StoredColumnQueueProcessor}. Because the
+ * rebuild re-derives every target row from its current dependencies, running it again is always
+ * safe.</p>
+ *
+ * <p>The rebuild runs in Java rather than calling the PL/pgSQL {@code ad_scd_rebuild}, so it works
+ * identically on PostgreSQL and Oracle — Oracle has no engine PL/SQL functions deployed. It is the
+ * dialect-neutral equivalent of that function's per-row recompute loop.</p>
  *
  * <p>The single parameter {@code AD_Column_ID} identifies the stored computed column (the
  * {@code Computation_Mode='S'} column whose value is recomputed). The whole rebuild runs in one
- * transaction with the {@code my.scd_refreshing} GUC set, so the engine's own writes to the target
- * table do not re-enqueue dirty rows.</p>
+ * transaction with the recursion guard engaged (PostgreSQL {@code my.scd_refreshing} GUC / Oracle
+ * global trigger disable), so the engine's own writes to the target table do not re-enqueue dirty
+ * rows.</p>
  */
 public class StoredColumnRebuild implements Process {
 
@@ -60,23 +62,15 @@ public class StoredColumnRebuild implements Process {
     }
 
     ConnectionProvider conn = bundle.getConnection();
+    boolean oracle = "ORACLE".equals(conn.getRDBMS());
+    StoredColumnRecomputer recomputer = new StoredColumnRecomputer(oracle);
     Connection con = conn.getTransactionConnection();
     try {
-      // Suppress re-entrant enqueues from the engine's own writes during the rebuild.
-      try (PreparedStatement ps = con
-          .prepareStatement("SELECT set_config('my.scd_refreshing', 'true', true)")) {
-        ps.execute();
-      }
+      // Suppress re-entrant enqueues from the engine's own synchronous writes during the rebuild
+      // (PostgreSQL only; the transaction-local GUC is released when the transaction ends).
+      recomputer.setRefreshingGuard(con);
 
-      int rebuilt = 0;
-      try (PreparedStatement ps = con.prepareStatement("SELECT ad_scd_rebuild(?)")) {
-        ps.setString(1, columnId);
-        try (ResultSet rs = ps.executeQuery()) {
-          if (rs.next()) {
-            rebuilt = rs.getInt(1);
-          }
-        }
-      }
+      int rebuilt = recomputer.rebuild(con, columnId);
 
       conn.releaseCommitConnection(con);
 

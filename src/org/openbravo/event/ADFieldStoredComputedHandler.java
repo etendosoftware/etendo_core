@@ -20,7 +20,9 @@ import javax.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
+import org.openbravo.base.model.Property;
 import org.openbravo.client.kernel.event.EntityNewEvent;
+import org.openbravo.client.kernel.event.EntityPersistenceEvent;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.model.ad.datamodel.Column;
@@ -50,27 +52,39 @@ public class ADFieldStoredComputedHandler extends EntityPersistenceEventObserver
     if (!isValidEvent(event)) {
       return;
     }
-    enforceReadOnly((Field) event.getTargetInstance());
+    enforceReadOnly(event);
   }
 
   public void onUpdate(@Observes EntityUpdateEvent event) {
     if (!isValidEvent(event)) {
       return;
     }
-    enforceReadOnly((Field) event.getTargetInstance());
+    enforceReadOnly(event);
   }
 
   /**
    * Sets the field read-only when its column is a stored computed column.
    *
-   * @param field
-   *          the {@link Field} being persisted
+   * <p>Following the {@link EntityPersistenceEventObserver} contract, the persisted values come from
+   * the event's current state; setters on the target instance are ignored for the ongoing save.
+   * Therefore the read-only flag is written through {@link EntityPersistenceEvent#setCurrentState}.</p>
+   *
+   * @param event
+   *          the persistence event for the {@link Field} being saved
    */
-  private void enforceReadOnly(Field field) {
-    Column column = field.getColumn();
+  private void enforceReadOnly(EntityPersistenceEvent event) {
+    final Column column = (Column) event.getCurrentState(getColumnProperty());
     if (column != null && "S".equals(column.getComputationMode())
-        && !Boolean.TRUE.equals(field.isReadOnly())) {
-      field.setReadOnly(true);
+        && !Boolean.TRUE.equals(event.getCurrentState(getReadOnlyProperty()))) {
+      event.setCurrentState(getReadOnlyProperty(), true);
     }
+  }
+
+  private Property getColumnProperty() {
+    return ENTITIES[0].getProperty(Field.PROPERTY_COLUMN);
+  }
+
+  private Property getReadOnlyProperty() {
+    return ENTITIES[0].getProperty(Field.PROPERTY_READONLY);
   }
 }

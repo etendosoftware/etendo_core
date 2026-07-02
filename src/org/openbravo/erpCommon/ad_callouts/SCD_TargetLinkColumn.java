@@ -51,8 +51,10 @@ import org.openbravo.database.ConnectionProvider;
 public class SCD_TargetLinkColumn extends SimpleCallout {
 
   /**
-   * Discovers FK columns on {@code sourceTableId} that reference {@code targetTableId}, covering both
-   * <i>TableDir</i> (reference 19) and <i>Table</i> (reference 18, via {@code AD_REF_TABLE}) columns.
+   * Discovers FK columns on {@code sourceTableId} that reference {@code targetTableId}, covering the
+   * three ways an Etendo FK column can name its target table: <i>TableDir</i> (reference 19,
+   * implicit — the column name matches the target's key column), <i>Table</i> (reference 18, target
+   * via {@code AD_REF_TABLE}) and <i>Search</i> (reference 30, target via {@code AD_REF_SEARCH}).
    * Ordered parent-first so the caller can apply the parent-preference precedence deterministically.
    */
   private static final String QUERY_FK_CANDIDATES =
@@ -71,6 +73,11 @@ public class SCD_TargetLinkColumn extends SimpleCallout {
     + "           JOIN   ad_column k ON k.ad_column_id = rt.ad_key "
     + "           WHERE  rt.ad_reference_id = c.ad_reference_value_id "
     + "           AND    k.ad_table_id = ? ) "
+    + "       OR "
+    + "         c.ad_reference_id = '30' AND EXISTS ( "
+    + "           SELECT 1 FROM ad_ref_search rs "
+    + "           WHERE  rs.ad_reference_id = c.ad_reference_value_id "
+    + "           AND    rs.ad_table_id = ? ) "
     + "       ) "
     + "ORDER  BY c.isparent DESC, c.columnname";
 
@@ -158,6 +165,7 @@ public class SCD_TargetLinkColumn extends SimpleCallout {
       ps.setString(1, sourceTableId);
       ps.setString(2, targetTableId);
       ps.setString(3, targetTableId);
+      ps.setString(4, targetTableId);
       var rs = ps.executeQuery();
       while (rs.next()) {
         FkCandidate fk = new FkCandidate();

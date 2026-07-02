@@ -184,6 +184,33 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
           continue;
         }
 
+        List<String> watchedColNames =
+            watchedByDep.getOrDefault(row.depId, new ArrayList<>());
+
+        // An UPDATE event needs watched columns to be safe: without them the trigger fires on EVERY
+        // update to a source row — including the engine's own recompute write — with no value guard to
+        // stop it. On Oracle the enqueue no longer honours the global trigger-disable (see
+        // deployOracleTrigger), so an unguarded UPDATE would re-enqueue the row the processor just
+        // recomputed, forever; on PostgreSQL it is at best wasteful. Drop the UPDATE event in that
+        // case and warn. INSERT/DELETE carry no such risk — the engine recompute writes an UPDATE,
+        // never an INSERT or DELETE — so they are kept.
+        String updateEvent = row.updateEvent;
+        if ("Y".equals(updateEvent) && watchedColNames.isEmpty()) {
+          log.warn("SCD dependency {} on table {} declares an UPDATE event but has no watched columns"
+              + " — dropping the UPDATE event (it would fire on every update with no value guard,"
+              + " risking a re-enqueue loop). INSERT/DELETE events, if any, are still deployed.",
+              row.depId, row.sourceTable);
+          updateEvent = "N";
+        }
+
+        // If nothing is left to fire on, generate no trigger at all — and leave this dep OUT of
+        // activeDepIds so dropOrphanedFunctions removes any objects a previous run deployed for it.
+        if (!"Y".equals(row.insertEvent) && !"Y".equals(updateEvent) && !"Y".equals(row.deleteEvent)) {
+          log.warn("SCD dependency {} on table {} has no watched columns and no INSERT/DELETE events"
+              + " — no trigger generated.", row.depId, row.sourceTable);
+          continue;
+        }
+
         activeDepIds.add(row.depId);
 
         // Track this column for initial population. A column is a "first activation" only if NONE of
@@ -198,10 +225,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         String funcName    = "ad_scd_" + row.depId + "_trf";
         String triggerName = "ad_scd_" + row.depId + "_trg";
 
-        List<String> watchedColNames =
-            watchedByDep.getOrDefault(row.depId, new ArrayList<>());
-
-        String eventClause = buildEventClause(row.insertEvent, row.updateEvent, row.deleteEvent,
+        String eventClause = buildEventClause(row.insertEvent, updateEvent, row.deleteEvent,
             watchedColNames);
 
         if (oracle) {
@@ -619,15 +643,23 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   /**
    * Builds the per-dependency enqueue function.
    *
-   * <p>Three guards precede the enqueue:</p>
+   * <p>Two guards precede the enqueue:</p>
    * <ol>
-   *   <li>{@code my.triggers_disabled} — the global Etendo trigger-disable flag.</li>
    *   <li>{@code my.scd_refreshing} — set while the engine drains the queue, so the engine's own
    *       writes to target tables do not re-enqueue (recursive-loop guard).</li>
    *   <li>Watched-column value guard — on {@code UPDATE}, skip enqueueing unless at least one watched
    *       column actually changed value ({@code IS DISTINCT FROM}). {@code INSERT}/{@code DELETE}
    *       always enqueue.</li>
    * </ol>
+   *
+   * <p><b>Deliberately ignores {@code my.triggers_disabled}.</b> Operations that disable Etendo
+   * triggers for bulk work — imports, record cloning ({@code CloneRecords} / {@code CloneOrderHook}),
+   * and other {@code TriggerHandler.disable()} callers — still mutate watched source rows, and the
+   * stored computed columns must stay consistent with those mutations. If the enqueue honored the
+   * global disable flag the dirty row would never be written and the computed value would silently go
+   * stale (this is the sales-order clone symptom). The enqueue therefore runs regardless of
+   * {@code my.triggers_disabled}; recursion from the engine's own recompute writes is still guarded by
+   * {@code my.scd_refreshing} above, which is an independent flag.</p>
    *
    * <p>Before each enqueue the function deletes any prior dead-lettered ({@code IS_IGNORED='Y'}) row
    * for the same {@code (column, target)} so a genuine new source change resets retry bookkeeping
@@ -653,9 +685,12 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         + "DECLARE\n"
         + "  v_target_id VARCHAR(32);\n"
         + "BEGIN\n"
-        + "  IF current_setting('my.triggers_disabled', true) = 'Y' THEN\n"
-        + "    RETURN COALESCE(NEW, OLD);\n"
-        + "  END IF;\n"
+        // NOTE: this enqueue trigger intentionally does NOT check my.triggers_disabled. Operations
+        // that disable Etendo triggers for bulk work (imports, record cloning, ...) still change
+        // watched source rows, so the dirty row MUST be enqueued regardless to keep the stored
+        // computed column consistent. Recursion from the engine's own recompute writes is guarded
+        // separately by my.scd_refreshing below (an independent flag), so dropping the disable check
+        // does not reopen the recursive-loop it never protected against.
         + "  IF current_setting('my.scd_refreshing', true) = 'true' THEN\n"
         + "    RETURN COALESCE(NEW, OLD);\n"
         + "  END IF;\n"
@@ -663,6 +698,10 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         + "  FOR v_target_id IN (\n"
         + "    " + resolverSql + "\n"
         + "  ) LOOP\n"
+        // Skip dirty-record generation when the resolver yields a NULL target id: there is no row to
+        // recompute, and a NULL TARGET_RECORD_ID would pollute the queue (and collide with the
+        // null-sentinel full-rebuild row). Mirrors the Oracle path's CONTINUE WHEN v_target_id IS NULL.
+        + "    CONTINUE WHEN v_target_id IS NULL;\n"
         // Reset on re-trigger: a genuine new source change must give a previously dead-lettered
         // (column, target) a clean retry. The dedup key includes TRANSACTION_ID, so a new
         // transaction inserts a fresh row instead of conflicting with the stale is_ignored='Y'
@@ -677,7 +716,11 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
         + "      AD_COLUMN_ID, TARGET_RECORD_ID, TRANSACTION_ID,\n"
         + "      REFRESH_MODE, COMPUTATION_SEQUENCE_NUMBER\n"
         + "    ) VALUES (\n"
-        + "      get_uuid(), '0', '0', 'Y', NOW(), '0', NOW(), '0',\n"
+        // AD_CLIENT_ID is taken from the source row that fired the trigger (COALESCE covers DELETE,
+        // where NEW is null, and INSERT, where OLD is null) so the dirty row is owned by the same
+        // client as the record whose change enqueued it.
+        + "      get_uuid(), COALESCE(NEW.ad_client_id, OLD.ad_client_id), '0', 'Y',\n"
+        + "      NOW(), '0', NOW(), '0',\n"
         + "      '" + columnId + "', v_target_id, pg_current_xact_id()::text::bigint,\n"
         + "      '" + refreshMode + "', " + seqNo + "\n"
         + "    ) ON CONFLICT DO NOTHING;\n"
@@ -698,10 +741,14 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
    *       rewrite — see {@link #toOracleResolver}); {@code TG_OP} → {@code INSERTING} /
    *       {@code UPDATING} / {@code DELETING}.</li>
    *   <li>{@code NOW()} → {@code SYSDATE}; {@code get_uuid()} is portable.</li>
-   *   <li>The recursion guard is Etendo's session-scoped global trigger-disable
-   *       ({@code AD_IsTriggerEnabled()}='N'), reused instead of a PG GUC (workstream C3). There is no
-   *       {@code my.scd_refreshing} on Oracle — the same disable covers both the global-import and the
-   *       engine-refresh cases.</li>
+   *   <li><b>No recursion guard.</b> Unlike PostgreSQL there is no {@code my.scd_refreshing} check and
+   *       — deliberately — no {@code AD_IsTriggerEnabled()} check either. Oracle drains every column
+   *       through the async Java processor ({@code Refresh_Mode} forced to {@code 'Q'}), so the enqueue
+   *       cannot recurse inside a transaction (it only writes the dirty queue). Honouring the global
+   *       trigger-disable would suppress the enqueue during imports and record cloning and silently
+   *       stale the computed column (the sales-order clone symptom). Cross-cycle re-enqueue from the
+   *       processor's own recompute write is prevented structurally: the caller never deploys an UPDATE
+   *       event without watched columns, and the watched-column value guard rejects no-op writes.</li>
    *   <li>Dedup is a {@code MERGE} on {@code (AD_COLUMN_ID, TARGET_RECORD_ID)} among non-dead-lettered
    *       rows ({@code IS_IGNORED='N'}) instead of {@code INSERT … ON CONFLICT}; {@code TRANSACTION_ID}
    *       stays {@code NULL} (only the PG {@code 'S'} drain reads it) so there is no per-transaction
@@ -749,10 +796,15 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       + "  CURSOR c_targets IS\n"
       + "    " + oracleResolver + ";\n"
       + "BEGIN\n"
-      // C3: reuse Etendo's global trigger-disable — set by the Java processor while it recomputes.
-      + "  IF AD_IsTriggerEnabled() = 'N' THEN\n"
-      + "    RETURN;\n"
-      + "  END IF;\n"
+      // NOTE: this enqueue trigger intentionally does NOT check AD_IsTriggerEnabled()/AD_Disable_Triggers.
+      // Operations that disable Etendo triggers for bulk work (imports, record cloning, ...) still
+      // mutate watched source rows, so the dirty row MUST be enqueued regardless to keep the stored
+      // computed column consistent (this is the sales-order clone symptom). Oracle drains everything
+      // through the async Java processor (REFRESH_MODE forced to 'Q'), so no enqueue can recurse within
+      // a transaction; the trigger only writes to the AD_STOREDCOLUMN_DIRTY queue. Cross-cycle
+      // re-enqueue from the processor's own recompute write is prevented structurally instead: an
+      // UPDATE event is never deployed without watched columns (see the caller), and the watched-column
+      // value guard below rejects no-op writes. INSERT/DELETE never fire on an UPDATE-only recompute.
       + watchedGuard
       + "  OPEN c_targets;\n"
       + "  LOOP\n"
@@ -765,7 +817,10 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       + "       AND is_ignored = 'Y';\n"
       // Dedup on (column, target) among live rows; TRANSACTION_ID stays NULL on Oracle. Forced 'Q'.
       + "    MERGE INTO ad_storedcolumn_dirty d\n"
-      + "    USING (SELECT '" + row.columnId + "' AS ad_column_id, v_target_id AS target_record_id\n"
+      + "    USING (SELECT '" + row.columnId + "' AS ad_column_id, v_target_id AS target_record_id,\n"
+      // AD_CLIENT_ID taken from the source row that fired the trigger (COALESCE covers DELETE, where
+      // :NEW is null, and INSERT, where :OLD is null).
+      + "                  COALESCE(:NEW.ad_client_id, :OLD.ad_client_id) AS ad_client_id\n"
       + "             FROM dual) s\n"
       + "    ON (d.ad_column_id = s.ad_column_id\n"
       + "        AND d.target_record_id = s.target_record_id\n"
@@ -776,7 +831,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       + "      ad_column_id, target_record_id, transaction_id,\n"
       + "      refresh_mode, computation_sequence_number\n"
       + "    ) VALUES (\n"
-      + "      get_uuid(), '0', '0', 'Y', SYSDATE, '0', SYSDATE, '0',\n"
+      + "      get_uuid(), s.ad_client_id, '0', 'Y', SYSDATE, '0', SYSDATE, '0',\n"
       + "      s.ad_column_id, s.target_record_id, NULL,\n"
       + "      'Q', " + row.seqNo + "\n"
       + "    );\n"

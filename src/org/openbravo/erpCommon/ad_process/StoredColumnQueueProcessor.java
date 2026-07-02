@@ -18,14 +18,11 @@
  */
 package org.openbravo.erpCommon.ad_process;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Savepoint;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,35 +39,40 @@ import org.openbravo.scheduling.ProcessLogger;
 /**
  * Background process that drains the asynchronous stored-computed-column queue.
  *
- * <p>Each invocation runs as a single database transaction. It claims up to {@code Max Records} of
- * the oldest queued ({@code REFRESH_MODE='Q'}) dirty rows that are not dead-lettered
- * ({@code IS_IGNORED='N'}), recomputes them through the generic engine functions, and deletes the
- * rows it processes. Rows are claimed with {@code FOR UPDATE SKIP LOCKED} so several scheduler
- * threads can drain the queue concurrently without contending for the same rows.</p>
+ * <p>Each invocation fetches up to {@code Max Records} of the oldest queued ({@code REFRESH_MODE='Q'})
+ * dirty rows that are not dead-lettered ({@code IS_IGNORED='N'}) and processes each one in its own
+ * database transaction, committing after every row. There is a single drainer, so the fetch does not
+ * lock rows ({@code FOR UPDATE SKIP LOCKED} was removed): the recompute is idempotent and the dirty
+ * row is deleted by id, so nothing depends on holding a claim across the batch.</p>
  *
  * <p>Sentinel rows ({@code TARGET_RECORD_ID IS NULL}) request a full column rebuild — they are
  * processed first by looping the same per-target recompute over every primary key of the column's
- * target table; once a sentinel succeeds, any sibling per-target rows claimed in the same batch for
+ * target table; once a sentinel succeeds, any sibling per-target rows fetched in the same batch for
  * that column are dropped because the rebuild already covered every row.</p>
  *
- * <p><b>Recompute runs in Java</b> (Phase 5, workstream C2). The per-row recompute is issued
- * directly on this processor's connection as two statements — a {@code FOR UPDATE} lock followed by
- * an {@code UPDATE <table> SET <col> = <fn>(<pk>) WHERE <pk> = ?} — instead of calling the PL/pgSQL
- * {@code ad_scd_recompute}. The stored-column metadata ({@code table}, {@code col}, {@code pk},
- * {@code fn}) is read once from {@code AD_COLUMN}/{@code AD_TABLE} and cached per column. This single
- * Java drain serves both PostgreSQL and Oracle, so Oracle needs zero engine PL/SQL functions;
- * PostgreSQL keeps PL/pgSQL {@code ad_scd_recompute} only for its in-transaction {@code 'S'} drain.
- * The write is unconditional (no {@code IS DISTINCT FROM} guard), matching the PL/pgSQL engine.</p>
+ * <p><b>Recompute runs in Java</b> (Phase 5, workstream C2), delegated to the shared
+ * {@link StoredColumnRecomputer}. The per-row recompute is issued directly on this processor's
+ * connection as two statements — a {@code FOR UPDATE} lock followed by an
+ * {@code UPDATE <table> SET <col> = <fn>(<pk>) WHERE <pk> = ?} — instead of calling the PL/pgSQL
+ * {@code ad_scd_recompute}, and a sentinel rebuild loops that recompute over every target row (the
+ * Java equivalent of {@code ad_scd_rebuild}). That single dialect-neutral engine serves both
+ * PostgreSQL and Oracle, so Oracle needs zero engine PL/SQL functions; PostgreSQL keeps PL/pgSQL
+ * {@code ad_scd_recompute} only for its in-transaction {@code 'S'} drain. The write is unconditional
+ * (no {@code IS DISTINCT FROM} guard), matching the PL/pgSQL engine.</p>
  *
- * <p>Per-target rows are processed each inside its own JDBC savepoint. A failure rolls the row's
- * savepoint back and increments {@code RETRY_COUNT}, records {@code ERROR_MSG}, and dead-letters the
- * row ({@code IS_IGNORED='Y'}) once the retry threshold is reached — without aborting the rest of the
- * batch.</p>
+ * <p>Every row is processed in its own transaction. On success the recompute and the dirty-row delete
+ * commit together. On <b>any</b> failure the row's transaction is rolled back and the failure is
+ * recorded in a <b>separate</b> transaction — incrementing {@code RETRY_COUNT}, storing
+ * {@code ERROR_MSG}, and dead-lettering the row ({@code IS_IGNORED='Y'}) once the retry threshold is
+ * reached — so a poison row neither aborts the batch nor blocks its siblings. A rolled-back
+ * transaction cannot itself persist the failure (PostgreSQL aborts it), which is why the retry/error
+ * bookkeeping runs in a fresh transaction. The cause is logged at {@code ERROR} with its stack trace
+ * so the failure is never silent.</p>
  *
- * <p>The engine's own writes to watched target tables must not re-enqueue work. On PostgreSQL the
- * {@code my.scd_refreshing} GUC is set for the whole transaction; on Oracle the equivalent global
- * trigger-disable ({@code AD_Disable_Triggers}, checked by every enqueue trigger via
- * {@code AD_IsTriggerEnabled()}) is engaged instead (Phase 5, workstream C3).</p>
+ * <p>On PostgreSQL the engine recomputes synchronously inside the row's transaction, so its own
+ * writes to watched target tables must not re-enqueue work; the {@code my.scd_refreshing} GUC is set
+ * for the transaction to suppress that recursion (Phase 5, workstream C3). Oracle drains every column
+ * asynchronously, so its enqueue trigger only writes the dirty queue and needs no such guard.</p>
  */
 public class StoredColumnQueueProcessor implements Process {
 
@@ -83,41 +85,47 @@ public class StoredColumnQueueProcessor implements Process {
   /** Maximum length persisted in AD_STOREDCOLUMN_DIRTY.ERROR_MSG. */
   private static final int ERROR_MSG_MAX = 4000;
 
-  private static final String CLAIM_SQL = "SELECT ad_storedcolumn_dirty_id, ad_column_id, target_record_id"
+  /**
+   * Fetches the oldest non-dead-lettered queued rows for this client (plus the System-owned
+   * full-rebuild sentinels). No row locking: there is a single drainer, and processing is idempotent,
+   * so {@code FOR UPDATE SKIP LOCKED} is unnecessary. The batch size is bounded through JDBC
+   * {@code setMaxRows}, which is dialect-neutral, so a single statement serves both PostgreSQL and
+   * Oracle.
+   */
+  private static final String FETCH_SQL = "SELECT ad_storedcolumn_dirty_id, ad_column_id, target_record_id"
       + " FROM ad_storedcolumn_dirty"
       + " WHERE refresh_mode = 'Q' AND is_ignored = 'N'"
-      + " ORDER BY computation_sequence_number ASC, created ASC"
-      + " LIMIT ?"
-      + " FOR UPDATE SKIP LOCKED";
+      // Drain this client's own dirty rows plus the System-owned ('0') full-rebuild sentinels, which
+      // recompute the whole table across all clients and so must be picked up by any client's run.
+      + " AND ad_client_id IN (?, '0')"
+      + " ORDER BY computation_sequence_number ASC, created ASC";
 
   private static final String DELETE_SQL = "DELETE FROM ad_storedcolumn_dirty WHERE ad_storedcolumn_dirty_id = ?";
 
-  private static final String FAIL_SQL = "UPDATE ad_storedcolumn_dirty"
+  /**
+   * Dead-letter update, dialect-specific in two spots: the error-message truncation ({@code left} on
+   * PostgreSQL, {@code SUBSTR} on Oracle) and the update timestamp ({@code now()} vs {@code SYSDATE}).
+   * Both variants bind the same three parameters (message, retry threshold, dirty-row id).
+   */
+  private static final String FAIL_SQL_PG = "UPDATE ad_storedcolumn_dirty"
       + " SET retry_count = retry_count + 1,"
       + "     error_msg = left(?, " + ERROR_MSG_MAX + "),"
       + "     is_ignored = CASE WHEN retry_count + 1 >= ? THEN 'Y' ELSE 'N' END,"
       + "     updated = now()"
       + " WHERE ad_storedcolumn_dirty_id = ?";
 
-  /**
-   * Resolves the physical target table, stored column, computation function and primary-key column
-   * for a stored computed column. Logical AD identifiers are stored mixed-case while the physical
-   * objects are lowercase, so every name is {@code lower()}-ed here. Read once per column and cached
-   * in {@link #metaCache}. Mirrors the metadata lookup the PL/pgSQL {@code ad_scd_recompute} does.
-   */
-  private static final String META_SQL = "SELECT lower(t.tablename),"
-      + " lower(c.columnname), lower(c.computation_function),"
-      + " lower((SELECT k.columnname FROM ad_column k"
-      + "         WHERE k.ad_table_id = c.ad_table_id AND k.iskey = 'Y'))"
-      + " FROM ad_column c"
-      + " JOIN ad_table t ON t.ad_table_id = c.ad_table_id"
-      + " WHERE c.ad_column_id = ?";
+  private static final String FAIL_SQL_ORACLE = "UPDATE ad_storedcolumn_dirty"
+      + " SET retry_count = retry_count + 1,"
+      + "     error_msg = SUBSTR(?, 1, " + ERROR_MSG_MAX + "),"
+      + "     is_ignored = CASE WHEN retry_count + 1 >= ? THEN 'Y' ELSE 'N' END,"
+      + "     updated = SYSDATE"
+      + " WHERE ad_storedcolumn_dirty_id = ?";
 
-  /** Per-column recompute metadata, populated lazily within one processor invocation. */
-  private final Map<String, ColumnMeta> metaCache = new HashMap<>();
-
-  /** True when the underlying RDBMS is Oracle; selects the dialect-specific recursion guard (C3). */
+  /** True when the underlying RDBMS is Oracle; selects the dialect-specific claim/dead-letter SQL. */
   private boolean oracle;
+
+  /** Shared Java recompute engine (metadata lookup, per-row recompute, rebuild, recursion guard). */
+  private StoredColumnRecomputer recomputer;
 
   @Override
   public void execute(ProcessBundle bundle) throws Exception {
@@ -127,22 +135,22 @@ public class StoredColumnQueueProcessor implements Process {
 
     ConnectionProvider conn = bundle.getConnection();
     oracle = "ORACLE".equals(conn.getRDBMS());
-    metaCache.clear();
+    recomputer = new StoredColumnRecomputer(oracle);
+    String clientId = bundle.getContext().getClient();
     Connection con = conn.getTransactionConnection();
     int processed = 0;
     int rebuilt = 0;
     int failed = 0;
     try {
-      // Suppress re-entrant enqueues caused by the engine's own writes during this transaction.
-      setRefreshingGuard(con);
-
-      List<DirtyRow> batch = claim(con, maxRecords);
+      List<DirtyRow> batch = fetchBatch(con, maxRecords, clientId);
+      // Close the read transaction opened by the fetch before the per-row transactions begin.
+      con.commit();
 
       // Sentinel-first: full rebuilds cover every target row of their column.
       Set<String> rebuiltColumns = new HashSet<>();
       for (DirtyRow row : batch) {
         if (row.targetId == null) {
-          if (processSentinel(con, row, retryThreshold)) {
+          if (processRow(con, row, retryThreshold, true)) {
             rebuiltColumns.add(row.columnId);
             rebuilt++;
           } else {
@@ -151,21 +159,22 @@ public class StoredColumnQueueProcessor implements Process {
         }
       }
 
-      // Per-target rows, each isolated in its own savepoint.
+      // Per-target rows, each in its own transaction.
       for (DirtyRow row : batch) {
         if (row.targetId == null || rebuiltColumns.contains(row.columnId)) {
           continue;
         }
-        if (processTarget(con, row, retryThreshold)) {
+        if (processRow(con, row, retryThreshold, false)) {
           processed++;
         } else {
           failed++;
         }
       }
 
-      clearRefreshingGuard(con);
+      // Every row already committed (or rolled back) on its own; nothing pending to commit here.
       conn.releaseCommitConnection(con);
     } catch (Exception e) {
+      log4j.error("Stored computed column queue processing failed", e);
       try {
         conn.releaseRollbackConnection(con);
       } catch (Exception rollbackEx) {
@@ -179,14 +188,23 @@ public class StoredColumnQueueProcessor implements Process {
     if (logger != null) {
       logger.logln(summary);
     }
-    log4j.debug(summary);
+    log4j.info(summary);
   }
 
-  /** Claims the oldest queued rows for this transaction with SKIP LOCKED. */
-  private List<DirtyRow> claim(Connection con, int maxRecords) throws SQLException {
+  /**
+   * Fetches the oldest queued rows for this client plus the System-owned rebuild sentinels. No row
+   * locking (single drainer, idempotent processing); the batch size is bounded via JDBC
+   * {@code setMaxRows}.
+   */
+  private List<DirtyRow> fetchBatch(Connection con, int maxRecords, String clientId)
+      throws SQLException {
     List<DirtyRow> rows = new ArrayList<>();
-    try (PreparedStatement ps = con.prepareStatement(CLAIM_SQL)) {
-      ps.setInt(1, maxRecords);
+    // Drain dirty rows owned by the client this process is running in (the enqueue triggers stamp
+    // AD_CLIENT_ID from the source record, partitioning the queue per client) plus the System-owned
+    // ('0') full-rebuild sentinels, which span all clients and must run under any client's drain.
+    try (PreparedStatement ps = con.prepareStatement(FETCH_SQL)) {
+      ps.setMaxRows(maxRecords);
+      ps.setString(1, clientId);
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) {
           rows.add(new DirtyRow(rs.getString(1), rs.getString(2), rs.getString(3)));
@@ -197,118 +215,32 @@ public class StoredColumnQueueProcessor implements Process {
   }
 
   /**
-   * Runs a full column rebuild for a sentinel row by recomputing every primary key of the column's
-   * target table, all inside the sentinel's savepoint (replaces {@code ad_scd_rebuild} on the async
-   * path). Returns true on success.
+   * Processes one dirty row in its own transaction: engages the recursion guard, recomputes the row
+   * (a full column rebuild when {@code sentinel}, otherwise a single-target recompute), deletes the
+   * dirty row, and commits. On <b>any</b> failure — including non-{@code SQLException}s from metadata
+   * lookup — the row's transaction is rolled back and the failure is recorded and dead-lettered in a
+   * separate committed transaction, so one poison row neither aborts the batch nor blocks its
+   * siblings. The cause is logged at {@code ERROR} with its stack trace. Returns true on success.
    */
-  private boolean processSentinel(Connection con, DirtyRow row, int retryThreshold)
-      throws SQLException {
-    Savepoint sp = con.setSavepoint();
+  private boolean processRow(Connection con, DirtyRow row, int retryThreshold, boolean sentinel) {
     try {
-      ColumnMeta meta = metaFor(con, row.columnId);
-      if (meta != null) {
-        for (String pk : allTargetIds(con, meta)) {
-          recompute(con, meta, pk);
-        }
+      // Suppress re-entrant enqueues caused by the engine's own synchronous writes within this row's
+      // transaction (PostgreSQL only; no-op on Oracle, which drains asynchronously).
+      recomputer.setRefreshingGuard(con);
+      if (sentinel) {
+        recomputer.rebuild(con, row.columnId);
+      } else {
+        recomputer.recomputeOne(con, row.columnId, row.targetId);
       }
       deleteRow(con, row.id);
+      con.commit();
       return true;
-    } catch (SQLException e) {
-      con.rollback(sp);
+    } catch (Exception e) {
+      log4j.error("Stored column recompute failed (ad_column_id={}, target_record_id={})",
+          row.columnId, row.targetId, e);
       recordFailure(con, row, retryThreshold, e);
       return false;
     }
-  }
-
-  /**
-   * Recomputes a single target row inside its own savepoint (replaces {@code ad_scd_recompute} on the
-   * async path — the recompute now runs in Java on this connection). Returns true on success.
-   */
-  private boolean processTarget(Connection con, DirtyRow row, int retryThreshold)
-      throws SQLException {
-    Savepoint sp = con.setSavepoint();
-    try {
-      ColumnMeta meta = metaFor(con, row.columnId);
-      if (meta != null) {
-        recompute(con, meta, row.targetId);
-      }
-      deleteRow(con, row.id);
-      return true;
-    } catch (SQLException e) {
-      con.rollback(sp);
-      recordFailure(con, row, retryThreshold, e);
-      return false;
-    }
-  }
-
-  /**
-   * Recomputes and writes one target row: locks it {@code FOR UPDATE} to serialize concurrent
-   * recomputations of the same aggregate, then writes {@code <col> = <fn>(<pk>)} unconditionally.
-   * This is the Java equivalent of the PL/pgSQL {@code ad_scd_recompute} and must stay behaviorally
-   * identical to it (verified by the parity tests). Table/column/function/pk names come from cached
-   * {@code AD_COLUMN} metadata and are lowercased physical identifiers, so they are quoted here.
-   */
-  private void recompute(Connection con, ColumnMeta meta, String targetId) throws SQLException {
-    String q = quoteChar();
-    String lockSql = "SELECT 1 FROM " + q + meta.table + q
-        + " WHERE " + q + meta.pk + q + " = ? FOR UPDATE";
-    try (PreparedStatement ps = con.prepareStatement(lockSql)) {
-      ps.setString(1, targetId);
-      ps.execute();
-    }
-    String updateSql = "UPDATE " + q + meta.table + q
-        + " SET " + q + meta.column + q + " = " + q + meta.fn + q + "(" + q + meta.pk + q + ")"
-        + " WHERE " + q + meta.pk + q + " = ?";
-    try (PreparedStatement ps = con.prepareStatement(updateSql)) {
-      ps.setString(1, targetId);
-      ps.executeUpdate();
-    }
-  }
-
-  /** Reads (and caches) the recompute metadata for a column; null when the column is not resolvable. */
-  private ColumnMeta metaFor(Connection con, String columnId) throws SQLException {
-    if (metaCache.containsKey(columnId)) {
-      return metaCache.get(columnId);
-    }
-    ColumnMeta meta = null;
-    try (PreparedStatement ps = con.prepareStatement(META_SQL)) {
-      ps.setString(1, columnId);
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          String table = rs.getString(1);
-          String column = rs.getString(2);
-          String fn = rs.getString(3);
-          String pk = rs.getString(4);
-          if (table != null && column != null && fn != null && pk != null) {
-            meta = new ColumnMeta(table, column, fn, pk);
-          }
-        }
-      }
-    }
-    if (meta == null) {
-      log4j.warn("Stored column {} has incomplete recompute metadata — skipping", columnId);
-    }
-    metaCache.put(columnId, meta);
-    return meta;
-  }
-
-  /** Returns every primary-key value of the target table, used to drive a sentinel full rebuild. */
-  private List<String> allTargetIds(Connection con, ColumnMeta meta) throws SQLException {
-    String q = quoteChar();
-    List<String> ids = new ArrayList<>();
-    String sql = "SELECT " + q + meta.pk + q + " FROM " + q + meta.table + q;
-    try (PreparedStatement ps = con.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery()) {
-      while (rs.next()) {
-        ids.add(rs.getString(1));
-      }
-    }
-    return ids;
-  }
-
-  /** Identifier quote character for the active dialect (both PostgreSQL and Oracle use double quotes). */
-  private String quoteChar() {
-    return "\"";
   }
 
   private void deleteRow(Connection con, String dirtyId) throws SQLException {
@@ -319,61 +251,46 @@ public class StoredColumnQueueProcessor implements Process {
   }
 
   /**
-   * Records a processing failure on the dirty row: increments the retry counter, stores the error
-   * message, and dead-letters the row once the threshold is reached. Logged at WARN when
-   * dead-lettered so operators can investigate.
+   * Records a processing failure in a fresh transaction: rolls back the aborted recompute transaction,
+   * then increments the retry counter, stores the error message, and dead-letters the row once the
+   * threshold is reached. Runs on its own transaction because a failed (PostgreSQL-aborted) transaction
+   * cannot persist the bookkeeping. Never throws: a failure to record is logged and swallowed so the
+   * batch continues with the remaining rows.
    */
-  private void recordFailure(Connection con, DirtyRow row, int retryThreshold, SQLException cause)
-      throws SQLException {
+  private void recordFailure(Connection con, DirtyRow row, int retryThreshold, Exception cause) {
+    try {
+      con.rollback();
+    } catch (SQLException e) {
+      log4j.error("Could not roll back failed stored-column recompute (id={})", row.id, e);
+    }
+    try {
+      // The PostgreSQL recompute guard is a transaction-local GUC released by the rollback above, so
+      // no explicit clear is needed here before recording the failure.
+      String message = messageOf(cause);
+      try (PreparedStatement ps = con.prepareStatement(oracle ? FAIL_SQL_ORACLE : FAIL_SQL_PG)) {
+        ps.setString(1, message);
+        ps.setInt(2, retryThreshold);
+        ps.setString(3, row.id);
+        ps.executeUpdate();
+      }
+      con.commit();
+    } catch (SQLException e) {
+      log4j.error("Could not record stored-column failure (id={})", row.id, e);
+      try {
+        con.rollback();
+      } catch (SQLException rollbackEx) {
+        log4j.error("Could not roll back stored-column failure record (id={})", row.id, rollbackEx);
+      }
+    }
+  }
+
+  /** Non-null failure message for {@code ERROR_MSG}: the exception message, or its class name. */
+  private static String messageOf(Exception cause) {
     String message = cause.getMessage();
-    try (PreparedStatement ps = con.prepareStatement(FAIL_SQL)) {
-      ps.setString(1, message);
-      ps.setInt(2, retryThreshold);
-      ps.setString(3, row.id);
-      ps.executeUpdate();
+    if (message == null || message.isEmpty()) {
+      message = cause.getClass().getName();
     }
-    log4j.warn("Stored column recompute failed (ad_column_id={}, target_record_id={}): {}",
-        row.columnId, row.targetId, message);
-  }
-
-  /**
-   * Engages the dialect-specific recursion guard so the engine's own writes to watched target tables
-   * do not re-enqueue dirty rows (Phase 5, workstream C3).
-   *
-   * <p>On PostgreSQL the transaction-local {@code my.scd_refreshing} GUC is set (SET LOCAL semantics),
-   * checked by the {@code ad_scd_dirty_aiu} enqueue trigger. On Oracle there is no per-transaction
-   * GUC, so the processor reuses Etendo's existing session-scoped global trigger disable
-   * ({@code AD_Disable_Triggers}); every Oracle enqueue trigger short-circuits when
-   * {@code AD_IsTriggerEnabled()} returns {@code 'N'}. Both guards are released implicitly when the
-   * connection's transaction ends (PostgreSQL) or when the session ends / {@code AD_Enable_Triggers}
-   * runs (Oracle); the processor uses its own dedicated connection, so the Oracle disable never leaks
-   * into unrelated work.</p>
-   */
-  private void setRefreshingGuard(Connection con) throws SQLException {
-    if (oracle) {
-      try (CallableStatement cs = con.prepareCall("{call AD_Disable_Triggers()}")) {
-        cs.execute();
-      }
-    } else {
-      try (PreparedStatement ps = con
-          .prepareStatement("SELECT set_config('my.scd_refreshing', 'true', true)")) {
-        ps.execute();
-      }
-    }
-  }
-
-  /**
-   * Releases the recursion guard before commit. PostgreSQL needs nothing (the {@code SET LOCAL} GUC
-   * ends with the transaction), but Oracle's {@code AD_Disable_Triggers} inserted a session-status
-   * row that would otherwise persist past commit and keep triggers disabled on the shared session, so
-   * {@code AD_Enable_Triggers} is called to clear it.
-   */
-  private void clearRefreshingGuard(Connection con) throws SQLException {
-    if (oracle) {
-      try (CallableStatement cs = con.prepareCall("{call AD_Enable_Triggers()}")) {
-        cs.execute();
-      }
-    }
+    return message;
   }
 
   /** Reads an integer process parameter, falling back when the bundle or value is absent. */
@@ -414,25 +331,6 @@ public class StoredColumnQueueProcessor implements Process {
       this.id = id;
       this.columnId = columnId;
       this.targetId = targetId;
-    }
-  }
-
-  /**
-   * Cached recompute metadata for one stored computed column: the physical target table, the stored
-   * column, its computation function and the primary-key column. All are lowercased physical
-   * identifiers (see {@link #META_SQL}).
-   */
-  private static final class ColumnMeta {
-    private final String table;
-    private final String column;
-    private final String fn;
-    private final String pk;
-
-    private ColumnMeta(String table, String column, String fn, String pk) {
-      this.table = table;
-      this.column = column;
-      this.fn = fn;
-      this.pk = pk;
     }
   }
 }
