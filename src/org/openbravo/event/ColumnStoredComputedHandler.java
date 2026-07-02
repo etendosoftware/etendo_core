@@ -25,8 +25,8 @@ import org.openbravo.client.kernel.event.EntityNewEvent;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
+import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
 import org.openbravo.model.ad.datamodel.Column;
-import org.openbravo.modulescript.StoredComputedValidator;
 
 /**
  * Enforces the definition invariants of a stored computed column (EPL-1807): when
@@ -80,7 +80,7 @@ public class ColumnStoredComputedHandler extends EntityPersistenceEventObserver 
    *           function or computation sequence number
    */
   private void validateStoredComputedDefinition(Column column) {
-    String code = StoredComputedValidator.checkShape(column.getComputationMode(),
+    String code = StoredComputedShapeValidator.checkShape(column.getComputationMode(),
         column.getSqllogic(), column.getComputationFunction(),
         column.getComputationSequenceNumber());
     if (code != null) {

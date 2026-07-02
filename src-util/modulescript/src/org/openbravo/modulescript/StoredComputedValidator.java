@@ -36,6 +36,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
 
 /**
  * Build-time (single-pass, whole-DB) validator for stored computed column definitions (EPL-1807,
@@ -72,8 +73,13 @@ public final class StoredComputedValidator {
   }
 
   // --- Reused AD_MESSAGE keys (rendered by the runtime DAL handlers; reused here as labels) ------
-  /** V1–V3 shape rule — shared with {@code ColumnStoredComputedHandler} (an actual AD_MESSAGE). */
-  public static final String ETGO_StoredComputedColDef = "ETGO_StoredComputedColDef";
+  /**
+   * V1–V3 shape rule — shared with {@code ColumnStoredComputedHandler} (an actual AD_MESSAGE).
+   * Re-exposed as a delegating constant to the core single source of truth
+   * {@link StoredComputedShapeValidator#ETGO_StoredComputedColDef}.
+   */
+  public static final String ETGO_StoredComputedColDef =
+      StoredComputedShapeValidator.ETGO_StoredComputedColDef;
   /** V11 target XOR — shared with {@code ColumnCompDependencyTargetHandler} (an actual AD_MESSAGE). */
   public static final String ETGO_CompDepTargetXor = "ETGO_CompDepTargetXor";
 
@@ -92,8 +98,6 @@ public final class StoredComputedValidator {
   static final String ETGO_ScdMissingIndex = "ETGO_ScdMissingIndex";
   static final String ETGO_ScdCompositePkTarget = "ETGO_ScdCompositePkTarget";
 
-  private static final String STORED_COMPUTED = "S";
-
   /** Rollout toggle name (JVM system property or environment variable). */
   static final String TOGGLE = "ETGO_SCD_VALIDATION";
 
@@ -103,8 +107,9 @@ public final class StoredComputedValidator {
 
   /**
    * Shape rule V1–V3, shared verbatim with the runtime DAL guard {@code ColumnStoredComputedHandler}.
-   * Pure: only String/Long arguments, so it is callable from both the {@code src/} observer (DAL) and
-   * this build-time validator (JDBC).
+   * Delegates to the core single source of truth
+   * {@link StoredComputedShapeValidator#checkShape(String, String, String, Long)} so both this
+   * build-time validator (JDBC) and the {@code src/} observer (DAL) evaluate the exact same predicate.
    *
    * <p>When {@code computationMode = 'S'} the column is recomputed by a database function, so
    * {@code sqlLogic} MUST be blank, {@code fn} MUST be set, and {@code seq} MUST be a positive number.
@@ -122,16 +127,7 @@ public final class StoredComputedValidator {
    * @return the violation code, or {@code null} when the shape is valid
    */
   public static String checkShape(String computationMode, String sqlLogic, String fn, Long seq) {
-    if (!STORED_COMPUTED.equals(computationMode)) {
-      return null;
-    }
-    boolean hasSqlLogic = isNotBlank(sqlLogic);
-    boolean hasFunction = isNotBlank(fn);
-    boolean hasSequence = seq != null && seq > 0;
-    if (hasSqlLogic || !hasFunction || !hasSequence) {
-      return ETGO_StoredComputedColDef;
-    }
-    return null;
+    return StoredComputedShapeValidator.checkShape(computationMode, sqlLogic, fn, seq);
   }
 
   /**
