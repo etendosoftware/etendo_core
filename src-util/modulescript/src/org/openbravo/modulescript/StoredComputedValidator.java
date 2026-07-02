@@ -90,6 +90,7 @@ public final class StoredComputedValidator {
   static final String ETGO_ScdTriggerMissing = "ETGO_ScdTriggerMissing";
   static final String ETGO_ScdTriggerDrift = "ETGO_ScdTriggerDrift";
   static final String ETGO_ScdMissingIndex = "ETGO_ScdMissingIndex";
+  static final String ETGO_ScdCompositePkTarget = "ETGO_ScdCompositePkTarget";
 
   private static final String STORED_COMPUTED = "S";
 
@@ -314,6 +315,7 @@ public final class StoredComputedValidator {
     List<ColInfo> columns = loadStoredComputedColumns(cp);
 
     checkShapeRules(columns, violations);
+    checkCompositePkTarget(cp, violations);
     checkFunctions(cp, oracle, columns, violations);
     checkDependencyExistence(cp, violations);
     checkUpdateWatched(cp, violations);
@@ -345,6 +347,44 @@ public final class StoredComputedValidator {
       }
       violations.add(new Violation(Severity.ERROR, code,
           "column " + c.qname() + " — " + String.join("; ", issues)));
+    }
+  }
+
+  // --- Group A2 — single-column target primary key -----------------------------------------------
+
+  /**
+   * Rejects any stored computed column whose target table has a composite (multi-column) primary key.
+   * The recompute engine resolves the target row through a single primary-key column
+   * ({@code UPDATE <table> SET <col> = <fn>(<pk>) WHERE <pk> = ?} and the metadata subquery
+   * {@code SELECT k.columnname ... WHERE k.iskey='Y'} in {@code StoredColumnRecomputer.META_SQL}),
+   * which is scalar and therefore fails at runtime ("more than one row") on a composite-key table.
+   * Guarding it here at build time turns that latent runtime failure into a clear, actionable error.
+   */
+  private static void checkCompositePkTarget(ConnectionProvider cp, List<Violation> violations) {
+    String sql =
+        "SELECT t.tablename, c.columnname, "
+      + "       (SELECT count(*) FROM ad_column k "
+      + "        WHERE k.ad_table_id = c.ad_table_id AND k.iskey = 'Y') AS keycount "
+      + "FROM   ad_column c JOIN ad_table t ON t.ad_table_id = c.ad_table_id "
+      + "WHERE  c.computation_mode = 'S' AND c.isactive = 'Y' "
+      + "ORDER  BY t.tablename, c.columnname";
+    try {
+      PreparedStatement ps = cp.getPreparedStatement(sql);
+      try {
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+          if (rs.getInt("keycount") > 1) {
+            violations.add(new Violation(Severity.ERROR, ETGO_ScdCompositePkTarget,
+                "column " + rs.getString("tablename") + "." + rs.getString("columnname")
+                    + " — target table " + rs.getString("tablename") + " has a composite (multi-column)"
+                    + " primary key; the recompute engine only supports single-column primary keys"));
+          }
+        }
+      } finally {
+        cp.releasePreparedStatement(ps);
+      }
+    } catch (Exception e) {
+      throw wrap("composite-PK target", e);
     }
   }
 

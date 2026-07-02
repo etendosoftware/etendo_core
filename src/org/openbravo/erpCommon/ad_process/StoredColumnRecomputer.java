@@ -57,16 +57,21 @@ class StoredColumnRecomputer {
 
   private static final Logger log4j = LogManager.getLogger();
 
+  /** Keyset-pagination page size for a full rebuild — bounds the PKs held in memory at once. */
+  private static final int REBUILD_CHUNK_SIZE = 1000;
+
   /**
    * Resolves the physical target table, stored column, computation function and primary-key column
    * for a stored computed column. Logical AD identifiers are stored mixed-case while the physical
-   * objects are lowercase, so every name is {@code lower()}-ed here. Read once per column and cached
-   * in {@link #metaCache}. Mirrors the metadata lookup the PL/pgSQL {@code ad_scd_recompute} does.
+   * objects are lowercase on PostgreSQL but UPPERCASE on Oracle, so the RAW identifiers are read here
+   * and case-folded per dialect in {@link #metaFor(Connection, String)} before quoting. Read once per
+   * column and cached in {@link #metaCache}. Mirrors the metadata lookup the PL/pgSQL
+   * {@code ad_scd_recompute} does.
    */
-  private static final String META_SQL = "SELECT lower(t.tablename),"
-      + " lower(c.columnname), lower(c.computation_function),"
-      + " lower((SELECT k.columnname FROM ad_column k"
-      + "         WHERE k.ad_table_id = c.ad_table_id AND k.iskey = 'Y'))"
+  private static final String META_SQL = "SELECT t.tablename,"
+      + " c.columnname, c.computation_function,"
+      + " (SELECT k.columnname FROM ad_column k"
+      + "         WHERE k.ad_table_id = c.ad_table_id AND k.iskey = 'Y')"
       + " FROM ad_column c"
       + " JOIN ad_table t ON t.ad_table_id = c.ad_table_id"
       + " WHERE c.ad_column_id = ?";
@@ -120,7 +125,9 @@ class StoredColumnRecomputer {
    * Full idempotent rebuild of one stored computed column: recomputes every primary key of the
    * column's target table. This is the Java equivalent of the PL/pgSQL {@code ad_scd_rebuild} (a
    * per-row recompute loop) and serves both the async sentinel path and the manual rebuild process.
-   * Returns the number of target rows recomputed (0 when the column has incomplete metadata).
+   * Target PKs are paged through in bounded keyset chunks (see {@link #nextTargetIdChunk}) so memory
+   * stays constant regardless of table size. Returns the number of target rows recomputed (0 when the
+   * column has incomplete metadata).
    */
   int rebuild(Connection con, String columnId) throws SQLException {
     ColumnMeta meta = metaFor(con, columnId);
@@ -128,9 +135,19 @@ class StoredColumnRecomputer {
       return 0;
     }
     int count = 0;
-    for (String pk : allTargetIds(con, meta)) {
-      recompute(con, meta, pk);
-      count++;
+    String afterPk = null;
+    while (true) {
+      // Fetch one bounded chunk of PKs and fully read it into memory before recomputing, so no
+      // ResultSet stays open on this connection while the per-row recompute UPDATE runs.
+      List<String> chunk = nextTargetIdChunk(con, meta, afterPk);
+      for (String pk : chunk) {
+        recompute(con, meta, pk);
+        count++;
+      }
+      if (chunk.size() < REBUILD_CHUNK_SIZE) {
+        break; // last (partial) chunk drained — no more rows to page through
+      }
+      afterPk = chunk.get(chunk.size() - 1);
     }
     return count;
   }
@@ -140,7 +157,8 @@ class StoredColumnRecomputer {
    * recomputations of the same aggregate, then writes {@code <col> = <fn>(<pk>)} unconditionally.
    * This is the Java equivalent of the PL/pgSQL {@code ad_scd_recompute} and must stay behaviorally
    * identical to it (verified by the parity tests). Table/column/function/pk names come from cached
-   * {@code AD_COLUMN} metadata and are lowercased physical identifiers, so they are quoted here.
+   * {@code AD_COLUMN} metadata and are case-folded physical identifiers (lowercase on PostgreSQL,
+   * UPPERCASE on Oracle), so they are quoted here.
    */
   private void recompute(Connection con, ColumnMeta meta, String targetId) throws SQLException {
     String q = quoteChar();
@@ -169,10 +187,10 @@ class StoredColumnRecomputer {
       ps.setString(1, columnId);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) {
-          String table = rs.getString(1);
-          String column = rs.getString(2);
-          String fn = rs.getString(3);
-          String pk = rs.getString(4);
+          String table = fold(rs.getString(1));
+          String column = fold(rs.getString(2));
+          String fn = fold(rs.getString(3));
+          String pk = fold(rs.getString(4));
           if (table != null && column != null && fn != null && pk != null) {
             meta = new ColumnMeta(table, column, fn, pk);
           }
@@ -186,15 +204,37 @@ class StoredColumnRecomputer {
     return meta;
   }
 
-  /** Returns every primary-key value of the target table, used to drive a full rebuild. */
-  private List<String> allTargetIds(Connection con, ColumnMeta meta) throws SQLException {
+  /**
+   * Fetches the next bounded chunk of primary-key values of the target table for a keyset-paginated
+   * rebuild: at most {@link #REBUILD_CHUNK_SIZE} PKs ordered ascending, starting strictly after
+   * {@code afterPk} (or from the beginning when it is null). Keyset pagination keeps memory bounded
+   * regardless of table size — {@link #rebuild} pages through the whole table one chunk at a time
+   * instead of buffering every PK. The chunk is fully read and its {@code ResultSet} closed before the
+   * caller issues any recompute UPDATE on the same connection.
+   *
+   * <p>Note: the whole rebuild still runs inside the caller's single transaction, so the per-row
+   * {@code FOR UPDATE} locks accumulate for its duration — the memory footprint is bounded here, but
+   * the transaction's lock footprint is not.</p>
+   */
+  private List<String> nextTargetIdChunk(Connection con, ColumnMeta meta, String afterPk)
+      throws SQLException {
     String q = quoteChar();
     List<String> ids = new ArrayList<>();
-    String sql = "SELECT " + q + meta.pk + q + " FROM " + q + meta.table + q;
-    try (PreparedStatement ps = con.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery()) {
-      while (rs.next()) {
-        ids.add(rs.getString(1));
+    StringBuilder sql = new StringBuilder("SELECT ").append(q).append(meta.pk).append(q)
+        .append(" FROM ").append(q).append(meta.table).append(q);
+    if (afterPk != null) {
+      sql.append(" WHERE ").append(q).append(meta.pk).append(q).append(" > ?");
+    }
+    sql.append(" ORDER BY ").append(q).append(meta.pk).append(q);
+    try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+      ps.setMaxRows(REBUILD_CHUNK_SIZE);
+      if (afterPk != null) {
+        ps.setString(1, afterPk);
+      }
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          ids.add(rs.getString(1));
+        }
       }
     }
     return ids;
@@ -206,9 +246,22 @@ class StoredColumnRecomputer {
   }
 
   /**
+   * Folds a raw physical identifier to the case the active dialect stores it in: UPPERCASE on Oracle,
+   * lowercase on PostgreSQL. Once folded the identifier can be quoted safely because it matches the
+   * physical object's stored name. Null-safe (returns null for a null input).
+   */
+  private String fold(String value) {
+    if (value == null) {
+      return null;
+    }
+    return oracle ? value.toUpperCase() : value.toLowerCase();
+  }
+
+  /**
    * Cached recompute metadata for one stored computed column: the physical target table, the stored
-   * column, its computation function and the primary-key column. All are lowercased physical
-   * identifiers (see {@link #META_SQL}).
+   * column, its computation function and the primary-key column. All are case-folded physical
+   * identifiers (lowercase on PostgreSQL, UPPERCASE on Oracle — see {@link #META_SQL} and
+   * {@link #fold(String)}).
    */
   private static final class ColumnMeta {
     private final String table;

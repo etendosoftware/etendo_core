@@ -45,7 +45,7 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="REFRESH_MODE" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
+      <column name="REFRESH_MODE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>

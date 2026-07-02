@@ -79,7 +79,7 @@ public class StoredColumnRebuild implements Process {
       if (logger != null) {
         logger.logln(summary);
       }
-      log4j.debug(summary);
+      log4j.info(summary);
     } catch (Exception e) {
       try {
         conn.releaseRollbackConnection(con);

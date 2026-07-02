@@ -41,14 +41,16 @@ import org.openbravo.scheduling.ProcessLogger;
  *
  * <p>Each invocation fetches up to {@code Max Records} of the oldest queued ({@code REFRESH_MODE='Q'})
  * dirty rows that are not dead-lettered ({@code IS_IGNORED='N'}) and processes each one in its own
- * database transaction, committing after every row. There is a single drainer, so the fetch does not
- * lock rows ({@code FOR UPDATE SKIP LOCKED} was removed): the recompute is idempotent and the dirty
- * row is deleted by id, so nothing depends on holding a claim across the batch.</p>
+ * database transaction, committing after every row. Concurrent drainers are supported (spec §5.5):
+ * the fetch claims a disjoint batch with {@code FOR UPDATE SKIP LOCKED}, so two runs never contend on
+ * the same rows; the recompute is idempotent and the dirty row is deleted by id, so even a rare
+ * overlap is harmless.</p>
  *
- * <p>Sentinel rows ({@code TARGET_RECORD_ID IS NULL}) request a full column rebuild — they are
- * processed first by looping the same per-target recompute over every primary key of the column's
- * target table; once a sentinel succeeds, any sibling per-target rows fetched in the same batch for
- * that column are dropped because the rebuild already covered every row.</p>
+ * <p>Sentinel rows ({@code TARGET_RECORD_ID IS NULL}) request a full column rebuild. The batch is
+ * processed in a single pass honouring the {@code computation_sequence_number} order of the fetch: a
+ * sentinel rebuilds its column (looping the same per-target recompute over every primary key of the
+ * column's target table), and any sibling per-target rows for that column later in the batch are
+ * dropped because the rebuild already covered every row.</p>
  *
  * <p><b>Recompute runs in Java</b> (Phase 5, workstream C2), delegated to the shared
  * {@link StoredColumnRecomputer}. The per-row recompute is issued directly on this processor's
@@ -87,10 +89,12 @@ public class StoredColumnQueueProcessor implements Process {
 
   /**
    * Fetches the oldest non-dead-lettered queued rows for this client (plus the System-owned
-   * full-rebuild sentinels). No row locking: there is a single drainer, and processing is idempotent,
-   * so {@code FOR UPDATE SKIP LOCKED} is unnecessary. The batch size is bounded through JDBC
-   * {@code setMaxRows}, which is dialect-neutral, so a single statement serves both PostgreSQL and
-   * Oracle.
+   * full-rebuild sentinels). Concurrent drainers are supported: {@code FOR UPDATE SKIP LOCKED} makes
+   * each drainer claim a disjoint batch by skipping rows another drainer's fetch has already locked
+   * (spec §5.5). SKIP LOCKED is supported by both PostgreSQL and Oracle 12c+ and composes with the
+   * {@code ORDER BY} and JDBC {@code setMaxRows} batch bound, so a single dialect-neutral statement
+   * serves both. Processing stays idempotent and rows are deleted by id, so even a rare overlap is
+   * harmless.
    */
   private static final String FETCH_SQL = "SELECT ad_storedcolumn_dirty_id, ad_column_id, target_record_id"
       + " FROM ad_storedcolumn_dirty"
@@ -98,7 +102,8 @@ public class StoredColumnQueueProcessor implements Process {
       // Drain this client's own dirty rows plus the System-owned ('0') full-rebuild sentinels, which
       // recompute the whole table across all clients and so must be picked up by any client's run.
       + " AND ad_client_id IN (?, '0')"
-      + " ORDER BY computation_sequence_number ASC, created ASC";
+      + " ORDER BY computation_sequence_number ASC, created ASC"
+      + " FOR UPDATE SKIP LOCKED";
 
   private static final String DELETE_SQL = "DELETE FROM ad_storedcolumn_dirty WHERE ad_storedcolumn_dirty_id = ?";
 
@@ -146,7 +151,10 @@ public class StoredColumnQueueProcessor implements Process {
       // Close the read transaction opened by the fetch before the per-row transactions begin.
       con.commit();
 
-      // Sentinel-first: full rebuilds cover every target row of their column.
+      // Single pass in the batch's computation_sequence_number order, so a low-seq column is always
+      // recomputed before a higher-seq column that depends on it. A sentinel (targetId == null)
+      // rebuilds its whole column; any per-target row for a column already rebuilt by an earlier
+      // sentinel in this batch is dropped because the rebuild covered every row.
       Set<String> rebuiltColumns = new HashSet<>();
       for (DirtyRow row : batch) {
         if (row.targetId == null) {
@@ -156,15 +164,9 @@ public class StoredColumnQueueProcessor implements Process {
           } else {
             failed++;
           }
-        }
-      }
-
-      // Per-target rows, each in its own transaction.
-      for (DirtyRow row : batch) {
-        if (row.targetId == null || rebuiltColumns.contains(row.columnId)) {
+        } else if (rebuiltColumns.contains(row.columnId)) {
           continue;
-        }
-        if (processRow(con, row, retryThreshold, false)) {
+        } else if (processRow(con, row, retryThreshold, false)) {
           processed++;
         } else {
           failed++;
@@ -192,9 +194,9 @@ public class StoredColumnQueueProcessor implements Process {
   }
 
   /**
-   * Fetches the oldest queued rows for this client plus the System-owned rebuild sentinels. No row
-   * locking (single drainer, idempotent processing); the batch size is bounded via JDBC
-   * {@code setMaxRows}.
+   * Fetches the oldest queued rows for this client plus the System-owned rebuild sentinels. Uses
+   * {@code FOR UPDATE SKIP LOCKED} so concurrent drainers claim disjoint batches; the batch size is
+   * bounded via JDBC {@code setMaxRows}.
    */
   private List<DirtyRow> fetchBatch(Connection con, int maxRecords, String clientId)
       throws SQLException {
