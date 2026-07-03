@@ -22,6 +22,7 @@ package org.openbravo.erpCommon;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.criterion.ProjectionList;
@@ -34,6 +35,7 @@ import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.CustomerAccounts;
 import org.openbravo.model.common.businesspartner.VendorAccounts;
+import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.accounting.AccountingFact;
@@ -124,8 +126,14 @@ public class ReportsUtility {
     initialBalanceQuery
         .add(Restrictions.in(AccountingFact.PROPERTY_ORGANIZATION, getOrgList(orgId)));
     try {
-      initialBalanceQuery.add(
-          Restrictions.lt(AccountingFact.PROPERTY_ACCOUNTINGDATE, OBDateUtils.getDate(dateFrom)));
+      final Date from = OBDateUtils.getDate(dateFrom);
+      // Entries before dateFrom, plus year-opening entries (C_Period, AD_Table_ID='145') dated on
+      // dateFrom, which are excluded from the report detail and would otherwise be missed.
+      initialBalanceQuery.add(Restrictions.or(
+          Restrictions.lt(AccountingFact.PROPERTY_ACCOUNTINGDATE, from),
+          Restrictions.and(Restrictions.eq(AccountingFact.PROPERTY_ACCOUNTINGDATE, from),
+              Restrictions.eq(AccountingFact.PROPERTY_TABLE,
+                  OBDal.getInstance().getProxy(Table.class, "145")))));
     } catch (ParseException pe) {
       // do nothing
     }
