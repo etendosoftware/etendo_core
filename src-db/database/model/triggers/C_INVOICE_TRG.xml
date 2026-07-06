@@ -70,7 +70,7 @@ BEGIN
            END IF;
         END IF;
     END IF;
-      IF (COALESCE(:OLD.C_BPartner_ID, '0')!=COALESCE(:NEW.C_BPartner_ID, '0')) OR (COALESCE(:OLD.M_PriceList_ID,'0') != COALESCE(:NEW.M_PriceList_ID,'0'))  THEN
+      IF (COALESCE(:OLD.C_BPartner_ID, '0')!=COALESCE(:NEW.C_BPartner_ID, '0')) THEN
       SELECT COUNT(*)
         INTO v_n
         FROM C_INVOICELINE
