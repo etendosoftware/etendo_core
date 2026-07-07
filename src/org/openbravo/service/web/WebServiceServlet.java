@@ -107,6 +107,22 @@ public class WebServiceServlet extends BaseWebServiceServlet {
   }
 
   @Override
+  protected void doPatch(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+    try {
+      final String segment = WebServiceUtil.getInstance().getFirstSegment(request.getPathInfo());
+      final WebService ws = getWebService(request);
+      if (ws != null) {
+        ws.doPatch(getRemainingPath(request.getPathInfo(), segment), request, response);
+      }
+    } catch (final OBException e) {
+      throw e;
+    } catch (final Exception e) {
+      throw new OBException(e);
+    }
+  }
+
+  @Override
   protected WebService getWebService(HttpServletRequest request) {
     final WebService webService = super.getWebService(request);
     if (webService == null) {
