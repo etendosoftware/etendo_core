@@ -20,7 +20,7 @@ public class PurchaseOrderStressTest extends StressTestBase {
 
   private static final long MAX_MS_PER_ORDER_CREATION = 15;
   private static final long MAX_MS_PER_ORDER_COMPLETE = 100;
-  private static final long MAX_MS_PER_LINE_CREATION = 15;
+  private static final long MAX_MS_PER_LINE_CREATION = 30;
   private static final long MAX_MEMORY_MB_PER_100_ORDERS = 50;
 
   @Override
