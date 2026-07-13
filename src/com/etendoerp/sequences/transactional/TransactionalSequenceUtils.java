@@ -80,9 +80,16 @@ public class TransactionalSequenceUtils {
      * result resolves to the cached instance and its stale {@code nextAssignedNumber} survives,
      * so two concurrent transactions can both compute the same value even though the SQL lock
      * itself worked. {@code refresh(entity, UPGRADE)} both acquires the {@code SELECT ... FOR
-     * UPDATE} lock and rehydrates the entity from the locked row. The preceding {@code flush()}
-     * preserves increments pending in the current session (several values generated in one
-     * transaction) that a refresh would otherwise discard.</p>
+     * UPDATE} lock and rehydrates the entity from the locked row.</p>
+     *
+     * <p>Do NOT call {@code session.flush()} here. {@code generateValue()} — and therefore this
+     * method — is invoked BY Hibernate itself from inside {@code AbstractEntityPersister.insert()}
+     * while an outer flush is already iterating the action queue
+     * ({@code preInsertInMemoryValueGeneration}). A nested {@code flush()} re-enters that same
+     * iteration, which re-invokes {@code generateValue()} for the very insert still in progress,
+     * recursing until the stack overflows. Any increment pending in this transaction is flushed
+     * either by that outer, already-running flush or by the caller's normal per-record flush
+     * (e.g. one row of a batch import), so a locked refresh alone is enough to see it.</p>
      */
     public static Sequence lockSequence(String sequenceId) {
         final Session session = OBDal.getInstance().getSession();
@@ -90,7 +97,6 @@ public class TransactionalSequenceUtils {
         if (sequence == null) {
             return null;
         }
-        session.flush();
         session.refresh(sequence, LockOptions.UPGRADE);
         return sequence;
     }
