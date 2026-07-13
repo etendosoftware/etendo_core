@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.utility.Sequence;
 
@@ -71,17 +70,29 @@ public class TransactionalSequenceUtils {
         OBDal.getInstance().save(sequence);
     }
 
+    /**
+     * Returns the {@link Sequence} holding a pessimistic row lock, guaranteeing its in-memory
+     * state matches the locked row.
+     *
+     * <p>A locking HQL query is NOT enough here: when the entity is already present in the
+     * Hibernate session (callers such as {@code DefaultTransactionalSequence.generateValue()}
+     * always look the sequence up, unlocked, before asking for its next value), the query
+     * result resolves to the cached instance and its stale {@code nextAssignedNumber} survives,
+     * so two concurrent transactions can both compute the same value even though the SQL lock
+     * itself worked. {@code refresh(entity, UPGRADE)} both acquires the {@code SELECT ... FOR
+     * UPDATE} lock and rehydrates the entity from the locked row. The preceding {@code flush()}
+     * preserves increments pending in the current session (several values generated in one
+     * transaction) that a refresh would otherwise discard.</p>
+     */
     public static Sequence lockSequence(String sequenceId) {
-        final String where = "" +
-                "select s " +
-                "from ADSequence s " +
-                "where id = :id";
         final Session session = OBDal.getInstance().getSession();
-        final Query<Sequence> query = session.createQuery(where, Sequence.class);
-        query.setParameter("id", sequenceId);
-        query.setMaxResults(1);
-        query.setLockOptions(LockOptions.UPGRADE);
-        return query.uniqueResult();
+        final Sequence sequence = OBDal.getInstance().get(Sequence.class, sequenceId);
+        if (sequence == null) {
+            return null;
+        }
+        session.flush();
+        session.refresh(sequence, LockOptions.UPGRADE);
+        return sequence;
     }
 
     public static Sequence getSequenceFromParameters(SequenceParameterList sequenceParameterList) throws RequiredDimensionException, NotFoundSequenceException {
