@@ -14,6 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +54,8 @@ import org.openbravo.model.ad.utility.Sequence;
  */
 public class DefaultTransactionalSequencePreloadRaceTest extends WeldBaseTest {
 
+  private static final Logger log = LogManager.getLogger();
+
   private static final int HOLD_LOCK_MS = 800;
   private static final long LATCH_TIMEOUT_S = 30;
 
@@ -80,7 +84,7 @@ public class DefaultTransactionalSequencePreloadRaceTest extends WeldBaseTest {
     List<Future<String>> r = executor.invokeAll(threads, 5, TimeUnit.MINUTES);
     String doc1 = r.get(0).get();
     String doc2 = r.get(1).get();
-    System.out.println("Holder value: " + doc1 + " | Racer value: " + doc2);
+    log.info("Holder value: {} | Racer value: {}", doc1, doc2);
 
     assertThat(doc2, not(equalTo(doc1)));
   }
@@ -96,12 +100,12 @@ public class DefaultTransactionalSequencePreloadRaceTest extends WeldBaseTest {
       setTestUserContext();
       Sequence preloaded = OBDal.getInstance().get(Sequence.class, sequence.getId());
       String value = TransactionalSequenceUtils.getNextValueFromSequence(preloaded, true);
-      System.out.println("Holder computed " + value + ", holding transaction open...");
+      log.info("Holder computed {}, holding transaction open...", value);
       firstValueComputed.countDown();
       Thread.sleep(HOLD_LOCK_MS);
       SessionHandler.getInstance().commitAndClose();
       OBDal.getInstance().getSession().disconnect();
-      System.out.println("Holder committed.");
+      log.info("Holder committed.");
       return value;
     }
   }
@@ -119,10 +123,10 @@ public class DefaultTransactionalSequencePreloadRaceTest extends WeldBaseTest {
       }
       setTestUserContext();
       Sequence preloaded = OBDal.getInstance().get(Sequence.class, sequence.getId());
-      System.out.println("Racer preloaded sequence with nextAssignedNumber="
-          + preloaded.getNextAssignedNumber() + " while holder still holds the lock");
+      log.info("Racer preloaded sequence with nextAssignedNumber={} while holder still holds the lock",
+          preloaded.getNextAssignedNumber());
       String value = TransactionalSequenceUtils.getNextValueFromSequence(preloaded, true);
-      System.out.println("Racer computed " + value);
+      log.info("Racer computed {}", value);
       SessionHandler.getInstance().commitAndClose();
       OBDal.getInstance().getSession().disconnect();
       return value;
