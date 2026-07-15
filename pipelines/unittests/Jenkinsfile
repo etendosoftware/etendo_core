@@ -535,7 +535,7 @@ pipeline {
               echo "--------------- Installing SonarQube ---------------"
               env.JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
               sh """
-                apt-get update && apt-get install -y wget unzip
+                apt-get update && apt-get install -y --no-upgrade wget unzip
                 wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}-linux.zip
                 unzip sonar-scanner-cli-${SONAR_VERSION}-linux.zip
                 export PATH=\$PATH:\${WORKSPACE}/sonar-scanner-${SONAR_VERSION}-linux/bin
