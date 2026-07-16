@@ -210,9 +210,11 @@ public class FinancialUtils {
   }
 
   /**
-   * Method to get the conversion rate defined at system level. If there is not a conversion rate
-   * defined on the given Organization it is searched recursively on its parent organization until
-   * one is found. If no conversion rate is found null is returned.
+   * Method to get the conversion rate for the given parameters. Both the client's own conversion
+   * rates and the shared system ('0') conversion rates are considered; a client-specific rate takes
+   * precedence over a system rate for the same organization, currencies and date. If there is not a
+   * conversion rate defined on the given Organization it is searched recursively on its parent
+   * organization until one is found. If no conversion rate is found null is returned.
    *
    * @param date
    *          Date conversion is being performed.
@@ -236,13 +238,22 @@ public class FinancialUtils {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
       obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT, client));
+      // Consider both the client's own rates and the shared system ('0') rates.
+      final List<Client> clients = new ArrayList<>();
+      clients.add(client);
+      if (!"0".equals(client.getId())) {
+        clients.add(OBDal.getInstance().getProxy(Client.class, "0"));
+      }
+      obcConvRate.add(Restrictions.in(ConversionRate.PROPERTY_CLIENT, clients));
       obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
       obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
       obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, dateWithoutTimestamp));
       obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, dateWithoutTimestamp));
       obcConvRate.setFilterOnReadableClients(false);
       obcConvRate.setFilterOnReadableOrganization(false);
+      // A client-specific rate wins over the system ('0') rate for the same org/currency/date.
+      obcConvRate.addOrderBy(ConversionRate.PROPERTY_CLIENT, false);
+      obcConvRate.setMaxResults(1);
       conversionRate = (ConversionRate) obcConvRate.uniqueResult();
       if (conversionRate != null) {
         return conversionRate;
