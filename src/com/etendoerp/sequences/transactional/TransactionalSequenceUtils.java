@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.utility.Sequence;
 
@@ -71,17 +70,35 @@ public class TransactionalSequenceUtils {
         OBDal.getInstance().save(sequence);
     }
 
+    /**
+     * Returns the {@link Sequence} holding a pessimistic row lock, guaranteeing its in-memory
+     * state matches the locked row.
+     *
+     * <p>A locking HQL query is NOT enough here: when the entity is already present in the
+     * Hibernate session (callers such as {@code DefaultTransactionalSequence.generateValue()}
+     * always look the sequence up, unlocked, before asking for its next value), the query
+     * result resolves to the cached instance and its stale {@code nextAssignedNumber} survives,
+     * so two concurrent transactions can both compute the same value even though the SQL lock
+     * itself worked. {@code refresh(entity, UPGRADE)} both acquires the {@code SELECT ... FOR
+     * UPDATE} lock and rehydrates the entity from the locked row.</p>
+     *
+     * <p>Do NOT call {@code session.flush()} here. {@code generateValue()} — and therefore this
+     * method — is invoked BY Hibernate itself from inside {@code AbstractEntityPersister.insert()}
+     * while an outer flush is already iterating the action queue
+     * ({@code preInsertInMemoryValueGeneration}). A nested {@code flush()} re-enters that same
+     * iteration, which re-invokes {@code generateValue()} for the very insert still in progress,
+     * recursing until the stack overflows. Any increment pending in this transaction is flushed
+     * either by that outer, already-running flush or by the caller's normal per-record flush
+     * (e.g. one row of a batch import), so a locked refresh alone is enough to see it.</p>
+     */
     public static Sequence lockSequence(String sequenceId) {
-        final String where = "" +
-                "select s " +
-                "from ADSequence s " +
-                "where id = :id";
         final Session session = OBDal.getInstance().getSession();
-        final Query<Sequence> query = session.createQuery(where, Sequence.class);
-        query.setParameter("id", sequenceId);
-        query.setMaxResults(1);
-        query.setLockOptions(LockOptions.UPGRADE);
-        return query.uniqueResult();
+        final Sequence sequence = OBDal.getInstance().get(Sequence.class, sequenceId);
+        if (sequence == null) {
+            return null;
+        }
+        session.refresh(sequence, LockOptions.UPGRADE);
+        return sequence;
     }
 
     public static Sequence getSequenceFromParameters(SequenceParameterList sequenceParameterList) throws RequiredDimensionException, NotFoundSequenceException {
