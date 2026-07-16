@@ -1,6 +1,7 @@
 package org.openbravo.test.stress;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -9,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,6 +35,18 @@ public class QueryStressTest extends StressTestBase {
   private static final String COUNT_SO_QUERY =
       "SELECT count(*) FROM c_order WHERE issotrx = 'Y'";
 
+  /** Executions discarded before timing, to bring the pages the query reads into cache. */
+  private static final int WARMUP_RUNS = 1;
+
+  /** Timed executions per measurement. The median of these is what gets asserted. */
+  private static final int MEASURED_RUNS = 5;
+
+  /**
+   * Maximum N+1 overhead the InvoiceStatus SQL Logic column may add per grid row.
+   * Provisional: recalibrate once a few runs of the warmed-up measurement are available.
+   */
+  private static final double MAX_FUNCTION_OVERHEAD_MS_PER_ROW = 2.0;
+
   @Override
   protected String[] getAuditTriggers() {
     return new String[0];
@@ -46,6 +60,64 @@ public class QueryStressTest extends StressTestBase {
   @Override
   protected String getStressDocPrefix() {
     return "STRESS-QUERY-";
+  }
+
+  // ==========================================================================
+  // Measurement helpers
+  // ==========================================================================
+
+  /** The median elapsed time of a repeated measurement, plus the rows the query returned. */
+  private static final class Measurement {
+    private final long medianMs;
+    private final int rows;
+
+    private Measurement(long medianMs, int rows) {
+      this.medianMs = medianMs;
+      this.rows = rows;
+    }
+  }
+
+  /**
+   * Runs {@code query} {@link #WARMUP_RUNS} times discarding the timings, then returns the
+   * median of {@link #MEASURED_RUNS} timed executions.
+   * <p>
+   * The pipeline starts the RDS instance on every build, so the first read of a table is served
+   * from EBS against an empty buffer cache. A single cold sample varied by up to 70% across
+   * runs of identical code, which is indistinguishable from a real regression. Production
+   * instances are long-running and warm, so the median of warm executions is both the
+   * reproducible measurement and the representative one.
+   */
+  private Measurement measure(Supplier<List<?>> query) {
+    for (int i = 0; i < WARMUP_RUNS; i++) {
+      query.get();
+      OBDal.getInstance().getSession().clear();
+    }
+
+    long[] times = new long[MEASURED_RUNS];
+    int rows = 0;
+    for (int i = 0; i < MEASURED_RUNS; i++) {
+      long start = System.nanoTime();
+      List<?> results = query.get();
+      times[i] = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+      rows = results.size();
+      OBDal.getInstance().getSession().clear();
+    }
+
+    Arrays.sort(times);
+    return new Measurement(times[MEASURED_RUNS / 2], rows);
+  }
+
+  /** The Goods Receipt grid page query, with the InvoiceStatus SQL Logic column. */
+  private Supplier<List<?>> goodsReceiptPageQuery(int pageSize, int page) {
+    return () -> OBDal.getInstance().getSession()
+        .createNativeQuery(
+            "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
+                + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
+                + "FROM m_inout m "
+                + "WHERE m.issotrx = 'N' "
+                + "ORDER BY m.movementdate DESC "
+                + "LIMIT " + pageSize + " OFFSET " + (page * pageSize))
+        .list();
   }
 
   // ==========================================================================
@@ -322,9 +394,7 @@ public class QueryStressTest extends StressTestBase {
   public void testGoodsReceiptGridBaseline() {
     OBContext.setAdminMode(true);
     try {
-      long start = System.nanoTime();
-      @SuppressWarnings("unchecked")
-      List<Object[]> results = OBDal.getInstance().getSession()
+      Measurement grid = measure(() -> OBDal.getInstance().getSession()
           .createNativeQuery(
               "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
                   + "bp.name AS bpartner "
@@ -333,15 +403,15 @@ public class QueryStressTest extends StressTestBase {
                   + "WHERE m.issotrx = 'N' "
                   + "ORDER BY m.movementdate DESC "
                   + "LIMIT 100")
-          .list();
-      long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+          .list());
 
       log.info("[STRESS-QUERY] Goods Receipt grid (baseline, no function): "
-          + results.size() + ROWS_IN_SEPARATOR + elapsed + " ms");
-      Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
+          + grid.rows + ROWS_IN_SEPARATOR + grid.medianMs + " ms (median of "
+          + MEASURED_RUNS + ")");
+      Assert.assertTrue(EXPECTED_RESULTS, grid.rows > 0);
       Assert.assertTrue(
-          "Goods Receipt baseline too slow: " + elapsed + " ms (max: 75 ms)",
-          elapsed <= 75);
+          "Goods Receipt baseline too slow: " + grid.medianMs + " ms (max: 75 ms)",
+          grid.medianMs <= 75);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -356,9 +426,7 @@ public class QueryStressTest extends StressTestBase {
   public void testGoodsReceiptGridWithInvoiceStatusFunction() {
     OBContext.setAdminMode(true);
     try {
-      long start = System.nanoTime();
-      @SuppressWarnings("unchecked")
-      List<Object[]> results = OBDal.getInstance().getSession()
+      Measurement grid = measure(() -> OBDal.getInstance().getSession()
           .createNativeQuery(
               "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
                   + "bp.name AS bpartner, "
@@ -368,25 +436,30 @@ public class QueryStressTest extends StressTestBase {
                   + "WHERE m.issotrx = 'N' "
                   + "ORDER BY m.movementdate DESC "
                   + "LIMIT 100")
-          .list();
-      long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+          .list());
 
       log.info("[STRESS-QUERY] Goods Receipt grid (with InvoiceStatus function): "
-          + results.size() + ROWS_IN_SEPARATOR + elapsed + " ms");
-      Assert.assertFalse(EXPECTED_RESULTS, results.isEmpty());
+          + grid.rows + ROWS_IN_SEPARATOR + grid.medianMs + " ms (median of "
+          + MEASURED_RUNS + ")");
+      Assert.assertTrue(EXPECTED_RESULTS, grid.rows > 0);
       Assert.assertTrue(
-          "Goods Receipt with InvoiceStatus function too slow: " + elapsed
+          "Goods Receipt with InvoiceStatus function too slow: " + grid.medianMs
               + " ms (max: 200 ms)",
-          elapsed <= 200);
+          grid.medianMs <= 200);
     } finally {
       OBContext.restorePreviousMode();
     }
   }
 
   /**
-   * Compares grid query performance with and without the SQL Logic function column.
-   * A high degradation factor indicates N+1 function-call overhead that will
-   * cause grid loading issues in the UI.
+   * Measures what the InvoiceStatus SQL Logic column costs per grid row, by timing the same
+   * page query with and without it. A high per-row overhead is the N+1 function-call pattern
+   * that caused the ETP-2696 grid loading issues.
+   * <p>
+   * The assertion is on the overhead per row rather than on the ratio between the two timings:
+   * the baseline is a handful of milliseconds, so a ratio divides by a number small enough that
+   * ordinary I/O jitter moves it from 5x to 10x without the code changing. The ratio is still
+   * logged, as a diagnostic.
    */
   @Test
   public void testGoodsReceiptInvoiceStatusDegradation() {
@@ -394,23 +467,16 @@ public class QueryStressTest extends StressTestBase {
     try {
       int pageSize = 100;
 
-      // Baseline: without function
-      long baseStart = System.nanoTime();
-      OBDal.getInstance().getSession()
+      Measurement base = measure(() -> OBDal.getInstance().getSession()
           .createNativeQuery(
               "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus "
                   + "FROM m_inout m "
                   + "WHERE m.issotrx = 'N' "
                   + "ORDER BY m.movementdate DESC "
                   + "LIMIT " + pageSize)
-          .list();
-      long baseTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - baseStart);
+          .list());
 
-      OBDal.getInstance().getSession().clear();
-
-      // With function: per-row call
-      long funcStart = System.nanoTime();
-      OBDal.getInstance().getSession()
+      Measurement withFunction = measure(() -> OBDal.getInstance().getSession()
           .createNativeQuery(
               "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
                   + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
@@ -418,22 +484,25 @@ public class QueryStressTest extends StressTestBase {
                   + "WHERE m.issotrx = 'N' "
                   + "ORDER BY m.movementdate DESC "
                   + "LIMIT " + pageSize)
-          .list();
-      long funcTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - funcStart);
+          .list());
 
-      long normalizedBaseTime = Math.max(baseTime, 15);
-      double degradation = (double) funcTime / normalizedBaseTime;
+      double overheadPerRow =
+          (double) (withFunction.medianMs - base.medianMs) / Math.max(withFunction.rows, 1);
+      double degradation = (double) withFunction.medianMs / Math.max(base.medianMs, 1);
 
       log.info("[STRESS-QUERY] === GOODS RECEIPT INVOICE STATUS DEGRADATION ===");
-      log.info("[STRESS-QUERY] Baseline (no function): " + baseTime + " ms");
-      log.info("[STRESS-QUERY] With InvoiceStatus function: " + funcTime + " ms");
+      log.info("[STRESS-QUERY] Baseline (no function): " + base.medianMs + " ms");
+      log.info("[STRESS-QUERY] With InvoiceStatus function: " + withFunction.medianMs + " ms");
       log.info(String.format("[STRESS-QUERY] Degradation factor: %.1fx", degradation));
+      log.info(String.format("[STRESS-QUERY] Function overhead: %.2f ms/row", overheadPerRow));
 
+      Assert.assertTrue(EXPECTED_RESULTS, withFunction.rows > 0);
       Assert.assertTrue(
-          String.format("InvoiceStatus function degrades grid query by %.1fx "
-              + "(max: 10x, normalized base: %d ms, raw base: %d ms, with function: %d ms)",
-              degradation, normalizedBaseTime, baseTime, funcTime),
-          degradation <= 10);
+          String.format("InvoiceStatus function adds %.2f ms/row of N+1 overhead (max: %.2f "
+              + "ms/row; base: %d ms, with function: %d ms, rows: %d)",
+              overheadPerRow, MAX_FUNCTION_OVERHEAD_MS_PER_ROW, base.medianMs,
+              withFunction.medianMs, withFunction.rows),
+          overheadPerRow <= MAX_FUNCTION_OVERHEAD_MS_PER_ROW);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -453,19 +522,17 @@ public class QueryStressTest extends StressTestBase {
       long totalTime = 0;
       long maxPageTime = 0;
 
+      // Warm-up pass: discarded, so the measured pass reflects a warm buffer cache rather
+      // than the first read of m_inout off EBS after the pipeline started the RDS instance.
+      for (int page = 0; page < totalPages; page++) {
+        goodsReceiptPageQuery(pageSize, page).get();
+        OBDal.getInstance().getSession().clear();
+      }
+
       for (int page = 0; page < totalPages; page++) {
         long start = System.nanoTime();
 
-        @SuppressWarnings("unchecked")
-        List<Object[]> results = OBDal.getInstance().getSession()
-            .createNativeQuery(
-                "SELECT m.m_inout_id, m.documentno, m.movementdate, m.docstatus, "
-                    + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
-                    + "FROM m_inout m "
-                    + "WHERE m.issotrx = 'N' "
-                    + "ORDER BY m.movementdate DESC "
-                    + "LIMIT " + pageSize + " OFFSET " + (page * pageSize))
-            .list();
+        List<?> results = goodsReceiptPageQuery(pageSize, page).get();
 
         long pageTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         totalTime += pageTime;
@@ -503,11 +570,9 @@ public class QueryStressTest extends StressTestBase {
     try {
       int[] rowCounts = {100, 250, 500};
 
-      long prevTime = 0;
+      long widestPageTime = 0;
       for (int rows : rowCounts) {
-        long start = System.nanoTime();
-        @SuppressWarnings("unchecked")
-        List<Object[]> results = OBDal.getInstance().getSession()
+        Measurement page = measure(() -> OBDal.getInstance().getSession()
             .createNativeQuery(
                 "SELECT m.m_inout_id, m.documentno, "
                     + "C_GETINVOICESTATUSFROMSHIPMENT(m.m_inout_id) AS invoice_status "
@@ -515,22 +580,21 @@ public class QueryStressTest extends StressTestBase {
                     + "WHERE m.issotrx = 'N' "
                     + "ORDER BY m.movementdate DESC "
                     + "LIMIT " + rows)
-            .list();
-        long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+            .list());
 
-        double msPerRow = results.isEmpty() ? 0 : (double) elapsed / results.size();
+        double msPerRow = page.rows == 0 ? 0 : (double) page.medianMs / page.rows;
 
         log.info("[STRESS-QUERY] InvoiceStatus function " + rows + " rows: "
-            + elapsed + MS_PER_ROW_SEPARATOR + String.format("%.2f", msPerRow) + " ms/row)");
+            + page.medianMs + MS_PER_ROW_SEPARATOR + String.format("%.2f", msPerRow)
+            + " ms/row)");
 
-        OBDal.getInstance().getSession().clear();
-        prevTime = elapsed;
+        widestPageTime = page.medianMs;
       }
 
-      // The 500-row query should complete within a reasonable time
+      // rowCounts ascends, so this is the 500-row measurement.
       Assert.assertTrue(
-          "InvoiceStatus function with 500 rows too slow: " + prevTime + " ms (max: 950 ms)",
-          prevTime <= 950);
+          "InvoiceStatus function with 500 rows too slow: " + widestPageTime + " ms (max: 950 ms)",
+          widestPageTime <= 950);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -560,44 +624,37 @@ public class QueryStressTest extends StressTestBase {
         String functionCall = test[2];
         String label = test[3];
 
-        // Baseline without function
-        long baseStart = System.nanoTime();
-        OBDal.getInstance().getSession()
+        // Both variants are warmed and measured the same way. Timing a cold baseline against
+        // an already-warm function query made the degradation come out below 1x on every run,
+        // which silently disabled the assertion below.
+        Measurement base = measure(() -> OBDal.getInstance().getSession()
             .createNativeQuery(
                 "SELECT * FROM " + table
                     + " WHERE " + filter
                     + " ORDER BY created DESC LIMIT 100")
-            .list();
-        long baseTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - baseStart);
+            .list());
 
-        OBDal.getInstance().getSession().clear();
-
-        // With function
-        long funcStart = System.nanoTime();
-        OBDal.getInstance().getSession()
+        Measurement withFunction = measure(() -> OBDal.getInstance().getSession()
             .createNativeQuery(
                 "SELECT *, " + functionCall + " FROM " + table
                     + " WHERE " + filter
                     + " ORDER BY created DESC LIMIT 100")
-            .list();
-        long funcTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - funcStart);
+            .list());
 
-        double degradation = baseTime > 0 ? (double) funcTime / baseTime : funcTime;
+        double degradation = (double) withFunction.medianMs / Math.max(base.medianMs, 1);
 
-        log.info("[STRESS-QUERY] SQL Logic [" + label + "]: base=" + baseTime
-            + " ms, with function=" + funcTime + " ms, degradation="
+        log.info("[STRESS-QUERY] SQL Logic [" + label + "]: base=" + base.medianMs
+            + " ms, with function=" + withFunction.medianMs + " ms, degradation="
             + String.format("%.1fx", degradation));
 
         Assert.assertTrue(
-            "SQL Logic function [" + label + "] too slow: " + funcTime
+            "SQL Logic function [" + label + "] too slow: " + withFunction.medianMs
                 + " ms (max: " + maxAllowed + " ms)",
-            funcTime <= maxAllowed);
+            withFunction.medianMs <= maxAllowed);
         Assert.assertTrue(
             String.format("SQL Logic function [%s] degrades query by %.1fx (max: 10x)",
                 label, degradation),
             degradation <= 10);
-
-        OBDal.getInstance().getSession().clear();
       }
     } finally {
       OBContext.restorePreviousMode();
