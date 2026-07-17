@@ -57,6 +57,9 @@ public class FinancialUtilsTest extends WeldBaseTest {
   /** Pound Sterling currency id (as used by FundsTransferTest). */
   private static final String POUND_CURRENCY_ID = "114";
 
+  /** Assertion message used when the returned multiply rate does not match the expected value. */
+  private static final String WRONG_MULTIPLY_RATE = "Wrong multiply rate returned";
+
   private Client testClient;
   private Client starClient;
   private Currency euro;
@@ -125,7 +128,7 @@ public class FinancialUtilsTest extends WeldBaseTest {
     assertNotNull("A conversion rate should be found", result);
     assertEquals("The client-specific rate must win over the system rate", TEST_CLIENT_ID,
         result.getClient().getId());
-    assertEquals("Wrong multiply rate returned", 0,
+    assertEquals(WRONG_MULTIPLY_RATE, 0,
         result.getMultipleRateBy().compareTo(clientRate));
   }
 
@@ -147,7 +150,7 @@ public class FinancialUtilsTest extends WeldBaseTest {
     assertNotNull("The system ('0') conversion rate should be found as fallback", result);
     assertEquals("The returned rate must belong to the system ('0') client", STAR_CLIENT_ID,
         result.getClient().getId());
-    assertEquals("Wrong multiply rate returned", 0,
+    assertEquals(WRONG_MULTIPLY_RATE, 0,
         result.getMultipleRateBy().compareTo(systemRate));
   }
 
@@ -170,7 +173,7 @@ public class FinancialUtilsTest extends WeldBaseTest {
     assertNotNull("The client conversion rate should be found", result);
     assertEquals("The returned rate must belong to the test client", TEST_CLIENT_ID,
         result.getClient().getId());
-    assertEquals("Wrong multiply rate returned", 0,
+    assertEquals(WRONG_MULTIPLY_RATE, 0,
         result.getMultipleRateBy().compareTo(clientRate));
   }
 
@@ -194,7 +197,7 @@ public class FinancialUtilsTest extends WeldBaseTest {
     assertNotNull("The rate defined on the parent organization should be found", result);
     assertEquals("The returned rate must be the parent-organization one", Orgs.ESP,
         result.getOrganization().getId());
-    assertEquals("Wrong multiply rate returned", 0,
+    assertEquals(WRONG_MULTIPLY_RATE, 0,
         result.getMultipleRateBy().compareTo(parentRate));
   }
 
