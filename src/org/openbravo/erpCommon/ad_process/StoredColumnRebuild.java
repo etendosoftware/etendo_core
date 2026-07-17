@@ -43,9 +43,15 @@ import org.openbravo.scheduling.ProcessLogger;
  *
  * <p>The single parameter {@code AD_Column_ID} identifies the stored computed column (the
  * {@code Computation_Mode='S'} column whose value is recomputed). The whole rebuild runs in one
- * transaction with the recursion guard engaged (PostgreSQL {@code my.scd_refreshing} GUC / Oracle
- * global trigger disable), so the engine's own writes to the target table do not re-enqueue dirty
- * rows.</p>
+ * transaction. On PostgreSQL it engages the transaction-local {@code my.scd_refreshing} GUC, which
+ * suppresses the re-entrant enqueue that its <em>synchronous</em> recompute would otherwise cause.
+ * Oracle has <b>no</b> runtime recursion guard — it deliberately does not honour Etendo's global
+ * trigger-disable — because it does not need one: re-enqueue from the engine's own write is
+ * prevented structurally (the recompute writes a target column that is never in its own watched
+ * set, and the watched-column value guard rejects no-op writes), and dependency cycles that could
+ * otherwise loop the async {@code 'Q'} drain are rejected at validation time by rule V14
+ * ({@code ETGO_ScdDependencyCycle}, a hard error). Either way the engine's own writes to the target
+ * table do not re-enqueue dirty rows.</p>
  */
 public class StoredColumnRebuild implements Process {
 
