@@ -39,10 +39,17 @@ import org.openbravo.scheduling.ProcessLogger;
  *
  * <p>Each invocation fetches up to {@code Max Records} of the oldest queued ({@code REFRESH_MODE='Q'})
  * dirty rows that are not dead-lettered ({@code IS_IGNORED='N'}) and processes each one in its own
- * database transaction, committing after every row. Concurrent drainers are supported (spec §5.5):
- * the fetch claims a disjoint batch with {@code FOR UPDATE SKIP LOCKED}, so two runs never contend on
- * the same rows; the recompute is idempotent and the dirty row is deleted by id, so even a rare
- * overlap is harmless.</p>
+ * database transaction, committing after every row.</p>
+ *
+ * <p><b>Concurrent drainers are NOT supported.</b> This process must run serially — a single Process
+ * Request, and (in a cluster) a single node. Correctness depends on the
+ * {@code computation_sequence_number} ordering of the fetch: chained stored columns are allowed to
+ * read one another's stored values, and a column is only guaranteed to see a fresh upstream value
+ * because the lower-sequence column is recomputed first. A second drainer running at the same time
+ * orders its own half of the queue independently, so a downstream column can be recomputed before —
+ * or concurrently with — the upstream column it reads, leaving it stale. The fetch takes no row lock:
+ * a lock would not help here anyway, since {@link #execute} commits the fetch transaction before the
+ * per-row work begins, releasing any lock immediately.</p>
  *
  * <p>Sentinel rows ({@code TARGET_RECORD_ID IS NULL}) request a full column rebuild. The batch is
  * processed in a single pass honouring the {@code computation_sequence_number} order of the fetch: a
@@ -87,12 +94,20 @@ public class StoredColumnQueueProcessor implements Process {
 
   /**
    * Fetches the oldest non-dead-lettered queued rows for this client (plus the System-owned
-   * full-rebuild sentinels). Concurrent drainers are supported: {@code FOR UPDATE SKIP LOCKED} makes
-   * each drainer claim a disjoint batch by skipping rows another drainer's fetch has already locked
-   * (spec §5.5). SKIP LOCKED is supported by both PostgreSQL and Oracle 12c+ and composes with the
-   * {@code ORDER BY} and JDBC {@code setMaxRows} batch bound, so a single dialect-neutral statement
-   * serves both. Processing stays idempotent and rows are deleted by id, so even a rare overlap is
-   * harmless.
+   * full-rebuild sentinels), lowest {@code computation_sequence_number} first.
+   *
+   * <p>The {@code ORDER BY} is a correctness requirement, not a nicety: it is what makes a chained
+   * stored column read an already-refreshed upstream value. It composes with the JDBC
+   * {@code setMaxRows} bound — the batch takes the <i>lowest</i> sequence numbers, so a chain split
+   * across successive batches still drains upstream-first. Only a concurrent drainer breaks the
+   * ordering, which is why this process is not supported concurrently (see the class javadoc).</p>
+   *
+   * <p>The fetch takes no row lock. This process assumes a single drainer — concurrent drainers are
+   * not supported, since a second drainer would fetch an overlapping, independently-ordered batch and
+   * could recompute a chained reader before the upstream value it reads, breaking the sequence
+   * ordering above. A lock here would not help anyway: {@link #execute} commits the fetch transaction
+   * before the per-row work begins, releasing any lock immediately. A plain {@code SELECT ... ORDER BY}
+   * is dialect-neutral, valid on both PostgreSQL and Oracle.</p>
    */
   private static final String FETCH_SQL = "SELECT ad_storedcolumn_dirty_id, ad_column_id, target_record_id"
       + " FROM ad_storedcolumn_dirty"
@@ -100,8 +115,7 @@ public class StoredColumnQueueProcessor implements Process {
       // Drain this client's own dirty rows plus the System-owned ('0') full-rebuild sentinels, which
       // recompute the whole table across all clients and so must be picked up by any client's run.
       + " AND ad_client_id IN (?, '0')"
-      + " ORDER BY computation_sequence_number ASC, created ASC"
-      + " FOR UPDATE SKIP LOCKED";
+      + " ORDER BY computation_sequence_number ASC, created ASC";
 
   private static final String DELETE_SQL = "DELETE FROM ad_storedcolumn_dirty WHERE ad_storedcolumn_dirty_id = ?";
 
@@ -192,9 +206,10 @@ public class StoredColumnQueueProcessor implements Process {
   }
 
   /**
-   * Fetches the oldest queued rows for this client plus the System-owned rebuild sentinels. Uses
-   * {@code FOR UPDATE SKIP LOCKED} so concurrent drainers claim disjoint batches; the batch size is
-   * bounded via JDBC {@code setMaxRows}.
+   * Fetches the oldest queued rows for this client plus the System-owned rebuild sentinels, in
+   * {@code computation_sequence_number} order, bounding the batch via JDBC {@code setMaxRows}. Takes
+   * no row lock; see {@link #FETCH_SQL} and the class javadoc for why this process assumes a single
+   * drainer and does not support concurrent execution.
    */
   private List<DirtyRow> fetchBatch(Connection con, int maxRecords, String clientId)
       throws SQLException {

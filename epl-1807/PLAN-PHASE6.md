@@ -285,8 +285,9 @@ it in that module's own repo, as Phase 5 established for its SQL scenario harnes
      dirties N target rows (constraint-trigger recompute at commit) vs. the same transaction with
      the column removed.
   2. **Async drain throughput** — dirty rows/sec drained by `StoredColumnQueueProcessor` at
-     `Max_Records` = 100 / 500 / 1000, single vs. two concurrent Process Requests (validates the
-     `SKIP LOCKED` linear-scaling claim in `OPERATIONS.md`).
+     `Max_Records` = 100 / 500 / 1000, **single drainer only** (concurrent drainers are not
+     supported — the drain scales vertically via batch size and run frequency, not horizontally;
+     see `OPERATIONS.md`). This measurement fixes the batch-size/interval guidance there.
   3. **Rebuild time** — `ad_scd_rebuild(column)` wall-clock at 10k / 100k / 1M target rows
      (calibrates the `LARGE_TABLE_THRESHOLD = 100_000` enqueue-vs-inline decision).
   4. **`update.database` deploy time** — with vs. without Workstream 2's hash-skip, at 10 / 100

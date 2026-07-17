@@ -74,8 +74,8 @@ Parameter (REQUIREMENTS §5.5):
 **Execution per invocation (one DB transaction):**
 
 1. Claim up to `Max Records` rows from `AD_StoredColumn_Dirty` where `Refresh_Mode = 'Q'`,
-   `ORDER BY Computation_Sequence_Number ASC, Created ASC`, using
-   `SELECT … FOR UPDATE SKIP LOCKED`.
+   `ORDER BY Computation_Sequence_Number ASC, Created ASC`, using `SELECT … FOR UPDATE`
+   (deliberately **without** `SKIP LOCKED` — see A3).
 2. **Sentinel first:** for each claimed row with `Target_Record_ID IS NULL`, call
    `ad_scd_rebuild(<column_id>)`, delete the sentinel, and drop from the batch any other
    claimed rows for the same column (the rebuild already covered them).
@@ -92,11 +92,25 @@ Parameter (REQUIREMENTS §5.5):
 **not** trigger the synchronous drain — they simply persist for A1. No change needed to the
 trigger; confirm with a test that a `'Q'` insert leaves the row in the table post-commit.
 
-### A3. Concurrency
+### A3. Concurrency — the drain is serial
 
-`FOR UPDATE SKIP LOCKED` lets multiple scheduled instances claim disjoint batches.
-`ad_scd_recompute`'s existing `FOR UPDATE` lock on the **target** row prevents two batches
-that resolved to the same aggregate from racing. No target computed twice simultaneously.
+**Concurrent drainers are NOT supported.** Schedule exactly one Process Request, on one node.
+
+The claim is ordered by `Computation_Sequence_Number`, and that ordering is a correctness
+requirement rather than a nicety: chained stored columns may read one another's stored values,
+and a downstream column only sees a fresh upstream value because the lower-sequence column is
+recomputed first. A second drainer running concurrently orders **its own half** of the queue
+independently, so a downstream column can be recomputed before — or alongside — the upstream
+column it reads, storing a stale value. The claim therefore uses a plain `FOR UPDATE` (no
+`SKIP LOCKED`), so a concurrent fetch blocks instead of claiming a disjoint, independently
+ordered batch.
+
+`ad_scd_recompute`'s `FOR UPDATE` lock on the **target** row still prevents two writers racing
+on the same aggregate, but a target lock cannot restore cross-column *ordering* — hence the
+serial requirement.
+
+This restricts only the drainer. Concurrent **user** transactions writing to source tables are
+fully supported; they just enqueue dirty rows for the single drainer to process in order.
 
 ### A4. Failure / retry / poison rows — **Q mode only**
 
@@ -296,7 +310,11 @@ Per REQUIREMENTS §7.4:
 - Background processor claims a batch, writes results, deletes processed rows.
 - Null-sentinel row triggers full `ad_scd_rebuild` and is deleted; sibling individual rows
   for the same column are skipped.
-- Two concurrent processor instances claim disjoint sets — no target computed twice.
+- Chained columns drain upstream-first: a column whose function reads another stored column's
+  value sees the refreshed upstream value, because the batch is drained in
+  `Computation_Sequence_Number` order (including when the chain spans successive batches).
+- Concurrent **user** transactions writing watched source rows all enqueue correctly and are
+  drained in order by the single drainer.
 - Consistency check (`ad_scd_check`) detects values the queue has not yet refreshed.
 - **Poison row (Q):** a row whose recompute always fails increments `retry_count`, captures
   `error_msg`, does **not** block its batch-mates (savepoint isolation), and flips
@@ -332,8 +350,9 @@ the Java-recompute refactor that lets one drain serve both platforms).
 
 ## Exit criteria
 
-- A `'Q'` column drains correctly and idempotently via the scheduled processor; concurrent
-  instances are safe; nothing drains synchronously.
+- A `'Q'` column drains correctly and idempotently via the scheduled processor, running as a
+  single serial instance (concurrent drainers are not supported — A3); nothing drains
+  synchronously.
 - Activating a stored-computed column on a populated table backfills all existing rows via
   the mode-appropriate path.
 - Poison `'Q'` rows retry, capture `error_msg`, isolate via savepoint, and dead-letter at the

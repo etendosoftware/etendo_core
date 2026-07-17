@@ -47,19 +47,36 @@ Request*) per installation:
 2. **Timing** = Scheduled; **Frequency** = e.g. every 1 minute (tune to your lag tolerance).
 3. Parameters:
    - **Max Records** — batch size per run (default `100`). Raise it if the queue backlogs;
-     keep it bounded so a single run stays short and `SKIP LOCKED` lets parallel runs help.
+     keep it bounded so a single run stays short.
    - **Retry Threshold** — failures before a row is dead-lettered (default `5`).
 
-Multiple concurrent runs are safe: rows are claimed `FOR UPDATE SKIP LOCKED`, so parallel
-scheduler threads drain disjoint sets and never compute the same target twice.
+> **Run exactly one drainer. Parallel processing is not supported.**
+> Create a **single** Process Request for this process, and in a clustered installation make sure
+> only one node runs it. The processor drains the queue **serially**, in
+> `Computation_Sequence_Number` order, and that ordering is a correctness requirement: chained
+> stored columns may read one another's stored values, and a downstream column only sees a fresh
+> upstream value because the upstream column is recomputed first. A second concurrent drainer
+> orders its own portion of the queue independently, so a downstream column can be recomputed
+> before the upstream column it reads and will store a **stale** value.
+>
+> Note that `PREVENTCONCURRENT='Y'` on the process record is a useful guard but **not** a
+> guarantee: the scheduler's check is node-local (so it does not stop a second node in a cluster)
+> and it does not veto a run under a different client or organization. Enforce single-drainer
+> operationally.
+
+This restriction applies to the `'Q'` drain on **both** PostgreSQL and Oracle. It does **not**
+restrict ordinary concurrent *user* activity: any number of users may write to source tables at
+once — their enqueue triggers simply add dirty rows to the queue, which the single drainer then
+processes in order.
 
 ### Tuning guidance
 
 - **Lower interval → fresher data, more polling overhead.** Most dashboards are fine at
   1–5 minutes.
-- **Backlog growing run over run** → raise *Max Records* first, then add a second concurrent
-  Process Request (SKIP LOCKED makes this scale linearly until DB write throughput is the
-  limit).
+- **Backlog growing run over run** → raise *Max Records* and/or shorten the interval. Do **not**
+  add a second Process Request to drain in parallel: concurrent drainers are not supported (see
+  above) and will corrupt chained column values. The `'Q'` drain scales vertically (bigger
+  batches, more frequent runs), not horizontally.
 - A large **initial population** (see below) for a `'Q'` column enqueues a single null
   sentinel; the first processor run after deploy does the full rebuild, which can be long.
   Schedule the first run for a maintenance window on big tables.

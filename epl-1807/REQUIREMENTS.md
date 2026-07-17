@@ -75,6 +75,8 @@ Warn (not fail) on sequential scans or `STABLE` rather than `IMMUTABLE` function
 - Refresh does not update audit columns.
 - A function error rolls back the entire originating transaction.
 - Refresh does not re-trigger dependency collection recursively.
+- Concurrent user transactions writing to source tables are supported.
+- The `Refresh_Mode = Q` drain runs **serially** — a single processor instance, on a single node. Concurrent drainers are not supported, because they would break the `Computation_Sequence_Number` ordering that chained columns depend on (see §5.5).
 
 ### 3.4 Performance Requirements
 
@@ -207,7 +209,7 @@ If the computation function raises an error, the entire transaction rolls back.
 
 **Step 4 — Async recalculation (queued mode, outside the originating transaction)**
 
-For `Refresh_Mode = Q` columns, dirty rows persist after commit. A background process claims batches with `SKIP LOCKED`, calls the computation function, writes results, and deletes processed rows. The stored column lags by the scheduler interval.
+For `Refresh_Mode = Q` columns, dirty rows persist after commit. A single background process claims a batch in `Computation_Sequence_Number` order, calls the computation function, writes results, and deletes processed rows. The stored column lags by the scheduler interval. The processor runs serially — see §5.5.
 
 **Step 5 — Manual rebuild**
 
@@ -432,14 +434,20 @@ The async process request handles `Refresh_Mode = Q` columns outside the origina
 
 **Execution per invocation:**
 
-1. Claim up to `Max Records` rows from `AD_StoredColumn_Dirty` where `Refresh_Mode = Q`, ordered by `Computation_Sequence_Number` ascending, using `SELECT … FOR UPDATE SKIP LOCKED`.
+1. Claim up to `Max Records` rows from `AD_StoredColumn_Dirty` where `Refresh_Mode = Q`, ordered by `Computation_Sequence_Number` ascending, using `SELECT … FOR UPDATE` (deliberately **without** `SKIP LOCKED` — see the concurrency note below).
 2. Handle sentinel rows (`Target_Record_ID IS NULL`) first: call `sf_rebuild(<column_id>)` for each, then delete the sentinel and remove any individual dirty rows for the same column from the batch.
 3. Group remaining rows by `AD_Column_ID` and process in `Created` order within each group.
 4. For each row, call the computation function and write the result only when it differs from the current stored value. Set the `sf.refreshing` session flag to suppress dependency triggers.
 5. Delete each processed row immediately after its value is written.
 6. Commit. If the computation function raises an error for any row, the entire batch transaction rolls back and dirty rows remain for the next run.
 
-Multiple instances may run concurrently. `SKIP LOCKED` ensures each instance claims a disjoint batch; no target record is computed simultaneously by two instances. Note that different transactions can each produce a dirty row for the same `(AD_Column_ID, Target_Record_ID)` — the unique constraint only prevents within-transaction duplicates (where `Transaction_ID` is the same). The async queue may therefore contain multiple rows for the same target record from different transactions; the processor will compute the target once per row, which is correct (idempotent) but wasteful. A deduplication step during batch claiming (`SELECT DISTINCT ON (AD_Column_ID, Target_Record_ID)`) could reduce redundant work in high-throughput scenarios but is deferred to post-MVP.
+**The processor must run serially — multiple concurrent instances are NOT supported**, on either PostgreSQL or Oracle. Draining in `Computation_Sequence_Number` order is a correctness requirement: a chained stored column may read another stored column's value, and it only observes a fresh upstream value because the lower-sequence column is recomputed first. Each drainer orders only the rows it claims, so two concurrent drainers partition the queue into two independently-ordered halves and a downstream column can be recomputed before — or concurrently with — the upstream column it reads, storing a stale value. The claim therefore uses plain `FOR UPDATE`, so a second fetch blocks rather than claiming a disjoint batch.
+
+Deployments must run a single Process Request for this process, on a single node. `PREVENTCONCURRENT='Y'` is set on the process record but is not sufficient on its own: `ProcessMonitor.vetoJobExecution` checks only jobs executing on the local node and does not veto runs under a different client or organization. Single-drainer operation is an operational requirement.
+
+This restricts only the drainer. Concurrent *user* transactions writing to source tables remain fully supported; they enqueue dirty rows that the single drainer processes in order.
+
+Note that different transactions can each produce a dirty row for the same `(AD_Column_ID, Target_Record_ID)` — the unique constraint only prevents within-transaction duplicates (where `Transaction_ID` is the same). The async queue may therefore contain multiple rows for the same target record from different transactions; the processor will compute the target once per row, which is correct (idempotent) but wasteful. A deduplication step during batch claiming (`SELECT DISTINCT ON (AD_Column_ID, Target_Record_ID)`) could reduce redundant work in high-throughput scenarios but is deferred to post-MVP.
 
 ---
 
@@ -521,7 +529,8 @@ Each test case runs within its own database transaction that is rolled back afte
 - The background processor claims a batch, writes results, and deletes processed rows.
 - A null sentinel row triggers a full rebuild via `sf_rebuild(<column_id>)` and is deleted after completion.
 - Individual dirty rows for the same column as a sentinel are skipped (already covered by the rebuild).
-- Two concurrent process request instances claim disjoint row sets; no target record is computed twice.
+- A chained column (one whose function reads another stored column) is recomputed after its upstream column within a batch, honouring `Computation_Sequence_Number` order.
+- Concurrent user transactions writing to source tables enqueue correctly and the single drainer settles every affected target. (Concurrent *drainer* instances are out of scope — the processor is not supported concurrently; see §5.5.)
 - The consistency check detects values that were not refreshed by the queue processor.
 
 ### 7.5 Schema Forge Pipeline Tests
@@ -680,7 +689,7 @@ Largest phase — delivers the working end-to-end synchronous refresh.
 
 - `Refresh_Mode = Q` in dependency triggers: leave dirty rows after commit.
 - Initial population for `Q` in `generateStoredComputedTriggers`: insert null sentinel on first activation.
-- Async process request: `SKIP LOCKED` batch claim, sentinel rows via `sf_rebuild`, compute/write/delete individual rows.
+- Async process request: serial `FOR UPDATE` batch claim in `Computation_Sequence_Number` order, sentinel rows via `sf_rebuild`, compute/write/delete individual rows.
 - Expose consistency check as `checkStoredColumns` Gradle task and scheduled background process.
 - Schema Forge pipeline changes: `resolve-curated.js`, `push-to-neo.js`, `generate-frontend.js`, `validate-pipeline.js` rule F11.
 
