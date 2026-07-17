@@ -764,12 +764,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
             .seqnumberpaymentstatus(payment.getStatus())) == (FIN_Utility
                 .seqnumberpaymentstatus(FIN_Utility.invoicePaymentStatus(payment)));
         // Credit consumed as consumer, captured before reactivation touches it (ETP-4489).
-        BigDecimal consumedCredit = BigDecimal.ZERO;
-        if (strAction.equals("RE")
-            && payment.getGeneratedCredit().compareTo(BigDecimal.ZERO) == 0
-            && payment.getUsedCredit().compareTo(BigDecimal.ZERO) != 0) {
-          consumedCredit = payment.getUsedCredit();
-        }
+        BigDecimal consumedCredit = consumedCreditOnReactivation(payment, strAction);
         // Initialize amounts
         payment.setProcessed(false);
         OBDal.getInstance().save(payment);
@@ -1046,11 +1041,9 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
           if (strAction.equals("R")) {
             payment.setUsedCredit(BigDecimal.ZERO);
           }
-          // ETP-4489: "RE" only reverses the credit source side. Reduce the consumer-side details
-          // by the released credit and reset usedCredit to keep the document consistent.
-          if (consumedCredit.compareTo(BigDecimal.ZERO) > 0) {
-            reduceConsumerCreditSide(payment, consumedCredit, restorePaidAmounts);
-          }
+          // ETP-4489: "RE" only reverses the credit source side; when this payment consumed
+          // credit, reduce the consumer-side details by it and reset usedCredit (no-op otherwise).
+          reduceConsumerCreditSide(payment, consumedCredit, restorePaidAmounts);
         } finally {
           OBDal.getInstance().flush();
           OBContext.restorePreviousMode();
@@ -1338,9 +1331,33 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
   }
 
   /**
+   * Returns the Credit To Use {@code payment} consumed as a consumer that an "RE" (Reactivate,
+   * keep lines) reactivation must release from its own document details, or zero when this does not
+   * apply. Only "RE" of a payment that consumes credit ({@code generatedCredit == 0} and
+   * {@code usedCredit != 0}) qualifies; "R" already zeroes everything and credit-generating
+   * payments are out of scope. Kept as a helper so the (already oversized) reactivation method does
+   * not grow in cognitive complexity (ETP-4489).
+   *
+   * @param payment
+   *     the payment being reactivated
+   * @param strAction
+   *     the reactivation action ("R" or "RE")
+   * @return the consumed credit to release, or {@link BigDecimal#ZERO} when not applicable
+   */
+  private BigDecimal consumedCreditOnReactivation(FIN_Payment payment, String strAction) {
+    if (strAction.equals("RE")
+        && payment.getGeneratedCredit().compareTo(BigDecimal.ZERO) == 0
+        && payment.getUsedCredit().compareTo(BigDecimal.ZERO) != 0) {
+      return payment.getUsedCredit();
+    }
+    return BigDecimal.ZERO;
+  }
+
+  /**
    * Reduces the consumer-side invoice/order {@link FIN_PaymentScheduleDetail} amounts of a payment
    * that consumed Credit To Use by the amount of credit released back to its source during an "RE"
-   * (Reactivate, keep lines) reactivation, and resets its {@code usedCredit} to zero.
+   * (Reactivate, keep lines) reactivation, and resets its {@code usedCredit} to zero. Does nothing
+   * when {@code creditToRelease} is zero or negative (no credit was consumed).
    * <p>
    * Core's "RE" reactivation reverses only the credit source side, so without this the consumer's
    * details keep requesting the original cash+credit total while {@code payment.amount} only holds
@@ -1359,6 +1376,9 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
    */
   private void reduceConsumerCreditSide(FIN_Payment payment, BigDecimal creditToRelease,
       boolean restorePaidAmounts) {
+    if (creditToRelease == null || creditToRelease.signum() <= 0) {
+      return;
+    }
     BigDecimal remaining = creditToRelease;
     for (FIN_PaymentDetail detail : payment.getFINPaymentDetailList()) {
       for (FIN_PaymentScheduleDetail psd : new ArrayList<FIN_PaymentScheduleDetail>(
