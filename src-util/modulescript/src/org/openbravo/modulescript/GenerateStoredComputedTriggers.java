@@ -319,7 +319,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   /**
    * Recompute a single target row. Looks up the physical target table, stored column, computation
    * function and primary key from {@code AD_COLUMN} metadata. Logical AD identifiers are stored
-   * mixed-case ({@code C_Order}, {@code EM_Ettst_Linetotal}, {@code ETTST_SUMLINEAMOUNTS}) while the
+   * mixed-case ({@code C_Order}, {@code EM_Etscc_Linetotal}, {@code ETSCC_SUMLINEAMOUNTS}) while the
    * physical PostgreSQL objects are lowercase, so every name is {@code lower()}-ed and quoted via
    * {@code format(%I)}.
    *

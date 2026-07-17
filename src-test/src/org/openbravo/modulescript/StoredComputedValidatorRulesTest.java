@@ -67,7 +67,8 @@ import org.openbravo.modulescript.StoredComputedValidator.Violation;
  * cannot be exercised meaningfully against a mock or a clean DB without a real module deploy, so it is
  * intentionally omitted rather than asserted in a way that could false-pass. Live-DB engine behaviour
  * is covered separately by the self-asserting script wrappers under
- * {@code modules/com.etendo.test/src-test/} (e.g. {@code StoredComputedEngineScenariosSqlTest}).</p>
+ * {@code modules/com.etendoerp.storedcomputedcolumn/src-test/} (e.g.
+ * {@code StoredComputedEngineScenariosSqlTest}).</p>
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

@@ -12,8 +12,8 @@ already deploys, via raw JDBC at `update.database`:
   `ad_scd_check`,
 - the static constraint trigger `ad_scd_dirty_aiu` (`DEFERRABLE INITIALLY DEFERRED`).
 
-That covers `Refresh_Mode = 'S'` end-to-end (verified by the `com.etendo.test` pilot,
-multi-column + multi-source). Phase 4 closes the two **PostgreSQL** gaps that the synchronous
+That covers `Refresh_Mode = 'S'` end-to-end (verified by the
+`com.etendoerp.storedcomputedcolumn` pilot, multi-column + multi-source). Phase 4 closes the two **PostgreSQL** gaps that the synchronous
 path intentionally left open:
 
 1. **Queued mode (`Refresh_Mode = 'Q'`)** — nothing drains `'Q'` dirty rows today.
@@ -178,9 +178,14 @@ no-op there. A genuine new change thus gives the row a clean retry (`retry_count
 
 ### A5. Scheduling
 
-Ship an inactive **Process Request** template (default interval, e.g. 1 min) so operators
-can enable it per installation. Document that `'Q'` columns lag by the scheduler interval
-and are eventually consistent.
+**As shipped:** no **Process Request** template is delivered — not even an inactive one.
+Each installation creates its own Process Request for the queue processor, so the interval
+matches local latency tolerance and load rather than inheriting an arbitrary default.
+
+Documented that `'Q'` columns lag by the scheduler interval and are eventually consistent.
+The operator procedure (step-by-step Process Request setup, *Max Records* / *Retry
+Threshold* parameters, and tuning guidance) lives in `OPERATIONS.md` → "Scheduling the
+queue processor".
 
 ---
 

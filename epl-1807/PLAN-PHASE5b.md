@@ -412,11 +412,15 @@ Delegate all test authoring per CLAUDE.md (`test-generator` / `/etendo:test`).
     way. This split is also the boundary between the two test targets: the DAL handler's own shape
     tests assert the *rejection*; the build validator's V1–V3 tests assert *detection* of rows that
     slipped in via raw SQL.
-- **SQL fixtures / documentation** — new
+- ~~**SQL fixtures / documentation** — new
   `modules/com.etendo.test/src-test/sql/stored_computed_validation_scenarios.sql` alongside the
   existing `stored_computed_*` files, documenting each negative case and its detection query
   (parity with `stored_computed_engine_scenarios.sql`). Note the `com.etendo.test` module is
-  committed in its own repo, not `etendo_core` (per 3b).
+  committed in its own repo, not `etendo_core` (per 3b).~~
+  **Superseded** — never written. The JUnit validator suite (`StoredComputedValidatorTest`,
+  `StoredComputedValidatorPureTest`, `StoredComputedValidatorRulesTest`,
+  `StoredComputedValidatorLiveDbTest`, landed in `c77354b1`) covers the same validation rules
+  with better isolation and CI integration than a live-DB SQL script would.
 - **Drift (V15)**: an integration test that deploys via the generator, tampers with one deployed
   function body, re-runs `checkDeploymentDrift`, and asserts a drift warning; and one that drops
   a deployed trigger and asserts a `ETGO_ScdTriggerMissing` hard error.
@@ -489,7 +493,11 @@ Delegate all test authoring per CLAUDE.md (`test-generator` / `/etendo:test`).
         `OPERATIONS.md`.
 11. [ ] **Tests** (delegate to Tester) — pure-logic JUnit (shape, cycles, type map), OBBaseTest
         per-rule negative + clean fixtures, drift/missing-trigger integration tests, and
-        `stored_computed_validation_scenarios.sql` in `com.etendo.test`.
+        ~~`stored_computed_validation_scenarios.sql` in `com.etendo.test`~~ *(superseded — the
+        SQL script was never written; the JUnit validator suite `StoredComputedValidatorTest` /
+        `StoredComputedValidatorPureTest` / `StoredComputedValidatorRulesTest` /
+        `StoredComputedValidatorLiveDbTest`, landed in `c77354b1`, covers the same rules with
+        better isolation and CI integration — see the Tests section above)*.
 12. [ ] **Docs** — update `epl-1807/REQUIREMENTS.md` / `OPERATIONS.md` and field help with the
         validation rules and the failure/toggle behavior.
 
