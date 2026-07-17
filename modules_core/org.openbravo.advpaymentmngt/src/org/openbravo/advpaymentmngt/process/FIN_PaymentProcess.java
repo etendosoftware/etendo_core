@@ -62,6 +62,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentDetail;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentPropDetail;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentProposal;
+import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment_Credit;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
@@ -762,6 +763,13 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
         boolean restorePaidAmounts = (FIN_Utility
             .seqnumberpaymentstatus(payment.getStatus())) == (FIN_Utility
                 .seqnumberpaymentstatus(FIN_Utility.invoicePaymentStatus(payment)));
+        // Credit consumed as consumer, captured before reactivation touches it (ETP-4489).
+        BigDecimal consumedCredit = BigDecimal.ZERO;
+        if (strAction.equals("RE")
+            && payment.getGeneratedCredit().compareTo(BigDecimal.ZERO) == 0
+            && payment.getUsedCredit().compareTo(BigDecimal.ZERO) != 0) {
+          consumedCredit = payment.getUsedCredit();
+        }
         // Initialize amounts
         payment.setProcessed(false);
         OBDal.getInstance().save(payment);
@@ -1037,6 +1045,11 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
           }
           if (strAction.equals("R")) {
             payment.setUsedCredit(BigDecimal.ZERO);
+          }
+          // ETP-4489: "RE" only reverses the credit source side. Reduce the consumer-side details
+          // by the released credit and reset usedCredit to keep the document consistent.
+          if (consumedCredit.compareTo(BigDecimal.ZERO) > 0) {
+            reduceConsumerCreditSide(payment, consumedCredit, restorePaidAmounts);
           }
         } finally {
           OBDal.getInstance().flush();
@@ -1322,6 +1335,88 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
     creditInfo.setOrganization(newPayment.getOrganization());
     creditInfo.setClient(newPayment.getClient());
     newPayment.getFINPaymentCreditList().add(creditInfo);
+  }
+
+  /**
+   * Reduces the consumer-side invoice/order {@link FIN_PaymentScheduleDetail} amounts of a payment
+   * that consumed Credit To Use by the amount of credit released back to its source during an "RE"
+   * (Reactivate, keep lines) reactivation, and resets its {@code usedCredit} to zero.
+   * <p>
+   * Core's "RE" reactivation reverses only the credit source side, so without this the consumer's
+   * details keep requesting the original cash+credit total while {@code payment.amount} only holds
+   * the cash portion, leaving the payment inconsistent and unprocessable (ETP-4489). The released
+   * credit is distributed across the document details in list order until fully accounted for,
+   * supporting both single- and multi-line payments (including the 100% credit case).
+   *
+   * @param payment
+   *     the payment being reactivated, whose consumer-side details must be reduced
+   * @param creditToRelease
+   *     the Credit To Use amount to release from the consumer-side details
+   * @param restorePaidAmounts
+   *     whether the reactivation loop already reversed the full detail amount from the schedule
+   *     (true) or left the schedule untouched because the payment is awaiting execution (false);
+   *     drives the schedule adjustment so it lands on the remaining cash amount in both cases
+   */
+  private void reduceConsumerCreditSide(FIN_Payment payment, BigDecimal creditToRelease,
+      boolean restorePaidAmounts) {
+    BigDecimal remaining = creditToRelease;
+    for (FIN_PaymentDetail detail : payment.getFINPaymentDetailList()) {
+      for (FIN_PaymentScheduleDetail psd : new ArrayList<FIN_PaymentScheduleDetail>(
+          detail.getFINPaymentScheduleDetailList())) {
+        remaining = reducePsdCreditSide(payment, detail, psd, remaining, restorePaidAmounts);
+      }
+    }
+    payment.setUsedCredit(BigDecimal.ZERO);
+    OBDal.getInstance().save(payment);
+  }
+
+  /**
+   * Reduces a single document {@link FIN_PaymentScheduleDetail} by as much of {@code remaining} as
+   * it can absorb, shrinking the detail to its cash amount and restoring the parent schedule's
+   * paid/outstanding totals accordingly. Returns whatever is left of {@code remaining} to
+   * distribute across the next details. Non-document details (pure credit, GL item) and a
+   * fully-consumed {@code remaining} are no-ops.
+   *
+   * @param payment
+   *     the payment being reactivated
+   * @param detail
+   *     the payment detail owning {@code psd}
+   * @param psd
+   *     the payment schedule detail to reduce
+   * @param remaining
+   *     the credit amount still to be released
+   * @param restorePaidAmounts
+   *     see {@link #reduceConsumerCreditSide}
+   * @return the credit amount still pending after this detail
+   */
+  private BigDecimal reducePsdCreditSide(FIN_Payment payment, FIN_PaymentDetail detail,
+      FIN_PaymentScheduleDetail psd, BigDecimal remaining, boolean restorePaidAmounts) {
+    if (remaining.signum() <= 0) {
+      return remaining;
+    }
+    final FIN_PaymentSchedule schedule = psd.getInvoicePaymentSchedule() != null
+        ? psd.getInvoicePaymentSchedule()
+        : psd.getOrderPaymentSchedule();
+    if (schedule == null) {
+      return remaining;
+    }
+    final BigDecimal psdAmount = psd.getAmount() != null ? psd.getAmount() : BigDecimal.ZERO;
+    final BigDecimal reduceBy = remaining.min(psdAmount);
+    if (reduceBy.signum() <= 0) {
+      return remaining;
+    }
+    final BigDecimal newAmount = psdAmount.subtract(reduceBy).max(BigDecimal.ZERO);
+    // Shrink the detail to its cash amount; the freed credit returns to the document's outstanding.
+    FIN_AddPayment.updatePaymentDetail(psd, payment, newAmount, false);
+    // If the loop already reversed the full amount, add the cash back; otherwise subtract the
+    // released credit from the intact schedule.
+    if (restorePaidAmounts) {
+      FIN_AddPayment.updatePaymentScheduleAmounts(detail, schedule, newAmount, BigDecimal.ZERO);
+    } else {
+      FIN_AddPayment.updatePaymentScheduleAmounts(detail, schedule, reduceBy.negate(),
+          BigDecimal.ZERO);
+    }
+    return remaining.subtract(reduceBy);
   }
 
   private void undoUsedCredit(FIN_Payment myPayment, Set<String> invoiceDocNos) {
