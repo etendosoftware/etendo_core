@@ -121,8 +121,8 @@ trigger DDL is applied. It is implemented by the `ValidateStoredComputedColumns`
 `GenerateStoredComputedTriggers`, so a broken definition aborts the build *before* it can
 deploy inconsistent database objects. It validates definition shape, computation-function
 existence/signature/return-type/volatility, dependency completeness, target-resolver XOR,
-dependency cycles, deployed-trigger drift, and supporting FK indexes (rules V1–V16 — see
-`REQUIREMENTS.md §3.6`). The check is **read-only and idempotent**: it inspects catalog and
+dependency cycles, deployed-trigger drift, supporting FK indexes, and refresh ordering
+(rules V1–V17 — see `REQUIREMENTS.md §3.6`). The check is **read-only and idempotent**: it inspects catalog and
 AD metadata but never writes.
 
 By default the gate is **enforcing**: any hard (`ERROR`) violation prints the aggregated

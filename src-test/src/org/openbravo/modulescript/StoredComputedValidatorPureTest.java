@@ -37,6 +37,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.modulescript.StoredComputedValidator.Cycle;
+import org.openbravo.modulescript.StoredComputedValidator.Edge;
 import org.openbravo.modulescript.StoredComputedValidator.Severity;
 import org.openbravo.modulescript.StoredComputedValidator.Violation;
 
@@ -44,8 +45,11 @@ import org.openbravo.modulescript.StoredComputedValidator.Violation;
  * Pure-logic unit tests for {@link StoredComputedValidator} — no database, no Mockito. These cover
  * the four DB-free surfaces of the validator (EPL-1807, Phase 5b):
  * <ul>
- *   <li>the three-color DFS cycle detector {@link StoredComputedValidator#findCycles(Map, Map)}
- *       and its ordering predicate {@code isStrictlyOrdered} (rule <b>V14</b>);</li>
+ *   <li>the three-color DFS cycle detector {@link StoredComputedValidator#findCycles(Map)} (rule
+ *       <b>V14</b>: every cycle is hard, unconditionally);</li>
+ *   <li>the per-edge refresh-ordering predicate
+ *       {@link StoredComputedValidator#findSequenceOrderViolations(Map, Map, List)} (rule
+ *       <b>V17</b>);</li>
  *   <li>the coarse type-family mappers {@code familyForReference} / {@code familyForPgType} that
  *       drive the function-correctness rules (<b>V5</b>–<b>V6</b>);</li>
  *   <li>the toggle + aggregation surface {@code finishOrThrow} / {@code formatReport} /
@@ -53,9 +57,9 @@ import org.openbravo.modulescript.StoredComputedValidator.Violation;
  * </ul>
  *
  * <p>Every method name states the rule under test and the expected outcome. The tests live in the
- * validator's own package so the package-private members ({@code isStrictlyOrdered},
- * {@code familyForReference}, {@code familyForPgType}, {@code formatReport}, {@code isEnforce},
- * {@code TOGGLE}) are reachable without widening any production visibility.</p>
+ * validator's own package so the package-private members ({@code familyForReference},
+ * {@code familyForPgType}, {@code formatReport}, {@code isEnforce}, {@code TOGGLE}) are reachable
+ * without widening any production visibility.</p>
  */
 public class StoredComputedValidatorPureTest {
 
@@ -78,7 +82,8 @@ public class StoredComputedValidatorPureTest {
   }
 
   // ================================================================================================
-  // V14 — findCycles / isStrictlyOrdered (pure three-color DFS + closed-walk ordering).
+  // V14 — findCycles (pure three-color DFS). Every cycle is hard, unconditionally: a cycle is
+  // exactly a dirty set with no topological order, so no sequence assignment can rescue it.
   // ================================================================================================
 
   @Test
@@ -86,7 +91,7 @@ public class StoredComputedValidatorPureTest {
     Map<String, List<String>> adjacency = new HashMap<>();
     adjacency.put("a", Arrays.asList("b"));
     adjacency.put("b", Arrays.asList("c"));
-    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency, seq());
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
     assertTrue(cycles.isEmpty(), "a simple acyclic chain a->b->c must yield no cycle");
   }
 
@@ -98,29 +103,26 @@ public class StoredComputedValidatorPureTest {
     adjacency.put("a", Arrays.asList("b", "c"));
     adjacency.put("b", Arrays.asList("d"));
     adjacency.put("c", Arrays.asList("d"));
-    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency, seq());
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
     assertTrue(cycles.isEmpty(), "a diamond DAG with a shared sink is not a cycle");
   }
 
   @Test
-  void v14PlainTwoNodeCycleIsReportedAsHardUnordered() {
+  void v14PlainTwoNodeCycleIsReported() {
     Map<String, List<String>> adjacency = new HashMap<>();
     adjacency.put("a", Arrays.asList("b"));
     adjacency.put("b", Arrays.asList("a"));
-    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency, seq("a", 1L, "b", 2L));
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
     assertEquals(1, cycles.size(), "a<->b is a single distinct cycle");
-    assertFalse(cycles.get(0).seqOrdered,
-        "a real cycle can never be strictly increasing around the closed walk -> HARD");
   }
 
   @Test
   void v14SelfLoopIsReportedAsCycle() {
     Map<String, List<String>> adjacency = new HashMap<>();
     adjacency.put("a", Arrays.asList("a"));
-    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency, seq("a", 5L));
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
     assertEquals(1, cycles.size(), "a self-loop a->a is a cycle");
     assertEquals(Collections.singletonList("a"), cycles.get(0).path);
-    assertFalse(cycles.get(0).seqOrdered, "a single-node cycle is never strictly ordered");
   }
 
   @Test
@@ -130,49 +132,116 @@ public class StoredComputedValidatorPureTest {
     adjacency.put("a", Arrays.asList("b"));
     adjacency.put("b", Arrays.asList("c"));
     adjacency.put("c", Arrays.asList("a", "d"));
-    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency, seq());
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
     assertEquals(1, cycles.size(), "the single 3-node cycle must be reported exactly once");
     assertEquals(3, cycles.get(0).path.size(), "the cycle path is a,b,c (closing node not repeated)");
-    assertFalse(cycles.get(0).seqOrdered);
   }
 
   @Test
-  void v14SeqAscendingCycleStillClassifiesHardBecauseOfClosingEdge() {
-    // Documents the actual (and only reachable) behavior: even a cycle whose forward edges are
-    // strictly increasing (seq a<b<c) is HARD, because the closing edge c->a breaks the order
-    // (seq[c] >= seq[a]). The WARN "ordered refresh" branch is therefore unreachable for a genuine
-    // cycle — the closed-walk evaluation guarantees a real cycle is deterministically HARD.
+  void v14AscendingSequenceNumbersDoNotRescueACycle() {
+    // Replaces the former "seq-ordered cycles are only WARN" behavior. Sequence numbers ascending
+    // along the forward edges (a=1,b=2,c=3) change nothing: a cycle has no topological order at all,
+    // so the drain cannot refresh it correctly whatever the numbers say. The detector reports the
+    // cycle and the caller classifies it ERROR unconditionally.
     Map<String, List<String>> adjacency = new HashMap<>();
     adjacency.put("a", Arrays.asList("b"));
     adjacency.put("b", Arrays.asList("c"));
     adjacency.put("c", Arrays.asList("a"));
-    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency, seq("a", 1L, "b", 2L, "c", 3L));
-    assertEquals(1, cycles.size());
-    assertFalse(cycles.get(0).seqOrdered,
-        "closing edge c->a (seq 3 >= 1) makes even an ascending cycle HARD");
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
+    assertEquals(1, cycles.size(),
+        "an ascending-sequence cycle is still a cycle: severity does not depend on the seq numbers");
+  }
+
+  // ================================================================================================
+  // V17 — findSequenceOrderViolations (per-edge refresh ordering, WARN).
+  // Edge a->b means b's function READS a's stored value, so the drain (ORDER BY
+  // computation_sequence_number) must visit a first: the edge needs seq[a] < seq[b].
+  // ================================================================================================
+
+  @Test
+  void v17WellOrderedChainHasNoViolation() {
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency,
+        seq("a", 1L, "b", 2L), Collections.<Cycle> emptyList());
+    assertTrue(bad.isEmpty(), "a(1) -> b(2): the drain refreshes a before b, which is correct");
   }
 
   @Test
-  void v14StrictlyOrderedIsFalseForSingletonPath() {
-    assertFalse(StoredComputedValidator.isStrictlyOrdered(Collections.singletonList("a"),
-        seq("a", 1L)), "a path shorter than two nodes is never strictly ordered");
+  void v17EqualSequenceNumbersAreAViolation() {
+    // Equality gives NO ordering guarantee: both drains break ties arbitrarily with respect to the
+    // dependency (target_record_id for the 'S' engine, created for the 'Q' engine).
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency,
+        seq("a", 0L, "b", 0L), Collections.<Cycle> emptyList());
+    assertEquals(1, bad.size(), "a(0) -> b(0): a tie orders nothing, so the edge is unsafe");
+    assertEquals("a", bad.get(0).from);
+    assertEquals("b", bad.get(0).to);
   }
 
   @Test
-  void v14StrictlyOrderedIsFalseForAscendingClosedWalk() {
-    // Rotation-independent closed-walk semantics: a<b<c forward, but the wrap c->a fails, so the
-    // whole loop is not strictly ordered.
-    assertFalse(StoredComputedValidator.isStrictlyOrdered(Arrays.asList("a", "b", "c"),
-        seq("a", 1L, "b", 2L, "c", 3L)),
-        "the closing last->first edge breaks strict ordering on any real cycle");
+  void v17DecreasingSequenceNumbersAreAViolation() {
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency,
+        seq("a", 5L, "b", 2L), Collections.<Cycle> emptyList());
+    assertEquals(1, bad.size(), "a(5) -> b(2): the drain visits b first and reads a stale a");
   }
 
   @Test
-  void v14StrictlyOrderedIsFalseWhenASequenceIsMissing() {
+  void v17MissingSequenceNumberIsAViolation() {
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
     Map<String, Long> s = new HashMap<>();
     s.put("a", 1L); // 'b' intentionally absent -> null seq
-    assertFalse(StoredComputedValidator.isStrictlyOrdered(Arrays.asList("a", "b"), s),
-        "a missing Computation_Sequence_Number makes the ordering undefined -> not ordered");
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency, s,
+        Collections.<Cycle> emptyList());
+    assertEquals(1, bad.size(),
+        "a null Computation_Sequence_Number leaves the edge's ordering undefined -> unsafe");
+  }
+
+  @Test
+  void v17FlagsOnlyTheMisorderedEdgeOfAPath() {
+    // a(1) -> b(2) -> c(1). This is a PATH, not a cycle: c reads b but carries a LOWER sequence
+    // number, so the drain visits c before b and c reads a stale b. Only the b->c edge is unsafe;
+    // a->b is correctly ordered and must stay silent.
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
+    adjacency.put("b", Arrays.asList("c"));
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency,
+        seq("a", 1L, "b", 2L, "c", 1L), Collections.<Cycle> emptyList());
+    assertEquals(1, bad.size(), "only the b->c edge is misordered");
+    assertAll(() -> assertEquals("b", bad.get(0).from), () -> assertEquals("c", bad.get(0).to));
+  }
+
+  @Test
+  void v17IsSuppressedForEdgesInsideAReportedCycle() {
+    // a <-> b is a cycle, already reported HARD by V14. Its edges necessarily fail the per-edge
+    // ordering test in at least one direction, but the cycle is the real finding — per-edge noise on
+    // top of it is unhelpful, so both edges are suppressed.
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
+    adjacency.put("b", Arrays.asList("a"));
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
+    assertEquals(1, cycles.size(), "precondition: V14 reports the cycle");
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency,
+        seq("a", 1L, "b", 2L), cycles);
+    assertTrue(bad.isEmpty(), "edges of an already-reported cycle must not also raise V17");
+  }
+
+  @Test
+  void v17StillFlagsEdgesOutsideAReportedCycle() {
+    // a <-> b cycle (suppressed), plus a separate misordered edge b -> c that is NOT in the cycle
+    // and must still be reported.
+    Map<String, List<String>> adjacency = new HashMap<>();
+    adjacency.put("a", Arrays.asList("b"));
+    adjacency.put("b", Arrays.asList("a", "c"));
+    List<Cycle> cycles = StoredComputedValidator.findCycles(adjacency);
+    List<Edge> bad = StoredComputedValidator.findSequenceOrderViolations(adjacency,
+        seq("a", 1L, "b", 2L, "c", 2L), cycles);
+    assertEquals(1, bad.size(), "the non-cycle edge b->c is still checked");
+    assertAll(() -> assertEquals("b", bad.get(0).from), () -> assertEquals("c", bad.get(0).to));
   }
 
   // ================================================================================================

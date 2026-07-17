@@ -106,7 +106,8 @@ generic `handleError`).
   (file `src-util/modulescript/src/org/openbravo/modulescript/ValidateStoredComputedColumns.java`,
   mirroring `EnforceStoredComputedReadOnly`). Runs every `update.database`, executes all rules
   via `StoredComputedValidator`, and on any hard violation throws a `BuildException` with the
-  aggregated report. This is where V1–V14 live (definition + dependency + graph + refresh-mode).
+  aggregated report. This is where V1–V14 and V17 live (definition + dependency + graph +
+  refresh-mode + refresh ordering).
 - **Guard inside `GenerateStoredComputedTriggers.execute()`** — because ordering across scripts
   is not deterministic, add a one-line call to
   `StoredComputedValidator.assertDefinitionsValid(cp)` as the **first statement** of
@@ -243,9 +244,8 @@ queued path, and the Oracle `'S'→'Q'` downgrade is intended behavior, not a mi
 
 ### Group E — Dependency graph (cycle detection)
 
-**V14 — The stored-computed dependency graph must be acyclic (or explicitly ordered).** *(user:
-"cycle detection (2 or 3 levels deep)"; "cycles between stored computed columns exist without
-explicit refresh ordering")*
+**V14 — The stored-computed dependency graph must be acyclic.** *(user: "cycle detection (2 or 3
+levels deep)"; "cycles between stored computed columns exist without explicit refresh ordering")*
 - Graph model: one node per `Computation_Mode='S'` column. Add a directed edge **A → B** when
   recomputing A can dirty B, i.e. B has an active dependency whose `Source_Table_ID` = A's target
   table **and** whose watched columns include A's stored column (A's recompute writes A's column
@@ -254,14 +254,38 @@ explicit refresh ordering")*
   gray node is a cycle. DFS finds cycles of **any** length — the "2 or 3 levels deep" the user
   mentions are just the common short cases; the algorithm is not depth-limited. On detection,
   surface the **full cycle path** (column names) in the message, not just the fact of a cycle.
-- **Explicit refresh ordering nuance (user):** a cycle in the *data* graph is a hard error for
-  `'S'` columns (termination/correctness risk within the drain). If, however, the columns'
-  `Computation_Sequence_Number` values are **strictly increasing along every edge of the cycle**
-  (i.e. an explicit total order breaks the cycle at recompute time), downgrade that specific
-  cycle to **WARN**. A cycle whose sequence numbers do **not** impose a strict order is **HARD**.
+- **Every cycle is HARD — unconditionally.** An earlier revision of this plan proposed downgrading
+  a cycle to WARN when `Computation_Sequence_Number` was "strictly increasing along every edge of
+  the cycle". That condition is **unsatisfiable by construction**: going around a closed loop it
+  demands `seq[first] < … < seq[last] < seq[first]`. It *should* be unsatisfiable — a cycle is
+  precisely a dirty set with **no topological order**, so no sequence assignment can make the drain
+  refresh it correctly. Sequence numbers order an acyclic graph; they cannot break a cycle. The
+  downgrade branch was therefore dead code resting on an unsound idea, and has been removed.
 - Pure/unit-testable: the graph + DFS is a pure function over an edge list — see Testing.
-- Severity: **HARD** (unordered cycle) / **WARN** (cycle broken by strict seq ordering). Key:
-  `ETGO_ScdDependencyCycle`.
+- Severity: **HARD** (every cycle). Key: `ETGO_ScdDependencyCycle`.
+
+**V17 — Every edge of the acyclic graph must be honoured by `Computation_Sequence_Number`.**
+- Same edge set as V14: **A → B** when B declares an active dependency whose `Source_Table_ID` is
+  A's target table and whose watched columns include A's stored column — i.e. B's computation
+  function reads A's stored value. That declaration is exactly how a user says "B depends on A".
+- Chaining works by **ordering, not cascade**: the recursion guard (`my.scd_refreshing`) means the
+  engine's own recompute writes never enqueue anything, so a chain A → B only works because a
+  single source write dirties A and B *independently* and the drain then recomputes them in
+  `Computation_Sequence_Number` order. Both drains order that way
+  (`GenerateStoredComputedTriggers.PROCESS_DIRTY_FN` for `'S'`,
+  `StoredColumnQueueProcessor.FETCH_SQL` for `'Q'`). Sequence numbers consistent with the
+  dependency graph are therefore **load-bearing for correctness**, not a cosmetic hint.
+- Fires when `seq[A]` is null, `seq[B]` is null, or `seq[A] >= seq[B]`. **Equality counts:** ties
+  break on `target_record_id` (`'S'`) or `created` (`'Q'`), both arbitrary with respect to the
+  dependency, so equal numbers give no ordering guarantee at all.
+- Edges inside a cycle already reported by V14 are **suppressed** — the cycle is the real finding
+  and per-edge noise on top of it is unhelpful.
+- Severity: **WARN**, never ERROR. An unset or non-positive sequence number on an `'S'` column is
+  already a hard V3 error, so erroring here would only double-report it; what remains (two
+  configured columns merely ordered wrongly relative to each other) belongs to the same advisory
+  family as V15/V16 — a fix a developer should make, not a reason to fail an install.
+- Pure/unit-testable: `findSequenceOrderViolations(adjacency, seqByNode, cycles)` is a pure
+  function over the same edge list. Key: `ETGO_ScdSequenceOrder`.
 
 ### Group F — Deployment integrity (runs *after* generation, inside the generator)
 
@@ -306,9 +330,10 @@ recompute reads child rows by that FK; without an index those lookups scan.
 | V11 | Target resolver XOR | HARD |
 | ~~V12~~ | Removed — runtime NULL-target guard instead | — |
 | ~~V13~~ | Removed — Refresh_Mode check dropped | — |
-| V14 | Acyclic dependency graph | HARD (unordered cycle) / WARN (seq-ordered) |
+| V14 | Acyclic dependency graph | HARD (every cycle) |
 | V15 | Trigger present / no drift | HARD (missing) / WARN (drift) |
 | V16 | Index on target FK | WARN |
+| V17 | Per-edge refresh ordering (seq[A] < seq[B] on every A → B) | WARN |
 
 ---
 
@@ -395,8 +420,12 @@ Delegate all test authoring per CLAUDE.md (`test-generator` / `/etendo:test`).
   - `checkShape(...)`: matrix over mode ∈ {S, non-S} × sqlLogic set/blank × fn set/blank × seq
     null/0/positive — assert exactly the DAL handler's current outcomes (guards against
     regressions from the refactor).
-  - `findCycles(...)`: acyclic graph → none; 2-node cycle; 3-node cycle; self-loop; cycle broken
-    by strictly-increasing seq → warn-classified; cycle with equal/decreasing seq → hard.
+  - `findCycles(...)`: acyclic graph → none; 2-node cycle; 3-node cycle; self-loop; every cycle
+    is hard regardless of the sequence numbers on it.
+  - `findSequenceOrderViolations(...)` (V17): well-ordered chain `a(1) → b(2)` → none; equal
+    numbers `a(0) → b(0)` → warn; decreasing numbers → warn; missing (null) number on either end
+    → warn; path `a(1) → b(2) → c(1)` → warn on `b → c` only; edges inside a V14-reported cycle
+    → suppressed.
   - Coarse type/ref compatibility map (V6): representative ref→type pairs, compatible + mismatch.
 - **DB / integration** (`OBBaseTest`, PostgreSQL): seed a deliberately-broken `AD_Column` +
   `AD_COLUMN_COMP_DEPENDENCY` (+ `AD_COMPDEP_WATCHED_COL`) fixture per rule, invoke the
@@ -475,7 +504,8 @@ Delegate all test authoring per CLAUDE.md (`test-generator` / `/etendo:test`).
 3. [ ] **Group A/B/C rules** (V1–V11) — implement the JDBC detection queries (PG + Oracle) in
        the helper, each returning `Violation`s with the right key/severity.
 4. [ ] **Cycle detection** (V14) — build the edge list query, implement `findCycles` (3-color
-       DFS) + the seq-ordering downgrade, surface the full cycle path in the message.
+       DFS), surface the full cycle path in the message; every cycle is hard. Reuse the same edge
+       list for the V17 per-edge ordering advisory (`findSequenceOrderViolations`).
 5. [ ] **Dedicated ModuleScript** — `ValidateStoredComputedColumns extends ModuleScript`
        (`src-util/modulescript/…`), runs `assertDefinitionsValid(cp)` and throws its own
        aggregated `BuildException`; mirror `EnforceStoredComputedReadOnly` structure.
@@ -504,14 +534,16 @@ Delegate all test authoring per CLAUDE.md (`test-generator` / `/etendo:test`).
 ## Exit criteria
 
 - `update.database` **hard-fails with a clear aggregated message** when any hard rule (V1–V5
-  arity, V8–V11, V14 unordered cycle, V15 missing) is violated by *any* existing stored computed
+  arity, V8–V11, V14 any cycle, V15 missing) is violated by *any* existing stored computed
   definition — verified by the negative fixtures.
 - The DAL handler and the build validator share one `checkShape` implementation; no duplicated
   rule logic.
-- Warn-only rules (V6 type, V7 volatility, V16 index, V15 drift) log clearly and never block the
-  build.
-- Cycle detection reports the full column path and correctly distinguishes seq-ordered (warn)
-  from unordered (hard) cycles.
+- Warn-only rules (V6 type, V7 volatility, V16 index, V15 drift, V17 ordering) log clearly and
+  never block the build.
+- Cycle detection reports the full column path and hard-fails on **every** cycle, regardless of
+  the `Computation_Sequence_Number` values on it.
+- The V17 ordering advisory warns on every `A → B` edge where `seq[A] >= seq[B]` (or either is
+  unset), and stays silent on edges inside a cycle already reported by V14.
 - All new tests pass on PostgreSQL; Oracle-specific introspection paths are covered or explicitly
   documented as best-effort.
 

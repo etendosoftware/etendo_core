@@ -59,7 +59,8 @@ import org.openbravo.modulescript.StoredComputedValidator.Violation;
  * arg), <b>V6</b> return type (HARD void / WARN family mismatch), <b>V7</b> volatility, <b>V8</b>
  * no-dependencies, <b>V9</b> update-without-watched, <b>V10</b> watched-column-table, <b>V11</b>
  * target XOR (both set / neither set), <b>V14</b> dependency cycle (full SQL &rarr; graph &rarr;
- * {@code findCycles} wiring), <b>V16</b> FK-index advisory, plus one end-to-end enforce-mode smoke
+ * {@code findCycles} wiring), <b>V17</b> per-edge refresh-ordering advisory, <b>V16</b> FK-index
+ * advisory, plus one end-to-end enforce-mode smoke
  * that asserts a {@link BuildException}.</p>
  *
  * <p><b>Not fixtured here:</b> <b>V15</b> deployment drift ({@code checkDeploymentDrift}) is a
@@ -223,7 +224,9 @@ public class StoredComputedValidatorRulesTest {
   void v14MutualDependencyCycleIsHard() throws Exception {
     // Two valid stored computed columns A (col-a on tab-x) and B (col-b on tab-y). A's recompute
     // enqueues B (dep on B: source tab-x, watches col-a) and B's enqueues A (dep on A: source tab-y,
-    // watches col-b) -> a 2-node cycle with no strict ordering -> ETGO_ScdDependencyCycle (HARD).
+    // watches col-b) -> a 2-node cycle -> ETGO_ScdDependencyCycle (HARD, unconditionally: no
+    // Computation_Sequence_Number assignment can order a cycle). assertOneViolation also pins the
+    // V17 suppression: the cycle's edges must NOT additionally raise ETGO_ScdSequenceOrder.
     Map<String, Object> colA = fnColumnFull("col-a", "tab-x", 10L, "12");
     Map<String, Object> colB = fnColumnFull("col-b", "tab-y", 20L, "12");
 
@@ -235,6 +238,43 @@ public class StoredComputedValidatorRulesTest {
         row("b_col", "col-a", "src_table", "tab-y", "watched_col_id", "col-b"))); // B -> A
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdDependencyCycle, Severity.ERROR);
+  }
+
+  // ================================================================================================
+  // V17 — per-edge refresh ordering: same loader + edges SQL, wired into findSequenceOrderViolations.
+  // ================================================================================================
+
+  @Test
+  void v17ReaderWithLowerSequenceNumberThanItsSourceWarns() throws Exception {
+    // A (col-a on tab-x, seq 20) and B (col-b on tab-y, seq 10). B reads A (dep on B: source tab-x,
+    // watches col-a) -> the drain must refresh A before B, but B's LOWER sequence number means the
+    // drain visits B first and B reads a stale A. Acyclic, so V14 stays silent and V17 warns.
+    Map<String, Object> colA = fnColumnFull("col-a", "tab-x", 20L, "12");
+    Map<String, Object> colB = fnColumnFull("col-b", "tab-y", 10L, "12");
+
+    Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
+    routes.put(Q_LOADER, Arrays.asList(colA, colB));
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "numeric", "text"))); // valid fn -> no V4–V7 noise
+    routes.put(Q_V14_EDGES, singletonList(
+        row("b_col", "col-b", "src_table", "tab-x", "watched_col_id", "col-a"))); // A -> B
+    List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
+    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdSequenceOrder, Severity.WARN);
+  }
+
+  @Test
+  void v17CorrectlyOrderedChainIsSilent() throws Exception {
+    // Same shape, but A (seq 10) is refreshed before B (seq 20) -> the edge is honoured -> no
+    // violation at all. Guards against V17 firing on the correct, intended chaining configuration.
+    Map<String, Object> colA = fnColumnFull("col-a", "tab-x", 10L, "12");
+    Map<String, Object> colB = fnColumnFull("col-b", "tab-y", 20L, "12");
+
+    Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
+    routes.put(Q_LOADER, Arrays.asList(colA, colB));
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "numeric", "text")));
+    routes.put(Q_V14_EDGES, singletonList(
+        row("b_col", "col-b", "src_table", "tab-x", "watched_col_id", "col-a"))); // A -> B
+    List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
+    assertTrue(vs.isEmpty(), "a correctly ordered chain must raise nothing, got: " + vs);
   }
 
   // ================================================================================================

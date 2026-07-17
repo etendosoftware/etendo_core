@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,10 +51,12 @@ import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
  * <ul>
  *   <li>{@link #checkShape(String, String, String, Long)} — the pure shape predicate shared with the
  *       runtime DAL guard {@code ColumnStoredComputedHandler} (no DB, no DAL types).</li>
- *   <li>{@link #findCycles(Map, Map)} — the pure three-color DFS cycle detector.</li>
+ *   <li>{@link #findCycles(Map)} — the pure three-color DFS cycle detector.</li>
+ *   <li>{@link #findSequenceOrderViolations(Map, Map, List)} — the pure per-edge refresh-ordering
+ *       predicate (V17).</li>
  *   <li>{@link #assertDefinitionsValid(ConnectionProvider)} — the JDBC entry point that runs
- *       V1–V11 + V14 + V16 (all the definition-time shape, function, dependency, cycle and index
- *       rules catalogued in the Rule index below) over every
+ *       V1–V11 + V14 + V16 + V17 (all the definition-time shape, function, dependency, cycle,
+ *       ordering and index rules catalogued in the Rule index below) over every
  *       {@code Computation_Mode='S' AND IsActive='Y'} column and, when any hard rule is violated,
  *       throws its own aggregated {@link BuildException}.</li>
  *   <li>{@link #checkDeploymentDrift(ConnectionProvider, boolean, List)} — V15 (post-deploy trigger
@@ -85,21 +88,36 @@ import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
  *       ({@link #ETGO_ScdUpdateNoWatched}); <b>V10</b> each watched column must live on the
  *       dependency's source table ({@link #ETGO_ScdWatchedColumnTable}); <b>V11</b> exactly one of
  *       Target_ID_Resolver_SQL / Target_Link_Column must be set ({@link #ETGO_CompDepTargetXor}).</li>
- *   <li><b>V14</b> — dependency-cycle detection among stored computed columns
- *       ({@link #ETGO_ScdDependencyCycle}): a cycle broken by a strictly increasing
- *       Computation_Sequence_Number is WARN (ordered refresh), any other cycle is HARD.</li>
+ *   <li><b>V14</b> — dependency-cycle detection among stored computed columns (HARD,
+ *       {@link #ETGO_ScdDependencyCycle}): <b>every</b> cycle is an error. A cycle is exactly a
+ *       dirty set with no topological order, so no Computation_Sequence_Number assignment can
+ *       rescue one — the severity does not depend on the sequence numbers along it.</li>
  *   <li><b>V15</b> — post-deploy trigger drift ({@link #checkDeploymentDrift(ConnectionProvider,
  *       boolean, List)}): a missing deployed trigger/function is HARD
  *       ({@link #ETGO_ScdTriggerMissing}); a PG function body that differs from the freshly generated
  *       DDL is WARN ({@link #ETGO_ScdTriggerDrift}, a re-run self-heals).</li>
  *   <li><b>V16</b> — FK-index performance advisory (WARN, {@link #ETGO_ScdMissingIndex}): no index
  *       leads with a dependency's Target_Link_Column on its source table.</li>
+ *   <li><b>V17</b> — per-edge refresh-ordering advisory (WARN, {@link #ETGO_ScdSequenceOrder}): on
+ *       the acyclic part of the same graph V14 builds, an edge {@code A -> B} means B's computation
+ *       function reads A's stored value, so the drain must recompute A <i>before</i> B. Both drains
+ *       order by Computation_Sequence_Number ({@code GenerateStoredComputedTriggers.PROCESS_DIRTY_FN}
+ *       for {@code 'S'}, {@code StoredColumnQueueProcessor.FETCH_SQL} for {@code 'Q'}), so a null
+ *       sequence on either end, or {@code seq[A] >= seq[B]}, means the drain may visit B first and
+ *       read a stale A. Equality trips this rule too: the tie-breaks (target_record_id / created)
+ *       are arbitrary with respect to the dependency and guarantee nothing. Warn-only by design: an
+ *       unset or non-positive sequence number is already a hard V3 error, so erroring here would only
+ *       double-report it, and what is left (two configured columns merely ordered wrongly relative to
+ *       each other) is an advisory in the same family as V15/V16 — a fix a developer should make, not
+ *       a reason to fail an install. Edges inside a cycle V14 already
+ *       reported are suppressed: the cycle is the finding, per-edge noise on top of it is not.</li>
  * </ul>
  *
  * <p><b>Rollout toggle.</b> {@code ETGO_SCD_VALIDATION} (JVM system property first, then environment
  * variable; default {@code enforce}). In {@code warn} mode every hard violation is downgraded to a
  * warning and the build is never stopped — an escape hatch for a grace period. The heuristic rules
- * (V6 type mismatch, V7 volatility, V15 drift, V16 index) are warn-only regardless of the toggle.</p>
+ * (V6 type mismatch, V7 volatility, V15 drift, V16 index, V17 ordering) are warn-only regardless of
+ * the toggle.</p>
  */
 public final class StoredComputedValidator {
 
@@ -129,6 +147,7 @@ public final class StoredComputedValidator {
   static final String ETGO_ScdUpdateNoWatched = "ETGO_ScdUpdateNoWatched";
   static final String ETGO_ScdWatchedColumnTable = "ETGO_ScdWatchedColumnTable";
   static final String ETGO_ScdDependencyCycle = "ETGO_ScdDependencyCycle";
+  static final String ETGO_ScdSequenceOrder = "ETGO_ScdSequenceOrder";
   static final String ETGO_ScdTriggerMissing = "ETGO_ScdTriggerMissing";
   static final String ETGO_ScdTriggerDrift = "ETGO_ScdTriggerDrift";
   static final String ETGO_ScdMissingIndex = "ETGO_ScdMissingIndex";
@@ -170,20 +189,15 @@ public final class StoredComputedValidator {
    * Pure three-color (white/gray/black) DFS cycle detector over a directed dependency graph. A
    * back-edge to a gray node closes a cycle; each distinct cycle (by its node set) is reported once.
    *
-   * <p>Each returned {@link Cycle} also carries whether it is broken by a strict refresh ordering:
-   * {@link Cycle#seqOrdered} is evaluated over the CLOSED walk (every forward edge plus the closing
-   * {@code last -> first} edge) so the classification is rotation-independent — see
-   * {@link #isStrictlyOrdered(List, Map)}. A genuine cycle can never be strictly increasing all the
-   * way around, so a real cycle is deterministically HARD.</p>
+   * <p>Every cycle found is a hard error (V14), unconditionally. A cycle is exactly a dirty set with
+   * no topological order, so no {@code Computation_Sequence_Number} assignment can rescue one: the
+   * detector therefore reports the path only and carries no severity hint.</p>
    *
    * @param adjacency
    *          directed edges: {@code node -> list of successors}
-   * @param seqByNode
-   *          {@code Computation_Sequence_Number} per node (used only for the ordered/unordered split)
    * @return one {@link Cycle} per distinct cycle found (empty when the graph is acyclic)
    */
-  public static List<Cycle> findCycles(Map<String, List<String>> adjacency,
-      Map<String, Long> seqByNode) {
+  public static List<Cycle> findCycles(Map<String, List<String>> adjacency) {
     Set<String> nodes = new HashSet<>(adjacency.keySet());
     for (List<String> succ : adjacency.values()) {
       nodes.addAll(succ);
@@ -194,22 +208,22 @@ public final class StoredComputedValidator {
     Deque<String> path = new ArrayDeque<>();
     for (String node : nodes) {
       if (color.getOrDefault(node, 0) == 0) {
-        dfs(node, adjacency, color, path, cycles, seen, seqByNode);
+        dfs(node, adjacency, color, path, cycles, seen);
       }
     }
     return cycles;
   }
 
   private static void dfs(String u, Map<String, List<String>> adjacency, Map<String, Integer> color,
-      Deque<String> path, List<Cycle> cycles, Set<String> seen, Map<String, Long> seqByNode) {
+      Deque<String> path, List<Cycle> cycles, Set<String> seen) {
     color.put(u, 1);
     path.addLast(u);
     for (String v : adjacency.getOrDefault(u, Collections.<String> emptyList())) {
       int c = color.getOrDefault(v, 0);
       if (c == 0) {
-        dfs(v, adjacency, color, path, cycles, seen, seqByNode);
+        dfs(v, adjacency, color, path, cycles, seen);
       } else if (c == 1) {
-        recordCycle(v, path, cycles, seen, seqByNode);
+        recordCycle(v, path, cycles, seen);
       }
     }
     color.put(u, 2);
@@ -217,7 +231,7 @@ public final class StoredComputedValidator {
   }
 
   private static void recordCycle(String backTo, Deque<String> path, List<Cycle> cycles,
-      Set<String> seen, Map<String, Long> seqByNode) {
+      Set<String> seen) {
     List<String> full = new ArrayList<>(path);
     int idx = full.indexOf(backTo);
     if (idx < 0) {
@@ -228,31 +242,71 @@ public final class StoredComputedValidator {
     if (!seen.add(key)) {
       return;
     }
-    cycles.add(new Cycle(cyc, isStrictlyOrdered(cyc, seqByNode)));
+    cycles.add(new Cycle(cyc));
   }
 
   /**
-   * True when {@code seqByNode} imposes a strict order along <b>every</b> edge of the CLOSED walk of
-   * the cycle — every forward edge <i>and</i> the closing {@code last -> first} edge. Evaluating the
-   * closed walk (rather than only the forward slice DFS happened to capture) makes the result
-   * <b>rotation-independent</b>: the same cycle classifies identically no matter which node DFS
-   * entered it from. Because a genuine cycle can never be strictly increasing all the way around the
-   * loop (that would require {@code seq[first] < ... < seq[last] < seq[first]}), a real cycle in this
-   * enqueue graph deterministically classifies as unordered (HARD) here.
+   * Pure per-edge refresh-ordering predicate (V17). For every edge {@code A -> B} of the same graph
+   * {@link #findCycles(Map)} walks, B's computation function reads A's stored value, so the drain must
+   * recompute A <b>before</b> B. Both drains visit the dirty set ordered by
+   * {@code Computation_Sequence_Number} ({@code GenerateStoredComputedTriggers.PROCESS_DIRTY_FN} for
+   * the {@code 'S'} engine, {@code StoredColumnQueueProcessor.FETCH_SQL} for the {@code 'Q'} engine),
+   * so the edge is only honoured when {@code seq[A] < seq[B]}.
+   *
+   * <p>An edge is returned (i.e. violates the ordering) when either endpoint has no sequence number,
+   * or when {@code seq[A] >= seq[B]}. <b>Equality counts:</b> the drains break ties on
+   * {@code target_record_id} / {@code created}, both arbitrary with respect to the dependency, so
+   * {@code seq[A] == seq[B]} guarantees nothing.</p>
+   *
+   * <p>Edges whose two endpoints both sit inside one of the {@code cycles} already reported by V14 are
+   * skipped: the cycle is the real finding and no sequence assignment can order it, so per-edge noise
+   * on top of it is unhelpful. This also naturally suppresses self-loops and chords of a cycle.</p>
+   *
+   * @param adjacency
+   *          directed edges: {@code node -> list of successors}
+   * @param seqByNode
+   *          {@code Computation_Sequence_Number} per node; a missing/null entry is a violation
+   * @param cycles
+   *          cycles already reported by V14, whose edges are suppressed here
+   * @return the offending edges, ordered by {@code (from, to)} so the report is deterministic
    */
-  static boolean isStrictlyOrdered(List<String> cyclePath, Map<String, Long> seqByNode) {
-    if (cyclePath.size() < 2) {
-      return false;
+  public static List<Edge> findSequenceOrderViolations(Map<String, List<String>> adjacency,
+      Map<String, Long> seqByNode, List<Cycle> cycles) {
+    List<Set<String>> cycleNodes = new ArrayList<>();
+    for (Cycle c : cycles) {
+      cycleNodes.add(new HashSet<>(c.path));
     }
-    int n = cyclePath.size();
-    for (int i = 0; i < n; i++) {
-      Long a = seqByNode.get(cyclePath.get(i));
-      Long b = seqByNode.get(cyclePath.get((i + 1) % n)); // wrap: closing last -> first edge
-      if (a == null || b == null || a >= b) {
-        return false;
+    List<Edge> offending = new ArrayList<>();
+    for (Map.Entry<String, List<String>> e : adjacency.entrySet()) {
+      String a = e.getKey();
+      for (String b : e.getValue()) {
+        if (inSameCycle(a, b, cycleNodes)) {
+          continue;
+        }
+        Long sa = seqByNode.get(a);
+        Long sb = seqByNode.get(b);
+        if (sa == null || sb == null || sa >= sb) {
+          offending.add(new Edge(a, b));
+        }
       }
     }
-    return true;
+    Collections.sort(offending, new Comparator<Edge>() {
+      @Override
+      public int compare(Edge x, Edge y) {
+        int c = x.from.compareTo(y.from);
+        return c != 0 ? c : x.to.compareTo(y.to);
+      }
+    });
+    return offending;
+  }
+
+  private static boolean inSameCycle(String a, String b, List<Set<String>> cycleNodes) {
+    for (Set<String> nodes : cycleNodes) {
+      if (nodes.contains(a) && nodes.contains(b)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -354,7 +408,7 @@ public final class StoredComputedValidator {
     checkUpdateWatched(cp, violations);
     checkWatchedColumnTable(cp, violations);
     checkTargetXor(cp, violations);
-    checkCycles(cp, violations);
+    checkCyclesAndSequenceOrder(cp, violations);
     checkFkIndexes(cp, oracle, violations);
 
     return violations;
@@ -674,9 +728,9 @@ public final class StoredComputedValidator {
     }
   }
 
-  // --- Group E — cycle detection (V14) -----------------------------------------------------------
+  // --- Group E — cycle detection (V14) and refresh-ordering advisory (V17) -----------------------
 
-  private static void checkCycles(ConnectionProvider cp, List<Violation> violations) {
+  private static void checkCyclesAndSequenceOrder(ConnectionProvider cp, List<Violation> violations) {
     // Build the graph: node = 'S' active column. Edge A -> B when B has an active dependency whose
     // source table is A's table and whose watched columns include A's column (A's recompute write
     // then enqueues B).
@@ -724,7 +778,10 @@ public final class StoredComputedValidator {
       throw wrap("V14 cycle edges", e);
     }
 
-    for (Cycle cycle : findCycles(adjacency, seqByNode)) {
+    // V14 — every cycle is hard: a cycle is a dirty set with no topological order, so no
+    // Computation_Sequence_Number assignment can make the drain refresh it correctly.
+    List<Cycle> cycles = findCycles(adjacency);
+    for (Cycle cycle : cycles) {
       StringBuilder path = new StringBuilder();
       for (int i = 0; i < cycle.path.size(); i++) {
         ColInfo c = nodeById.get(cycle.path.get(i));
@@ -733,16 +790,32 @@ public final class StoredComputedValidator {
       // close the loop back to the first node
       ColInfo first = nodeById.get(cycle.path.get(0));
       path.append(first != null ? first.qname() : cycle.path.get(0));
-      if (cycle.seqOrdered) {
-        violations.add(new Violation(Severity.WARN, ETGO_ScdDependencyCycle,
-            "cycle among stored computed columns (" + path
-                + ") — broken by strictly increasing Computation_Sequence_Number, so it is ordered"));
-      } else {
-        violations.add(new Violation(Severity.ERROR, ETGO_ScdDependencyCycle,
-            "cycle among stored computed columns (" + path
-                + ") with no strict refresh ordering (Computation_Sequence_Number)"));
-      }
+      violations.add(new Violation(Severity.ERROR, ETGO_ScdDependencyCycle,
+          "cycle among stored computed columns (" + path + ")"));
     }
+
+    // V17 — on the acyclic part, each edge A -> B needs seq[A] < seq[B] or the drain refreshes the
+    // reader before the value it reads.
+    for (Edge edge : findSequenceOrderViolations(adjacency, seqByNode, cycles)) {
+      violations.add(new Violation(Severity.WARN, ETGO_ScdSequenceOrder,
+          "refresh ordering: " + qnameOf(nodeById, edge.to) + " (Computation_Sequence_Number "
+              + seqText(seqByNode.get(edge.to)) + ") reads " + qnameOf(nodeById, edge.from)
+              + " (Computation_Sequence_Number " + seqText(seqByNode.get(edge.from))
+              + "), but the refresh drain processes dirty rows in Computation_Sequence_Number order, "
+              + "so " + qnameOf(nodeById, edge.to) + " may be recomputed before "
+              + qnameOf(nodeById, edge.from) + " and read a stale value — give "
+              + qnameOf(nodeById, edge.from) + " a strictly lower Computation_Sequence_Number than "
+              + qnameOf(nodeById, edge.to) + " (equal numbers do not order: ties break arbitrarily)"));
+    }
+  }
+
+  private static String qnameOf(Map<String, ColInfo> nodeById, String columnId) {
+    ColInfo c = nodeById.get(columnId);
+    return c != null ? c.qname() : columnId;
+  }
+
+  private static String seqText(Long seq) {
+    return seq == null ? "unset" : seq.toString();
   }
 
   // --- Group G — performance advisory (V16) ------------------------------------------------------
@@ -1102,14 +1175,32 @@ public final class StoredComputedValidator {
     }
   }
 
-  /** A detected cycle: the node path (not repeating the closing node) and whether seq-ordered. */
+  /** A detected cycle: the node path, not repeating the closing node. Always a hard error (V14). */
   public static final class Cycle {
     public final List<String> path;
-    public final boolean seqOrdered;
 
-    public Cycle(List<String> path, boolean seqOrdered) {
+    public Cycle(List<String> path) {
       this.path = path;
-      this.seqOrdered = seqOrdered;
+    }
+  }
+
+  /**
+   * A directed edge {@code from -> to} of the dependency graph: recomputing {@code from} dirties
+   * {@code to}, i.e. {@code to}'s computation function reads {@code from}'s stored value. Returned by
+   * {@link #findSequenceOrderViolations(Map, Map, List)} for the edges the drain would visit backwards.
+   */
+  public static final class Edge {
+    public final String from;
+    public final String to;
+
+    public Edge(String from, String to) {
+      this.from = from;
+      this.to = to;
+    }
+
+    @Override
+    public String toString() {
+      return from + " -> " + to;
     }
   }
 
