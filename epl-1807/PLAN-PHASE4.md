@@ -112,6 +112,10 @@ serial requirement.
 This restricts only the drainer. Concurrent **user** transactions writing to source tables are
 fully supported; they just enqueue dirty rows for the single drainer to process in order.
 
+> **Superseded (per-client partitioning):** the queue is now partitioned by `AD_CLIENT_ID` — the
+> "single drainer" ordering requirement holds *within* a client, while different clients drain
+> independently. See `OPERATIONS.md` for the current behavior.
+
 ### A4. Failure / retry / poison rows — **Q mode only**
 
 **Scope decision (locked):** error handling lives **only** in the `'Q'` async path. The
@@ -314,7 +318,8 @@ Per REQUIREMENTS §7.4:
   value sees the refreshed upstream value, because the batch is drained in
   `Computation_Sequence_Number` order (including when the chain spans successive batches).
 - Concurrent **user** transactions writing watched source rows all enqueue correctly and are
-  drained in order by the single drainer.
+  drained in order by the single drainer (per client — see the per-client partitioning note above
+  and `OPERATIONS.md`).
 - Consistency check (`ad_scd_check`) detects values the queue has not yet refreshed.
 - **Poison row (Q):** a row whose recompute always fails increments `retry_count`, captures
   `error_msg`, does **not** block its batch-mates (savepoint isolation), and flips
