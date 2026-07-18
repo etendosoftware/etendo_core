@@ -253,7 +253,7 @@ The shared dirty-tracking table. Each row represents one target record that need
 | ----------------------------- | ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `AD_StoredColumn_Dirty_ID`    | VARCHAR(32) | Yes       | Primary key (UUID)                                                                                                                                                                   |
 | `AD_Column_ID`                | VARCHAR(32) | Yes       | FK → `AD_Column`; identifies which stored column is dirty                                                                                                                            |
-| `Target_Record_ID`            | VARCHAR(32) | No        | Target record ID. `NULL` is a sentinel meaning "recompute all records" (initial population or bulk reset)                                                                            |
+| `Target_Record_ID`            | VARCHAR(32) | No        | Target record ID. `NULL` is a sentinel meaning "recompute all rows of this column for `AD_Client_ID`" (initial population or bulk reset). Sentinels are per `(AD_Column_ID, AD_Client_ID)` and carry the real client id — there is no cross-client `'0'` sentinel. |
 | `Transaction_ID`              | BIGINT      | No        | ID of the transaction that created this row. Set to `pg_current_xact_id()::bigint` on PostgreSQL; `NULL` on Oracle (not applicable in async-only mode). Allows the deferred pass to select only its own rows and is useful for debugging. |
 | `Refresh_Mode`                | CHAR(1)     | Yes       | Copied from `AD_Column.Refresh_Mode` at insert time                                                                                                                                  |
 | `Computation_Sequence_Number` | INTEGER     | Yes       | Copied from `AD_Column` at insert time; drives deferred pass ordering                                                                                                                |
@@ -262,9 +262,9 @@ The shared dirty-tracking table. Each row represents one target record that need
 **Deduplication constraints:**
 
 - `UNIQUE (AD_Column_ID, Target_Record_ID, Transaction_ID)` — duplicate dirty events within the same transaction are dropped via `INSERT … ON CONFLICT DO NOTHING`. On Oracle, where `Transaction_ID` is `NULL`, deduplication is handled via `MERGE` in the PL/SQL trigger.
-- `UNIQUE (AD_Column_ID, Transaction_ID) WHERE Target_Record_ID IS NULL` — at most one "process all" sentinel per column per transaction. A separate partial index is required because `NULL` values are not equal in standard unique constraints.
+- `UNIQUE (AD_Column_ID, AD_Client_ID, Transaction_ID) WHERE Target_Record_ID IS NULL` — at most one "process all" sentinel per column **per client** per transaction. `AD_Client_ID` is part of the index so each client gets its own sentinel and drains independently; a separate partial index is required because `NULL` values are not equal in standard unique constraints.
 
-Dependency triggers always resolve concrete target IDs and never insert the null sentinel. Only the initial population mechanism does.
+Dependency triggers always resolve concrete target IDs and never insert the null sentinel. Only the initial population mechanism does, one sentinel per client that has rows in the target table.
 
 **Indexes:**
 
@@ -391,7 +391,7 @@ Task steps:
 6. **Apply DDL** — for changed or new columns: `DROP FUNCTION IF EXISTS … CASCADE`, then `CREATE OR REPLACE FUNCTION`, then `CREATE CONSTRAINT TRIGGER`. Apply in `SeqNo` order within each column.
 7. **Set AD_Field read-only** — run the `ReadOnlyLogic = 'Y'` propagation SQL for all affected fields.
 8. **Update export** — write updated trigger XML to the module's `src-db/` directory.
-9. **Initial population** — for columns being activated for the first time (no existing generated objects): call `sf_rebuild(<column_id>)` directly for `Refresh_Mode = S`; insert a null sentinel into `AD_StoredColumn_Dirty` for `Refresh_Mode = Q`; do nothing for `Refresh_Mode = M`.
+9. **Initial population** — for columns being activated for the first time (no existing generated objects): call `sf_rebuild(<column_id>)` directly for `Refresh_Mode = S`; insert one null sentinel per client (`SELECT DISTINCT ad_client_id FROM <target_table>`, each with the real `AD_CLIENT_ID`) into `AD_StoredColumn_Dirty` for `Refresh_Mode = Q`; do nothing for `Refresh_Mode = M`.
 10. **Report** — print a summary of columns processed, skipped, created, updated, and dropped.
 
 The task runs automatically as part of `update.database` after the standard schema application step. It also runs as a pre-commit hook: if any trigger in `src-db/` is stale relative to the current AD metadata hash, the commit is rejected.
@@ -434,18 +434,20 @@ The async process request handles `Refresh_Mode = Q` columns outside the origina
 
 **Execution per invocation:**
 
-1. Claim up to `Max Records` rows from `AD_StoredColumn_Dirty` where `Refresh_Mode = Q`, ordered by `Computation_Sequence_Number` ascending, using `SELECT … FOR UPDATE` (deliberately **without** `SKIP LOCKED` — see the concurrency note below).
-2. Handle sentinel rows (`Target_Record_ID IS NULL`) first: call `sf_rebuild(<column_id>)` for each, then delete the sentinel and remove any individual dirty rows for the same column from the batch.
+1. Claim up to `Max Records` rows from `AD_StoredColumn_Dirty` where `Refresh_Mode = Q` **and `AD_Client_ID = <caller's client>`** (from `bundle.getContext().getClient()`; the queue is partitioned by client and each run drains only its own client's rows — there is no cross-client `'0'` branch), ordered by `Computation_Sequence_Number` ascending, using `SELECT … FOR UPDATE` (deliberately **without** `SKIP LOCKED` — see the concurrency note below).
+2. Handle sentinel rows (`Target_Record_ID IS NULL`) first: rebuild that column **scoped to the run's client** through the dialect-neutral Java recomputer (`StoredColumnRecomputer.rebuild(con, columnId, clientId)`, which recomputes only that client's rows), then delete the sentinel and remove any individual dirty rows for the same column from the batch.
 3. Group remaining rows by `AD_Column_ID` and process in `Created` order within each group.
 4. For each row, call the computation function and write the result only when it differs from the current stored value. Set the `sf.refreshing` session flag to suppress dependency triggers.
 5. Delete each processed row immediately after its value is written.
 6. Commit. If the computation function raises an error for any row, the entire batch transaction rolls back and dirty rows remain for the next run.
 
-**The processor must run serially — multiple concurrent instances are NOT supported**, on either PostgreSQL or Oracle. Draining in `Computation_Sequence_Number` order is a correctness requirement: a chained stored column may read another stored column's value, and it only observes a fresh upstream value because the lower-sequence column is recomputed first. Each drainer orders only the rows it claims, so two concurrent drainers partition the queue into two independently-ordered halves and a downstream column can be recomputed before — or concurrently with — the upstream column it reads, storing a stale value. The claim therefore uses plain `FOR UPDATE`, so a second fetch blocks rather than claiming a disjoint batch.
+**Per client, the processor must run serially — two concurrent instances for the same client are NOT supported**, on either PostgreSQL or Oracle. Draining in `Computation_Sequence_Number` order is a correctness requirement: a chained stored column may read another stored column's value, and it only observes a fresh upstream value because the lower-sequence column is recomputed first. Each drainer orders only the rows it claims, so two concurrent drainers for the *same* client partition that client's queue into two independently-ordered halves and a downstream column can be recomputed before — or concurrently with — the upstream column it reads, storing a stale value. The claim therefore uses plain `FOR UPDATE`, so a second fetch for the same client blocks rather than claiming a disjoint batch.
 
-Deployments must run a single Process Request for this process, on a single node. `PREVENTCONCURRENT='Y'` is set on the process record but is not sufficient on its own: `ProcessMonitor.vetoJobExecution` checks only jobs executing on the local node and does not veto runs under a different client or organization. Single-drainer operation is an operational requirement.
+Because the queue is partitioned by `AD_Client_ID` and each run drains only its own client, **different clients' drainers may run concurrently** — their partitions are disjoint, so they never contend and cannot reorder one another's chains. Concurrency is unsafe only *within* a single client.
 
-This restricts only the drainer. Concurrent *user* transactions writing to source tables remain fully supported; they enqueue dirty rows that the single drainer processes in order.
+Deployments must run one Process Request for this process **per active client**, each on a single node. `PREVENTCONCURRENT='Y'` is set on the process record but is not sufficient on its own: `ProcessMonitor.vetoJobExecution` checks only jobs executing on the local node and does not veto runs under a different client or organization. One-drainer-per-client operation is an operational requirement.
+
+This restricts only the drainer. Concurrent *user* transactions writing to source tables remain fully supported; they enqueue dirty rows that the client's single drainer processes in order.
 
 Note that different transactions can each produce a dirty row for the same `(AD_Column_ID, Target_Record_ID)` — the unique constraint only prevents within-transaction duplicates (where `Transaction_ID` is the same). The async queue may therefore contain multiple rows for the same target record from different transactions; the processor will compute the target once per row, which is correct (idempotent) but wasteful. A deduplication step during batch claiming (`SELECT DISTINCT ON (AD_Column_ID, Target_Record_ID)`) could reduce redundant work in high-throughput scenarios but is deferred to post-MVP.
 
@@ -527,10 +529,11 @@ Each test case runs within its own database transaction that is rolled back afte
 
 - A `Refresh_Mode = Q` column accumulates dirty rows after a business transaction without processing them synchronously.
 - The background processor claims a batch, writes results, and deletes processed rows.
-- A null sentinel row triggers a full rebuild via `sf_rebuild(<column_id>)` and is deleted after completion.
+- A null sentinel row triggers a full rebuild of the run's client via the client-scoped Java recomputer and is deleted after completion.
 - Individual dirty rows for the same column as a sentinel are skipped (already covered by the rebuild).
+- Two clients each get their own null sentinel on first activation, and a drainer running under one client rebuilds only that client's rows, leaving the other client's sentinel untouched.
 - A chained column (one whose function reads another stored column) is recomputed after its upstream column within a batch, honouring `Computation_Sequence_Number` order.
-- Concurrent user transactions writing to source tables enqueue correctly and the single drainer settles every affected target. (Concurrent *drainer* instances are out of scope — the processor is not supported concurrently; see §5.5.)
+- Concurrent user transactions writing to source tables enqueue correctly and the client's single drainer settles every affected target. (Concurrent *drainer* instances for the **same** client are out of scope — not supported; drainers for **different** clients may run concurrently; see §5.5.)
 - The consistency check detects values that were not refreshed by the queue processor.
 
 ### 7.5 Schema Forge Pipeline Tests
@@ -572,7 +575,7 @@ Phase 3 carries the most risk. The deferred constraint trigger is conceptually s
 
 - `AD_Column` extended with `Computation_Mode`, `Computation_Function`, `Refresh_Mode` (`S` and `M` only; `Q` excluded).
 - `AD_Column_Computation_Dependency` table with all fields including `SeqNo`.
-- `AD_StoredColumn_Dirty` table with UUID primary key, nullable `Target_Record_ID`, mandatory `Refresh_Mode` and `Created`; unique constraint on `(AD_Column_ID, Target_Record_ID, Transaction_ID)`; partial unique index for the null sentinel; sync partial index on `(Transaction_ID, Computation_Sequence_Number)`.
+- `AD_StoredColumn_Dirty` table with UUID primary key, nullable `Target_Record_ID`, mandatory `Refresh_Mode` and `Created`; unique constraint on `(AD_Column_ID, Target_Record_ID, Transaction_ID)`; per-client partial unique index for the null sentinel on `(AD_Column_ID, AD_Client_ID, Transaction_ID) WHERE Target_Record_ID IS NULL`; sync partial index on `(Transaction_ID, Computation_Sequence_Number)`.
 - AD windows and list references so new fields are editable in the dictionary UI.
 - Dependency AFTER triggers per dependency row: insert dirty rows, `INSERT … ON CONFLICT DO NOTHING`, session flag guard.
 - Deferred recalculation constraint trigger (`DEFERRABLE INITIALLY DEFERRED`) on `AD_StoredColumn_Dirty`: ordered by `Computation_Sequence_Number`, `IS DISTINCT FROM` write guard, no audit-column updates.
@@ -628,7 +631,7 @@ Phase 3 carries the most risk. The deferred constraint trigger is conceptually s
 
 - Add `Computation_Mode`, `Computation_Function`, `Refresh_Mode`, `Computation_Sequence_Number` to `AD_Column`.
 - Create `AD_Column_Computation_Dependency` with all fields including `SeqNo`.
-- Create `AD_StoredColumn_Dirty`: UUID PK, nullable `Target_Record_ID`, mandatory `Refresh_Mode`, `Computation_Sequence_Number`, `Created`; unique constraint on `(AD_Column_ID, Target_Record_ID, Transaction_ID)`; partial unique index for the null sentinel; sync and queue partial indexes.
+- Create `AD_StoredColumn_Dirty`: UUID PK, nullable `Target_Record_ID`, mandatory `Refresh_Mode`, `Computation_Sequence_Number`, `Created`; unique constraint on `(AD_Column_ID, Target_Record_ID, Transaction_ID)`; per-client partial unique index for the null sentinel on `(AD_Column_ID, AD_Client_ID, Transaction_ID) WHERE Target_Record_ID IS NULL`; sync and queue partial indexes.
 - Add AD windows and list references for the new fields.
 - Export and run `update.database` clean.
 
@@ -688,8 +691,8 @@ Largest phase — delivers the working end-to-end synchronous refresh.
 ### Phase 6 — Queued Refresh and Consistency Checks
 
 - `Refresh_Mode = Q` in dependency triggers: leave dirty rows after commit.
-- Initial population for `Q` in `generateStoredComputedTriggers`: insert null sentinel on first activation.
-- Async process request: serial `FOR UPDATE` batch claim in `Computation_Sequence_Number` order, sentinel rows via `sf_rebuild`, compute/write/delete individual rows.
+- Initial population for `Q` in `generateStoredComputedTriggers`: insert one null sentinel per client (real `AD_CLIENT_ID`, `SELECT DISTINCT ad_client_id FROM <target_table>`) on first activation.
+- Async process request: client-scoped serial `FOR UPDATE` batch claim (`AD_Client_ID = <caller's client>`) in `Computation_Sequence_Number` order, sentinel rows via the client-scoped Java recomputer, compute/write/delete individual rows. Different clients drain concurrently; same-client concurrency is unsupported.
 - Expose consistency check as `checkStoredColumns` Gradle task and scheduled background process.
 - Schema Forge pipeline changes: `resolve-curated.js`, `push-to-neo.js`, `generate-frontend.js`, `validate-pipeline.js` rule F11.
 

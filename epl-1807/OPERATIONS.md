@@ -50,24 +50,30 @@ Request*) per installation:
      keep it bounded so a single run stays short.
    - **Retry Threshold** — failures before a row is dead-lettered (default `5`).
 
-> **Run exactly one drainer. Parallel processing is not supported.**
-> Create a **single** Process Request for this process, and in a clustered installation make sure
-> only one node runs it. The processor drains the queue **serially**, in
+> **Run exactly one drainer per client. Two drainers for the same client are not supported.**
+> The queue is partitioned by `AD_Client_ID`: each processor run drains only the rows of the
+> client it runs under (read from `bundle.getContext().getClient()`), so schedule **one** Process
+> Request per active client, and in a clustered installation make sure only one node runs each
+> client's drainer. Within a client the processor drains the queue **serially**, in
 > `Computation_Sequence_Number` order, and that ordering is a correctness requirement: chained
 > stored columns may read one another's stored values, and a downstream column only sees a fresh
-> upstream value because the upstream column is recomputed first. A second concurrent drainer
-> orders its own portion of the queue independently, so a downstream column can be recomputed
-> before the upstream column it reads and will store a **stale** value.
+> upstream value because the upstream column is recomputed first. A second concurrent drainer for
+> the *same* client orders its own portion of that client's queue independently, so a downstream
+> column can be recomputed before the upstream column it reads and will store a **stale** value.
+>
+> Different clients' drainers **may** run concurrently — client partitions are disjoint, so they
+> never contend and cannot reorder one another's chains. Concurrency is unsafe only *within* a
+> single client.
 >
 > Note that `PREVENTCONCURRENT='Y'` on the process record is a useful guard but **not** a
 > guarantee: the scheduler's check is node-local (so it does not stop a second node in a cluster)
-> and it does not veto a run under a different client or organization. Enforce single-drainer
+> and it does not veto a run under a different client or organization. Enforce one-drainer-per-client
 > operationally.
 
 This restriction applies to the `'Q'` drain on **both** PostgreSQL and Oracle. It does **not**
 restrict ordinary concurrent *user* activity: any number of users may write to source tables at
-once — their enqueue triggers simply add dirty rows to the queue, which the single drainer then
-processes in order.
+once — their enqueue triggers simply add dirty rows to the queue, which the client's single
+drainer then processes in order.
 
 ### Tuning guidance
 
@@ -77,9 +83,10 @@ processes in order.
   add a second Process Request to drain in parallel: concurrent drainers are not supported (see
   above) and will corrupt chained column values. The `'Q'` drain scales vertically (bigger
   batches, more frequent runs), not horizontally.
-- A large **initial population** (see below) for a `'Q'` column enqueues a single null
-  sentinel; the first processor run after deploy does the full rebuild, which can be long.
-  Schedule the first run for a maintenance window on big tables.
+- A large **initial population** (see below) for a `'Q'` column enqueues one null sentinel
+  **per client** that has rows in the target table; each client's first processor run after
+  deploy does that client's full rebuild, which can be long. Schedule the first run for a
+  maintenance window on big tables.
 
 ## Failure handling (dead-lettering)
 
@@ -117,6 +124,12 @@ the idempotent engine function `ad_scd_rebuild(<column_id>)`. Use it for:
 
 It is always safe to re-run: every target row is recomputed from its current dependencies.
 
+**Client scope:** the rebuild recomputes only the **caller's** client's rows, matching the
+per-client partitioning of the async queue — a regular operator repairs only their own client.
+The one exception is a caller running as **System** (`AD_CLIENT_ID='0'`): a System rebuild
+recomputes **all** clients' rows, which is the intended cross-client repair path. The caller's
+client is read from the process bundle context (`bundle.getContext().getClient()`).
+
 ## Initial population on first activation
 
 When `GenerateStoredComputedTriggers` deploys a column's `ad_scd_*` objects for the first
@@ -126,8 +139,9 @@ according to the column's refresh mode:
 - **`'S'`** → rebuilds inline during `update.database`, **unless** the target table exceeds
   `LARGE_TABLE_THRESHOLD` (100,000 rows). Above the threshold it logs a WARN and enqueues a
   sentinel instead, so the build does not block — drain it via the queue or a manual rebuild.
-- **`'Q'`** → enqueues one null sentinel; the next queue-processor run does the full rebuild
-  off-line.
+- **`'Q'`** → enqueues one null sentinel **per client** that has rows in the target table (each
+  carries that client's real `AD_CLIENT_ID`); each client's next queue-processor run does that
+  client's full rebuild off-line.
 - **`'M'`** → does nothing; run **Rebuild Stored Column** when ready.
 
 ## Build-time validation (`update.database`) and the `ETGO_SCD_VALIDATION` toggle

@@ -120,14 +120,38 @@ class StoredColumnRecomputer {
   }
 
   /**
-   * Full idempotent rebuild of one stored computed column: recomputes every primary key of the
-   * column's target table. This is the Java equivalent of the PL/pgSQL {@code ad_scd_rebuild} (a
-   * per-row recompute loop) and serves both the async sentinel path and the manual rebuild process.
-   * Target PKs are paged through in bounded keyset chunks (see {@link #nextTargetIdChunk}) so memory
-   * stays constant regardless of table size. Returns the number of target rows recomputed (0 when the
-   * column has incomplete metadata).
+   * Full idempotent rebuild of one stored computed column across <b>all</b> clients: recomputes every
+   * primary key of the column's target table regardless of {@code AD_CLIENT_ID}. This is the Java
+   * equivalent of the PL/pgSQL {@code ad_scd_rebuild} (a per-row recompute loop). It serves the manual
+   * rebuild ({@link StoredColumnRebuild}) only when the caller runs as System ({@code AD_CLIENT_ID='0'})
+   * — a deliberate cross-client repair. The async sentinel path and a non-System manual rebuild use the
+   * client-scoped {@link #rebuild(Connection, String, String)} overload instead. Target PKs are paged
+   * through in bounded keyset chunks (see {@link #nextTargetIdChunk}) so memory stays constant
+   * regardless of table size. Returns the number of target rows recomputed (0 when the column has
+   * incomplete metadata).
    */
   int rebuild(Connection con, String columnId) throws SQLException {
+    return rebuildInternal(con, columnId, null);
+  }
+
+  /**
+   * Full idempotent rebuild of one stored computed column scoped to a single client: recomputes only
+   * the target-table rows whose {@code AD_CLIENT_ID} equals {@code clientId}. This is the per-client
+   * variant used by the async sentinel path ({@link StoredColumnQueueProcessor}, which partitions the
+   * queue by client) and by a non-System manual rebuild ({@link StoredColumnRebuild}). It mirrors
+   * {@link #rebuild(Connection, String)} but appends a client filter to the keyset paging. Returns the
+   * number of target rows recomputed (0 when the column has incomplete metadata).
+   */
+  int rebuild(Connection con, String columnId, String clientId) throws SQLException {
+    return rebuildInternal(con, columnId, clientId);
+  }
+
+  /**
+   * Shared rebuild loop for both the all-client and client-scoped entry points. When {@code clientId}
+   * is null every target PK is recomputed; otherwise only PKs of rows owned by {@code clientId} are
+   * paged and recomputed (see {@link #nextTargetIdChunk}).
+   */
+  private int rebuildInternal(Connection con, String columnId, String clientId) throws SQLException {
     ColumnMeta meta = metaFor(con, columnId);
     if (meta == null) {
       return 0;
@@ -137,7 +161,7 @@ class StoredColumnRecomputer {
     while (true) {
       // Fetch one bounded chunk of PKs and fully read it into memory before recomputing, so no
       // ResultSet stays open on this connection while the per-row recompute UPDATE runs.
-      List<String> chunk = nextTargetIdChunk(con, meta, afterPk);
+      List<String> chunk = nextTargetIdChunk(con, meta, afterPk, clientId);
       for (String pk : chunk) {
         recompute(con, meta, pk);
         count++;
@@ -205,8 +229,10 @@ class StoredColumnRecomputer {
   /**
    * Fetches the next bounded chunk of primary-key values of the target table for a keyset-paginated
    * rebuild: at most {@link #REBUILD_CHUNK_SIZE} PKs ordered ascending, starting strictly after
-   * {@code afterPk} (or from the beginning when it is null). Keyset pagination keeps memory bounded
-   * regardless of table size — {@link #rebuild} pages through the whole table one chunk at a time
+   * {@code afterPk} (or from the beginning when it is null). When {@code clientId} is non-null the
+   * chunk is restricted to rows owned by that client (an {@code AD_CLIENT_ID = ?} filter, folded to the
+   * dialect's stored case); when null every row is paged. Keyset pagination keeps memory bounded
+   * regardless of table size — {@link #rebuildInternal} pages through the table one chunk at a time
    * instead of buffering every PK. The chunk is fully read and its {@code ResultSet} closed before the
    * caller issues any recompute UPDATE on the same connection.
    *
@@ -214,20 +240,33 @@ class StoredColumnRecomputer {
    * {@code FOR UPDATE} locks accumulate for its duration — the memory footprint is bounded here, but
    * the transaction's lock footprint is not.</p>
    */
-  private List<String> nextTargetIdChunk(Connection con, ColumnMeta meta, String afterPk)
-      throws SQLException {
+  private List<String> nextTargetIdChunk(Connection con, ColumnMeta meta, String afterPk,
+      String clientId) throws SQLException {
     String q = quoteChar();
     List<String> ids = new ArrayList<>();
     StringBuilder sql = new StringBuilder("SELECT ").append(q).append(meta.pk).append(q)
         .append(" FROM ").append(q).append(meta.table).append(q);
+    boolean hasWhere = false;
     if (afterPk != null) {
       sql.append(" WHERE ").append(q).append(meta.pk).append(q).append(" > ?");
+      hasWhere = true;
+    }
+    if (clientId != null) {
+      // Restrict the rebuild to one client's rows. AD_CLIENT_ID is folded to the physical case the
+      // active dialect stores it in (lowercase on PostgreSQL, UPPERCASE on Oracle), matching how the
+      // metadata identifiers are folded, then quoted.
+      sql.append(hasWhere ? " AND " : " WHERE ")
+          .append(q).append(fold("ad_client_id")).append(q).append(" = ?");
     }
     sql.append(" ORDER BY ").append(q).append(meta.pk).append(q);
     try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
       ps.setMaxRows(REBUILD_CHUNK_SIZE);
+      int idx = 1;
       if (afterPk != null) {
-        ps.setString(1, afterPk);
+        ps.setString(idx++, afterPk);
+      }
+      if (clientId != null) {
+        ps.setString(idx, clientId);
       }
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) {

@@ -571,8 +571,8 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
           // async path: enqueue a sentinel and let StoredColumnQueueProcessor recompute in Java.
           insertSentinel(cp, pop);
           log.info("SCD column {} first-activated (REFRESH_MODE='S', Oracle) — deferred to the async "
-              + "queue (null-sentinel); run StoredColumnQueueProcessor to complete population",
-              pop.columnId);
+              + "queue (per-client null-sentinels); run StoredColumnQueueProcessor to complete "
+              + "population", pop.columnId);
           continue;
         }
         long rowCount = countRows(cp, pop.targetTable);
@@ -594,7 +594,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       } else if ("Q".equals(mode)) {
         insertSentinel(cp, pop);
         log.info("SCD column {} first-activated (REFRESH_MODE='Q') — queued full rebuild "
-            + "(null-sentinel)", pop.columnId);
+            + "(per-client null-sentinels)", pop.columnId);
       } else {
         log.warn("SCD column {} has unknown REFRESH_MODE '{}' — skipping initial population",
             pop.columnId, mode);
@@ -621,42 +621,56 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   }
 
   /**
-   * Inserts a single null-sentinel ({@code TARGET_RECORD_ID IS NULL}) queued dirty row requesting a
-   * full rebuild of the column. {@code ON CONFLICT DO NOTHING} on the sentinel unique index makes this
-   * idempotent across re-runs within the same transaction.
+   * Inserts one per-client null-sentinel ({@code TARGET_RECORD_ID IS NULL}) queued dirty row per
+   * distinct client that owns rows in the target table, each requesting a full rebuild of the column
+   * for that client. The queue is partitioned by client, so every client gets its own sentinel and
+   * drains it under its own {@link StoredColumnQueueProcessor} run. {@code ON CONFLICT DO NOTHING}
+   * (PostgreSQL) / the {@code MERGE} match (Oracle) on the {@code (AD_COLUMN_ID, AD_CLIENT_ID,
+   * TRANSACTION_ID)} sentinel unique index makes this idempotent across re-runs within the same
+   * transaction. {@code get_uuid()} is VOLATILE, so each selected client row gets its own primary key.
    */
   private void insertSentinel(ConnectionProvider cp, ColumnPopulation pop) throws Exception {
     if (oracle) {
       // Oracle: SYSDATE for timestamps, NULL TRANSACTION_ID (no pg_current_xact_id()), and a MERGE
-      // against the sentinel key (column + NULL target, not ignored) for the idempotency that
-      // ON CONFLICT DO NOTHING provides on PostgreSQL.
+      // against the sentinel key (column + client + NULL target, not ignored) for the idempotency that
+      // ON CONFLICT DO NOTHING provides on PostgreSQL. The source is one row per distinct owning
+      // client, so a per-client sentinel is inserted for every client that has rows in the target.
+      // The SELECT DISTINCT ad_client_id full-scans the target table, which is acceptable because it
+      // runs only once at column first-activation (not per-row, not per-request).
       cp.getPreparedStatement(
           "MERGE INTO AD_STOREDCOLUMN_DIRTY d\n"
-        + "USING dual ON (d.AD_COLUMN_ID = '" + pop.columnId + "'\n"
-        + "              AND d.TARGET_RECORD_ID IS NULL AND d.IS_IGNORED = 'N')\n"
+        + "USING (SELECT DISTINCT ad_client_id FROM " + pop.targetTable + ") s\n"
+        + "ON (d.AD_COLUMN_ID = '" + pop.columnId + "'\n"
+        + "    AND d.AD_CLIENT_ID = s.ad_client_id\n"
+        + "    AND d.TARGET_RECORD_ID IS NULL AND d.IS_IGNORED = 'N')\n"
         + "WHEN NOT MATCHED THEN INSERT (\n"
         + "  AD_STOREDCOLUMN_DIRTY_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,\n"
         + "  CREATED, CREATEDBY, UPDATED, UPDATEDBY,\n"
         + "  AD_COLUMN_ID, TARGET_RECORD_ID, TRANSACTION_ID,\n"
         + "  REFRESH_MODE, COMPUTATION_SEQUENCE_NUMBER\n"
         + ") VALUES (\n"
-        + "  get_uuid(), '0', '0', 'Y', SYSDATE, '0', SYSDATE, '0',\n"
+        + "  get_uuid(), s.ad_client_id, '0', 'Y', SYSDATE, '0', SYSDATE, '0',\n"
         + "  '" + pop.columnId + "', NULL, NULL,\n"
         + "  'Q', " + pop.seqNo + "\n"
         + ")").execute();
       return;
     }
+    // PostgreSQL: one sentinel row per distinct owning client via a set-based INSERT ... SELECT.
+    // get_uuid() is VOLATILE so each selected client row receives its own primary key.
+    // The SELECT DISTINCT ad_client_id full-scans the target table, which is acceptable because it
+    // runs only once at column first-activation (not per-row, not per-request).
     cp.getPreparedStatement(
         "INSERT INTO AD_STOREDCOLUMN_DIRTY (\n"
       + "  AD_STOREDCOLUMN_DIRTY_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,\n"
       + "  CREATED, CREATEDBY, UPDATED, UPDATEDBY,\n"
       + "  AD_COLUMN_ID, TARGET_RECORD_ID, TRANSACTION_ID,\n"
       + "  REFRESH_MODE, COMPUTATION_SEQUENCE_NUMBER\n"
-      + ") VALUES (\n"
-      + "  get_uuid(), '0', '0', 'Y', NOW(), '0', NOW(), '0',\n"
-      + "  '" + pop.columnId + "', NULL, pg_current_xact_id()::text::bigint,\n"
-      + "  'Q', " + pop.seqNo + "\n"
-      + ") ON CONFLICT DO NOTHING").execute();
+      + ")\n"
+      + "SELECT get_uuid(), c.ad_client_id, '0', 'Y', NOW(), '0', NOW(), '0',\n"
+      + "       '" + pop.columnId + "', NULL, pg_current_xact_id()::text::bigint,\n"
+      + "       'Q', " + pop.seqNo + "\n"
+      + "  FROM (SELECT DISTINCT ad_client_id FROM " + pop.targetTable + ") c\n"
+      + "ON CONFLICT DO NOTHING").execute();
   }
 
   /**

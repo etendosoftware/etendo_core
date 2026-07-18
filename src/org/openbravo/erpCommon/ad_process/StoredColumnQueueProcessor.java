@@ -41,21 +41,29 @@ import org.openbravo.scheduling.ProcessLogger;
  * dirty rows that are not dead-lettered ({@code IS_IGNORED='N'}) and processes each one in its own
  * database transaction, committing after every row.</p>
  *
- * <p><b>Concurrent drainers are NOT supported.</b> This process must run serially — a single Process
- * Request, and (in a cluster) a single node. Correctness depends on the
- * {@code computation_sequence_number} ordering of the fetch: chained stored columns are allowed to
- * read one another's stored values, and a column is only guaranteed to see a fresh upstream value
- * because the lower-sequence column is recomputed first. A second drainer running at the same time
- * orders its own half of the queue independently, so a downstream column can be recomputed before —
- * or concurrently with — the upstream column it reads, leaving it stale. The fetch takes no row lock:
- * a lock would not help here anyway, since {@link #execute} commits the fetch transaction before the
- * per-row work begins, releasing any lock immediately.</p>
+ * <p><b>The queue is partitioned by client.</b> Each run drains only the rows owned by the client it
+ * runs in ({@code AD_CLIENT_ID = bundle.getContext().getClient()}); the enqueue triggers stamp that
+ * client from the source record and initial population writes one full-rebuild sentinel per owning
+ * client. {@link StoredColumnQueueProcessor} must therefore be scheduled per active client. Because
+ * the partitions are disjoint, different clients' drains may run <b>concurrently</b> with no
+ * interference.</p>
  *
- * <p>Sentinel rows ({@code TARGET_RECORD_ID IS NULL}) request a full column rebuild. The batch is
- * processed in a single pass honouring the {@code computation_sequence_number} order of the fetch: a
- * sentinel rebuilds its column (looping the same per-target recompute over every primary key of the
- * column's target table), and any sibling per-target rows for that column later in the batch are
- * dropped because the rebuild already covered every row.</p>
+ * <p><b>Concurrent same-client drainers are NOT supported.</b> Within a single client's partition this
+ * process must run serially — a single Process Request, and (in a cluster) a single node. Correctness
+ * depends on the {@code computation_sequence_number} ordering of the fetch: chained stored columns are
+ * allowed to read one another's stored values, and a column is only guaranteed to see a fresh upstream
+ * value because the lower-sequence column is recomputed first. A second drainer on the same client
+ * orders its own half of the partition independently, so a downstream column can be recomputed
+ * before — or concurrently with — the upstream column it reads, leaving it stale. The fetch takes no
+ * row lock: a lock would not help here anyway, since {@link #execute} commits the fetch transaction
+ * before the per-row work begins, releasing any lock immediately.</p>
+ *
+ * <p>Sentinel rows ({@code TARGET_RECORD_ID IS NULL}) request a full rebuild of the column for the
+ * sentinel's own client. The batch is processed in a single pass honouring the
+ * {@code computation_sequence_number} order of the fetch: a sentinel rebuilds its column for the
+ * running client (looping the same per-target recompute over every primary key of the column's target
+ * table that belongs to that client), and any sibling per-target rows for that column later in the
+ * batch are dropped because the rebuild already covered every row.</p>
  *
  * <p><b>Recompute runs in Java</b> (Phase 5, workstream C2), delegated to the shared
  * {@link StoredColumnRecomputer}. The per-row recompute is issued directly on this processor's
@@ -93,28 +101,38 @@ public class StoredColumnQueueProcessor implements Process {
   private static final int ERROR_MSG_MAX = 4000;
 
   /**
-   * Fetches the oldest non-dead-lettered queued rows for this client (plus the System-owned
-   * full-rebuild sentinels), lowest {@code computation_sequence_number} first.
+   * Fetches the oldest non-dead-lettered queued rows owned by this client, lowest
+   * {@code computation_sequence_number} first.
+   *
+   * <p>The queue is partitioned by client: both per-target dirty rows (stamped with the source
+   * record's {@code AD_CLIENT_ID} by the enqueue triggers) and full-rebuild null-sentinels (one per
+   * owning client, written by initial population) live under a real client id. A run therefore drains
+   * exactly its own client's partition — there is no cross-client System-owned ({@code '0'}) sentinel
+   * to pick up. Because the partitions are disjoint, different clients' drains may run concurrently;
+   * same-client concurrency stays unsupported (see the class javadoc).</p>
    *
    * <p>The {@code ORDER BY} is a correctness requirement, not a nicety: it is what makes a chained
    * stored column read an already-refreshed upstream value. It composes with the JDBC
    * {@code setMaxRows} bound — the batch takes the <i>lowest</i> sequence numbers, so a chain split
-   * across successive batches still drains upstream-first. Only a concurrent drainer breaks the
-   * ordering, which is why this process is not supported concurrently (see the class javadoc).</p>
+   * across successive batches still drains upstream-first. Only a concurrent same-client drainer breaks
+   * the ordering, which is why this process is not supported concurrently per client (see the class
+   * javadoc).</p>
    *
-   * <p>The fetch takes no row lock. This process assumes a single drainer — concurrent drainers are
-   * not supported, since a second drainer would fetch an overlapping, independently-ordered batch and
-   * could recompute a chained reader before the upstream value it reads, breaking the sequence
-   * ordering above. A lock here would not help anyway: {@link #execute} commits the fetch transaction
-   * before the per-row work begins, releasing any lock immediately. A plain {@code SELECT ... ORDER BY}
-   * is dialect-neutral, valid on both PostgreSQL and Oracle.</p>
+   * <p>The fetch takes no row lock. This process assumes a single drainer per client — concurrent
+   * same-client drainers are not supported, since a second drainer would fetch an overlapping,
+   * independently-ordered batch and could recompute a chained reader before the upstream value it
+   * reads, breaking the sequence ordering above. A lock here would not help anyway: {@link #execute}
+   * commits the fetch transaction before the per-row work begins, releasing any lock immediately. A
+   * plain {@code SELECT ... ORDER BY} is dialect-neutral, valid on both PostgreSQL and Oracle.</p>
    */
   private static final String FETCH_SQL = "SELECT ad_storedcolumn_dirty_id, ad_column_id, target_record_id"
       + " FROM ad_storedcolumn_dirty"
       + " WHERE refresh_mode = 'Q' AND is_ignored = 'N'"
-      // Drain this client's own dirty rows plus the System-owned ('0') full-rebuild sentinels, which
-      // recompute the whole table across all clients and so must be picked up by any client's run.
-      + " AND ad_client_id IN (?, '0')"
+      // Drain only this client's own dirty rows. The queue is partitioned by client: enqueue triggers
+      // stamp AD_CLIENT_ID from the source record, and initial population writes one null-sentinel per
+      // owning client (each rebuilds only that client's rows), so a client's run recomputes exactly its
+      // own partition. There is no cross-client '0' sentinel to pick up.
+      + " AND ad_client_id = ?"
       + " ORDER BY computation_sequence_number ASC, created ASC";
 
   private static final String DELETE_SQL = "DELETE FROM ad_storedcolumn_dirty WHERE ad_storedcolumn_dirty_id = ?";
@@ -170,7 +188,7 @@ public class StoredColumnQueueProcessor implements Process {
       Set<String> rebuiltColumns = new HashSet<>();
       for (DirtyRow row : batch) {
         if (row.targetId == null) {
-          if (processRow(con, row, retryThreshold, true)) {
+          if (processRow(con, row, retryThreshold, true, clientId)) {
             rebuiltColumns.add(row.columnId);
             rebuilt++;
           } else {
@@ -178,7 +196,7 @@ public class StoredColumnQueueProcessor implements Process {
           }
         } else if (rebuiltColumns.contains(row.columnId)) {
           continue;
-        } else if (processRow(con, row, retryThreshold, false)) {
+        } else if (processRow(con, row, retryThreshold, false, clientId)) {
           processed++;
         } else {
           failed++;
@@ -206,17 +224,18 @@ public class StoredColumnQueueProcessor implements Process {
   }
 
   /**
-   * Fetches the oldest queued rows for this client plus the System-owned rebuild sentinels, in
-   * {@code computation_sequence_number} order, bounding the batch via JDBC {@code setMaxRows}. Takes
-   * no row lock; see {@link #FETCH_SQL} and the class javadoc for why this process assumes a single
-   * drainer and does not support concurrent execution.
+   * Fetches the oldest queued rows owned by this client, in {@code computation_sequence_number} order,
+   * bounding the batch via JDBC {@code setMaxRows}. Takes no row lock; see {@link #FETCH_SQL} and the
+   * class javadoc for the per-client queue partitioning and why this process assumes a single drainer
+   * per client and does not support concurrent same-client execution.
    */
   private List<DirtyRow> fetchBatch(Connection con, int maxRecords, String clientId)
       throws SQLException {
     List<DirtyRow> rows = new ArrayList<>();
-    // Drain dirty rows owned by the client this process is running in (the enqueue triggers stamp
-    // AD_CLIENT_ID from the source record, partitioning the queue per client) plus the System-owned
-    // ('0') full-rebuild sentinels, which span all clients and must run under any client's drain.
+    // Drain only the dirty rows owned by the client this process is running in. The enqueue triggers
+    // stamp AD_CLIENT_ID from the source record and initial population writes one full-rebuild
+    // null-sentinel per owning client, so the queue is partitioned per client and this run recomputes
+    // exactly its own partition.
     try (PreparedStatement ps = con.prepareStatement(FETCH_SQL)) {
       ps.setMaxRows(maxRecords);
       ps.setString(1, clientId);
@@ -231,19 +250,22 @@ public class StoredColumnQueueProcessor implements Process {
 
   /**
    * Processes one dirty row in its own transaction: engages the recursion guard, recomputes the row
-   * (a full column rebuild when {@code sentinel}, otherwise a single-target recompute), deletes the
-   * dirty row, and commits. On <b>any</b> failure — including non-{@code SQLException}s from metadata
-   * lookup — the row's transaction is rolled back and the failure is recorded and dead-lettered in a
-   * separate committed transaction, so one poison row neither aborts the batch nor blocks its
-   * siblings. The cause is logged at {@code ERROR} with its stack trace. Returns true on success.
+   * (a full column rebuild scoped to {@code clientId} when {@code sentinel}, otherwise a single-target
+   * recompute), deletes the dirty row, and commits. On <b>any</b> failure — including
+   * non-{@code SQLException}s from metadata lookup — the row's transaction is rolled back and the
+   * failure is recorded and dead-lettered in a separate committed transaction, so one poison row
+   * neither aborts the batch nor blocks its siblings. The cause is logged at {@code ERROR} with its
+   * stack trace. Returns true on success.
    */
-  private boolean processRow(Connection con, DirtyRow row, int retryThreshold, boolean sentinel) {
+  private boolean processRow(Connection con, DirtyRow row, int retryThreshold, boolean sentinel,
+      String clientId) {
     try {
       // Suppress re-entrant enqueues caused by the engine's own synchronous writes within this row's
       // transaction (PostgreSQL only; no-op on Oracle, which drains asynchronously).
       recomputer.setRefreshingGuard(con);
       if (sentinel) {
-        recomputer.rebuild(con, row.columnId);
+        // A per-client sentinel rebuilds only the running client's rows of the target table.
+        recomputer.rebuild(con, row.columnId, clientId);
       } else {
         recomputer.recomputeOne(con, row.columnId, row.targetId);
       }

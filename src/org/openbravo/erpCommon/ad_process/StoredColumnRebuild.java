@@ -41,6 +41,13 @@ import org.openbravo.scheduling.ProcessLogger;
  * identically on PostgreSQL and Oracle — Oracle has no engine PL/SQL functions deployed. It is the
  * dialect-neutral equivalent of that function's per-row recompute loop.</p>
  *
+ * <p><b>Client scope:</b> the rebuild recomputes only the <em>caller's</em> client's rows of the
+ * target table, matching the per-client partitioning of the async queue. The one exception is a
+ * caller running as System ({@code AD_CLIENT_ID='0'}): a System rebuild recomputes <b>all</b> clients'
+ * rows, which is the intended cross-client repair path. The caller's client is read from the process
+ * bundle context ({@code bundle.getContext().getClient()}), the same accessor
+ * {@link StoredColumnQueueProcessor} uses to partition its drain.</p>
+ *
  * <p>The single parameter {@code AD_Column_ID} identifies the stored computed column (the
  * {@code Computation_Mode='S'} column whose value is recomputed). The whole rebuild runs in one
  * transaction. On PostgreSQL it engages the transaction-local {@code my.scd_refreshing} GUC, which
@@ -68,18 +75,24 @@ public class StoredColumnRebuild implements Process {
     ConnectionProvider conn = bundle.getConnection();
     boolean oracle = "ORACLE".equals(conn.getRDBMS());
     StoredColumnRecomputer recomputer = new StoredColumnRecomputer(oracle);
+    // Scope the rebuild to the caller's client, except System ('0') which rebuilds ALL clients (the
+    // post-migration repair path). This mirrors the per-client queue partitioning: a regular operator
+    // only ever repairs their own client's rows.
+    String clientId = bundle.getContext().getClient();
+    boolean system = "0".equals(clientId);
     Connection con = conn.getTransactionConnection();
     try {
       // Suppress re-entrant enqueues from the engine's own synchronous writes during the rebuild
       // (PostgreSQL only; the transaction-local GUC is released when the transaction ends).
       recomputer.setRefreshingGuard(con);
 
-      int rebuilt = recomputer.rebuild(con, columnId);
+      int rebuilt = system ? recomputer.rebuild(con, columnId)
+          : recomputer.rebuild(con, columnId, clientId);
 
       conn.releaseCommitConnection(con);
 
       String summary = "Stored column rebuild: " + rebuilt + " row(s) recomputed for column "
-          + columnId;
+          + columnId + (system ? " (all clients — System caller)" : " (client " + clientId + ")");
       if (logger != null) {
         logger.logln(summary);
       }

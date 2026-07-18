@@ -80,6 +80,7 @@
       </index>
       <index name="AD_STOREDCOLDIRTY_SENTINEL" unique="true">
         <index-column name="AD_COLUMN_ID"/>
+        <index-column name="AD_CLIENT_ID"/>
         <index-column name="TRANSACTION_ID"/>
         <whereClause><![CDATA[TARGET_RECORD_ID IS NULL]]></whereClause>
       </index>

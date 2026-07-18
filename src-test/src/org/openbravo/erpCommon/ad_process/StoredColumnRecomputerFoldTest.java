@@ -20,7 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
@@ -63,14 +66,21 @@ public class StoredColumnRecomputerFoldTest {
 
   private static final String COLUMN_ID = "COL-1807";
   private static final String TARGET_ID = "ORD-1";
+  private static final String CLIENT_ID = "CLIENT-A";
 
-  /** Holds a mocked Connection and the list of SQL strings passed to {@code prepareStatement}. */
+  /**
+   * Holds a mocked Connection, the list of SQL strings passed to {@code prepareStatement}, and the
+   * generic {@link PreparedStatement} every non-metadata query is answered with (so tests can verify
+   * parameter bindings such as the client-id filter).
+   */
   private static final class Capture {
     private final Connection con;
     private final List<String> sql = new ArrayList<>();
+    private final PreparedStatement genericPs;
 
-    private Capture(Connection con) {
+    private Capture(Connection con, PreparedStatement genericPs) {
       this.con = con;
+      this.genericPs = genericPs;
     }
   }
 
@@ -83,7 +93,6 @@ public class StoredColumnRecomputerFoldTest {
   private Capture newConnection(String rawTable, String rawColumn, String rawFn, String rawPk)
       throws SQLException {
     Connection con = mock(Connection.class);
-    Capture capture = new Capture(con);
 
     ResultSet metaRs = mock(ResultSet.class);
     when(metaRs.next()).thenReturn(true, false);
@@ -101,6 +110,7 @@ public class StoredColumnRecomputerFoldTest {
     when(genericPs.execute()).thenReturn(true);
     when(genericPs.executeUpdate()).thenReturn(1);
 
+    Capture capture = new Capture(con, genericPs);
     when(con.prepareStatement(anyString())).thenAnswer(inv -> {
       String sql = inv.getArgument(0);
       capture.sql.add(sql);
@@ -179,6 +189,47 @@ public class StoredColumnRecomputerFoldTest {
     assertEquals(0, new StoredColumnRecomputer(true).rebuild(ora.con, COLUMN_ID));
     assertEquals("SELECT \"C_ORDER_ID\" FROM \"C_ORDER\" ORDER BY \"C_ORDER_ID\"",
         only(ora.sql, "ORDER BY"));
+  }
+
+  @Test
+  void clientScopedRebuildAppendsFoldedClientFilterAndBindsClientIdOnPostgres()
+      throws SQLException {
+    // Per-client rebuild overload (EPL-1807 per-client enqueue): the keyset chunk SELECT must append
+    // a "ad_client_id" = ? filter, folded to lowercase and double-quoted on PostgreSQL, and bind the
+    // clientId. The target is empty, so afterPk is null and clientId binds at parameter index 1.
+    Capture pg = newConnection(RAW_TABLE, RAW_COLUMN, RAW_FN, RAW_PK);
+    assertEquals(0, new StoredColumnRecomputer(false).rebuild(pg.con, COLUMN_ID, CLIENT_ID));
+
+    assertEquals(
+        "SELECT \"c_order_id\" FROM \"c_order\" WHERE \"ad_client_id\" = ? ORDER BY \"c_order_id\"",
+        only(pg.sql, "ORDER BY"));
+    verify(pg.genericPs).setString(1, CLIENT_ID);
+  }
+
+  @Test
+  void clientScopedRebuildAppendsFoldedClientFilterAndBindsClientIdOnOracle() throws SQLException {
+    // Same client-scoped rebuild on Oracle: the filter column is folded to UPPERCASE and quoted, and
+    // the clientId is bound. Proves the client filter shares the engine's dialect-aware fold seam.
+    Capture ora = newConnection(RAW_TABLE, RAW_COLUMN, RAW_FN, RAW_PK);
+    assertEquals(0, new StoredColumnRecomputer(true).rebuild(ora.con, COLUMN_ID, CLIENT_ID));
+
+    assertEquals(
+        "SELECT \"C_ORDER_ID\" FROM \"C_ORDER\" WHERE \"AD_CLIENT_ID\" = ? ORDER BY \"C_ORDER_ID\"",
+        only(ora.sql, "ORDER BY"));
+    verify(ora.genericPs).setString(1, CLIENT_ID);
+  }
+
+  @Test
+  void allClientRebuildOverloadAppendsNoClientFilter() throws SQLException {
+    // The all-client overload (null clientId) must NOT append any client filter and must never bind a
+    // client id — it is the deliberate cross-client repair path (System manual rebuild).
+    Capture pg = newConnection(RAW_TABLE, RAW_COLUMN, RAW_FN, RAW_PK);
+    assertEquals(0, new StoredColumnRecomputer(false).rebuild(pg.con, COLUMN_ID));
+
+    String chunk = only(pg.sql, "ORDER BY");
+    assertFalse(chunk.contains("ad_client_id"), "all-client rebuild must not filter by client: " + chunk);
+    assertFalse(chunk.contains(" WHERE "), "empty-target all-client chunk must have no WHERE: " + chunk);
+    verify(pg.genericPs, never()).setString(eq(1), eq(CLIENT_ID));
   }
 
   @Test
