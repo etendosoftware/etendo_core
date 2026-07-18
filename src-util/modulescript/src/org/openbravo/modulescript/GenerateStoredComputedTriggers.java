@@ -552,6 +552,16 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
    * {@code my.scd_refreshing} guard {@code LOCAL} to that block, so the engine's own writes do not
    * re-enqueue. It must be one statement because the ModuleScript connection commits per
    * {@code execute()}, which would otherwise reset a {@code SET LOCAL} guard between calls.</p>
+   *
+   * <p><b>SYNC NOTE:</b> the first-activation dispatch below (the
+   * hadPreexistingDep / 'M' / 'S'+Oracle / 'S'+size / 'Q' / unknown branch decision) is mirrored
+   * verbatim as a pure function {@code decideBackfillAction} in
+   * {@code org.openbravo.modulescript.GenerateStoredComputedTriggersBackfillDecisionTest}
+   * (src-test), which pins the decision truth table as a unit test. The method is intentionally
+   * NOT refactored into a shared decision helper because {@code rowCount} is computed lazily (only
+   * on the 'S'/non-Oracle branch) and each branch emits a distinct log line — extracting it would
+   * add a {@code count(*)} for 'Q'/'M' columns or lose the per-case logging. Any change to the
+   * branch decision here MUST be reflected in that mirror, and vice versa.</p>
    */
   private void populateNewColumns(ConnectionProvider cp, Map<String, ColumnPopulation> populations)
       throws Exception {
