@@ -26,7 +26,7 @@ import org.openbravo.client.kernel.event.EntityNewEvent;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
-import org.openbravo.model.materialmgmt.onhandquantity.ColumnCompDependency;
+import org.openbravo.model.ad.datamodel.ColumnCompDependency;
 
 /**
  * Enforces the exactly-one-of XOR rule between the two ways a stored computed column dependency can
