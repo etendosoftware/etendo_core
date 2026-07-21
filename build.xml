@@ -881,6 +881,7 @@ export.database: exports database structure and data to xml files.
     <ant dir="${base.db}" target="update.database.java" inheritAll="true" inheritRefs="true" />
     <antcall target="generate.entities.quick" />
     <antcall target="apply.module" />
+    <updatesystemstatus v="RB60"/>
   </target>
 
   <target name="create.database.script" depends="init, core.lib">

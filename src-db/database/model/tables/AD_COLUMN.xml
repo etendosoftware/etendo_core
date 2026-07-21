@@ -225,6 +225,22 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault><![CDATA['Y']]></onCreateDefault>
       </column>
+      <column name="COMPUTATION_FUNCTION" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="REFRESH_MODE" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COMPUTATION_SEQUENCE_NUMBER" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault><![CDATA[0]]></onCreateDefault>
+      </column>
+      <column name="COMPUTATION_MODE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault><![CDATA[CASE WHEN SQLLOGIC IS NULL THEN 'N' ELSE 'V' END]]></onCreateDefault>
+      </column>
       <foreign-key foreignTable="AD_CALLOUT" name="AD_COLUMN_AD_CALLOUT">
         <reference local="AD_CALLOUT_ID" foreign="AD_CALLOUT_ID"/>
       </foreign-key>
