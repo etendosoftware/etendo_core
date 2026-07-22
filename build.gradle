@@ -55,6 +55,18 @@ java {
     sourceCompatibility = JavaVersion.VERSION_17
 }
 
+// EPL-1807: concrete modulescripts live in src-util/modulescript/src and are compiled
+// separately into src-util/modulescript/build/classes (committed .class files, not part
+// of the main :compileJava output). Unit tests that reference a concrete modulescript
+// (e.g. StoredComputedValidator and its nested types) need that output on the test
+// classpath, otherwise :compileTestJava fails with "package ... does not exist".
+sourceSets {
+    test {
+        compileClasspath += files('src-util/modulescript/build/classes')
+        runtimeClasspath += files('src-util/modulescript/build/classes')
+    }
+}
+
 jar{
     archiveBaseName.set("${javaPackage}")
     zip64 = true
