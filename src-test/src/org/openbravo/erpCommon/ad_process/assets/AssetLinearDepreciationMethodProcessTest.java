@@ -1,4 +1,4 @@
-package org.openbravo.erpCommon.ad_process.assets;
+package org.openbravo.erpCommon.ad_process.assets; // NOSONAR - existing Etendo package naming convention
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
