@@ -59,6 +59,7 @@ import org.openbravo.service.db.DbUtility;
 
 public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
   private static final Logger log4j = LogManager.getLogger();
+  private static final String ASSET_ID = "assetId";
   private static final String LINEAR = "LI";
   private static final String TIME = "TI";
   private static final String PERCENTAGE = "PE";
@@ -562,7 +563,7 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
         .getSession()
         .createQuery(hql)
         .setParameter("plannedAmount", plannedAmount)
-        .setParameter("assetId", asset.getId())
+        .setParameter(ASSET_ID, asset.getId())
         .executeUpdate();
     OBDal.getInstance().getSession().refresh(asset);
   }
@@ -662,7 +663,7 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
     final OBQuery<AmortizationLine> obq = OBDal.getInstance()
         .createQuery(AmortizationLine.class, hql)
         .setFilterOnReadableOrganization(false)
-        .setNamedParameter("assetId", asset.getId());
+        .setNamedParameter(ASSET_ID, asset.getId());
     obq.setNamedParameter("endDate", endDate);
     if (startDate != null) {
       obq.setNamedParameter("startDate", startDate);
@@ -816,7 +817,7 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
     final Long maxSeqNoAsset = OBDal.getInstance()
         .getSession()
         .createQuery(hql, Long.class)
-        .setParameter("assetId", asset.getId())
+        .setParameter(ASSET_ID, asset.getId())
         .uniqueResult();
     if (maxSeqNoAsset != null) {
       return maxSeqNoAsset;

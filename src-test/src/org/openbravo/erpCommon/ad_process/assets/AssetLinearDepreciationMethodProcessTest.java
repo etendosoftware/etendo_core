@@ -29,6 +29,7 @@ import org.openbravo.model.financialmgmt.assetmgmt.Asset;
 /**
  * Regression tests for ETP-4654 on {@link AssetLinearDepreciationMethodProcess}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AssetLinearDepreciationMethodProcessTest {
 
@@ -47,6 +48,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   private MockedStatic<OBDal> obDalStatic;
 
+  /** Sets up test fixtures. */
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
@@ -56,6 +58,7 @@ public class AssetLinearDepreciationMethodProcessTest {
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
   }
 
+  /** Tears down test fixtures. */
   @After
   public void tearDown() {
     if (obDalStatic != null) obDalStatic.close();
