@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +70,12 @@ public class AssetLinearDepreciationMethodProcessTest {
   private Organization mockOrg;
   @Mock
   private ProcessBundle mockBundle;
+  @Mock
+  private Session mockSession;
+  @Mock
+  private Query mockQuery;
+  @Mock
+  private OBCriteria<AmortizationLine> mockAmortizationLineCriteria;
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBContext> obContextStatic;
@@ -301,6 +310,57 @@ public class AssetLinearDepreciationMethodProcessTest {
     assertNotNull(result);
     // 1 year of 365 days
     assertEquals(0, result.compareTo(new BigDecimal("365")));
+  }
+
+  /**
+   * Regression test for ETP-4654: DepreciatedPlan must be persisted through a direct bulk UPDATE,
+   * never through the entity setter, since Hibernate's dirty-check silently drops the setter when
+   * the A_AMORTIZATIONLINE_TRG trigger already wrote the same value out-of-band, causing the
+   * field to toggle between 0 and the correct total on every recalculation.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testUpdateDepreciatedPlanFromLinesPersistsViaBulkUpdate() throws Exception {
+    final BigDecimal expectedTotal = new BigDecimal("1500.00");
+    when(mockAsset.getId()).thenReturn("ASSET_001");
+    when(mockOBDal.createCriteria(AmortizationLine.class)).thenReturn(mockAmortizationLineCriteria);
+    when(mockAmortizationLineCriteria.add(any())).thenReturn(mockAmortizationLineCriteria);
+    when(mockAmortizationLineCriteria.uniqueResult()).thenReturn(expectedTotal);
+    when(mockOBDal.getSession()).thenReturn(mockSession);
+    when(mockSession.createQuery(anyString())).thenReturn(mockQuery);
+    when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+
+    final Method method = AssetLinearDepreciationMethodProcess.class
+        .getDeclaredMethod("updateDepreciatedPlanFromLines", Asset.class);
+    method.setAccessible(true);
+    method.invoke(instance, mockAsset);
+
+    verify(mockAmortizationLineCriteria).setFilterOnReadableOrganization(false);
+    verify(mockQuery).setParameter("plannedAmount", expectedTotal);
+    verify(mockQuery).setParameter("assetId", "ASSET_001");
+    verify(mockQuery).executeUpdate();
+    verify(mockSession).refresh(mockAsset);
+    verify(mockAsset, never()).setDepreciatedPlan(any());
+  }
+
+  /**
+   * Get active amortization lines total zero when no active lines remain.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testGetActiveAmortizationLinesTotalReturnsZeroWhenNoLines() throws Exception {
+    when(mockOBDal.createCriteria(AmortizationLine.class)).thenReturn(mockAmortizationLineCriteria);
+    when(mockAmortizationLineCriteria.add(any())).thenReturn(mockAmortizationLineCriteria);
+    when(mockAmortizationLineCriteria.uniqueResult()).thenReturn(null);
+
+    final Method method = AssetLinearDepreciationMethodProcess.class
+        .getDeclaredMethod("getActiveAmortizationLinesTotal", Asset.class);
+    method.setAccessible(true);
+    final BigDecimal result = (BigDecimal) method.invoke(instance, mockAsset);
+
+    assertEquals(0, result.compareTo(BigDecimal.ZERO));
   }
 
   // --- Helper methods ---
