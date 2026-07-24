@@ -131,7 +131,7 @@ public class ${entity.simpleClassName} extends BaseOBObject ${entity.implementsS
     </#if>
     }
     </#if>
-    <#if !(p.domainType?? && p.domainType.reference.id?matches(SEARCH_VECTOR_REF_ID))>
+    <#if !(p.domainType?? && p.domainType.reference.id?matches(SEARCH_VECTOR_REF_ID)) && !p.storedComputed>
     /**
      * @see ${entity.simpleClassName}#<#if p.computedColumn>COMPUTED_COLUMN<#else>PROPERTY</#if>_${p.name?upper_case}
      * <@addDeprecationMessageIfNeeded property=p />

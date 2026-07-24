@@ -47,6 +47,10 @@
     <property name="position"/>
     <property name="seqno"/>
     <property name="sqlLogic"/>
+    <property name="computationMode" column="computation_mode"/>
+    <property name="computationFunction" column="computation_function"/>
+    <property name="refreshMode" column="refresh_mode"/>
+    <property name="computationSequenceNumber" column="computation_sequence_number"/>
     <property name="usedSequence" type="org.openbravo.base.session.OBYesNoType" column="isusedsequence"/>
 
     <many-to-one name="table" not-null="true" class="org.openbravo.base.model.Table" column="ad_table_id"/>

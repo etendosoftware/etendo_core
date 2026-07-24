@@ -303,7 +303,8 @@ public class DalMappingGenerator implements OBSingleton {
     // ignoring p.isUpdatable() for now as this is primarily used
     // for ui and not for background processes
 
-    if (p.isInactive() || p.getEntity().isView() || p.getSqlLogic() != null) {
+    if (p.isInactive() || p.getEntity().isView() || p.getSqlLogic() != null
+        || p.isStoredComputed()) {
       sb.append(" update=\"false\"");
       sb.append(" insert=\"false\"");
     }

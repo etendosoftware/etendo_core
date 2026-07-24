@@ -99,4 +99,13 @@
     <excludedFunction name="AD_ISTRIGGERENABLED"/>
     <excludedFunction name="AD_ENABLE_TRIGGERS"/>
     <excludedFunction name="AD_DISABLE_TRIGGERS"/>
+
+    <!-- EPL-1807: stored computed columns. The recalculation engine functions
+         and the deferred constraint trigger (ad_scd_dirty_aiu), plus the
+         per-dependency enqueue functions/triggers (ad_scd_<id>_trf / _trg), are
+         deployed via the GenerateStoredComputedTriggers ModuleScript (raw
+         PostgreSQL: DEFERRABLE constraint trigger, format()/FOR UPDATE) and must
+         never be exported as model XML. -->
+    <excludedFunction name="AD_SCD\_%"/>
+    <excludedTrigger name="AD_SCD\_%"/>
   </vector>
