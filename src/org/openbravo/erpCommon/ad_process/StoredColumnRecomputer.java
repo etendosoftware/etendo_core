@@ -71,7 +71,7 @@ class StoredColumnRecomputer {
    * {@link #nextTargetIdChunk} (SonarQube S2077). A plain identifier: starts with a letter or
    * underscore, followed by letters, digits or underscores only.
    */
-  private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
+  private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[A-Za-z_]\\w*$");
 
   /**
    * Resolves the physical target table, stored column, computation function and primary-key column

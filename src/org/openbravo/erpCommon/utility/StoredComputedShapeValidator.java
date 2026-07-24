@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.utility;
+package org.openbravo.erpCommon.utility; // NOSONAR - package name fixed by Etendo core convention
 
 /**
  * Dependency-free shape predicate for stored computed column definitions (EPL-1807). This is the
