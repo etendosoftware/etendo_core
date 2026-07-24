@@ -43,7 +43,7 @@ import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
  * every message is an English build-log string and the violation codes below are plain
  * {@code static final String} constants, <b>not</b> {@code AD_MESSAGE} rows. The only two codes that
  * remain {@code AD_MESSAGE} entries are the ones the runtime DAL handlers render in the UI
- * ({@link #ETGO_StoredComputedColDef} for the shape rules V1–V3 and {@link #ETGO_CompDepTargetXor}
+ * ({@link #ETGO_STORED_COMPUTED_COL_DEF} for the shape rules V1–V3 and {@link #ETGO_COMP_DEP_TARGET_XOR}
  * for the target XOR V11); this validator reuses those same two strings as labels for those rules.
  *
  * <p>This class is the single source of truth for the rule logic:</p>
@@ -68,36 +68,36 @@ import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
  * gaps — no rule was ever numbered with them), so their absence is deliberate, not an omission.</p>
  * <ul>
  *   <li><b>V1–V3</b> — shape of a {@code Computation_Mode='S'} column, all HARD under
- *       {@link #ETGO_StoredComputedColDef} (see {@link #checkShape(String, String, String, Long)}):
+ *       {@link #ETGO_STORED_COMPUTED_COL_DEF} (see {@link #checkShape(String, String, String, Long)}):
  *       <b>V1</b> SQLLogic must be blank, <b>V2</b> Computation_Function must be set, <b>V3</b>
  *       Computation_Sequence_Number must be &gt; 0.</li>
- *   <li><b>Composite-PK target</b> (unnumbered, HARD, {@link #ETGO_ScdCompositePkTarget}) — rejects a
+ *   <li><b>Composite-PK target</b> (unnumbered, HARD, {@link #ETGO_SCD_COMPOSITE_PK_TARGET}) — rejects a
  *       stored computed column whose target table has a composite (multi-column) primary key, which
  *       the single-PK recompute engine cannot resolve.</li>
  *   <li><b>V4–V7</b> — computation-function correctness: <b>V4</b> the function must exist (HARD,
- *       {@link #ETGO_ScdFunctionMissing}); <b>V5</b> it must take exactly one argument, the
+ *       {@link #ETGO_SCD_FUNCTION_MISSING}); <b>V5</b> it must take exactly one argument, the
  *       target-row primary key — HARD when the argument count is wrong, WARN when that single
- *       argument is non-textual ({@link #ETGO_ScdFunctionSignature}); <b>V6</b> its return type must
+ *       argument is non-textual ({@link #ETGO_SCD_FUNCTION_SIGNATURE}); <b>V6</b> its return type must
  *       be usable — HARD for void/trigger/record, WARN on a type-family mismatch against the column's
- *       AD reference ({@link #ETGO_ScdFunctionReturnType}); <b>V7</b> it should be side-effect free —
- *       WARN when the PG function is declared VOLATILE ({@link #ETGO_ScdFunctionVolatile}).</li>
+ *       AD reference ({@link #ETGO_SCD_FUNCTION_RETURN_TYPE}); <b>V7</b> it should be side-effect free —
+ *       WARN when the PG function is declared VOLATILE ({@link #ETGO_SCD_FUNCTION_VOLATILE}).</li>
  *   <li><b>V8–V11</b> — dependency correctness, all HARD: <b>V8</b> every stored computed column needs
- *       at least one active dependency ({@link #ETGO_ScdNoDependencies}); <b>V9</b> a dependency
+ *       at least one active dependency ({@link #ETGO_SCD_NO_DEPENDENCIES}); <b>V9</b> a dependency
  *       declaring an UPDATE event needs at least one active watched column
- *       ({@link #ETGO_ScdUpdateNoWatched}); <b>V10</b> each watched column must live on the
- *       dependency's source table ({@link #ETGO_ScdWatchedColumnTable}); <b>V11</b> exactly one of
- *       Target_ID_Resolver_SQL / Target_Link_Column must be set ({@link #ETGO_CompDepTargetXor}).</li>
+ *       ({@link #ETGO_SCD_UPDATE_NO_WATCHED}); <b>V10</b> each watched column must live on the
+ *       dependency's source table ({@link #ETGO_SCD_WATCHED_COLUMN_TABLE}); <b>V11</b> exactly one of
+ *       Target_ID_Resolver_SQL / Target_Link_Column must be set ({@link #ETGO_COMP_DEP_TARGET_XOR}).</li>
  *   <li><b>V14</b> — dependency-cycle detection among stored computed columns (HARD,
- *       {@link #ETGO_ScdDependencyCycle}): <b>every</b> cycle is an error. A cycle is exactly a
+ *       {@link #ETGO_SCD_DEPENDENCY_CYCLE}): <b>every</b> cycle is an error. A cycle is exactly a
  *       dirty set with no topological order, so no Computation_Sequence_Number assignment can
  *       rescue one — the severity does not depend on the sequence numbers along it.</li>
  *   <li><b>V15</b> — post-deploy trigger drift ({@link #checkDeploymentDrift(ConnectionProvider,
  *       boolean, List)}): a missing deployed trigger/function is HARD
- *       ({@link #ETGO_ScdTriggerMissing}); a PG function body that differs from the freshly generated
- *       DDL is WARN ({@link #ETGO_ScdTriggerDrift}, a re-run self-heals).</li>
- *   <li><b>V16</b> — FK-index performance advisory (WARN, {@link #ETGO_ScdMissingIndex}): no index
+ *       ({@link #ETGO_SCD_TRIGGER_MISSING}); a PG function body that differs from the freshly generated
+ *       DDL is WARN ({@link #ETGO_SCD_TRIGGER_DRIFT}, a re-run self-heals).</li>
+ *   <li><b>V16</b> — FK-index performance advisory (WARN, {@link #ETGO_SCD_MISSING_INDEX}): no index
  *       leads with a dependency's Target_Link_Column on its source table.</li>
- *   <li><b>V17</b> — per-edge refresh-ordering advisory (WARN, {@link #ETGO_ScdSequenceOrder}): on
+ *   <li><b>V17</b> — per-edge refresh-ordering advisory (WARN, {@link #ETGO_SCD_SEQUENCE_ORDER}): on
  *       the acyclic part of the same graph V14 builds, an edge {@code A -> B} means B's computation
  *       function reads A's stored value, so the drain must recompute A <i>before</i> B. Both drains
  *       order by Computation_Sequence_Number ({@code GenerateStoredComputedTriggers.PROCESS_DIRTY_FN}
@@ -131,28 +131,28 @@ public final class StoredComputedValidator {
   /**
    * V1–V3 shape rule — shared with {@code ColumnStoredComputedHandler} (an actual AD_MESSAGE).
    * Re-exposed as a delegating constant to the core single source of truth
-   * {@link StoredComputedShapeValidator#ETGO_StoredComputedColDef}.
+   * {@link StoredComputedShapeValidator#ETGO_STORED_COMPUTED_COL_DEF}.
    */
-  public static final String ETGO_StoredComputedColDef =
-      StoredComputedShapeValidator.ETGO_StoredComputedColDef;
+  public static final String ETGO_STORED_COMPUTED_COL_DEF =
+      StoredComputedShapeValidator.ETGO_STORED_COMPUTED_COL_DEF;
   /** V11 target XOR — shared with {@code ColumnCompDependencyTargetHandler} (an actual AD_MESSAGE). */
-  public static final String ETGO_CompDepTargetXor = "ETGO_CompDepTargetXor";
+  public static final String ETGO_COMP_DEP_TARGET_XOR = "ETGO_CompDepTargetXor";
 
   // --- Build-only codes (English label strings only — NOT AD_MESSAGE rows) ----------------------
-  static final String ETGO_ScdValidationFailed = "ETGO_ScdValidationFailed";
-  static final String ETGO_ScdFunctionMissing = "ETGO_ScdFunctionMissing";
-  static final String ETGO_ScdFunctionSignature = "ETGO_ScdFunctionSignature";
-  static final String ETGO_ScdFunctionReturnType = "ETGO_ScdFunctionReturnType";
-  static final String ETGO_ScdFunctionVolatile = "ETGO_ScdFunctionVolatile";
-  static final String ETGO_ScdNoDependencies = "ETGO_ScdNoDependencies";
-  static final String ETGO_ScdUpdateNoWatched = "ETGO_ScdUpdateNoWatched";
-  static final String ETGO_ScdWatchedColumnTable = "ETGO_ScdWatchedColumnTable";
-  static final String ETGO_ScdDependencyCycle = "ETGO_ScdDependencyCycle";
-  static final String ETGO_ScdSequenceOrder = "ETGO_ScdSequenceOrder";
-  static final String ETGO_ScdTriggerMissing = "ETGO_ScdTriggerMissing";
-  static final String ETGO_ScdTriggerDrift = "ETGO_ScdTriggerDrift";
-  static final String ETGO_ScdMissingIndex = "ETGO_ScdMissingIndex";
-  static final String ETGO_ScdCompositePkTarget = "ETGO_ScdCompositePkTarget";
+  static final String ETGO_SCD_VALIDATION_FAILED = "ETGO_ScdValidationFailed";
+  static final String ETGO_SCD_FUNCTION_MISSING = "ETGO_ScdFunctionMissing";
+  static final String ETGO_SCD_FUNCTION_SIGNATURE = "ETGO_ScdFunctionSignature";
+  static final String ETGO_SCD_FUNCTION_RETURN_TYPE = "ETGO_ScdFunctionReturnType";
+  static final String ETGO_SCD_FUNCTION_VOLATILE = "ETGO_ScdFunctionVolatile";
+  static final String ETGO_SCD_NO_DEPENDENCIES = "ETGO_ScdNoDependencies";
+  static final String ETGO_SCD_UPDATE_NO_WATCHED = "ETGO_ScdUpdateNoWatched";
+  static final String ETGO_SCD_WATCHED_COLUMN_TABLE = "ETGO_ScdWatchedColumnTable";
+  static final String ETGO_SCD_DEPENDENCY_CYCLE = "ETGO_ScdDependencyCycle";
+  static final String ETGO_SCD_SEQUENCE_ORDER = "ETGO_ScdSequenceOrder";
+  static final String ETGO_SCD_TRIGGER_MISSING = "ETGO_ScdTriggerMissing";
+  static final String ETGO_SCD_TRIGGER_DRIFT = "ETGO_ScdTriggerDrift";
+  static final String ETGO_SCD_MISSING_INDEX = "ETGO_ScdMissingIndex";
+  static final String ETGO_SCD_COMPOSITE_PK_TARGET = "ETGO_ScdCompositePkTarget";
 
   /** Rollout toggle name (JVM system property or environment variable). */
   static final String TOGGLE = "ETGO_SCD_VALIDATION";
@@ -182,7 +182,7 @@ public final class StoredComputedValidator {
    *
    * <p>When {@code computationMode = 'S'} the column is recomputed by a database function, so
    * {@code sqlLogic} MUST be blank, {@code fn} MUST be set, and {@code seq} MUST be a positive number.
-   * Returns {@link #ETGO_StoredComputedColDef} when any of the three is violated, otherwise
+   * Returns {@link #ETGO_STORED_COMPUTED_COL_DEF} when any of the three is violated, otherwise
    * {@code null}. Columns that are not stored computed are always valid here.</p>
    *
    * @param computationMode
@@ -477,7 +477,7 @@ public final class StoredComputedValidator {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           if (rs.getInt("keycount") > 1) {
-            violations.add(new Violation(Severity.ERROR, ETGO_ScdCompositePkTarget,
+            violations.add(new Violation(Severity.ERROR, ETGO_SCD_COMPOSITE_PK_TARGET,
                 COLUMN_PREFIX + rs.getString(TABLENAME) + "." + rs.getString(COLUMNNAME)
                     + " — target table " + rs.getString(TABLENAME) + " has a composite (multi-column)"
                     + " primary key; the recompute engine only supports single-column primary keys"));
@@ -520,7 +520,7 @@ public final class StoredComputedValidator {
 
     // V4 — function exists.
     if (!info.exists) {
-      violations.add(new Violation(Severity.ERROR, ETGO_ScdFunctionMissing,
+      violations.add(new Violation(Severity.ERROR, ETGO_SCD_FUNCTION_MISSING,
           COLUMN_PREFIX + c.qname() + COMPUTATION_FUNCTION_PREFIX + c.fn
               + "' does not exist in the database"));
       return; // nothing else to check for a missing function
@@ -607,7 +607,7 @@ public final class StoredComputedValidator {
       try {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdNoDependencies,
+          violations.add(new Violation(Severity.ERROR, ETGO_SCD_NO_DEPENDENCIES,
               COLUMN_PREFIX + rs.getString(TABLENAME) + "." + rs.getString(COLUMNNAME)
                   + " — a stored computed column must have at least one active dependency"));
         }
@@ -636,7 +636,7 @@ public final class StoredComputedValidator {
       try {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdUpdateNoWatched,
+          violations.add(new Violation(Severity.ERROR, ETGO_SCD_UPDATE_NO_WATCHED,
               DEPENDENCY_PREFIX + rs.getString(DEPID) + " on source table "
                   + rs.getString(SOURCE_TABLE)
                   + " declares an UPDATE event but has no active watched columns"));
@@ -669,7 +669,7 @@ public final class StoredComputedValidator {
       try {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdWatchedColumnTable,
+          violations.add(new Violation(Severity.ERROR, ETGO_SCD_WATCHED_COLUMN_TABLE,
               DEPENDENCY_PREFIX + rs.getString(DEPID) + " — watched column "
                   + rs.getString("watched_col") + " belongs to table "
                   + rs.getString("watched_table")
@@ -701,7 +701,7 @@ public final class StoredComputedValidator {
           boolean hasResolver = !rs.getString("resolver").isEmpty();
           boolean hasLink = rs.getString("linkcol") != null;
           if (hasResolver == hasLink) {
-            violations.add(new Violation(Severity.ERROR, ETGO_CompDepTargetXor,
+            violations.add(new Violation(Severity.ERROR, ETGO_COMP_DEP_TARGET_XOR,
                 DEPENDENCY_PREFIX + rs.getString(DEPID) + " — "
                     + (hasResolver ? "both Target_ID_Resolver_SQL and Target_Link_Column are set"
                         : "neither Target_ID_Resolver_SQL nor Target_Link_Column is set")
@@ -774,7 +774,7 @@ public final class StoredComputedValidator {
       }
       for (String[] fk : fks) {
         if (!hasLeadingIndex(cp, oracle, fk[1], fk[2])) {
-          violations.add(new Violation(Severity.WARN, ETGO_ScdMissingIndex,
+          violations.add(new Violation(Severity.WARN, ETGO_SCD_MISSING_INDEX,
               DEPENDENCY_PREFIX + fk[0] + " — no index leads with FK column " + fk[2]
                   + " on source table " + fk[1] + "; target lookups may scan"));
         }

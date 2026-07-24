@@ -146,7 +146,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdCompositePkTarget, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_COMPOSITE_PK_TARGET, Severity.ERROR);
   }
 
   /** V8 — an active stored computed column with no active dependency. */
@@ -162,7 +162,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdNoDependencies, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_NO_DEPENDENCIES, Severity.ERROR);
   }
 
   /** V9 — a dependency declaring an UPDATE event but with no active watched columns. */
@@ -179,7 +179,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdUpdateNoWatched, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_UPDATE_NO_WATCHED, Severity.ERROR);
   }
 
   /** V10 — a watched column that belongs to a table other than the dependency source table. */
@@ -199,7 +199,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdWatchedColumnTable, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_WATCHED_COLUMN_TABLE, Severity.ERROR);
   }
 
   /** V11 — both Target_ID_Resolver_SQL and Target_Link_Column are set. */
@@ -217,7 +217,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_CompDepTargetXor, Severity.ERROR);
+        StoredComputedValidator.ETGO_COMP_DEP_TARGET_XOR, Severity.ERROR);
   }
 
   /** V11 — neither Target_ID_Resolver_SQL nor Target_Link_Column is set. */
@@ -233,7 +233,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_CompDepTargetXor, Severity.ERROR);
+        StoredComputedValidator.ETGO_COMP_DEP_TARGET_XOR, Severity.ERROR);
   }
 
   /** V14 — a genuine mutual dependency cycle among two stored computed columns. */
@@ -259,7 +259,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdDependencyCycle, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_DEPENDENCY_CYCLE, Severity.ERROR);
   }
 
   /** V16 — a Target_Link_Column with no leading index on the source table. */
@@ -279,7 +279,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdMissingIndex, Severity.WARN);
+        StoredComputedValidator.ETGO_SCD_MISSING_INDEX, Severity.WARN);
   }
 
   /** V4 — Computation_Function does not exist in the database. */
@@ -296,7 +296,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdFunctionMissing, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_FUNCTION_MISSING, Severity.ERROR);
   }
 
   /** V5 — Computation_Function takes a number of arguments other than one. */
@@ -316,7 +316,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdFunctionSignature, Severity.ERROR);
+        StoredComputedValidator.ETGO_SCD_FUNCTION_SIGNATURE, Severity.ERROR);
   }
 
   /** V6 — return type family differs from the AD reference family (numeric vs string). */
@@ -337,7 +337,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdFunctionReturnType, Severity.WARN);
+        StoredComputedValidator.ETGO_SCD_FUNCTION_RETURN_TYPE, Severity.WARN);
   }
 
   /** V7 — Computation_Function is declared VOLATILE. */
@@ -357,7 +357,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       return;
     }
     assertMarkerViolation(collect(), marker,
-        StoredComputedValidator.ETGO_ScdFunctionVolatile, Severity.WARN);
+        StoredComputedValidator.ETGO_SCD_FUNCTION_VOLATILE, Severity.WARN);
   }
 
   /** A fully valid definition must produce no violation referencing its column. */

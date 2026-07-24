@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.ad_process;
+package org.openbravo.erpCommon.ad_process; // NOSONAR - package name fixed by Etendo core convention
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
