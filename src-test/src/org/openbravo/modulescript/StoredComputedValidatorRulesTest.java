@@ -86,6 +86,22 @@ public class StoredComputedValidatorRulesTest {
   private static final String Q_V14_EDGES = "AS watched_col_id";
   private static final String Q_V16_FK = "AS fk_col";
 
+  // Row/fixture literals reused across multiple tests (kept as named constants to avoid duplication).
+  private static final String COLUMNNAME = "columnname";
+  private static final String TABLENAME = "tablename";
+  private static final String SOURCE_TABLE = "source_table";
+  private static final String DEPID = "depid";
+  private static final String C_ORDERLINE = "c_orderline";
+  private static final String DEP_1 = "dep-1";
+  private static final String TAB_X = "tab-x";
+  private static final String COL_A = "col-a";
+  private static final String COL_B = "col-b";
+  private static final String TAB_Y = "tab-y";
+  private static final String WATCHED_COL_ID = "watched_col_id";
+  private static final String SRC_TABLE = "src_table";
+  private static final String B_COL = "b_col";
+  private static final String PG_TYPE_NUMERIC = "numeric";
+
   private String savedToggle;
 
   @BeforeEach
@@ -121,7 +137,7 @@ public class StoredComputedValidatorRulesTest {
   void v5WrongArgumentCountIsHard() throws Exception {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
-    routes.put(Q_PG_FN, singletonList(pgFn(2, "s", "numeric", "text"))); // 2 args, engine passes 1
+    routes.put(Q_PG_FN, singletonList(pgFn(2, "s", PG_TYPE_NUMERIC, "text"))); // 2 args, engine passes 1
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionSignature, Severity.ERROR);
   }
@@ -131,7 +147,7 @@ public class StoredComputedValidatorRulesTest {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
     // Exactly one argument (count OK) but it is int4 (NUMERIC family), not the VARCHAR/UUID PK.
-    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "numeric", "int4")));
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", PG_TYPE_NUMERIC, "int4")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionSignature, Severity.WARN);
   }
@@ -160,7 +176,7 @@ public class StoredComputedValidatorRulesTest {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
     // provolatile 'v' = VOLATILE; arg/return kept clean so only V7 fires.
-    routes.put(Q_PG_FN, singletonList(pgFn(1, "v", "numeric", "text")));
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "v", PG_TYPE_NUMERIC, "text")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionVolatile, Severity.WARN);
   }
@@ -172,7 +188,7 @@ public class StoredComputedValidatorRulesTest {
   @Test
   void v8ColumnWithoutDependenciesIsHard() throws Exception {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
-    routes.put(Q_V8_NO_DEP, singletonList(row("tablename", "c_order", "columnname", "totalamt")));
+    routes.put(Q_V8_NO_DEP, singletonList(row(TABLENAME, "c_order", COLUMNNAME, "totalamt")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdNoDependencies, Severity.ERROR);
   }
@@ -180,7 +196,7 @@ public class StoredComputedValidatorRulesTest {
   @Test
   void v9UpdateEventWithoutWatchedColumnIsHard() throws Exception {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
-    routes.put(Q_V9_UPDATE, singletonList(row("depid", "dep-1", "source_table", "c_orderline")));
+    routes.put(Q_V9_UPDATE, singletonList(row(DEPID, DEP_1, SOURCE_TABLE, C_ORDERLINE)));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdUpdateNoWatched, Severity.ERROR);
   }
@@ -189,8 +205,8 @@ public class StoredComputedValidatorRulesTest {
   void v10WatchedColumnOnForeignTableIsHard() throws Exception {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_V10_WATCHED_TABLE, singletonList(row(
-        "depid", "dep-1", "watched_col", "qtyordered",
-        "source_table", "c_orderline", "watched_table", "m_product")));
+        DEPID, DEP_1, "watched_col", "qtyordered",
+        SOURCE_TABLE, C_ORDERLINE, "watched_table", "m_product")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdWatchedColumnTable, Severity.ERROR);
   }
@@ -200,7 +216,7 @@ public class StoredComputedValidatorRulesTest {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     // Both Target_ID_Resolver_SQL (non-empty) and Target_Link_Column (non-null) set -> XOR violated.
     routes.put(Q_V11_XOR,
-        singletonList(row("depid", "dep-1", "resolver", "SELECT 1", "linkcol", "col-99")));
+        singletonList(row(DEPID, DEP_1, "resolver", "SELECT 1", "linkcol", "col-99")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     Violation v = assertOneViolation(vs, StoredComputedValidator.ETGO_CompDepTargetXor, Severity.ERROR);
     assertTrue(v.detail.contains("both"), "detail must state that both resolvers are set");
@@ -210,7 +226,7 @@ public class StoredComputedValidatorRulesTest {
   void v11NeitherTargetResolverSetIsHard() throws Exception {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     // resolver "" (COALESCE/TRIM empty) and linkcol null -> neither set -> XOR violated.
-    routes.put(Q_V11_XOR, singletonList(row("depid", "dep-2", "resolver", "", "linkcol", null)));
+    routes.put(Q_V11_XOR, singletonList(row(DEPID, "dep-2", "resolver", "", "linkcol", null)));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     Violation v = assertOneViolation(vs, StoredComputedValidator.ETGO_CompDepTargetXor, Severity.ERROR);
     assertTrue(v.detail.contains("neither"), "detail must state that neither resolver is set");
@@ -227,15 +243,15 @@ public class StoredComputedValidatorRulesTest {
     // watches col-b) -> a 2-node cycle -> ETGO_ScdDependencyCycle (HARD, unconditionally: no
     // Computation_Sequence_Number assignment can order a cycle). assertOneViolation also pins the
     // V17 suppression: the cycle's edges must NOT additionally raise ETGO_ScdSequenceOrder.
-    Map<String, Object> colA = fnColumnFull("col-a", "tab-x", 10L, "12");
-    Map<String, Object> colB = fnColumnFull("col-b", "tab-y", 20L, "12");
+    Map<String, Object> colA = fnColumnFull(COL_A, TAB_X, 10L, "12");
+    Map<String, Object> colB = fnColumnFull(COL_B, TAB_Y, 20L, "12");
 
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_LOADER, Arrays.asList(colA, colB));
-    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "numeric", "text"))); // valid fn -> no V4–V7 noise
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", PG_TYPE_NUMERIC, "text"))); // valid fn -> no V4–V7 noise
     routes.put(Q_V14_EDGES, Arrays.asList(
-        row("b_col", "col-b", "src_table", "tab-x", "watched_col_id", "col-a"),   // A -> B
-        row("b_col", "col-a", "src_table", "tab-y", "watched_col_id", "col-b"))); // B -> A
+        row(B_COL, COL_B, SRC_TABLE, TAB_X, WATCHED_COL_ID, COL_A),   // A -> B
+        row(B_COL, COL_A, SRC_TABLE, TAB_Y, WATCHED_COL_ID, COL_B))); // B -> A
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdDependencyCycle, Severity.ERROR);
   }
@@ -249,14 +265,14 @@ public class StoredComputedValidatorRulesTest {
     // A (col-a on tab-x, seq 20) and B (col-b on tab-y, seq 10). B reads A (dep on B: source tab-x,
     // watches col-a) -> the drain must refresh A before B, but B's LOWER sequence number means the
     // drain visits B first and B reads a stale A. Acyclic, so V14 stays silent and V17 warns.
-    Map<String, Object> colA = fnColumnFull("col-a", "tab-x", 20L, "12");
-    Map<String, Object> colB = fnColumnFull("col-b", "tab-y", 10L, "12");
+    Map<String, Object> colA = fnColumnFull(COL_A, TAB_X, 20L, "12");
+    Map<String, Object> colB = fnColumnFull(COL_B, TAB_Y, 10L, "12");
 
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_LOADER, Arrays.asList(colA, colB));
-    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "numeric", "text"))); // valid fn -> no V4–V7 noise
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", PG_TYPE_NUMERIC, "text"))); // valid fn -> no V4–V7 noise
     routes.put(Q_V14_EDGES, singletonList(
-        row("b_col", "col-b", "src_table", "tab-x", "watched_col_id", "col-a"))); // A -> B
+        row(B_COL, COL_B, SRC_TABLE, TAB_X, WATCHED_COL_ID, COL_A))); // A -> B
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdSequenceOrder, Severity.WARN);
   }
@@ -265,14 +281,14 @@ public class StoredComputedValidatorRulesTest {
   void v17CorrectlyOrderedChainIsSilent() throws Exception {
     // Same shape, but A (seq 10) is refreshed before B (seq 20) -> the edge is honoured -> no
     // violation at all. Guards against V17 firing on the correct, intended chaining configuration.
-    Map<String, Object> colA = fnColumnFull("col-a", "tab-x", 10L, "12");
-    Map<String, Object> colB = fnColumnFull("col-b", "tab-y", 20L, "12");
+    Map<String, Object> colA = fnColumnFull(COL_A, TAB_X, 10L, "12");
+    Map<String, Object> colB = fnColumnFull(COL_B, TAB_Y, 20L, "12");
 
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_LOADER, Arrays.asList(colA, colB));
-    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "numeric", "text")));
+    routes.put(Q_PG_FN, singletonList(pgFn(1, "s", PG_TYPE_NUMERIC, "text")));
     routes.put(Q_V14_EDGES, singletonList(
-        row("b_col", "col-b", "src_table", "tab-x", "watched_col_id", "col-a"))); // A -> B
+        row(B_COL, COL_B, SRC_TABLE, TAB_X, WATCHED_COL_ID, COL_A))); // A -> B
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertTrue(vs.isEmpty(), "a correctly ordered chain must raise nothing, got: " + vs);
   }
@@ -285,7 +301,7 @@ public class StoredComputedValidatorRulesTest {
   void v16MissingLeadingFkIndexIsWarn() throws Exception {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_V16_FK,
-        singletonList(row("depid", "dep-1", "source_table", "c_orderline", "fk_col", "c_order_id")));
+        singletonList(row(DEPID, DEP_1, SOURCE_TABLE, C_ORDERLINE, "fk_col", "c_order_id")));
     // No pg_index route -> hasLeadingIndex() sees an empty result set -> no leading index -> advisory.
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
     assertOneViolation(vs, StoredComputedValidator.ETGO_ScdMissingIndex, Severity.WARN);
@@ -299,7 +315,7 @@ public class StoredComputedValidatorRulesTest {
   void enforceModeSmokeThrowsBuildExceptionOnHardViolation() throws Exception {
     System.setProperty(StoredComputedValidator.TOGGLE, "enforce");
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
-    routes.put(Q_V8_NO_DEP, singletonList(row("tablename", "c_order", "columnname", "totalamt")));
+    routes.put(Q_V8_NO_DEP, singletonList(row(TABLENAME, "c_order", COLUMNNAME, "totalamt")));
     ConnectionProvider cp = router(routes);
     BuildException ex = assertThrows(BuildException.class,
         () -> StoredComputedValidator.assertDefinitionsValid(cp),
@@ -385,7 +401,7 @@ public class StoredComputedValidatorRulesTest {
 
   /** Builds a column-loader row (a valid stored computed column shape) with the given AD reference. */
   private static Map<String, Object> fnColumn(String refId) {
-    return fnColumnFull("col-a", "tab-x", 10L, refId);
+    return fnColumnFull(COL_A, TAB_X, 10L, refId);
   }
 
   /** Builds a column-loader row with explicit column id / table id / sequence, function 'myfn'. */
@@ -394,8 +410,8 @@ public class StoredComputedValidatorRulesTest {
     return row(
         "ad_column_id", columnId,
         "ad_table_id", tableId,
-        "tablename", "tab",
-        "columnname", columnId,
+        TABLENAME, "tab",
+        COLUMNNAME, columnId,
         "computation_mode", "S",
         "sqllogic", null,
         "computation_function", "myfn",
@@ -406,7 +422,7 @@ public class StoredComputedValidatorRulesTest {
   /** Builds a pg_proc introspection row: argument count, provolatile marker, return type, arg type. */
   private static Map<String, Object> pgFn(int pronargs, String provolatile, String rettype,
       String argtype) {
-    return row("pronargs", pronargs, "provolatile", provolatile, "rettype", rettype,
+    return row(Q_PG_FN, pronargs, "provolatile", provolatile, "rettype", rettype,
         "argtype", argtype);
   }
 

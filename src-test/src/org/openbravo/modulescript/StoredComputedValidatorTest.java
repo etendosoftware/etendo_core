@@ -52,6 +52,9 @@ import org.openbravo.modulescript.StoredComputedValidator.Violation;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class StoredComputedValidatorTest {
 
+  private static final String SUM_FN = "sum_fn";
+  private static final String SELECT_1 = "SELECT 1";
+
   // -------------------------------------------------------------------------------------------------
   // ENG-W3 — composite primary-key target guard (checkCompositePkTarget via collectDefinitionViolations)
   // -------------------------------------------------------------------------------------------------
@@ -148,22 +151,22 @@ public class StoredComputedValidatorTest {
 
   @Test
   void validStoredComputedShapeReturnsNull() {
-    assertNull(StoredComputedValidator.checkShape("S", "", "sum_fn", 10L));
-    assertNull(StoredComputedValidator.checkShape("S", null, "sum_fn", 10L));
+    assertNull(StoredComputedValidator.checkShape("S", "", SUM_FN, 10L));
+    assertNull(StoredComputedValidator.checkShape("S", null, SUM_FN, 10L));
   }
 
   @Test
   void nonStoredComputedColumnsAreAlwaysValid() {
     // Mode != 'S' short-circuits before any invariant — sqlLogic/fn/seq are irrelevant.
-    assertNull(StoredComputedValidator.checkShape("D", "SELECT 1", null, null));
-    assertNull(StoredComputedValidator.checkShape(null, "SELECT 1", null, null));
-    assertNull(StoredComputedValidator.checkShape("", "SELECT 1", null, null));
+    assertNull(StoredComputedValidator.checkShape("D", SELECT_1, null, null));
+    assertNull(StoredComputedValidator.checkShape(null, SELECT_1, null, null));
+    assertNull(StoredComputedValidator.checkShape("", SELECT_1, null, null));
   }
 
   @Test
   void storedComputedWithSqlLogicIsRejected() {
     assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
-        StoredComputedValidator.checkShape("S", "SELECT 1", "sum_fn", 10L));
+        StoredComputedValidator.checkShape("S", SELECT_1, SUM_FN, 10L));
   }
 
   @Test
@@ -177,10 +180,10 @@ public class StoredComputedValidatorTest {
   @Test
   void storedComputedWithNonPositiveOrMissingSequenceIsRejected() {
     assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
-        StoredComputedValidator.checkShape("S", null, "sum_fn", null));
+        StoredComputedValidator.checkShape("S", null, SUM_FN, null));
     assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
-        StoredComputedValidator.checkShape("S", null, "sum_fn", 0L));
+        StoredComputedValidator.checkShape("S", null, SUM_FN, 0L));
     assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
-        StoredComputedValidator.checkShape("S", null, "sum_fn", -1L));
+        StoredComputedValidator.checkShape("S", null, SUM_FN, -1L));
   }
 }

@@ -139,26 +139,7 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       // Each DDL statement below commits on this connection; with the default
       // CLOSE_CURSORS_AT_COMMIT holdability, deploying inside the open ResultSet would close the
       // cursor after the first row and silently skip the rest. Materialising first avoids that.
-      List<DepRow> deps = new ArrayList<>();
-      PreparedStatement psDeps = cp.getPreparedStatement(QUERY_DEPS);
-      ResultSet rs = psDeps.executeQuery();
-      while (rs.next()) {
-        DepRow row = new DepRow();
-        row.depId          = rs.getString("ad_column_comp_dependency_id").toLowerCase();
-        row.columnId       = rs.getString("ad_column_id");
-        row.insertEvent    = rs.getString("insert_event");
-        row.updateEvent    = rs.getString("update_event");
-        row.deleteEvent    = rs.getString("delete_event");
-        row.resolverSql    = rs.getString("target_id_resolver_sql");
-        row.linkColumn     = rs.getString("target_link_column");
-        row.linkIsParent   = rs.getString("target_link_isparent");
-        row.sourceTable    = rs.getString("source_table").toLowerCase();
-        row.targetTable    = rs.getString("target_table").toLowerCase();
-        row.refreshMode    = rs.getString("refresh_mode");
-        row.seqNo          = rs.getInt("computation_sequence_number");
-        deps.add(row);
-      }
-      cp.releasePreparedStatement(psDeps);
+      List<DepRow> deps = loadDependencyRows(cp);
 
       // Materialise watched columns (child table) before any DDL, same cursor discipline as deps.
       Map<String, List<String>> watchedByDep = loadWatchedColumns(cp);
@@ -171,91 +152,8 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
       // Per-column initial-population bookkeeping, insertion-ordered for stable logging.
       Map<String, ColumnPopulation> populations = new LinkedHashMap<>();
       for (DepRow row : deps) {
-        if (row.refreshMode == null) {
-          log.warn("Skipping SCD dependency {} — target column {} has no REFRESH_MODE set",
-              row.depId, row.columnId);
-          continue;
-        }
-
-        String resolverSql = resolveResolverSql(row);
-        if (resolverSql == null) {
-          log.warn("Skipping SCD dependency {} — neither TARGET_ID_RESOLVER_SQL nor "
-              + "TARGET_LINK_COLUMN_ID is set", row.depId);
-          continue;
-        }
-
-        String portabilityIssue = validateResolverPortability(resolverSql);
-        if (portabilityIssue != null) {
-          log.warn("Skipping SCD dependency {} — non-portable resolver SQL ({}): {}",
-              row.depId, portabilityIssue, resolverSql);
-          continue;
-        }
-
-        List<String> watchedColNames =
-            watchedByDep.getOrDefault(row.depId, new ArrayList<>());
-
-        // An UPDATE event needs watched columns to be safe: without them the trigger fires on EVERY
-        // update to a source row — including the engine's own recompute write — with no value guard to
-        // stop it. On Oracle the enqueue no longer honours the global trigger-disable (see
-        // deployOracleTrigger), so an unguarded UPDATE would re-enqueue the row the processor just
-        // recomputed, forever; on PostgreSQL it is at best wasteful. Drop the UPDATE event in that
-        // case and warn. INSERT/DELETE carry no such risk — the engine recompute writes an UPDATE,
-        // never an INSERT or DELETE — so they are kept.
-        String updateEvent = row.updateEvent;
-        if ("Y".equals(updateEvent) && watchedColNames.isEmpty()) {
-          log.warn("SCD dependency {} on table {} declares an UPDATE event but has no watched columns"
-              + " — dropping the UPDATE event (it would fire on every update with no value guard,"
-              + " risking a re-enqueue loop). INSERT/DELETE events, if any, are still deployed.",
-              row.depId, row.sourceTable);
-          updateEvent = "N";
-        }
-
-        // If nothing is left to fire on, generate no trigger at all — and leave this dep OUT of
-        // activeDepIds so dropOrphanedFunctions removes any objects a previous run deployed for it.
-        if (!"Y".equals(row.insertEvent) && !"Y".equals(updateEvent) && !"Y".equals(row.deleteEvent)) {
-          log.warn("SCD dependency {} on table {} has no watched columns and no INSERT/DELETE events"
-              + " — no trigger generated.", row.depId, row.sourceTable);
-          continue;
-        }
-
-        activeDepIds.add(row.depId);
-
-        // Track this column for initial population. A column is a "first activation" only if NONE of
-        // its dependency functions existed before this run (B2): if any did, the column was already
-        // deployed and previously populated, so re-running would needlessly re-aggregate every row.
-        ColumnPopulation pop = populations.computeIfAbsent(row.columnId,
-            k -> new ColumnPopulation(row.columnId, row.refreshMode, row.targetTable, row.seqNo));
-        if (preexistingDepIds.contains(row.depId)) {
-          pop.hadPreexistingDep = true;
-        }
-
-        String funcName    = "ad_scd_" + row.depId + "_trf";
-        String triggerName = "ad_scd_" + row.depId + "_trg";
-
-        String eventClause = buildEventClause(row.insertEvent, updateEvent, row.deleteEvent,
-            watchedColNames);
-
-        if (oracle) {
-          deployOracleTrigger(cp, triggerName, row, resolverSql, eventClause, watchedColNames);
-          // Oracle deploys only the inline trigger; drift check degrades to presence (no DDL).
-          deployed.add(new StoredComputedValidator.DeployedDep(row.depId, row.sourceTable, null));
-        } else {
-          String functionDdl = buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode,
-              row.seqNo, watchedColNames);
-          cp.getPreparedStatement(functionDdl).execute();
-
-          cp.getPreparedStatement(
-              "DROP TRIGGER IF EXISTS " + triggerName + " ON " + row.sourceTable).execute();
-          cp.getPreparedStatement(
-              "CREATE TRIGGER " + triggerName
-              + " AFTER " + eventClause + " ON " + row.sourceTable
-              + " FOR EACH ROW EXECUTE FUNCTION " + funcName + "()").execute();
-          // Capture the freshly rendered function DDL for the post-deploy body-drift comparison.
-          deployed.add(
-              new StoredComputedValidator.DeployedDep(row.depId, row.sourceTable, functionDdl));
-        }
-
-        log.info("Deployed SCD trigger {} on table {}", triggerName, row.sourceTable);
+        processDependencyRow(cp, row, watchedByDep, preexistingDepIds, activeDepIds, populations,
+            deployed);
       }
 
       dropOrphanedFunctions(cp, activeDepIds);
@@ -274,6 +172,140 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
     } catch (Exception e) {
       handleError(e);
     }
+  }
+
+  /**
+   * Drains {@link #QUERY_DEPS} into memory and releases the cursor. Extracted from {@link #execute}
+   * purely to keep that method's cognitive complexity down; behavior (query, row mapping, cursor
+   * discipline) is unchanged.
+   */
+  private List<DepRow> loadDependencyRows(ConnectionProvider cp) throws Exception {
+    List<DepRow> deps = new ArrayList<>();
+    PreparedStatement psDeps = cp.getPreparedStatement(QUERY_DEPS);
+    ResultSet rs = psDeps.executeQuery();
+    while (rs.next()) {
+      DepRow row = new DepRow();
+      row.depId          = rs.getString("ad_column_comp_dependency_id").toLowerCase();
+      row.columnId       = rs.getString("ad_column_id");
+      row.insertEvent    = rs.getString("insert_event");
+      row.updateEvent    = rs.getString("update_event");
+      row.deleteEvent    = rs.getString("delete_event");
+      row.resolverSql    = rs.getString("target_id_resolver_sql");
+      row.linkColumn     = rs.getString("target_link_column");
+      row.linkIsParent   = rs.getString("target_link_isparent");
+      row.sourceTable    = rs.getString("source_table").toLowerCase();
+      row.targetTable    = rs.getString("target_table").toLowerCase();
+      row.refreshMode    = rs.getString("refresh_mode");
+      row.seqNo          = rs.getInt("computation_sequence_number");
+      deps.add(row);
+    }
+    cp.releasePreparedStatement(psDeps);
+    return deps;
+  }
+
+  /**
+   * Validates, and — if still eligible — deploys, a single {@code AD_COLUMN_COMP_DEPENDENCY} row:
+   * the per-row body of the loop in {@link #execute}, extracted only to keep that method's cognitive
+   * complexity and per-loop {@code continue} count down. Each early exit below (a plain
+   * method {@code return}) corresponds 1:1 to what used to be a {@code continue} in the caller's loop;
+   * no decision, log message, or side effect was added, removed, or reordered.
+   *
+   * @param row              the dependency row being processed
+   * @param watchedByDep      watched-column names keyed by dependency id (see {@link #loadWatchedColumns})
+   * @param preexistingDepIds dependency ids whose enqueue function already existed before this run
+   * @param activeDepIds      accumulator: dependency ids that end up with a deployed trigger this run
+   * @param populations       accumulator: per-column initial-population bookkeeping
+   * @param deployed          accumulator: objects (re)deployed this run, for the drift check (V15)
+   */
+  private void processDependencyRow(ConnectionProvider cp, DepRow row,
+      Map<String, List<String>> watchedByDep, Set<String> preexistingDepIds,
+      Set<String> activeDepIds, Map<String, ColumnPopulation> populations,
+      List<StoredComputedValidator.DeployedDep> deployed) throws Exception {
+    if (row.refreshMode == null) {
+      log.warn("Skipping SCD dependency {} — target column {} has no REFRESH_MODE set",
+          row.depId, row.columnId);
+      return;
+    }
+
+    String resolverSql = resolveResolverSql(row);
+    if (resolverSql == null) {
+      log.warn("Skipping SCD dependency {} — neither TARGET_ID_RESOLVER_SQL nor "
+          + "TARGET_LINK_COLUMN_ID is set", row.depId);
+      return;
+    }
+
+    String portabilityIssue = validateResolverPortability(resolverSql);
+    if (portabilityIssue != null) {
+      log.warn("Skipping SCD dependency {} — non-portable resolver SQL ({}): {}",
+          row.depId, portabilityIssue, resolverSql);
+      return;
+    }
+
+    List<String> watchedColNames =
+        watchedByDep.getOrDefault(row.depId, new ArrayList<>());
+
+    // An UPDATE event needs watched columns to be safe: without them the trigger fires on EVERY
+    // update to a source row — including the engine's own recompute write — with no value guard to
+    // stop it. On Oracle the enqueue no longer honours the global trigger-disable (see
+    // deployOracleTrigger), so an unguarded UPDATE would re-enqueue the row the processor just
+    // recomputed, forever; on PostgreSQL it is at best wasteful. Drop the UPDATE event in that
+    // case and warn. INSERT/DELETE carry no such risk — the engine recompute writes an UPDATE,
+    // never an INSERT or DELETE — so they are kept.
+    String updateEvent = row.updateEvent;
+    if ("Y".equals(updateEvent) && watchedColNames.isEmpty()) {
+      log.warn("SCD dependency {} on table {} declares an UPDATE event but has no watched columns"
+          + " — dropping the UPDATE event (it would fire on every update with no value guard,"
+          + " risking a re-enqueue loop). INSERT/DELETE events, if any, are still deployed.",
+          row.depId, row.sourceTable);
+      updateEvent = "N";
+    }
+
+    // If nothing is left to fire on, generate no trigger at all — and leave this dep OUT of
+    // activeDepIds so dropOrphanedFunctions removes any objects a previous run deployed for it.
+    if (!"Y".equals(row.insertEvent) && !"Y".equals(updateEvent) && !"Y".equals(row.deleteEvent)) {
+      log.warn("SCD dependency {} on table {} has no watched columns and no INSERT/DELETE events"
+          + " — no trigger generated.", row.depId, row.sourceTable);
+      return;
+    }
+
+    activeDepIds.add(row.depId);
+
+    // Track this column for initial population. A column is a "first activation" only if NONE of
+    // its dependency functions existed before this run (B2): if any did, the column was already
+    // deployed and previously populated, so re-running would needlessly re-aggregate every row.
+    ColumnPopulation pop = populations.computeIfAbsent(row.columnId,
+        k -> new ColumnPopulation(row.columnId, row.refreshMode, row.targetTable, row.seqNo));
+    if (preexistingDepIds.contains(row.depId)) {
+      pop.hadPreexistingDep = true;
+    }
+
+    String funcName    = "ad_scd_" + row.depId + "_trf";
+    String triggerName = "ad_scd_" + row.depId + "_trg";
+
+    String eventClause = buildEventClause(row.insertEvent, updateEvent, row.deleteEvent,
+        watchedColNames);
+
+    if (oracle) {
+      deployOracleTrigger(cp, triggerName, row, resolverSql, eventClause, watchedColNames);
+      // Oracle deploys only the inline trigger; drift check degrades to presence (no DDL).
+      deployed.add(new StoredComputedValidator.DeployedDep(row.depId, row.sourceTable, null));
+    } else {
+      String functionDdl = buildFunctionDdl(funcName, resolverSql, row.columnId, row.refreshMode,
+          row.seqNo, watchedColNames);
+      cp.getPreparedStatement(functionDdl).execute();
+
+      cp.getPreparedStatement(
+          "DROP TRIGGER IF EXISTS " + triggerName + " ON " + row.sourceTable).execute();
+      cp.getPreparedStatement(
+          "CREATE TRIGGER " + triggerName
+          + " AFTER " + eventClause + " ON " + row.sourceTable
+          + " FOR EACH ROW EXECUTE FUNCTION " + funcName + "()").execute();
+      // Capture the freshly rendered function DDL for the post-deploy body-drift comparison.
+      deployed.add(
+          new StoredComputedValidator.DeployedDep(row.depId, row.sourceTable, functionDdl));
+    }
+
+    log.info("Deployed SCD trigger {} on table {}", triggerName, row.sourceTable);
   }
 
   /**
@@ -566,49 +598,61 @@ public class GenerateStoredComputedTriggers extends ModuleScript {
   private void populateNewColumns(ConnectionProvider cp, Map<String, ColumnPopulation> populations)
       throws Exception {
     for (ColumnPopulation pop : populations.values()) {
-      if (pop.hadPreexistingDep) {
-        continue; // already deployed in a prior run — leave existing values untouched
-      }
-      String mode = pop.refreshMode;
-      if ("M".equals(mode)) {
-        log.info("SCD column {} first-activated with REFRESH_MODE='M' — manual rebuild required "
-            + "(run StoredColumnRebuild)", pop.columnId);
-        continue;
-      }
-      if ("S".equals(mode)) {
-        if (oracle) {
-          // Oracle deploys no PL/pgSQL engine (no ad_scd_rebuild) and silently downgrades 'S' to the
-          // async path: enqueue a sentinel and let StoredColumnQueueProcessor recompute in Java.
-          insertSentinel(cp, pop);
-          log.info("SCD column {} first-activated (REFRESH_MODE='S', Oracle) — deferred to the async "
-              + "queue (per-client null-sentinels); run StoredColumnQueueProcessor to complete "
-              + "population", pop.columnId);
-          continue;
-        }
-        long rowCount = countRows(cp, pop.targetTable);
-        if (rowCount <= LARGE_TABLE_THRESHOLD) {
-          // Inline synchronous rebuild — single DO block so the LOCAL guard survives the call.
-          cp.getPreparedStatement(
-              "DO $$ BEGIN\n"
-            + "  PERFORM set_config('my.scd_refreshing', 'true', true);\n"
-            + "  PERFORM ad_scd_rebuild('" + pop.columnId + "');\n"
-            + "END $$").execute();
-          log.info("SCD column {} first-activated (REFRESH_MODE='S') — rebuilt {} row(s) inline",
-              pop.columnId, rowCount);
-        } else {
-          insertSentinel(cp, pop);
-          log.warn("SCD column {} first-activated (REFRESH_MODE='S') but target table {} has {} rows "
-              + "(> {} threshold) — deferred to the async queue; run StoredColumnQueueProcessor to "
-              + "complete population", pop.columnId, pop.targetTable, rowCount, LARGE_TABLE_THRESHOLD);
-        }
-      } else if ("Q".equals(mode)) {
+      populateColumn(cp, pop);
+    }
+  }
+
+  /**
+   * Runs the first-activation backfill dispatch for a single column: the per-iteration body of the
+   * loop in {@link #populateNewColumns}, extracted only to keep that method's cognitive complexity
+   * and per-loop {@code continue} count down. Each early exit below (a plain method {@code return})
+   * corresponds 1:1 to what used to be a {@code continue} in the caller's loop; no decision, log
+   * message, or side effect was added, removed, or reordered — see the SYNC NOTE on
+   * {@link #populateNewColumns} above, which still applies verbatim to this body.
+   */
+  private void populateColumn(ConnectionProvider cp, ColumnPopulation pop) throws Exception {
+    if (pop.hadPreexistingDep) {
+      return; // already deployed in a prior run — leave existing values untouched
+    }
+    String mode = pop.refreshMode;
+    if ("M".equals(mode)) {
+      log.info("SCD column {} first-activated with REFRESH_MODE='M' — manual rebuild required "
+          + "(run StoredColumnRebuild)", pop.columnId);
+      return;
+    }
+    if ("S".equals(mode)) {
+      if (oracle) {
+        // Oracle deploys no PL/pgSQL engine (no ad_scd_rebuild) and silently downgrades 'S' to the
+        // async path: enqueue a sentinel and let StoredColumnQueueProcessor recompute in Java.
         insertSentinel(cp, pop);
-        log.info("SCD column {} first-activated (REFRESH_MODE='Q') — queued full rebuild "
-            + "(per-client null-sentinels)", pop.columnId);
-      } else {
-        log.warn("SCD column {} has unknown REFRESH_MODE '{}' — skipping initial population",
-            pop.columnId, mode);
+        log.info("SCD column {} first-activated (REFRESH_MODE='S', Oracle) — deferred to the async "
+            + "queue (per-client null-sentinels); run StoredColumnQueueProcessor to complete "
+            + "population", pop.columnId);
+        return;
       }
+      long rowCount = countRows(cp, pop.targetTable);
+      if (rowCount <= LARGE_TABLE_THRESHOLD) {
+        // Inline synchronous rebuild — single DO block so the LOCAL guard survives the call.
+        cp.getPreparedStatement(
+            "DO $$ BEGIN\n"
+          + "  PERFORM set_config('my.scd_refreshing', 'true', true);\n"
+          + "  PERFORM ad_scd_rebuild('" + pop.columnId + "');\n"
+          + "END $$").execute();
+        log.info("SCD column {} first-activated (REFRESH_MODE='S') — rebuilt {} row(s) inline",
+            pop.columnId, rowCount);
+      } else {
+        insertSentinel(cp, pop);
+        log.warn("SCD column {} first-activated (REFRESH_MODE='S') but target table {} has {} rows "
+            + "(> {} threshold) — deferred to the async queue; run StoredColumnQueueProcessor to "
+            + "complete population", pop.columnId, pop.targetTable, rowCount, LARGE_TABLE_THRESHOLD);
+      }
+    } else if ("Q".equals(mode)) {
+      insertSentinel(cp, pop);
+      log.info("SCD column {} first-activated (REFRESH_MODE='Q') — queued full rebuild "
+          + "(per-client null-sentinels)", pop.columnId);
+    } else {
+      log.warn("SCD column {} has unknown REFRESH_MODE '{}' — skipping initial population",
+          pop.columnId, mode);
     }
   }
 

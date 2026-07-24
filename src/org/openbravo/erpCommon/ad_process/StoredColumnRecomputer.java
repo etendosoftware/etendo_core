@@ -58,6 +58,12 @@ class StoredColumnRecomputer {
   /** Keyset-pagination page size for a full rebuild — bounds the PKs held in memory at once. */
   private static final int REBUILD_CHUNK_SIZE = 1000;
 
+  /** SQL {@code WHERE} clause keyword, padded for direct concatenation into hand-built statements. */
+  private static final String WHERE_CLAUSE = " WHERE ";
+
+  /** Identifier quote character for the active dialect (both PostgreSQL and Oracle use double quotes). */
+  private static final String QUOTE_CHAR = "\"";
+
   /**
    * Resolves the physical target table, stored column, computation function and primary-key column
    * for a stored computed column. Logical AD identifiers are stored mixed-case while the physical
@@ -183,16 +189,16 @@ class StoredColumnRecomputer {
    * UPPERCASE on Oracle), so they are quoted here.
    */
   private void recompute(Connection con, ColumnMeta meta, String targetId) throws SQLException {
-    String q = quoteChar();
+    String q = QUOTE_CHAR;
     String lockSql = "SELECT 1 FROM " + q + meta.table + q
-        + " WHERE " + q + meta.pk + q + " = ? FOR UPDATE";
+        + WHERE_CLAUSE + q + meta.pk + q + " = ? FOR UPDATE";
     try (PreparedStatement ps = con.prepareStatement(lockSql)) {
       ps.setString(1, targetId);
       ps.execute();
     }
     String updateSql = "UPDATE " + q + meta.table + q
         + " SET " + q + meta.column + q + " = " + q + meta.fn + q + "(" + q + meta.pk + q + ")"
-        + " WHERE " + q + meta.pk + q + " = ?";
+        + WHERE_CLAUSE + q + meta.pk + q + " = ?";
     try (PreparedStatement ps = con.prepareStatement(updateSql)) {
       ps.setString(1, targetId);
       ps.executeUpdate();
@@ -242,20 +248,20 @@ class StoredColumnRecomputer {
    */
   private List<String> nextTargetIdChunk(Connection con, ColumnMeta meta, String afterPk,
       String clientId) throws SQLException {
-    String q = quoteChar();
+    String q = QUOTE_CHAR;
     List<String> ids = new ArrayList<>();
     StringBuilder sql = new StringBuilder("SELECT ").append(q).append(meta.pk).append(q)
         .append(" FROM ").append(q).append(meta.table).append(q);
     boolean hasWhere = false;
     if (afterPk != null) {
-      sql.append(" WHERE ").append(q).append(meta.pk).append(q).append(" > ?");
+      sql.append(WHERE_CLAUSE).append(q).append(meta.pk).append(q).append(" > ?");
       hasWhere = true;
     }
     if (clientId != null) {
       // Restrict the rebuild to one client's rows. AD_CLIENT_ID is folded to the physical case the
       // active dialect stores it in (lowercase on PostgreSQL, UPPERCASE on Oracle), matching how the
       // metadata identifiers are folded, then quoted.
-      sql.append(hasWhere ? " AND " : " WHERE ")
+      sql.append(hasWhere ? " AND " : WHERE_CLAUSE)
           .append(q).append(fold("ad_client_id")).append(q).append(" = ?");
     }
     sql.append(" ORDER BY ").append(q).append(meta.pk).append(q);
@@ -275,11 +281,6 @@ class StoredColumnRecomputer {
       }
     }
     return ids;
-  }
-
-  /** Identifier quote character for the active dialect (both PostgreSQL and Oracle use double quotes). */
-  private String quoteChar() {
-    return "\"";
   }
 
   /**

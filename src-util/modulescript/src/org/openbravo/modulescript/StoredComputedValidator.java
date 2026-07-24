@@ -21,7 +21,6 @@ import java.sql.ResultSet;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -121,7 +120,9 @@ import org.openbravo.erpCommon.utility.StoredComputedShapeValidator;
  */
 public final class StoredComputedValidator {
 
-  private static final Logger log = LogManager.getLogger();
+  // Package-private (not private): used by StoredComputedValidatorChecks (oracleObjectExists, pgCount,
+  // checkPgBodyDrift) in addition to this class's own methods.
+  static final Logger log = LogManager.getLogger();
 
   private StoredComputedValidator() {
   }
@@ -155,6 +156,19 @@ public final class StoredComputedValidator {
 
   /** Rollout toggle name (JVM system property or environment variable). */
   static final String TOGGLE = "ETGO_SCD_VALIDATION";
+
+  // --- Duplicated-literal constants (message building blocks and JDBC column labels) --------------
+  // Package-private (not private): FAMILY_STRING, COLUMN_PREFIX, COMPUTATION_FUNCTION_PREFIX,
+  // DEPENDENCY_PREFIX and NOT_PRESENT_AFTER_GENERATION are also used by StoredComputedValidatorChecks.
+  static final String FAMILY_STRING = "STRING";
+  static final String COLUMN_PREFIX = "column ";
+  static final String COMPUTATION_FUNCTION_PREFIX = " — Computation_Function '";
+  private static final String TABLENAME = "tablename";
+  private static final String COLUMNNAME = "columnname";
+  private static final String DEPID = "depid";
+  static final String DEPENDENCY_PREFIX = "dependency ";
+  private static final String SOURCE_TABLE = "source_table";
+  static final String NOT_PRESENT_AFTER_GENERATION = " is not present after generation";
 
   // ================================================================================================
   // Pure predicates (no DB, no DAL types) — the single source of truth shared with the DAL handler.
@@ -290,12 +304,9 @@ public final class StoredComputedValidator {
         }
       }
     }
-    Collections.sort(offending, new Comparator<Edge>() {
-      @Override
-      public int compare(Edge x, Edge y) {
-        int c = x.from.compareTo(y.from);
-        return c != 0 ? c : x.to.compareTo(y.to);
-      }
+    Collections.sort(offending, (x, y) -> {
+      int c = x.from.compareTo(y.from);
+      return c != 0 ? c : x.to.compareTo(y.to);
     });
     return offending;
   }
@@ -329,7 +340,7 @@ public final class StoredComputedValidator {
       case "10":  // String
       case "14":  // Text
       case "20":  // YesNo (char(1)) — grouped with strings for family purposes
-        return "STRING";
+        return FAMILY_STRING;
       case "15":  // Date
       case "16":  // DateTime / Timestamp
         return "DATE";
@@ -358,7 +369,7 @@ public final class StoredComputedValidator {
       case "char":
       case "text":
       case "name":
-        return "STRING";
+        return FAMILY_STRING;
       case "date":
       case "timestamp":
       case "timestamptz":
@@ -395,6 +406,11 @@ public final class StoredComputedValidator {
    * dependency, cycle and FK-index checks) and returns every violation found (hard and warn), without
    * applying the toggle or throwing. Separated from {@link #assertDefinitionsValid} so tests can
    * inspect the raw result.
+   *
+   * @param cp
+   *          the build-time JDBC connection provider used to load and check the definitions
+   * @return every violation found (hard and warn), unfiltered by the {@code ETGO_SCD_VALIDATION}
+   *         toggle
    */
   public static List<Violation> collectDefinitionViolations(ConnectionProvider cp) {
     boolean oracle = isOracle(cp);
@@ -433,7 +449,7 @@ public final class StoredComputedValidator {
         issues.add("Computation_Sequence_Number must be greater than 0");
       }
       violations.add(new Violation(Severity.ERROR, code,
-          "column " + c.qname() + " — " + String.join("; ", issues)));
+          COLUMN_PREFIX + c.qname() + " — " + String.join("; ", issues)));
     }
   }
 
@@ -462,8 +478,8 @@ public final class StoredComputedValidator {
         while (rs.next()) {
           if (rs.getInt("keycount") > 1) {
             violations.add(new Violation(Severity.ERROR, ETGO_ScdCompositePkTarget,
-                "column " + rs.getString("tablename") + "." + rs.getString("columnname")
-                    + " — target table " + rs.getString("tablename") + " has a composite (multi-column)"
+                COLUMN_PREFIX + rs.getString(TABLENAME) + "." + rs.getString(COLUMNNAME)
+                    + " — target table " + rs.getString(TABLENAME) + " has a composite (multi-column)"
                     + " primary key; the recompute engine only supports single-column primary keys"));
           }
         }
@@ -482,65 +498,37 @@ public final class StoredComputedValidator {
     // Introspect each distinct function once; report per affected column for a clear message.
     Map<String, FnInfo> byFn = new HashMap<>();
     for (ColInfo c : columns) {
-      if (!isNotBlank(c.fn)) {
-        continue; // V2 (Computation_Function must be set) already flags a missing function
-      }
-      String key = c.fn.toLowerCase();
-      FnInfo info = byFn.get(key);
-      if (info == null) {
-        info = oracle ? introspectFunctionOracle(cp, c.fn) : introspectFunctionPg(cp, c.fn);
-        byFn.put(key, info);
-      }
-      if (info == null) {
-        continue; // introspection failed (best-effort) — skip, no violation
-      }
-
-      // V4 — function exists.
-      if (!info.exists) {
-        violations.add(new Violation(Severity.ERROR, ETGO_ScdFunctionMissing,
-            "column " + c.qname() + " — Computation_Function '" + c.fn
-                + "' does not exist in the database"));
-        continue; // nothing else to check for a missing function
-      }
-
-      // V5 — signature: exactly one character-typed argument.
-      if (info.argCount != null && info.argCount != 1) {
-        violations.add(new Violation(Severity.ERROR, ETGO_ScdFunctionSignature,
-            "column " + c.qname() + " — Computation_Function '" + c.fn + "' takes " + info.argCount
-                + " argument(s); the engine calls it with exactly one (the target row primary key)"));
-      } else if (info.argFamily != null && !"STRING".equals(info.argFamily)) {
-        violations.add(new Violation(Severity.WARN, ETGO_ScdFunctionSignature,
-            "column " + c.qname() + " — Computation_Function '" + c.fn + "' single argument is "
-                + info.argType + "; the engine passes a VARCHAR/UUID primary key"));
-      }
-
-      // V6 — return type vs AD reference. WARN for a type-family mismatch; HARD when the function
-      // returns nothing usable (void/trigger/record).
-      if (info.returnType != null) {
-        String rt = info.returnType.toLowerCase();
-        if ("void".equals(rt) || "trigger".equals(rt) || "record".equals(rt)) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdFunctionReturnType,
-              "column " + c.qname() + " — Computation_Function '" + c.fn + "' returns '" + rt
-                  + "', which yields no usable column value"));
-        } else {
-          String expected = familyForReference(c.refId);
-          String actual = familyForPgType(info.returnType);
-          if (expected != null && actual != null && !expected.equals(actual)) {
-            violations.add(new Violation(Severity.WARN, ETGO_ScdFunctionReturnType,
-                "column " + c.qname() + " — Computation_Function '" + c.fn + "' returns "
-                    + info.returnType + " (" + actual + ") but the column reference expects "
-                    + expected));
-          }
-        }
-      }
-
-      // V7 — side-effect free (PG volatility only; Oracle has no reliable marker).
-      if (info.volatile_) {
-        violations.add(new Violation(Severity.WARN, ETGO_ScdFunctionVolatile,
-            "column " + c.qname() + " — Computation_Function '" + c.fn + "' is declared VOLATILE; a "
-                + "recompute function should be IMMUTABLE or STABLE and free of side effects"));
-      }
+      processColumnForFunctions(c, byFn, cp, oracle, violations);
     }
+  }
+
+  /** Per-column body of {@link #checkFunctions}, extracted so the loop keeps a single exit path (S135). */
+  private static void processColumnForFunctions(ColInfo c, Map<String, FnInfo> byFn, ConnectionProvider cp,
+      boolean oracle, List<Violation> violations) {
+    if (!isNotBlank(c.fn)) {
+      return; // V2 (Computation_Function must be set) already flags a missing function
+    }
+    String key = c.fn.toLowerCase();
+    FnInfo info = byFn.get(key);
+    if (info == null) {
+      info = oracle ? introspectFunctionOracle(cp, c.fn) : introspectFunctionPg(cp, c.fn);
+      byFn.put(key, info);
+    }
+    if (info == null) {
+      return; // introspection failed (best-effort) — skip, no violation
+    }
+
+    // V4 — function exists.
+    if (!info.exists) {
+      violations.add(new Violation(Severity.ERROR, ETGO_ScdFunctionMissing,
+          COLUMN_PREFIX + c.qname() + COMPUTATION_FUNCTION_PREFIX + c.fn
+              + "' does not exist in the database"));
+      return; // nothing else to check for a missing function
+    }
+
+    StoredComputedValidatorChecks.checkFunctionSignature(c, info, violations);
+    StoredComputedValidatorChecks.checkFunctionReturnType(c, info, violations);
+    StoredComputedValidatorChecks.checkFunctionVolatility(c, info, violations);
   }
 
   private static FnInfo introspectFunctionPg(ConnectionProvider cp, String fn) {
@@ -561,7 +549,7 @@ public final class StoredComputedValidator {
           info.exists = true;
           info.argCount = Integer.valueOf(rs.getInt("pronargs"));
           String prov = rs.getString("provolatile");
-          info.volatile_ = "v".equals(prov);
+          info.volatileFlag = "v".equals(prov);
           info.returnType = rs.getString("rettype");
           info.argType = rs.getString("argtype");
           info.argFamily = familyForPgType(info.argType);
@@ -620,7 +608,7 @@ public final class StoredComputedValidator {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           violations.add(new Violation(Severity.ERROR, ETGO_ScdNoDependencies,
-              "column " + rs.getString("tablename") + "." + rs.getString("columnname")
+              COLUMN_PREFIX + rs.getString(TABLENAME) + "." + rs.getString(COLUMNNAME)
                   + " — a stored computed column must have at least one active dependency"));
         }
       } finally {
@@ -649,8 +637,8 @@ public final class StoredComputedValidator {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           violations.add(new Violation(Severity.ERROR, ETGO_ScdUpdateNoWatched,
-              "dependency " + rs.getString("depid") + " on source table "
-                  + rs.getString("source_table")
+              DEPENDENCY_PREFIX + rs.getString(DEPID) + " on source table "
+                  + rs.getString(SOURCE_TABLE)
                   + " declares an UPDATE event but has no active watched columns"));
         }
       } finally {
@@ -682,10 +670,10 @@ public final class StoredComputedValidator {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           violations.add(new Violation(Severity.ERROR, ETGO_ScdWatchedColumnTable,
-              "dependency " + rs.getString("depid") + " — watched column "
+              DEPENDENCY_PREFIX + rs.getString(DEPID) + " — watched column "
                   + rs.getString("watched_col") + " belongs to table "
                   + rs.getString("watched_table")
-                  + ", not the dependency source table " + rs.getString("source_table")));
+                  + ", not the dependency source table " + rs.getString(SOURCE_TABLE)));
         }
       } finally {
         cp.releasePreparedStatement(ps);
@@ -714,7 +702,7 @@ public final class StoredComputedValidator {
           boolean hasLink = rs.getString("linkcol") != null;
           if (hasResolver == hasLink) {
             violations.add(new Violation(Severity.ERROR, ETGO_CompDepTargetXor,
-                "dependency " + rs.getString("depid") + " — "
+                DEPENDENCY_PREFIX + rs.getString(DEPID) + " — "
                     + (hasResolver ? "both Target_ID_Resolver_SQL and Target_Link_Column are set"
                         : "neither Target_ID_Resolver_SQL nor Target_Link_Column is set")
                     + " (exactly one is required)"));
@@ -744,79 +732,18 @@ public final class StoredComputedValidator {
       return;
     }
 
-    Map<String, List<String>> adjacency = new HashMap<>();
-    // For each active dependency of a stored computed column B: source_table_id + watched column ids.
-    String sql =
-        "SELECT d.ad_column_id AS b_col, d.source_table_id AS src_table, "
-      + "       w.ad_column_id AS watched_col_id "
-      + "FROM   ad_column_comp_dependency d "
-      + "JOIN   ad_column c ON c.ad_column_id = d.ad_column_id "
-      + "         AND c.computation_mode = 'S' AND c.isactive = 'Y' "
-      + "JOIN   ad_compdep_watched_col w "
-      + "         ON w.ad_column_comp_dependency_id = d.ad_column_comp_dependency_id "
-      + "         AND w.isactive = 'Y' "
-      + "WHERE  d.isactive = 'Y'";
-    try {
-      PreparedStatement ps = cp.getPreparedStatement(sql);
-      try {
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-          String bCol = rs.getString("b_col");
-          String srcTable = rs.getString("src_table");
-          String watchedColId = rs.getString("watched_col_id");
-          // A is a stored computed node whose column IS the watched column AND lives on the source table.
-          ColInfo a = nodeById.get(watchedColId);
-          if (a != null && srcTable != null && srcTable.equals(a.tableId)
-              && !watchedColId.equals(bCol)) {
-            adjacency.computeIfAbsent(watchedColId, k -> new ArrayList<>()).add(bCol);
-          }
-        }
-      } finally {
-        cp.releasePreparedStatement(ps);
-      }
-    } catch (Exception e) {
-      throw wrap("V14 cycle edges", e);
-    }
+    Map<String, List<String>> adjacency = StoredComputedValidatorChecks.buildDependencyGraph(cp, nodeById);
 
     // V14 — every cycle is hard: a cycle is a dirty set with no topological order, so no
     // Computation_Sequence_Number assignment can make the drain refresh it correctly.
     List<Cycle> cycles = findCycles(adjacency);
-    for (Cycle cycle : cycles) {
-      StringBuilder path = new StringBuilder();
-      for (int i = 0; i < cycle.path.size(); i++) {
-        ColInfo c = nodeById.get(cycle.path.get(i));
-        path.append(c != null ? c.qname() : cycle.path.get(i)).append(" -> ");
-      }
-      // close the loop back to the first node
-      ColInfo first = nodeById.get(cycle.path.get(0));
-      path.append(first != null ? first.qname() : cycle.path.get(0));
-      violations.add(new Violation(Severity.ERROR, ETGO_ScdDependencyCycle,
-          "cycle among stored computed columns (" + path + ")"));
-    }
+    StoredComputedValidatorChecks.reportCycles(nodeById, cycles, violations);
 
     // V17 — on the acyclic part, each edge A -> B needs seq[A] < seq[B] or the drain refreshes the
     // reader before the value it reads.
-    for (Edge edge : findSequenceOrderViolations(adjacency, seqByNode, cycles)) {
-      violations.add(new Violation(Severity.WARN, ETGO_ScdSequenceOrder,
-          "refresh ordering: " + qnameOf(nodeById, edge.to) + " (Computation_Sequence_Number "
-              + seqText(seqByNode.get(edge.to)) + ") reads " + qnameOf(nodeById, edge.from)
-              + " (Computation_Sequence_Number " + seqText(seqByNode.get(edge.from))
-              + "), but the refresh drain processes dirty rows in Computation_Sequence_Number order, "
-              + "so " + qnameOf(nodeById, edge.to) + " may be recomputed before "
-              + qnameOf(nodeById, edge.from) + " and read a stale value — give "
-              + qnameOf(nodeById, edge.from) + " a strictly lower Computation_Sequence_Number than "
-              + qnameOf(nodeById, edge.to) + " (equal numbers do not order: ties break arbitrarily)"));
-    }
+    StoredComputedValidatorChecks.reportSequenceOrderViolations(nodeById, adjacency, seqByNode, cycles, violations);
   }
 
-  private static String qnameOf(Map<String, ColInfo> nodeById, String columnId) {
-    ColInfo c = nodeById.get(columnId);
-    return c != null ? c.qname() : columnId;
-  }
-
-  private static String seqText(Long seq) {
-    return seq == null ? "unset" : seq.toString();
-  }
 
   // --- Group G — performance advisory (V16) ------------------------------------------------------
 
@@ -839,7 +766,7 @@ public final class StoredComputedValidator {
       try {
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
-          fks.add(new String[] { rs.getString("depid"), rs.getString("source_table"),
+          fks.add(new String[] { rs.getString(DEPID), rs.getString(SOURCE_TABLE),
               rs.getString("fk_col") });
         }
       } finally {
@@ -848,8 +775,8 @@ public final class StoredComputedValidator {
       for (String[] fk : fks) {
         if (!hasLeadingIndex(cp, oracle, fk[1], fk[2])) {
           violations.add(new Violation(Severity.WARN, ETGO_ScdMissingIndex,
-              "dependency " + fk[0] + " — no index leads with FK column " + fk[2] + " on source table "
-                  + fk[1] + "; target lookups may scan"));
+              DEPENDENCY_PREFIX + fk[0] + " — no index leads with FK column " + fk[2]
+                  + " on source table " + fk[1] + "; target lookups may scan"));
         }
       }
     } catch (Exception e) {
@@ -911,121 +838,12 @@ public final class StoredComputedValidator {
       String funcName = "ad_scd_" + dep.depId + "_trf";
       String triggerName = "ad_scd_" + dep.depId + "_trg";
       if (oracle) {
-        if (!oracleObjectExists(cp, "TRIGGER", triggerName)) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdTriggerMissing,
-              "dependency " + dep.depId + " — expected Oracle trigger " + triggerName
-                  + " is not present after generation"));
-        }
-        // Oracle body drift is best-effort and skipped to avoid false positives from formatting.
+        StoredComputedValidatorChecks.checkOracleDeployment(cp, dep, triggerName, violations);
       } else {
-        boolean funcPresent = pgCount(cp, "SELECT count(*) FROM pg_proc WHERE proname = ?", funcName) > 0;
-        boolean trigPresent =
-            pgCount(cp, "SELECT count(*) FROM pg_trigger WHERE tgname = ?", triggerName) > 0;
-        if (!funcPresent) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdTriggerMissing,
-              "dependency " + dep.depId + " — expected PG function " + funcName
-                  + " is not present after generation"));
-        }
-        if (!trigPresent) {
-          violations.add(new Violation(Severity.ERROR, ETGO_ScdTriggerMissing,
-              "dependency " + dep.depId + " — expected PG trigger " + triggerName
-                  + " is not present after generation"));
-        }
-        if (funcPresent && dep.expectedPgFunctionDdl != null) {
-          checkPgBodyDrift(cp, dep, funcName, violations);
-        }
+        StoredComputedValidatorChecks.checkPgDeployment(cp, dep, funcName, triggerName, violations);
       }
     }
     return violations;
-  }
-
-  private static void checkPgBodyDrift(ConnectionProvider cp, DeployedDep dep, String funcName,
-      List<Violation> violations) {
-    try {
-      String deployedBody = null;
-      PreparedStatement ps = cp.getPreparedStatement(
-          "SELECT pg_get_functiondef(oid) AS def FROM pg_proc WHERE proname = ?");
-      try {
-        ps.setString(1, funcName);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-          deployedBody = extractPlpgsqlBody(rs.getString("def"));
-        }
-      } finally {
-        cp.releasePreparedStatement(ps);
-      }
-      String expectedBody = extractPlpgsqlBody(dep.expectedPgFunctionDdl);
-      if (deployedBody != null && expectedBody != null
-          && !normalizeWs(deployedBody).equals(normalizeWs(expectedBody))) {
-        violations.add(new Violation(Severity.WARN, ETGO_ScdTriggerDrift,
-            "dependency " + dep.depId + " — deployed function " + funcName
-                + " body differs from the freshly generated definition (a re-run self-heals)"));
-      }
-    } catch (Exception e) {
-      log.warn("SCD validation: could not compare drift for {} — skipping: {}", funcName,
-          e.getMessage());
-    }
-  }
-
-  /** Extracts the body between the first and last dollar-quote delimiters, else returns input. */
-  private static String extractPlpgsqlBody(String def) {
-    if (def == null) {
-      return null;
-    }
-    int first = def.indexOf('$');
-    if (first < 0) {
-      return def;
-    }
-    int open = def.indexOf('$', first + 1);
-    if (open < 0) {
-      return def;
-    }
-    int last = def.lastIndexOf('$');
-    int beforeLast = def.lastIndexOf('$', last - 1);
-    if (beforeLast <= open) {
-      return def;
-    }
-    return def.substring(open + 1, beforeLast);
-  }
-
-  private static String normalizeWs(String s) {
-    return s.replaceAll("\\s+", " ").trim();
-  }
-
-  private static boolean oracleObjectExists(ConnectionProvider cp, String type, String name) {
-    try {
-      PreparedStatement ps = cp.getPreparedStatement(
-          "SELECT count(*) AS n FROM user_objects WHERE object_type = ? AND lower(object_name) = lower(?)");
-      try {
-        ps.setString(1, type);
-        ps.setString(2, name);
-        ResultSet rs = ps.executeQuery();
-        return rs.next() && rs.getInt("n") > 0;
-      } finally {
-        cp.releasePreparedStatement(ps);
-      }
-    } catch (Exception e) {
-      log.warn("SCD validation: could not check Oracle {} {} — assuming present: {}", type, name,
-          e.getMessage());
-      return true;
-    }
-  }
-
-  private static long pgCount(ConnectionProvider cp, String sql, String param) {
-    try {
-      PreparedStatement ps = cp.getPreparedStatement(sql);
-      try {
-        ps.setString(1, param);
-        ResultSet rs = ps.executeQuery();
-        return rs.next() ? rs.getLong(1) : 0L;
-      } finally {
-        cp.releasePreparedStatement(ps);
-      }
-    } catch (Exception e) {
-      log.warn("SCD validation: count query failed ({}) — assuming present: {}", param,
-          e.getMessage());
-      return 1L;
-    }
   }
 
   // ================================================================================================
@@ -1116,8 +934,8 @@ public final class StoredComputedValidator {
           ColInfo c = new ColInfo();
           c.columnId = rs.getString("ad_column_id");
           c.tableId = rs.getString("ad_table_id");
-          c.tableName = rs.getString("tablename");
-          c.columnName = rs.getString("columnname");
+          c.tableName = rs.getString(TABLENAME);
+          c.columnName = rs.getString(COLUMNNAME);
           c.computationMode = rs.getString("computation_mode");
           c.sqlLogic = rs.getString("sqllogic");
           c.fn = rs.getString("computation_function");
@@ -1143,7 +961,8 @@ public final class StoredComputedValidator {
     return s != null && !s.trim().isEmpty();
   }
 
-  private static BuildException wrap(String phase, Exception e) {
+  // Package-private (not private): used by StoredComputedValidatorChecks.buildDependencyGraph.
+  static BuildException wrap(String phase, Exception e) {
     return new BuildException(
         "Stored computed column validation could not run (" + phase + "): " + e.getMessage(), e);
   }
@@ -1159,10 +978,23 @@ public final class StoredComputedValidator {
 
   /** One validation finding: its severity, its label {@code code}, and a human-readable detail. */
   public static final class Violation {
+    /** Whether this finding stops the build in {@code enforce} mode, or is only ever logged. */
     public final Severity severity;
+    /** The rule label (an {@code ETGO_Scd*} build-only code, or an {@code AD_MESSAGE} key for V1–V3/V11). */
     public final String code;
+    /** Human-readable, English build-log description of the offending column/dependency/edge. */
     public final String detail;
 
+    /**
+     * Creates one validation finding.
+     *
+     * @param severity
+     *          whether this finding stops the build in {@code enforce} mode, or is warn-only
+     * @param code
+     *          the rule label for this finding
+     * @param detail
+     *          human-readable description of what was violated and where
+     */
     public Violation(Severity severity, String code, String detail) {
       this.severity = severity;
       this.code = code;
@@ -1177,8 +1009,15 @@ public final class StoredComputedValidator {
 
   /** A detected cycle: the node path, not repeating the closing node. Always a hard error (V14). */
   public static final class Cycle {
+    /** The cycle's node path (column IDs), in traversal order, not repeating the closing node. */
     public final List<String> path;
 
+    /**
+     * Creates a detected cycle.
+     *
+     * @param path
+     *          the cycle's node path (column IDs), in traversal order, not repeating the closing node
+     */
     public Cycle(List<String> path) {
       this.path = path;
     }
@@ -1190,9 +1029,19 @@ public final class StoredComputedValidator {
    * {@link #findSequenceOrderViolations(Map, Map, List)} for the edges the drain would visit backwards.
    */
   public static final class Edge {
+    /** The node (column ID) whose recompute dirties {@link #to}. */
     public final String from;
+    /** The node (column ID) whose computation function reads {@link #from}'s stored value. */
     public final String to;
 
+    /**
+     * Creates a directed dependency-graph edge.
+     *
+     * @param from
+     *          the node (column ID) whose recompute dirties {@code to}
+     * @param to
+     *          the node (column ID) whose computation function reads {@code from}'s stored value
+     */
     public Edge(String from, String to) {
       this.from = from;
       this.to = to;
@@ -1210,10 +1059,23 @@ public final class StoredComputedValidator {
    * DDL for drift comparison (null on Oracle, where only presence is checked).
    */
   public static final class DeployedDep {
+    /** {@code AD_Column_Comp_Dependency_ID} of the dependency this run (re)deployed objects for. */
     public final String depId;
+    /** Table name of the dependency's source table. */
     public final String sourceTable;
+    /** The freshly rendered PG function DDL for drift comparison (null on Oracle). */
     public final String expectedPgFunctionDdl;
 
+    /**
+     * Creates the record of what the generator (re)deployed for one dependency this run.
+     *
+     * @param depId
+     *          {@code AD_Column_Comp_Dependency_ID} of the dependency
+     * @param sourceTable
+     *          table name of the dependency's source table
+     * @param expectedPgFunctionDdl
+     *          the freshly rendered PG function DDL for drift comparison, or {@code null} on Oracle
+     */
     public DeployedDep(String depId, String sourceTable, String expectedPgFunctionDdl) {
       this.depId = depId;
       this.sourceTable = sourceTable;
@@ -1222,7 +1084,7 @@ public final class StoredComputedValidator {
   }
 
   /** One stored computed column row plus the metadata the rules need. */
-  private static final class ColInfo {
+  static final class ColInfo {
     String columnId;
     String tableId;
     String tableName;
@@ -1240,12 +1102,12 @@ public final class StoredComputedValidator {
   }
 
   /** Introspected computation-function facts (PG full; Oracle existence-only). */
-  private static final class FnInfo {
+  static final class FnInfo {
     boolean exists;
     Integer argCount;
     String argType;
     String argFamily;
     String returnType;
-    boolean volatile_;
+    boolean volatileFlag;
   }
 }

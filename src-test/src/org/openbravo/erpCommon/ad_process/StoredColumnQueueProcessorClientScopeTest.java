@@ -76,7 +76,6 @@ public class StoredColumnQueueProcessorClientScopeTest {
   /** Records the mocked collaborators and every SQL passed to {@code prepareStatement}. */
   private static final class Harness {
     private final ProcessBundle bundle;
-    private final Connection con;
     private final PreparedStatement fetchPs;
     private final PreparedStatement genericPs;
     private final List<String> sql;
@@ -84,7 +83,6 @@ public class StoredColumnQueueProcessorClientScopeTest {
     private Harness(ProcessBundle bundle, Connection con, PreparedStatement fetchPs,
         PreparedStatement genericPs, List<String> sql) {
       this.bundle = bundle;
-      this.con = con;
       this.fetchPs = fetchPs;
       this.genericPs = genericPs;
       this.sql = sql;
