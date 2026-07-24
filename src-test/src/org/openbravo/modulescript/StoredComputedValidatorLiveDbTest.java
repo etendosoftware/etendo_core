@@ -87,6 +87,11 @@ import org.openbravo.test.base.OBBaseTest;
  */
 public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
 
+  private static final String CREATE_FUNCTION = "CREATE FUNCTION ";
+  private static final String SELECT_1 = "SELECT 1";
+  private static final String LIVE_FIXTURE_NOT_SUPPORTED =
+      "live fixture not supported by this environment";
+
   private DalConnectionProvider cp;
   private Connection con;
   /** Function names created in-transaction; dropped implicitly by the rollback. */
@@ -106,7 +111,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
     // One valid IMMUTABLE, single-text-argument, text-returning function reused as the "good"
     // Computation_Function so unrelated columns never raise a spurious V4/V5/V6/V7.
     validFn = "scdfn_valid_" + suffix();
-    exec("CREATE FUNCTION " + validFn + "(p_id text) RETURNS text AS $$ SELECT p_id $$ "
+    exec(CREATE_FUNCTION + validFn + "(p_id text) RETURNS text AS $$ SELECT p_id $$ "
         + "LANGUAGE sql IMMUTABLE");
   }
 
@@ -134,10 +139,10 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       assumeTrue("no core table with a composite primary key available", v != null);
       makeStoredColumn(v.colId, validFn);
       // Give it an otherwise-valid dependency so V8 does not also fire for this column.
-      insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", null);
+      insertDependency(v.colId, v.tableId, "N", SELECT_1, null);
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -153,7 +158,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       makeStoredColumn(v.colId, validFn); // valid function + shape, but NO dependency row
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -168,9 +173,9 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       Victim v = singleVictim();
       makeStoredColumn(v.colId, validFn);
       // update_event = 'Y', resolver set (XOR ok), no watched columns -> V9.
-      marker = insertDependency(v.tableId, v.colId, v.tableId, "Y", "SELECT 1", null);
+      marker = insertDependency(v.colId, v.tableId, "Y", SELECT_1, null);
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -187,10 +192,10 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       Victim c = vs.get(0); // stored computed column, source table = c.tableId
       Victim other = vs.get(1); // watched column lives on a different table
       makeStoredColumn(c.colId, validFn);
-      marker = insertDependency(c.tableId, c.colId, c.tableId, "N", "SELECT 1", null);
+      marker = insertDependency(c.colId, c.tableId, "N", SELECT_1, null);
       insertWatchedCol(marker, other.colId); // wc.ad_table_id <> source_table_id -> V10
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -206,9 +211,9 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       makeStoredColumn(v.colId, validFn);
       // Link column = the source table's indexed primary key, so V16 (missing FK index) is silent
       // and only V11 fires for this dependency.
-      marker = insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", v.keyColId);
+      marker = insertDependency(v.colId, v.tableId, "N", SELECT_1, v.keyColId);
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -222,9 +227,9 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
     try {
       Victim v = singleVictim();
       makeStoredColumn(v.colId, validFn);
-      marker = insertDependency(v.tableId, v.colId, v.tableId, "N", null, null);
+      marker = insertDependency(v.colId, v.tableId, "N", null, null);
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -243,14 +248,14 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       makeStoredColumn(a.colId, validFn);
       makeStoredColumn(b.colId, validFn);
       // Edge a -> b: dependency OF b, source table = a's table, watched column = a.
-      String depB = insertDependency(a.tableId, b.colId, a.tableId, "N", "SELECT 1", null);
+      String depB = insertDependency(b.colId, a.tableId, "N", SELECT_1, null);
       insertWatchedCol(depB, a.colId);
       // Edge b -> a: dependency OF a, source table = b's table, watched column = b.
-      String depA = insertDependency(b.tableId, a.colId, b.tableId, "N", "SELECT 1", null);
+      String depA = insertDependency(a.colId, b.tableId, "N", SELECT_1, null);
       insertWatchedCol(depA, b.colId);
       marker = a.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -268,9 +273,9 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       assumeTrue("chosen FK column already leads an index", !columnLeadsIndex(v.tableName, v.columnName));
       makeStoredColumn(v.colId, validFn);
       // Link column set, resolver empty -> XOR satisfied (no V11); V16 evaluates the index.
-      marker = insertDependency(v.tableId, v.colId, v.tableId, "N", null, v.colId);
+      marker = insertDependency(v.colId, v.tableId, "N", null, v.colId);
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -284,10 +289,10 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
     try {
       Victim v = singleVictim();
       makeStoredColumn(v.colId, "scdfn_absent_" + suffix()); // never created
-      insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", null);
+      insertDependency(v.colId, v.tableId, "N", SELECT_1, null);
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -300,14 +305,14 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
     String marker;
     try {
       String fn = "scdfn_twoargs_" + suffix();
-      exec("CREATE FUNCTION " + fn + "(a text, b text) RETURNS text AS $$ SELECT a || b $$ "
+      exec(CREATE_FUNCTION + fn + "(a text, b text) RETURNS text AS $$ SELECT a || b $$ "
           + "LANGUAGE sql IMMUTABLE");
       Victim v = singleVictim();
       makeStoredColumn(v.colId, fn);
-      insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", null);
+      insertDependency(v.colId, v.tableId, "N", SELECT_1, null);
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -320,15 +325,15 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
     String marker;
     try {
       String fn = "scdfn_retint_" + suffix();
-      exec("CREATE FUNCTION " + fn + "(p_id text) RETURNS integer AS $$ SELECT 1 $$ "
+      exec(CREATE_FUNCTION + fn + "(p_id text) RETURNS integer AS $$ SELECT 1 $$ "
           + "LANGUAGE sql IMMUTABLE");
       Victim v = singleVictim();
       // Reference 10 = String -> STRING family; function returns integer -> NUMERIC family -> warn.
       makeStoredColumn(v.colId, fn, "10");
-      insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", null);
+      insertDependency(v.colId, v.tableId, "N", SELECT_1, null);
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -341,14 +346,14 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
     String marker;
     try {
       String fn = "scdfn_volatile_" + suffix();
-      exec("CREATE FUNCTION " + fn + "(p_id text) RETURNS text AS $$ SELECT p_id $$ "
+      exec(CREATE_FUNCTION + fn + "(p_id text) RETURNS text AS $$ SELECT p_id $$ "
           + "LANGUAGE sql VOLATILE");
       Victim v = singleVictim();
       makeStoredColumn(v.colId, fn);
-      insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", null);
+      insertDependency(v.colId, v.tableId, "N", SELECT_1, null);
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     assertMarkerViolation(collect(), marker,
@@ -363,10 +368,10 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
       Victim v = singleVictim();
       makeStoredColumn(v.colId, validFn, "10"); // valid immutable text fn, String reference
       // Exactly one target resolver, no watched columns, update_event = 'N' -> nothing to flag.
-      insertDependency(v.tableId, v.colId, v.tableId, "N", "SELECT 1", null);
+      insertDependency(v.colId, v.tableId, "N", SELECT_1, null);
       marker = v.qname();
     } catch (SQLException e) {
-      assumeNoException("live fixture not supported by this environment", e);
+      assumeNoException(LIVE_FIXTURE_NOT_SUPPORTED, e);
       return;
     }
     for (Violation viol : collect()) {
@@ -452,7 +457,7 @@ public class StoredComputedValidatorLiveDbTest extends OBBaseTest {
    * Inserts one active dependency for {@code columnId}. Returns the fresh dependency id, used as the
    * unique violation marker for the dependency-scoped rules (V9–V11, V16).
    */
-  private String insertDependency(String sourceTableId, String columnId, String depSourceTableId,
+  private String insertDependency(String columnId, String depSourceTableId,
       String updateEvent, String resolverSql, String targetLinkColumnId) throws SQLException {
     String depId = SequenceIdData.getUUID();
     String sql = "INSERT INTO ad_column_comp_dependency (ad_column_comp_dependency_id, ad_client_id, "

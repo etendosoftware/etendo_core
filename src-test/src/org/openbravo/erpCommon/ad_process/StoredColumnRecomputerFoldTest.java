@@ -68,6 +68,10 @@ public class StoredColumnRecomputerFoldTest {
   private static final String TARGET_ID = "ORD-1";
   private static final String CLIENT_ID = "CLIENT-A";
 
+  private static final String FOR_UPDATE = "FOR UPDATE";
+  private static final String UPDATE_PREFIX = "UPDATE ";
+  private static final String ORDER_BY = "ORDER BY";
+
   /**
    * Holds a mocked Connection, the list of SQL strings passed to {@code prepareStatement}, and the
    * generic {@link PreparedStatement} every non-metadata query is answered with (so tests can verify
@@ -140,11 +144,11 @@ public class StoredColumnRecomputerFoldTest {
     assertTrue(pg.recomputeOne(c.con, COLUMN_ID, TARGET_ID));
 
     assertEquals("SELECT 1 FROM \"c_order\" WHERE \"c_order_id\" = ? FOR UPDATE",
-        only(c.sql, "FOR UPDATE"));
+        only(c.sql, FOR_UPDATE));
     assertEquals(
         "UPDATE \"c_order\" SET \"totallines\" = \"c_order_recompute_totallines\"(\"c_order_id\")"
             + " WHERE \"c_order_id\" = ?",
-        only(c.sql, "UPDATE "));
+        only(c.sql, UPDATE_PREFIX));
   }
 
   @Test
@@ -155,11 +159,11 @@ public class StoredColumnRecomputerFoldTest {
     assertTrue(ora.recomputeOne(c.con, COLUMN_ID, TARGET_ID));
 
     assertEquals("SELECT 1 FROM \"C_ORDER\" WHERE \"C_ORDER_ID\" = ? FOR UPDATE",
-        only(c.sql, "FOR UPDATE"));
+        only(c.sql, FOR_UPDATE));
     assertEquals(
         "UPDATE \"C_ORDER\" SET \"TOTALLINES\" = \"C_ORDER_RECOMPUTE_TOTALLINES\"(\"C_ORDER_ID\")"
             + " WHERE \"C_ORDER_ID\" = ?",
-        only(c.sql, "UPDATE "));
+        only(c.sql, UPDATE_PREFIX));
   }
 
   @Test
@@ -173,8 +177,8 @@ public class StoredColumnRecomputerFoldTest {
     for (String sql : pg.sql) {
       assertFalse(sql.contains("`") || sql.contains("["), "unexpected quote style: " + sql);
     }
-    assertTrue(only(pg.sql, "FOR UPDATE").startsWith("SELECT 1 FROM \""));
-    assertTrue(only(ora.sql, "FOR UPDATE").startsWith("SELECT 1 FROM \""));
+    assertTrue(only(pg.sql, FOR_UPDATE).startsWith("SELECT 1 FROM \""));
+    assertTrue(only(ora.sql, FOR_UPDATE).startsWith("SELECT 1 FROM \""));
   }
 
   @Test
@@ -183,12 +187,12 @@ public class StoredColumnRecomputerFoldTest {
     // Empty target table -> one bounded chunk SELECT, no recompute, count 0.
     assertEquals(0, new StoredColumnRecomputer(false).rebuild(pg.con, COLUMN_ID));
     assertEquals("SELECT \"c_order_id\" FROM \"c_order\" ORDER BY \"c_order_id\"",
-        only(pg.sql, "ORDER BY"));
+        only(pg.sql, ORDER_BY));
 
     Capture ora = newConnection(RAW_TABLE, RAW_COLUMN, RAW_FN, RAW_PK);
     assertEquals(0, new StoredColumnRecomputer(true).rebuild(ora.con, COLUMN_ID));
     assertEquals("SELECT \"C_ORDER_ID\" FROM \"C_ORDER\" ORDER BY \"C_ORDER_ID\"",
-        only(ora.sql, "ORDER BY"));
+        only(ora.sql, ORDER_BY));
   }
 
   @Test
@@ -202,7 +206,7 @@ public class StoredColumnRecomputerFoldTest {
 
     assertEquals(
         "SELECT \"c_order_id\" FROM \"c_order\" WHERE \"ad_client_id\" = ? ORDER BY \"c_order_id\"",
-        only(pg.sql, "ORDER BY"));
+        only(pg.sql, ORDER_BY));
     verify(pg.genericPs).setString(1, CLIENT_ID);
   }
 
@@ -215,7 +219,7 @@ public class StoredColumnRecomputerFoldTest {
 
     assertEquals(
         "SELECT \"C_ORDER_ID\" FROM \"C_ORDER\" WHERE \"AD_CLIENT_ID\" = ? ORDER BY \"C_ORDER_ID\"",
-        only(ora.sql, "ORDER BY"));
+        only(ora.sql, ORDER_BY));
     verify(ora.genericPs).setString(1, CLIENT_ID);
   }
 
@@ -226,7 +230,7 @@ public class StoredColumnRecomputerFoldTest {
     Capture pg = newConnection(RAW_TABLE, RAW_COLUMN, RAW_FN, RAW_PK);
     assertEquals(0, new StoredColumnRecomputer(false).rebuild(pg.con, COLUMN_ID));
 
-    String chunk = only(pg.sql, "ORDER BY");
+    String chunk = only(pg.sql, ORDER_BY);
     assertFalse(chunk.contains("ad_client_id"), "all-client rebuild must not filter by client: " + chunk);
     assertFalse(chunk.contains(" WHERE "), "empty-target all-client chunk must have no WHERE: " + chunk);
     verify(pg.genericPs, never()).setString(eq(1), eq(CLIENT_ID));
@@ -244,8 +248,8 @@ public class StoredColumnRecomputerFoldTest {
     assertEquals(1, c.sql.size(), "only the metadata query should have been prepared: " + c.sql);
     assertTrue(c.sql.get(0).contains("computation_function"));
     for (String sql : c.sql) {
-      assertFalse(sql.contains("FOR UPDATE"), "no lock must be issued for incomplete metadata");
-      assertFalse(sql.startsWith("UPDATE "), "no update must be issued for incomplete metadata");
+      assertFalse(sql.contains(FOR_UPDATE), "no lock must be issued for incomplete metadata");
+      assertFalse(sql.startsWith(UPDATE_PREFIX), "no update must be issued for incomplete metadata");
     }
   }
 }

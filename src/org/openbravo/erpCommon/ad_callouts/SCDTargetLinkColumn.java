@@ -48,7 +48,10 @@ import org.openbravo.database.ConnectionProvider;
  * silently replaced. When discovery does not yield a single column the existing value is preserved
  * unless it has become invalid.</p>
  */
-public class SCD_TargetLinkColumn extends SimpleCallout {
+public class SCDTargetLinkColumn extends SimpleCallout {
+
+  /** HTTP parameter / callout result name for the {@code TARGET_LINK_COLUMN_ID} field. */
+  private static final String PARAM_TARGET_LINK_COLUMN_ID = "inptargetLinkColumnId";
 
   /**
    * Discovers FK columns on {@code sourceTableId} that reference {@code targetTableId}, covering the
@@ -85,7 +88,7 @@ public class SCD_TargetLinkColumn extends SimpleCallout {
   protected void execute(CalloutInfo info) throws ServletException {
     String sourceTableId = info.getStringParameter("inpsourceTableId", null);
     String targetColumnId = info.getStringParameter("inpadColumnId", null);
-    String currentLinkColumnId = info.getStringParameter("inptargetLinkColumnId", null);
+    String currentLinkColumnId = info.getStringParameter(PARAM_TARGET_LINK_COLUMN_ID, null);
 
     if (StringUtils.isBlank(sourceTableId) || StringUtils.isBlank(targetColumnId)) {
       return;
@@ -129,7 +132,7 @@ public class SCD_TargetLinkColumn extends SimpleCallout {
    */
   private void applyPrecedence(CalloutInfo info, List<FkCandidate> candidates) {
     if (candidates.isEmpty()) {
-      info.addResult("inptargetLinkColumnId", (Object) null);
+      info.addResult(PARAM_TARGET_LINK_COLUMN_ID, (Object) null);
       info.showMessage(OBMessageUtils.messageBD("ETGO_CompDepNoFk"));
       return;
     }
@@ -142,12 +145,12 @@ public class SCD_TargetLinkColumn extends SimpleCallout {
     }
 
     if (parents.size() == 1) {
-      info.addResult("inptargetLinkColumnId", parents.get(0).columnId);
+      info.addResult(PARAM_TARGET_LINK_COLUMN_ID, parents.get(0).columnId);
     } else if (parents.isEmpty() && candidates.size() == 1) {
-      info.addResult("inptargetLinkColumnId", candidates.get(0).columnId);
+      info.addResult(PARAM_TARGET_LINK_COLUMN_ID, candidates.get(0).columnId);
     } else {
       // ambiguous: several parents, or several non-parent FKs — leave blank, ask the user to pick.
-      info.addResult("inptargetLinkColumnId", (Object) null);
+      info.addResult(PARAM_TARGET_LINK_COLUMN_ID, (Object) null);
       info.showMessage(OBMessageUtils.getI18NMessage("ETGO_CompDepManyFk",
           new String[] { Integer.toString(candidates.size()) }));
     }

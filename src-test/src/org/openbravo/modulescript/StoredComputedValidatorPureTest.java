@@ -63,6 +63,10 @@ import org.openbravo.modulescript.StoredComputedValidator.Violation;
  */
 public class StoredComputedValidatorPureTest {
 
+  private static final String NUMERIC = "NUMERIC";
+  private static final String STRING = "STRING";
+  private static final String ENFORCE = "enforce";
+
   // Saved value of the rollout toggle system property, restored after each test so the toggle
   // tests never leak state into the rest of the suite.
   private String savedToggle;
@@ -251,20 +255,20 @@ public class StoredComputedValidatorPureTest {
   @Test
   void familyForReferenceMapsNumericReferences() {
     assertAll("numeric AD references",
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForReference("12")),  // Amount
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForReference("22")),  // Number
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForReference("11")),  // Integer
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForReference("29")),  // Quantity
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForReference("800008")),
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForReference("800019")));
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForReference("12")),  // Amount
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForReference("22")),  // Number
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForReference("11")),  // Integer
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForReference("29")),  // Quantity
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForReference("800008")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForReference("800019")));
   }
 
   @Test
   void familyForReferenceMapsStringAndDateReferences() {
     assertAll("string / date AD references",
-        () -> assertEquals("STRING", StoredComputedValidator.familyForReference("10")), // String
-        () -> assertEquals("STRING", StoredComputedValidator.familyForReference("14")), // Text
-        () -> assertEquals("STRING", StoredComputedValidator.familyForReference("20")), // YesNo
+        () -> assertEquals(STRING, StoredComputedValidator.familyForReference("10")), // String
+        () -> assertEquals(STRING, StoredComputedValidator.familyForReference("14")), // Text
+        () -> assertEquals(STRING, StoredComputedValidator.familyForReference("20")), // YesNo
         () -> assertEquals("DATE", StoredComputedValidator.familyForReference("15")),   // Date
         () -> assertEquals("DATE", StoredComputedValidator.familyForReference("16")));  // DateTime
   }
@@ -280,15 +284,15 @@ public class StoredComputedValidatorPureTest {
   @Test
   void familyForPgTypeMapsEachFamily() {
     assertAll("pg_type.typname families",
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForPgType("numeric")),
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForPgType("int4")),
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForPgType("int8")),
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForPgType("float8")),
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForPgType("money")),
-        () -> assertEquals("STRING", StoredComputedValidator.familyForPgType("varchar")),
-        () -> assertEquals("STRING", StoredComputedValidator.familyForPgType("bpchar")),
-        () -> assertEquals("STRING", StoredComputedValidator.familyForPgType("text")),
-        () -> assertEquals("STRING", StoredComputedValidator.familyForPgType("name")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForPgType("numeric")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForPgType("int4")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForPgType("int8")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForPgType("float8")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForPgType("money")),
+        () -> assertEquals(STRING, StoredComputedValidator.familyForPgType("varchar")),
+        () -> assertEquals(STRING, StoredComputedValidator.familyForPgType("bpchar")),
+        () -> assertEquals(STRING, StoredComputedValidator.familyForPgType("text")),
+        () -> assertEquals(STRING, StoredComputedValidator.familyForPgType("name")),
         () -> assertEquals("DATE", StoredComputedValidator.familyForPgType("date")),
         () -> assertEquals("DATE", StoredComputedValidator.familyForPgType("timestamptz")),
         () -> assertEquals("DATE", StoredComputedValidator.familyForPgType("timetz")));
@@ -297,8 +301,8 @@ public class StoredComputedValidatorPureTest {
   @Test
   void familyForPgTypeIsCaseInsensitive() {
     assertAll("typname is lower-cased before mapping",
-        () -> assertEquals("NUMERIC", StoredComputedValidator.familyForPgType("NUMERIC")),
-        () -> assertEquals("STRING", StoredComputedValidator.familyForPgType("VarChar")),
+        () -> assertEquals(NUMERIC, StoredComputedValidator.familyForPgType(NUMERIC)),
+        () -> assertEquals(STRING, StoredComputedValidator.familyForPgType("VarChar")),
         () -> assertEquals("DATE", StoredComputedValidator.familyForPgType("TIMESTAMP")));
   }
 
@@ -316,7 +320,7 @@ public class StoredComputedValidatorPureTest {
     // type), both non-null. A numeric Amount column whose function returns text is a mismatch; the
     // same column whose function returns numeric is a clean match (no violation).
     String expectedNumeric = StoredComputedValidator.familyForReference("12"); // Amount -> NUMERIC
-    assertEquals("NUMERIC", expectedNumeric);
+    assertEquals(NUMERIC, expectedNumeric);
     assertAll("V6 family comparison",
         () -> assertFalse(expectedNumeric.equals(StoredComputedValidator.familyForPgType("text")),
             "NUMERIC column returning text() is a family mismatch -> WARN"),
@@ -330,7 +334,7 @@ public class StoredComputedValidatorPureTest {
 
   @Test
   void enforceModeWithHardViolationThrowsBuildException() {
-    System.setProperty(StoredComputedValidator.TOGGLE, "enforce");
+    System.setProperty(StoredComputedValidator.TOGGLE, ENFORCE);
     List<Violation> violations = new ArrayList<>();
     violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_ScdNoDependencies,
         "column t.c — a stored computed column must have at least one active dependency"));
@@ -345,7 +349,7 @@ public class StoredComputedValidatorPureTest {
 
   @Test
   void enforceModeWithOnlyWarningsDoesNotThrow() {
-    System.setProperty(StoredComputedValidator.TOGGLE, "enforce");
+    System.setProperty(StoredComputedValidator.TOGGLE, ENFORCE);
     List<Violation> violations = new ArrayList<>();
     violations.add(new Violation(Severity.WARN, StoredComputedValidator.ETGO_ScdMissingIndex,
         "dependency d — no index leads with FK column"));
@@ -365,7 +369,7 @@ public class StoredComputedValidatorPureTest {
 
   @Test
   void emptyViolationListNeverThrows() {
-    System.setProperty(StoredComputedValidator.TOGGLE, "enforce");
+    System.setProperty(StoredComputedValidator.TOGGLE, ENFORCE);
     assertDoesNotThrow(() -> StoredComputedValidator.finishOrThrow(new ArrayList<>()),
         "no violations means no report and no throw");
   }
@@ -376,7 +380,7 @@ public class StoredComputedValidatorPureTest {
     assertFalse(StoredComputedValidator.isEnforce(), "'warn' disables enforcement");
     System.setProperty(StoredComputedValidator.TOGGLE, "WARN");
     assertFalse(StoredComputedValidator.isEnforce(), "the toggle value is compared case-insensitively");
-    System.setProperty(StoredComputedValidator.TOGGLE, "enforce");
+    System.setProperty(StoredComputedValidator.TOGGLE, ENFORCE);
     assertTrue(StoredComputedValidator.isEnforce(), "'enforce' enables enforcement");
     System.setProperty(StoredComputedValidator.TOGGLE, "anything-else");
     assertTrue(StoredComputedValidator.isEnforce(),
