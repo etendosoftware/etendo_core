@@ -207,9 +207,9 @@ public class StoredComputedValidatorPureTest {
 
   @Test
   void v17FlagsOnlyTheMisorderedEdgeOfAPath() {
-    // a(1) -> b(2) -> c(1). This is a PATH, not a cycle: c reads b but carries a LOWER sequence
-    // number, so the drain visits c before b and c reads a stale b. Only the b->c edge is unsafe;
-    // a->b is correctly ordered and must stay silent.
+    // Scenario a (seq 1) then b (seq 2) then c (seq 1): a PATH, not a cycle. Node c reads b but
+    // carries a LOWER sequence number, so the drain visits c before b and c reads a stale b. Only
+    // the edge b to c is unsafe; the edge a to b is correctly ordered and must stay silent.
     Map<String, List<String>> adjacency = new HashMap<>();
     adjacency.put("a", Arrays.asList("b"));
     adjacency.put("b", Arrays.asList("c"));
@@ -336,12 +336,12 @@ public class StoredComputedValidatorPureTest {
   void enforceModeWithHardViolationThrowsBuildException() {
     System.setProperty(StoredComputedValidator.TOGGLE, ENFORCE);
     List<Violation> violations = new ArrayList<>();
-    violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_ScdNoDependencies,
+    violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_SCD_NO_DEPENDENCIES,
         "column t.c — a stored computed column must have at least one active dependency"));
     BuildException ex = assertThrows(BuildException.class,
         () -> StoredComputedValidator.finishOrThrow(violations),
         "enforce mode + a hard violation must stop the build");
-    assertTrue(ex.getMessage().contains(StoredComputedValidator.ETGO_ScdNoDependencies),
+    assertTrue(ex.getMessage().contains(StoredComputedValidator.ETGO_SCD_NO_DEPENDENCIES),
         "the thrown report must carry the offending code");
     assertTrue(ex.getMessage().contains("validation failed"),
         "the thrown report must be the aggregated Phase 5b report");
@@ -351,7 +351,7 @@ public class StoredComputedValidatorPureTest {
   void enforceModeWithOnlyWarningsDoesNotThrow() {
     System.setProperty(StoredComputedValidator.TOGGLE, ENFORCE);
     List<Violation> violations = new ArrayList<>();
-    violations.add(new Violation(Severity.WARN, StoredComputedValidator.ETGO_ScdMissingIndex,
+    violations.add(new Violation(Severity.WARN, StoredComputedValidator.ETGO_SCD_MISSING_INDEX,
         "dependency d — no index leads with FK column"));
     assertDoesNotThrow(() -> StoredComputedValidator.finishOrThrow(violations),
         "warnings alone never stop the build, even in enforce mode");
@@ -361,7 +361,7 @@ public class StoredComputedValidatorPureTest {
   void warnModeWithHardViolationDoesNotThrow() {
     System.setProperty(StoredComputedValidator.TOGGLE, "warn");
     List<Violation> violations = new ArrayList<>();
-    violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_ScdNoDependencies,
+    violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_SCD_NO_DEPENDENCIES,
         "column t.c — missing dependency"));
     assertDoesNotThrow(() -> StoredComputedValidator.finishOrThrow(violations),
         "warn mode downgrades every hard violation to a warning and never stops the build");
@@ -400,9 +400,9 @@ public class StoredComputedValidatorPureTest {
   @Test
   void formatReportListsErrorsBeforeWarningsWithCounts() {
     List<Violation> violations = new ArrayList<>();
-    violations.add(new Violation(Severity.WARN, StoredComputedValidator.ETGO_ScdFunctionVolatile,
+    violations.add(new Violation(Severity.WARN, StoredComputedValidator.ETGO_SCD_FUNCTION_VOLATILE,
         "warn detail"));
-    violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_ScdFunctionMissing,
+    violations.add(new Violation(Severity.ERROR, StoredComputedValidator.ETGO_SCD_FUNCTION_MISSING,
         "error detail"));
     String report = StoredComputedValidator.formatReport(violations);
 
@@ -411,11 +411,11 @@ public class StoredComputedValidatorPureTest {
             report.startsWith("Stored computed column validation failed (1 error(s), 1 warning(s)):"),
             "header counts errors and warnings separately"),
         () -> assertTrue(
-            report.contains("  [ERROR] " + StoredComputedValidator.ETGO_ScdFunctionMissing
+            report.contains("  [ERROR] " + StoredComputedValidator.ETGO_SCD_FUNCTION_MISSING
                 + ": error detail"),
             "error lines are rendered with the [ERROR] prefix, code and detail"),
         () -> assertTrue(
-            report.contains("  [WARN ] " + StoredComputedValidator.ETGO_ScdFunctionVolatile
+            report.contains("  [WARN ] " + StoredComputedValidator.ETGO_SCD_FUNCTION_VOLATILE
                 + ": warn detail"),
             "warn lines are rendered with the [WARN ] prefix, code and detail"),
         () -> assertTrue(

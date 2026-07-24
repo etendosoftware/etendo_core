@@ -38,7 +38,7 @@ package org.openbravo.erpCommon.utility;
  * {@code StoredComputedValidator} so the two never drift):</p>
  * <ul>
  *   <li><b>V1–V3</b> — shape of a {@code Computation_Mode='S'} column, all HARD under
- *       {@link #ETGO_StoredComputedColDef}: <b>V1</b> SQLLogic must be blank, <b>V2</b>
+ *       {@link #ETGO_STORED_COMPUTED_COL_DEF}: <b>V1</b> SQLLogic must be blank, <b>V2</b>
  *       Computation_Function must be set, <b>V3</b> Computation_Sequence_Number must be &gt; 0.</li>
  * </ul>
  *
@@ -57,7 +57,7 @@ public final class StoredComputedShapeValidator {
    * V1–V3 shape rule message code — an {@code AD_MESSAGE} row rendered by the runtime DAL handler and
    * reused as a label by the build-time validator.
    */
-  public static final String ETGO_StoredComputedColDef = "ETGO_StoredComputedColDef";
+  public static final String ETGO_STORED_COMPUTED_COL_DEF = "ETGO_StoredComputedColDef";
 
   /**
    * Shape rule V1–V3, shared verbatim between the runtime DAL guard {@code ColumnStoredComputedHandler}
@@ -66,7 +66,7 @@ public final class StoredComputedShapeValidator {
    *
    * <p>When {@code computationMode = 'S'} the column is recomputed by a database function, so
    * {@code sqlLogic} MUST be blank, {@code fn} MUST be set, and {@code seq} MUST be a positive number.
-   * Returns {@link #ETGO_StoredComputedColDef} when any of the three is violated, otherwise
+   * Returns {@link #ETGO_STORED_COMPUTED_COL_DEF} when any of the three is violated, otherwise
    * {@code null}. Columns that are not stored computed are always valid here.</p>
    *
    * @param computationMode
@@ -87,7 +87,7 @@ public final class StoredComputedShapeValidator {
     boolean hasFunction = isNotBlank(fn);
     boolean hasSequence = seq != null && seq > 0;
     if (hasSqlLogic || !hasFunction || !hasSequence) {
-      return ETGO_StoredComputedColDef;
+      return ETGO_STORED_COMPUTED_COL_DEF;
     }
     return null;
   }

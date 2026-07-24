@@ -130,7 +130,7 @@ public class StoredComputedValidatorRulesTest {
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
     // Deliberately NO Q_PG_FN route -> introspection sees an empty result set.
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionMissing, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_FUNCTION_MISSING, Severity.ERROR);
   }
 
   @Test
@@ -139,7 +139,7 @@ public class StoredComputedValidatorRulesTest {
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
     routes.put(Q_PG_FN, singletonList(pgFn(2, "s", PG_TYPE_NUMERIC, "text"))); // 2 args, engine passes 1
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionSignature, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_FUNCTION_SIGNATURE, Severity.ERROR);
   }
 
   @Test
@@ -149,7 +149,7 @@ public class StoredComputedValidatorRulesTest {
     // Exactly one argument (count OK) but it is int4 (NUMERIC family), not the VARCHAR/UUID PK.
     routes.put(Q_PG_FN, singletonList(pgFn(1, "s", PG_TYPE_NUMERIC, "int4")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionSignature, Severity.WARN);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_FUNCTION_SIGNATURE, Severity.WARN);
   }
 
   @Test
@@ -158,7 +158,7 @@ public class StoredComputedValidatorRulesTest {
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
     routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "void", "text"))); // returns nothing usable
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionReturnType, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_FUNCTION_RETURN_TYPE, Severity.ERROR);
   }
 
   @Test
@@ -168,7 +168,7 @@ public class StoredComputedValidatorRulesTest {
     routes.put(Q_LOADER, singletonList(fnColumn("12")));
     routes.put(Q_PG_FN, singletonList(pgFn(1, "s", "text", "text")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionReturnType, Severity.WARN);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_FUNCTION_RETURN_TYPE, Severity.WARN);
   }
 
   @Test
@@ -178,7 +178,7 @@ public class StoredComputedValidatorRulesTest {
     // provolatile 'v' = VOLATILE; arg/return kept clean so only V7 fires.
     routes.put(Q_PG_FN, singletonList(pgFn(1, "v", PG_TYPE_NUMERIC, "text")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdFunctionVolatile, Severity.WARN);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_FUNCTION_VOLATILE, Severity.WARN);
   }
 
   // ================================================================================================
@@ -190,7 +190,7 @@ public class StoredComputedValidatorRulesTest {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_V8_NO_DEP, singletonList(row(TABLENAME, "c_order", COLUMNNAME, "totalamt")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdNoDependencies, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_NO_DEPENDENCIES, Severity.ERROR);
   }
 
   @Test
@@ -198,7 +198,7 @@ public class StoredComputedValidatorRulesTest {
     Map<String, List<Map<String, Object>>> routes = new LinkedHashMap<>();
     routes.put(Q_V9_UPDATE, singletonList(row(DEPID, DEP_1, SOURCE_TABLE, C_ORDERLINE)));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdUpdateNoWatched, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_UPDATE_NO_WATCHED, Severity.ERROR);
   }
 
   @Test
@@ -208,7 +208,7 @@ public class StoredComputedValidatorRulesTest {
         DEPID, DEP_1, "watched_col", "qtyordered",
         SOURCE_TABLE, C_ORDERLINE, "watched_table", "m_product")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdWatchedColumnTable, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_WATCHED_COLUMN_TABLE, Severity.ERROR);
   }
 
   @Test
@@ -218,7 +218,7 @@ public class StoredComputedValidatorRulesTest {
     routes.put(Q_V11_XOR,
         singletonList(row(DEPID, DEP_1, "resolver", "SELECT 1", "linkcol", "col-99")));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    Violation v = assertOneViolation(vs, StoredComputedValidator.ETGO_CompDepTargetXor, Severity.ERROR);
+    Violation v = assertOneViolation(vs, StoredComputedValidator.ETGO_COMP_DEP_TARGET_XOR, Severity.ERROR);
     assertTrue(v.detail.contains("both"), "detail must state that both resolvers are set");
   }
 
@@ -228,7 +228,7 @@ public class StoredComputedValidatorRulesTest {
     // resolver "" (COALESCE/TRIM empty) and linkcol null -> neither set -> XOR violated.
     routes.put(Q_V11_XOR, singletonList(row(DEPID, "dep-2", "resolver", "", "linkcol", null)));
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    Violation v = assertOneViolation(vs, StoredComputedValidator.ETGO_CompDepTargetXor, Severity.ERROR);
+    Violation v = assertOneViolation(vs, StoredComputedValidator.ETGO_COMP_DEP_TARGET_XOR, Severity.ERROR);
     assertTrue(v.detail.contains("neither"), "detail must state that neither resolver is set");
   }
 
@@ -253,7 +253,7 @@ public class StoredComputedValidatorRulesTest {
         row(B_COL, COL_B, SRC_TABLE, TAB_X, WATCHED_COL_ID, COL_A),   // A -> B
         row(B_COL, COL_A, SRC_TABLE, TAB_Y, WATCHED_COL_ID, COL_B))); // B -> A
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdDependencyCycle, Severity.ERROR);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_DEPENDENCY_CYCLE, Severity.ERROR);
   }
 
   // ================================================================================================
@@ -274,7 +274,7 @@ public class StoredComputedValidatorRulesTest {
     routes.put(Q_V14_EDGES, singletonList(
         row(B_COL, COL_B, SRC_TABLE, TAB_X, WATCHED_COL_ID, COL_A))); // A -> B
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdSequenceOrder, Severity.WARN);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_SEQUENCE_ORDER, Severity.WARN);
   }
 
   @Test
@@ -304,7 +304,7 @@ public class StoredComputedValidatorRulesTest {
         singletonList(row(DEPID, DEP_1, SOURCE_TABLE, C_ORDERLINE, "fk_col", "c_order_id")));
     // No pg_index route -> hasLeadingIndex() sees an empty result set -> no leading index -> advisory.
     List<Violation> vs = StoredComputedValidator.collectDefinitionViolations(router(routes));
-    assertOneViolation(vs, StoredComputedValidator.ETGO_ScdMissingIndex, Severity.WARN);
+    assertOneViolation(vs, StoredComputedValidator.ETGO_SCD_MISSING_INDEX, Severity.WARN);
   }
 
   // ================================================================================================
@@ -320,7 +320,7 @@ public class StoredComputedValidatorRulesTest {
     BuildException ex = assertThrows(BuildException.class,
         () -> StoredComputedValidator.assertDefinitionsValid(cp),
         "a hard violation in enforce mode must stop the build");
-    assertTrue(ex.getMessage().contains(StoredComputedValidator.ETGO_ScdNoDependencies),
+    assertTrue(ex.getMessage().contains(StoredComputedValidator.ETGO_SCD_NO_DEPENDENCIES),
         "the aggregated report must carry the offending code");
   }
 

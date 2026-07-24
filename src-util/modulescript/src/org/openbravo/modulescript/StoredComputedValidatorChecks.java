@@ -43,13 +43,13 @@ class StoredComputedValidatorChecks {
       List<StoredComputedValidator.Violation> violations) {
     if (info.argCount != null && info.argCount != 1) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.ERROR,
-          StoredComputedValidator.ETGO_ScdFunctionSignature,
+          StoredComputedValidator.ETGO_SCD_FUNCTION_SIGNATURE,
           StoredComputedValidator.COLUMN_PREFIX + c.qname() + StoredComputedValidator.COMPUTATION_FUNCTION_PREFIX
               + c.fn + "' takes " + info.argCount
               + " argument(s); the engine calls it with exactly one (the target row primary key)"));
     } else if (info.argFamily != null && !StoredComputedValidator.FAMILY_STRING.equals(info.argFamily)) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.WARN,
-          StoredComputedValidator.ETGO_ScdFunctionSignature,
+          StoredComputedValidator.ETGO_SCD_FUNCTION_SIGNATURE,
           StoredComputedValidator.COLUMN_PREFIX + c.qname() + StoredComputedValidator.COMPUTATION_FUNCTION_PREFIX
               + c.fn + "' single argument is " + info.argType + "; the engine passes a VARCHAR/UUID primary key"));
     }
@@ -67,7 +67,7 @@ class StoredComputedValidatorChecks {
     String rt = info.returnType.toLowerCase();
     if ("void".equals(rt) || "trigger".equals(rt) || "record".equals(rt)) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.ERROR,
-          StoredComputedValidator.ETGO_ScdFunctionReturnType,
+          StoredComputedValidator.ETGO_SCD_FUNCTION_RETURN_TYPE,
           StoredComputedValidator.COLUMN_PREFIX + c.qname() + StoredComputedValidator.COMPUTATION_FUNCTION_PREFIX
               + c.fn + "' returns '" + rt + "', which yields no usable column value"));
       return;
@@ -76,7 +76,7 @@ class StoredComputedValidatorChecks {
     String actual = StoredComputedValidator.familyForPgType(info.returnType);
     if (expected != null && actual != null && !expected.equals(actual)) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.WARN,
-          StoredComputedValidator.ETGO_ScdFunctionReturnType,
+          StoredComputedValidator.ETGO_SCD_FUNCTION_RETURN_TYPE,
           StoredComputedValidator.COLUMN_PREFIX + c.qname() + StoredComputedValidator.COMPUTATION_FUNCTION_PREFIX
               + c.fn + "' returns " + info.returnType + " (" + actual + ") but the column reference expects "
               + expected));
@@ -88,7 +88,7 @@ class StoredComputedValidatorChecks {
       List<StoredComputedValidator.Violation> violations) {
     if (info.volatileFlag) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.WARN,
-          StoredComputedValidator.ETGO_ScdFunctionVolatile,
+          StoredComputedValidator.ETGO_SCD_FUNCTION_VOLATILE,
           StoredComputedValidator.COLUMN_PREFIX + c.qname() + StoredComputedValidator.COMPUTATION_FUNCTION_PREFIX
               + c.fn + "' is declared VOLATILE; a "
               + "recompute function should be IMMUTABLE or STABLE and free of side effects"));
@@ -138,7 +138,7 @@ class StoredComputedValidatorChecks {
     return adjacency;
   }
 
-  /** Formats and records one HARD violation ({@code ETGO_ScdDependencyCycle}) per V14 cycle found. */
+  /** Formats and records one HARD violation ({@code ETGO_SCD_DEPENDENCY_CYCLE}) per V14 cycle found. */
   static void reportCycles(Map<String, StoredComputedValidator.ColInfo> nodeById,
       List<StoredComputedValidator.Cycle> cycles, List<StoredComputedValidator.Violation> violations) {
     for (StoredComputedValidator.Cycle cycle : cycles) {
@@ -151,19 +151,19 @@ class StoredComputedValidatorChecks {
       StoredComputedValidator.ColInfo first = nodeById.get(cycle.path.get(0));
       path.append(first != null ? first.qname() : cycle.path.get(0));
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.ERROR,
-          StoredComputedValidator.ETGO_ScdDependencyCycle,
+          StoredComputedValidator.ETGO_SCD_DEPENDENCY_CYCLE,
           "cycle among stored computed columns (" + path + ")"));
     }
   }
 
-  /** Formats and records one WARN violation ({@code ETGO_ScdSequenceOrder}) per V17 offending edge. */
+  /** Formats and records one WARN violation ({@code ETGO_SCD_SEQUENCE_ORDER}) per V17 offending edge. */
   static void reportSequenceOrderViolations(Map<String, StoredComputedValidator.ColInfo> nodeById,
       Map<String, List<String>> adjacency, Map<String, Long> seqByNode,
       List<StoredComputedValidator.Cycle> cycles, List<StoredComputedValidator.Violation> violations) {
     for (StoredComputedValidator.Edge edge : StoredComputedValidator.findSequenceOrderViolations(adjacency,
         seqByNode, cycles)) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.WARN,
-          StoredComputedValidator.ETGO_ScdSequenceOrder,
+          StoredComputedValidator.ETGO_SCD_SEQUENCE_ORDER,
           "refresh ordering: " + qnameOf(nodeById, edge.to)
               + " (Computation_Sequence_Number " + seqText(seqByNode.get(edge.to))
               + ") reads " + qnameOf(nodeById, edge.from)
@@ -194,7 +194,7 @@ class StoredComputedValidatorChecks {
       String triggerName, List<StoredComputedValidator.Violation> violations) {
     if (!oracleObjectExists(cp, "TRIGGER", triggerName)) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.ERROR,
-          StoredComputedValidator.ETGO_ScdTriggerMissing,
+          StoredComputedValidator.ETGO_SCD_TRIGGER_MISSING,
           StoredComputedValidator.DEPENDENCY_PREFIX + dep.depId + " — expected Oracle trigger " + triggerName
               + StoredComputedValidator.NOT_PRESENT_AFTER_GENERATION));
     }
@@ -210,13 +210,13 @@ class StoredComputedValidatorChecks {
         pgCount(cp, "SELECT count(*) FROM pg_trigger WHERE tgname = ?", triggerName) > 0;
     if (!funcPresent) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.ERROR,
-          StoredComputedValidator.ETGO_ScdTriggerMissing,
+          StoredComputedValidator.ETGO_SCD_TRIGGER_MISSING,
           StoredComputedValidator.DEPENDENCY_PREFIX + dep.depId + " — expected PG function " + funcName
               + StoredComputedValidator.NOT_PRESENT_AFTER_GENERATION));
     }
     if (!trigPresent) {
       violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.ERROR,
-          StoredComputedValidator.ETGO_ScdTriggerMissing,
+          StoredComputedValidator.ETGO_SCD_TRIGGER_MISSING,
           StoredComputedValidator.DEPENDENCY_PREFIX + dep.depId + " — expected PG trigger " + triggerName
               + StoredComputedValidator.NOT_PRESENT_AFTER_GENERATION));
     }
@@ -283,7 +283,7 @@ class StoredComputedValidatorChecks {
       if (deployedBody != null && expectedBody != null
           && !normalizeWs(deployedBody).equals(normalizeWs(expectedBody))) {
         violations.add(new StoredComputedValidator.Violation(StoredComputedValidator.Severity.WARN,
-            StoredComputedValidator.ETGO_ScdTriggerDrift,
+            StoredComputedValidator.ETGO_SCD_TRIGGER_DRIFT,
             StoredComputedValidator.DEPENDENCY_PREFIX + dep.depId + " — deployed function " + funcName
                 + " body differs from the freshly generated definition (a re-run self-heals)"));
       }

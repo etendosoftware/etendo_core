@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.ad_callouts;
+package org.openbravo.erpCommon.ad_callouts; // NOSONAR - package name fixed by Etendo core convention
 
 import java.util.ArrayList;
 import java.util.List;

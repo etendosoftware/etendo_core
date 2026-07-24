@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.ad_process;
+package org.openbravo.erpCommon.ad_process; // NOSONAR - package name fixed by Etendo core convention
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,6 +64,14 @@ class StoredColumnRecomputer {
 
   /** Identifier quote character for the active dialect (both PostgreSQL and Oracle use double quotes). */
   private static final String QUOTE_CHAR = "\"";
+
+  /**
+   * Allowlist for physical SQL identifiers (table/column/function/pk names) that are concatenated —
+   * rather than bound with {@code ?} — into hand-built SQL in {@link #recompute} and
+   * {@link #nextTargetIdChunk} (SonarQube S2077). A plain identifier: starts with a letter or
+   * underscore, followed by letters, digits or underscores only.
+   */
+  private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
 
   /**
    * Resolves the physical target table, stored column, computation function and primary-key column
@@ -186,7 +195,9 @@ class StoredColumnRecomputer {
    * This is the Java equivalent of the PL/pgSQL {@code ad_scd_recompute} and must stay behaviorally
    * identical to it (verified by the parity tests). Table/column/function/pk names come from cached
    * {@code AD_COLUMN} metadata and are case-folded physical identifiers (lowercase on PostgreSQL,
-   * UPPERCASE on Oracle), so they are quoted here.
+   * UPPERCASE on Oracle), so they are quoted here. Every identifier concatenated here was already
+   * validated against {@link #SAFE_IDENTIFIER} in {@link #metaFor(Connection, String)} before being
+   * cached, so this concatenation is safe (S2077).
    */
   private void recompute(Connection con, ColumnMeta meta, String targetId) throws SQLException {
     String q = QUOTE_CHAR;
@@ -205,7 +216,15 @@ class StoredColumnRecomputer {
     }
   }
 
-  /** Reads (and caches) the recompute metadata for a column; null when the column is not resolvable. */
+  /**
+   * Reads (and caches) the recompute metadata for a column; null when the column is not resolvable.
+   * Once folded, the 4 physical identifiers are validated against {@link #SAFE_IDENTIFIER} before
+   * being cached and later concatenated into SQL in {@link #recompute} and {@link #nextTargetIdChunk}
+   * (S2077 — closing the identifier-concatenation hotspot with an allowlist at this single choke
+   * point). A folded value that fails the allowlist means corrupted or tampered metadata, which is a
+   * distinct failure mode from the pre-existing "column not resolvable" (null) case above, so it is
+   * not swallowed the same way — it throws {@link IllegalStateException} instead.
+   */
   private ColumnMeta metaFor(Connection con, String columnId) throws SQLException {
     if (metaCache.containsKey(columnId)) {
       return metaCache.get(columnId);
@@ -220,6 +239,10 @@ class StoredColumnRecomputer {
           String fn = fold(rs.getString(3));
           String pk = fold(rs.getString(4));
           if (table != null && column != null && fn != null && pk != null) {
+            requireSafeIdentifier("table", table);
+            requireSafeIdentifier("column", column);
+            requireSafeIdentifier("computation function", fn);
+            requireSafeIdentifier("primary key column", pk);
             meta = new ColumnMeta(table, column, fn, pk);
           }
         }
@@ -230,6 +253,24 @@ class StoredColumnRecomputer {
     }
     metaCache.put(columnId, meta);
     return meta;
+  }
+
+  /**
+   * Validates a folded physical SQL identifier against {@link #SAFE_IDENTIFIER} before it is
+   * concatenated into hand-built SQL. Throws (unchecked) rather than returning a sentinel: an
+   * identifier read from {@code AD_COLUMN}/{@code AD_TABLE} that isn't a plain identifier indicates
+   * corrupted or tampered metadata and must not silently continue.
+   *
+   * @param kind human-readable label for the identifier's role, used only in the exception message
+   * @param value the folded identifier to validate
+   * @return {@code value}, unchanged, when it passes validation
+   * @throws IllegalStateException when {@code value} is null or does not match {@link #SAFE_IDENTIFIER}
+   */
+  private static String requireSafeIdentifier(String kind, String value) {
+    if (value == null || !SAFE_IDENTIFIER.matcher(value).matches()) {
+      throw new IllegalStateException("Unsafe SQL identifier for " + kind + ": " + value);
+    }
+    return value;
   }
 
   /**

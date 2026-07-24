@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.ad_process;
+package org.openbravo.erpCommon.ad_process; // NOSONAR - package name fixed by Etendo core convention
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -80,7 +80,7 @@ public class StoredColumnQueueProcessorClientScopeTest {
     private final PreparedStatement genericPs;
     private final List<String> sql;
 
-    private Harness(ProcessBundle bundle, Connection con, PreparedStatement fetchPs,
+    private Harness(ProcessBundle bundle, PreparedStatement fetchPs,
         PreparedStatement genericPs, List<String> sql) {
       this.bundle = bundle;
       this.fetchPs = fetchPs;
@@ -181,7 +181,7 @@ public class StoredColumnQueueProcessorClientScopeTest {
     when(bundle.getConnection()).thenReturn(conn);
     when(bundle.getContext()).thenReturn(ctx);
 
-    return new Harness(bundle, con, fetchPs, genericPs, capturedSql);
+    return new Harness(bundle, fetchPs, genericPs, capturedSql);
   }
 
   @Test

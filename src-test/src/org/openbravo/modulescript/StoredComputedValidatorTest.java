@@ -103,7 +103,7 @@ public class StoredComputedValidatorTest {
   private static List<Violation> compositePkViolations(List<Violation> all) {
     List<Violation> out = new ArrayList<>();
     for (Violation v : all) {
-      if (StoredComputedValidator.ETGO_ScdCompositePkTarget.equals(v.code)) {
+      if (StoredComputedValidator.ETGO_SCD_COMPOSITE_PK_TARGET.equals(v.code)) {
         out.add(v);
       }
     }
@@ -117,7 +117,7 @@ public class StoredComputedValidatorTest {
         StoredComputedValidator.collectDefinitionViolations(cp));
     assertEquals(1, composite.size(), "a target with 2 key columns must be rejected");
     assertEquals(Severity.ERROR, composite.get(0).severity);
-    assertEquals(StoredComputedValidator.ETGO_ScdCompositePkTarget, composite.get(0).code);
+    assertEquals(StoredComputedValidator.ETGO_SCD_COMPOSITE_PK_TARGET, composite.get(0).code);
   }
 
   @Test
@@ -165,25 +165,25 @@ public class StoredComputedValidatorTest {
 
   @Test
   void storedComputedWithSqlLogicIsRejected() {
-    assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
+    assertEquals(StoredComputedValidator.ETGO_STORED_COMPUTED_COL_DEF,
         StoredComputedValidator.checkShape("S", SELECT_1, SUM_FN, 10L));
   }
 
   @Test
   void storedComputedWithoutFunctionIsRejected() {
-    assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
+    assertEquals(StoredComputedValidator.ETGO_STORED_COMPUTED_COL_DEF,
         StoredComputedValidator.checkShape("S", null, null, 10L));
-    assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
+    assertEquals(StoredComputedValidator.ETGO_STORED_COMPUTED_COL_DEF,
         StoredComputedValidator.checkShape("S", null, "   ", 10L));
   }
 
   @Test
   void storedComputedWithNonPositiveOrMissingSequenceIsRejected() {
-    assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
+    assertEquals(StoredComputedValidator.ETGO_STORED_COMPUTED_COL_DEF,
         StoredComputedValidator.checkShape("S", null, SUM_FN, null));
-    assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
+    assertEquals(StoredComputedValidator.ETGO_STORED_COMPUTED_COL_DEF,
         StoredComputedValidator.checkShape("S", null, SUM_FN, 0L));
-    assertEquals(StoredComputedValidator.ETGO_StoredComputedColDef,
+    assertEquals(StoredComputedValidator.ETGO_STORED_COMPUTED_COL_DEF,
         StoredComputedValidator.checkShape("S", null, SUM_FN, -1L));
   }
 }
