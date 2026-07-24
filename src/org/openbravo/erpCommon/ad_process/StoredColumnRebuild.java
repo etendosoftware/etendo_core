@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.ad_process;
+package org.openbravo.erpCommon.ad_process; // NOSONAR - package name fixed by Etendo core convention
 
 import java.sql.Connection;
 import java.util.Map;
