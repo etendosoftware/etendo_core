@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -58,6 +59,7 @@ import org.openbravo.service.db.DbUtility;
 
 public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
   private static final Logger log4j = LogManager.getLogger();
+  private static final String ASSET_ID = "assetId";
   private static final String LINEAR = "LI";
   private static final String TIME = "TI";
   private static final String PERCENTAGE = "PE";
@@ -519,11 +521,74 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
 
     asset.setProcessed("Y");
     asset.setProcessAsset("Y");
-    asset.setDepreciatedPlan(amount);
     OBDal.getInstance().save(asset);
 
     OBDal.getInstance().flush();
+
+    // Recompute DepreciatedPlan from the real sum of the asset's active amortization lines and
+    // persist it with an explicit bulk UPDATE. Recalculating deletes and recreates the plan lines,
+    // which fires A_AMORTIZATIONLINE_TRG: the trigger maintains DepreciatedPlan out-of-band (direct
+    // SQL, outside the Hibernate session). A plain asset.setDepreciatedPlan(...) is then silently
+    // dropped by Hibernate's dirty-check against a stale snapshot whenever the value happens to
+    // match the loaded one, leaving the trigger's decremented value in place (the 0/correct toggle,
+    // ETP-4654). A direct UPDATE bypasses the snapshot and always writes the current line total.
+    updateDepreciatedPlanFromLines(asset);
+
     return msg;
+  }
+
+  /**
+   * Recompute the asset's {@code DepreciatedPlan} from the real total of its active amortization
+   * lines and persist it with an explicit bulk UPDATE.
+   * <p>
+   * Recalculating the plan deletes and recreates the amortization lines, which fires the
+   * {@code A_AMORTIZATIONLINE_TRG} trigger. That trigger maintains {@code DepreciatedPlan}
+   * out-of-band (direct SQL, outside the Hibernate session), so a plain
+   * {@link Asset#setDepreciatedPlan(BigDecimal)} is silently dropped by Hibernate's dirty-check
+   * against a snapshot the trigger left stale, leaving the trigger's decremented value in place
+   * (the 0/correct toggle, ETP-4654). A bulk UPDATE bypasses that snapshot and always writes the
+   * current line total; the managed asset is refreshed afterwards so its in-memory value stays
+   * consistent.
+   *
+   * @param asset
+   *          the asset whose {@code DepreciatedPlan} is recomputed and persisted
+   */
+  private void updateDepreciatedPlanFromLines(final Asset asset) {
+    final BigDecimal plannedAmount = getActiveAmortizationLinesTotal(asset);
+    //@formatter:off
+    final String hql = "update " + Asset.ENTITY_NAME
+        + " set depreciatedPlan = :plannedAmount where id = :assetId";
+    //@formatter:on
+    OBDal.getInstance()
+        .getSession()
+        .createQuery(hql)
+        .setParameter("plannedAmount", plannedAmount)
+        .setParameter(ASSET_ID, asset.getId())
+        .executeUpdate();
+    OBDal.getInstance().getSession().refresh(asset);
+  }
+
+  /**
+   * Get the total {@code amortizationAmount} across the asset's active amortization lines. Cancelled
+   * lines are inactive ({@code isActive = 'N'}) and are therefore excluded; the remaining active
+   * lines are exactly the Processed + Pending plan lines that make up the depreciated plan.
+   *
+   * @param asset
+   *          the asset whose amortization lines are summed
+   * @return the total amortization amount of the active lines, {@link BigDecimal#ZERO} if none
+   */
+  private BigDecimal getActiveAmortizationLinesTotal(final Asset asset) {
+    // OBCriteria filters on active = 'Y' by default, so cancelled (inactive) lines are excluded and
+    // the remaining active lines are exactly the Processed + Pending plan lines. Organization
+    // readability is disabled to match the rest of this process: the asset's lines may live in
+    // organizations outside the current context, and leaving them out would produce a partial sum.
+    final OBCriteria<AmortizationLine> obc = OBDal.getInstance()
+        .createCriteria(AmortizationLine.class)
+        .add(Restrictions.eq(AmortizationLine.PROPERTY_ASSET, asset));
+    obc.setProjection(Projections.sum(AmortizationLine.PROPERTY_AMORTIZATIONAMOUNT));
+    obc.setFilterOnReadableOrganization(false);
+    final BigDecimal total = (BigDecimal) obc.uniqueResult();
+    return total == null ? BigDecimal.ZERO : total;
   }
 
   /**
@@ -598,7 +663,7 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
     final OBQuery<AmortizationLine> obq = OBDal.getInstance()
         .createQuery(AmortizationLine.class, hql)
         .setFilterOnReadableOrganization(false)
-        .setNamedParameter("assetId", asset.getId());
+        .setNamedParameter(ASSET_ID, asset.getId());
     obq.setNamedParameter("endDate", endDate);
     if (startDate != null) {
       obq.setNamedParameter("startDate", startDate);
@@ -752,7 +817,7 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
     final Long maxSeqNoAsset = OBDal.getInstance()
         .getSession()
         .createQuery(hql, Long.class)
-        .setParameter("assetId", asset.getId())
+        .setParameter(ASSET_ID, asset.getId())
         .uniqueResult();
     if (maxSeqNoAsset != null) {
       return maxSeqNoAsset;
