@@ -40,6 +40,14 @@ package org.openbravo.erpCommon.utility; // NOSONAR - package name fixed by Eten
  *   <li><b>V1–V3</b> — shape of a {@code Computation_Mode='S'} column, all HARD under
  *       {@link #ETGO_STORED_COMPUTED_COL_DEF}: <b>V1</b> SQLLogic must be blank, <b>V2</b>
  *       Computation_Function must be set, <b>V3</b> Computation_Sequence_Number must be &gt; 0.</li>
+ *   <li><b>V18</b> — Refresh Mode of a {@code Computation_Mode='S'} column, HARD under
+ *       {@link #ETGO_STORED_COMPUTED_REFRESH_MODE} (see
+ *       {@link #checkRefreshMode(String, String)}): {@code Refresh_Mode} must be one of {@code S}
+ *       (Synchronous), {@code Q} (Queued) or {@code M} (Manual). Left null/blank,
+ *       {@code GenerateStoredComputedTriggers} silently skips the column (warn only) and it never
+ *       recomputes, so this rule rejects the misconfiguration at save time instead. Unlike V1–V3,
+ *       V18 is runtime-only: it is enforced by {@code ColumnStoredComputedHandler} and is
+ *       <b>not</b> part of the build-time {@code StoredComputedValidator} catalogue.</li>
  * </ul>
  *
  * <p>The class is intentionally kept free of any DB, Ant or DAL types (only {@code java.*}) so it is
@@ -58,6 +66,19 @@ public final class StoredComputedShapeValidator {
    * reused as a label by the build-time validator.
    */
   public static final String ETGO_STORED_COMPUTED_COL_DEF = "ETGO_StoredComputedColDef";
+
+  /**
+   * V18 refresh-mode rule message code — an {@code AD_MESSAGE} row rendered by the runtime DAL handler
+   * ({@code ColumnStoredComputedHandler}). Runtime-only: there is no build-time counterpart.
+   */
+  public static final String ETGO_STORED_COMPUTED_REFRESH_MODE = "ETGO_StoredComputedRefreshMode";
+
+  /** {@code AD_Column.Refresh_Mode} value: Synchronous. */
+  private static final String REFRESH_SYNCHRONOUS = "S";
+  /** {@code AD_Column.Refresh_Mode} value: Queued. */
+  private static final String REFRESH_QUEUED = "Q";
+  /** {@code AD_Column.Refresh_Mode} value: Manual. */
+  private static final String REFRESH_MANUAL = "M";
 
   /**
    * Shape rule V1–V3, shared verbatim between the runtime DAL guard {@code ColumnStoredComputedHandler}
@@ -90,6 +111,40 @@ public final class StoredComputedShapeValidator {
       return ETGO_STORED_COMPUTED_COL_DEF;
     }
     return null;
+  }
+
+  /**
+   * V18 refresh-mode rule, runtime-only: enforced solely by the DAL guard
+   * {@code ColumnStoredComputedHandler}, deliberately kept out of the build-time
+   * {@code StoredComputedValidator} catalogue. Pure: only String arguments, no DB, no DAL types.
+   *
+   * <p>When {@code computationMode = 'S'} the column is recomputed by a database function that some
+   * drain (synchronous, queued, or manually triggered) must invoke, so {@code refreshMode} MUST be one
+   * of {@code S} (Synchronous), {@code Q} (Queued) or {@code M} (Manual) — null/blank/anything else is
+   * a violation. Left unset, {@code GenerateStoredComputedTriggers} silently skips the column (warn
+   * only) and it never recomputes; this rule rejects that misconfiguration at save time. Columns that
+   * are not stored computed are always valid here.</p>
+   *
+   * @param computationMode
+   *          {@code AD_Column.Computation_Mode}
+   * @param refreshMode
+   *          {@code AD_Column.Refresh_Mode}
+   * @return {@link #ETGO_STORED_COMPUTED_REFRESH_MODE} when the column is stored computed and
+   *         {@code refreshMode} is not one of {@code S}/{@code Q}/{@code M}, otherwise {@code null}
+   */
+  public static String checkRefreshMode(String computationMode, String refreshMode) {
+    if (!STORED_COMPUTED.equals(computationMode)) {
+      return null;
+    }
+    if (!isValidRefreshMode(refreshMode)) {
+      return ETGO_STORED_COMPUTED_REFRESH_MODE;
+    }
+    return null;
+  }
+
+  private static boolean isValidRefreshMode(String refreshMode) {
+    return REFRESH_SYNCHRONOUS.equals(refreshMode) || REFRESH_QUEUED.equals(refreshMode)
+        || REFRESH_MANUAL.equals(refreshMode);
   }
 
   private static boolean isNotBlank(String s) {
