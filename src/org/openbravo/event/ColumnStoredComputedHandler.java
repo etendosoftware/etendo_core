@@ -38,13 +38,17 @@ import org.openbravo.model.ad.datamodel.Column;
  * {@code Computation_Function}, never from an inline SQL default;</li>
  * <li>{@code Computation_Function} MUST be set — it is the function the recompute engine invokes;</li>
  * <li>{@code Computation_Sequence_Number} MUST be set (greater than zero) — it orders the recompute
- * of dependent stored columns.</li>
+ * of dependent stored columns;</li>
+ * <li>{@code Refresh_Mode} MUST be set to one of Synchronous, Queued or Manual (V18) — left unset, the
+ * recompute engine silently skips the column and it never recomputes. Unlike the first three, V18 is
+ * enforced <b>only</b> here — it is deliberately not part of the build-time
+ * {@code StoredComputedValidator} catalogue.</li>
  * </ul>
  *
- * <p>Any save that sets {@code Computation_Mode = 'S'} without satisfying all three is rejected with
- * the {@code ETGO_StoredComputedColDef} message. The UI also guides these fields via DisplayLogic,
- * but this observer guarantees the invariant for every save through the DAL (modern UI, web
- * services, imports).</p>
+ * <p>Any save that sets {@code Computation_Mode = 'S'} without satisfying all four is rejected with the
+ * {@code ETGO_StoredComputedColDef} (V1–V3) or {@code ETGO_StoredComputedRefreshMode} (V18) message. The
+ * UI also guides these fields via DisplayLogic, but this observer guarantees the invariant for every
+ * save through the DAL (modern UI, web services, imports).</p>
  */
 public class ColumnStoredComputedHandler extends EntityPersistenceEventObserver {
   private static final Entity[] ENTITIES = {
@@ -76,13 +80,17 @@ public class ColumnStoredComputedHandler extends EntityPersistenceEventObserver 
    * @param column
    *          the {@link Column} being persisted
    * @throws OBException
-   *           if the column is stored computed but has SQL logic set, or is missing its computation
-   *           function or computation sequence number
+   *           if the column is stored computed but has SQL logic set, is missing its computation
+   *           function or computation sequence number (V1–V3), or has no valid refresh mode (V18)
    */
   private void validateStoredComputedDefinition(Column column) {
     String code = StoredComputedShapeValidator.checkShape(column.getComputationMode(),
         column.getSqllogic(), column.getComputationFunction(),
         column.getComputationSequenceNumber());
+    if (code == null) {
+      code = StoredComputedShapeValidator.checkRefreshMode(column.getComputationMode(),
+          column.getRefreshMode());
+    }
     if (code != null) {
       throw new OBException(OBMessageUtils.messageBD(code));
     }
