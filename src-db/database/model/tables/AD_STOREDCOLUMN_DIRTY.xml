@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+  <database name="TABLE AD_STOREDCOLUMN_DIRTY">
+    <table name="AD_STOREDCOLUMN_DIRTY" primaryKey="AD_STOREDCOLUMN_DIRTY_KEY">
+      <column name="AD_STOREDCOLUMN_DIRTY_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_COLUMN_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TARGET_RECORD_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRANSACTION_ID" primaryKey="false" required="false" type="DECIMAL" size="19,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="REFRESH_MODE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COMPUTATION_SEQUENCE_NUMBER" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="RETRY_COUNT" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ERROR_MSG" primaryKey="false" required="false" type="VARCHAR" size="4000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="IS_IGNORED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="AD_STOREDCOLDIRTY_AD_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_COLUMN" name="AD_STOREDCOLDIRTY_AD_COLUMN">
+        <reference local="AD_COLUMN_ID" foreign="AD_COLUMN_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="AD_STOREDCOLDIRTY_AD_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <index name="AD_STOREDCOLDIRTY_QUEUE" unique="false">
+        <index-column name="CREATED"/>
+        <whereClause><![CDATA[REFRESH_MODE='Q']]></whereClause>
+      </index>
+      <index name="AD_STOREDCOLDIRTY_SENTINEL" unique="true">
+        <index-column name="AD_COLUMN_ID"/>
+        <index-column name="AD_CLIENT_ID"/>
+        <index-column name="TRANSACTION_ID"/>
+        <whereClause><![CDATA[TARGET_RECORD_ID IS NULL]]></whereClause>
+      </index>
+      <index name="AD_STOREDCOLDIRTY_SYNC" unique="false">
+        <index-column name="TRANSACTION_ID"/>
+        <index-column name="COMPUTATION_SEQUENCE_NUMBER"/>
+        <whereClause><![CDATA[REFRESH_MODE='S']]></whereClause>
+      </index>
+      <unique name="AD_STOREDCOLDIRTY_DEDUP">
+        <unique-column name="AD_COLUMN_ID"/>
+        <unique-column name="TARGET_RECORD_ID"/>
+        <unique-column name="TRANSACTION_ID"/>
+      </unique>
+      <check name="AD_STOREDCOLDIRTY_IGNORED_CHK"><![CDATA[IS_IGNORED IN ('Y', 'N')]]></check>
+      <check name="AD_STOREDCOLDIRTY_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="AD_STOREDCOLDIRTY_REFMODE_CHK"><![CDATA[REFRESH_MODE IN ('S', 'Q', 'M')]]></check>
+    </table>
+  </database>
