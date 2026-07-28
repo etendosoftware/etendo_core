@@ -1945,6 +1945,31 @@ function getObjParent(obj) {
 }
 
 /**
+* Re-parents <option> elements that ended up nested inside a wrapper element (e.g. a
+* SUBREPORT placeholder <div>) instead of being direct children of the <select>. Some
+* browsers only recognize options as selectable when they are direct children of the
+* select, silently ignoring options left nested inside an intermediate container.
+* @param {Object} combo A reference to the combo (select) object.
+*/
+function reparentComboOptions(combo) {
+  if (!combo) return;
+  var options = Array.prototype.slice.call(combo.getElementsByTagName("option"));
+  for (var i = 0; i < options.length; i++) {
+    if (options[i].parentNode !== combo) {
+      combo.appendChild(options[i]);
+    }
+  }
+  var child = combo.firstChild;
+  while (child) {
+    var next = child.nextSibling;
+    if (child.nodeType === 1 && child.tagName !== "OPTION" && child.tagName !== "OPTGROUP") {
+      combo.removeChild(child);
+    }
+    child = next;
+  }
+}
+
+/**
 * Fills a combo with a data from an Array. Allows to set a default selected item, defined as boolean field in the Array.
 * @param {Object} combo A reference to the combo object.
 * @param {Array} dataArray Array containing the data for the combo. The structure of the array must be value, text, selected. Value is value of the item, text the string that will show the combo, an selected a boolean value to set if the item should appear selected.
