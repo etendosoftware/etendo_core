@@ -396,6 +396,12 @@ public class FIN_AddPayment {
         // update Amounts as they have changed
         assignedAmount = assignedAmount
             .subtract(paymentScheduleDetail.getPaymentDetails().getAmount());
+        // Flush pending changes before the criteria query below. A previous iteration may have
+        // removed an outstanding PSD (OBDal.remove); without flushing, getOutstandingPSDs re-reads
+        // stale DB state and re-materializes that row, so the later OBDal.save fails with
+        // "could not re-associate uninitialized transient collection" when a payment groups two
+        // PSDs (invoice + order schedule, e.g. invoice price differs from the order price).
+        OBDal.getInstance().flush();
         // update detail with the new value
         List<FIN_PaymentScheduleDetail> outStandingPSDs = getOutstandingPSDs(paymentScheduleDetail);
         BigDecimal difference = paymentScheduleDetail.getAmount()

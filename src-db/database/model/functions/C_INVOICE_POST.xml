@@ -320,14 +320,26 @@ BEGIN --BODY
       RAISE_APPLICATION_ERROR(-20000, '@CannotUseGenericProduct@ ' || v_productName);
     END IF;
 
-    -- Check the cash vat flag for all the taxes matches the invoice one
+    -- Check the cash vat flag for all the taxes matches the invoice one.
+    -- Exclude residual zero-amount tax rows left over after a line's tax was changed
+    -- (e.g. Cash VAT <-> regular tax): C_INVOICELINETAX_TRG zeroes the old C_INVOICETAX
+    -- row but never deletes it; it is removed afterwards by C_INVOICE_UPDATE_TAXES at the
+    -- extension point. This filter matches that cleanup's exact predicate (zero amounts and
+    -- no live C_INVOICELINETAX), so only rows that will actually be deleted are ignored,
+    -- while a genuine mix of Cash VAT and regular taxes is still rejected.
     select count(1)
     into v_count
     from c_invoicetax it inner join c_tax t on (it.c_tax_id = t.c_tax_id)
     where it.c_invoice_id = v_Record_ID
     and t.iswithholdingtax = 'N'
     and t.rate <> 0
-    and t.IsCashVat <> v_iscashvat;
+    and t.IsCashVat <> v_iscashvat
+    and not (it.taxamt = 0 and it.taxbaseamt = 0
+             and not exists (select 1
+                               from c_invoicelinetax b
+                               join c_invoiceline c on c.c_invoiceline_id = b.c_invoiceline_id
+                              where c.c_invoice_id = it.c_invoice_id
+                                and b.c_tax_id = it.c_tax_id));
 
     IF (v_count > 0) THEN
       RAISE_APPLICATION_ERROR(-20000, '@CashVATNotMatch@');

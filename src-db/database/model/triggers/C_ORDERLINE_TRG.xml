@@ -34,7 +34,10 @@
   v_istaxincluded CHAR(1);
   v_isReturn CHAR(1);
   v_PriceActual NUMBER;
-  
+  v_PriceList NUMBER;
+  v_NetList NUMBER;
+  v_GrossList NUMBER;
+
   v_Warehouse_ID VARCHAR2(32);
   v_BPartner_Location_ID VARCHAR2(32);
   v_Project_ID VARCHAR2(32);  
@@ -238,10 +241,22 @@ IF (UPDATING) THEN
       ELSE
         v_PriceActual := 0;
       END IF;
-    END IF;      
-    
+    END IF;
+
+    -- Derive pricelist from the gross catalog price (grosspricelist), not the discounted
+    -- gross_unit_price, so a manual discount no longer overwrites the net list price.
+    -- Fall back to the previous value when grosspricelist is unset or for BOM taxes.
+    IF (:new.grosspricelist IS NOT NULL AND :new.grosspricelist <> 0
+        AND :new.qtyordered <> 0 AND COALESCE(v_AsBOM, 'N') <> 'Y') THEN
+      v_GrossList := ROUND(:new.grosspricelist * :new.qtyordered, v_prec);
+      v_NetList := C_GET_NET_AMOUNT_FROM_GROSS(:new.c_tax_id, v_GrossList, v_GrossList, v_prec);
+      v_PriceList := ROUND(v_NetList / :new.qtyordered, v_price_prec);
+    ELSE
+      v_PriceList := v_priceactual;
+    END IF;
+
     :NEW.pricestd := v_priceactual;
-    :NEW.pricelist := v_priceactual;
+    :NEW.pricelist := v_PriceList;
     :NEW.pricelimit := v_priceactual;
     :NEW.priceactual := v_priceactual;
     :new.taxbaseamt := v_NetActual;

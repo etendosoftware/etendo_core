@@ -44,11 +44,20 @@ spec:
           exec:
             command:
               - bash
+<<<<<<< HEAD
               - '-c'
               - >-
                 chmod a+x /var/run/docker.sock 2>/dev/null || true && rm
                 /etc/apt/sources.list.d/pgdg.list 2>/dev/null || true && apt update && apt
                 install -y curl
+=======
+              - '-lc'
+              - |
+                chmod a+x /var/run/docker.sock || true
+                rm /etc/apt/sources.list.d/pgdg.list || true
+                apt-get update -y || true
+                apt-get install -y curl || echo "Could not install curl"
+>>>>>>> develop
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent

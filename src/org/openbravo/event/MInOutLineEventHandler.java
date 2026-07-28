@@ -18,6 +18,8 @@
  */
 package org.openbravo.event;
 
+import java.math.BigDecimal;
+
 import javax.enterprise.event.Observes;
 
 import org.hibernate.criterion.Restrictions;
@@ -49,10 +51,7 @@ class MInOutLineEventHandler extends EntityPersistenceEventObserver {
     }
     ShipmentInOutLine shipmentInOutLine = (ShipmentInOutLine) event.getTargetInstance();
 
-    if (shipmentInOutLine.getProduct() == null
-        && (shipmentInOutLine.getMovementQuantity().doubleValue() != 0)) {
-      throw new OBException(OBMessageUtils.messageBD("ProductNullAndMovementQtyGreaterZero"));
-    }
+    validateProductAndMovementQuantity(shipmentInOutLine);
   }
 
   public void onUpdate(@Observes EntityUpdateEvent event) {
@@ -61,9 +60,22 @@ class MInOutLineEventHandler extends EntityPersistenceEventObserver {
     }
     ShipmentInOutLine shipmentInOutLine = (ShipmentInOutLine) event.getTargetInstance();
 
-    if (shipmentInOutLine.getProduct() == null
-        && (shipmentInOutLine.getMovementQuantity().doubleValue() != 0)) {
+    validateProductAndMovementQuantity(shipmentInOutLine);
+  }
+
+  private void validateProductAndMovementQuantity(ShipmentInOutLine shipmentInOutLine) {
+    BigDecimal movementQuantity = shipmentInOutLine.getMovementQuantity();
+
+    if (movementQuantity == null || shipmentInOutLine.getProduct() != null) {
+      return;
+    }
+
+    if (movementQuantity.compareTo(BigDecimal.ZERO) != 0) {
       throw new OBException(OBMessageUtils.messageBD("ProductNullAndMovementQtyGreaterZero"));
+    }
+
+    if (!Boolean.TRUE.equals(shipmentInOutLine.isDescriptionOnly())) {
+      throw new OBException(OBMessageUtils.messageBD("ProductNullAndMovementQtyZero"));
     }
   }
 
