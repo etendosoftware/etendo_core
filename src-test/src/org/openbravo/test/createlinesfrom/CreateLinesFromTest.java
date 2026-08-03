@@ -83,6 +83,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
   private static final String INVOICE_COMPLETE_PROCEDURE_NAME = "c_invoice_post";
   // Shipment Complete Procedure
   private static final String SHIPMENT_INOUT_COMPLETE_PROCEDURE_NAME = "m_inout_post";
+  private static final String OPERATIVE_QUANTITY = "operativeQuantity";
 
   // Test information
   private String testNumber;
@@ -232,7 +233,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
     JSONArray remainingOrderQuantity = createSelectedLinesFromOrder(order);
     JSONObject selectedOrderLine = remainingOrderQuantity.getJSONObject(0);
     selectedOrderLine.put("orderedQuantity", BigDecimal.ONE.toString());
-    selectedOrderLine.put("operativeQuantity", BigDecimal.ONE.toString());
+    selectedOrderLine.put(OPERATIVE_QUANTITY, BigDecimal.ONE.toString());
     createLinesFromProcess.createInvoiceLinesFromDocumentLines(remainingOrderQuantity, invoice,
         OrderLine.class);
 
@@ -247,7 +248,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
     assertNull("The unreceived unit must not be linked to a goods receipt line",
         unreceivedInvoiceLine.getGoodsShipmentLine());
 
-    invoice = processInvoice(invoice);
+    processInvoice(invoice);
     OBDal.getInstance().refresh(receiptLine);
     BigDecimal matchedQuantity = receiptLine.getProcurementReceiptInvoiceMatchList()
         .stream()
@@ -295,7 +296,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
         line.put("product$_identifier", orderLine.getProduct().getIdentifier());
         line.put("lineNo", orderLine.getLineNo());
         line.put("orderedQuantity", orderLine.getOrderedQuantity().toString());
-        line.put("operativeQuantity",
+        line.put(OPERATIVE_QUANTITY,
             orderLine.getOperativeQuantity() == null ? orderLine.getOrderedQuantity().toString()
                 : orderLine.getOperativeQuantity().toString());
         line.put("id", orderLine.getId());
@@ -339,7 +340,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
         line.put("product$_identifier", shipmentInOutLine.getProduct().getIdentifier());
         line.put("lineNo", shipmentInOutLine.getLineNo());
         line.put("movementQuantity", shipmentInOutLine.getMovementQuantity().toString());
-        line.put("operativeQuantity",
+        line.put(OPERATIVE_QUANTITY,
             shipmentInOutLine.getOperativeQuantity() == null
                 ? shipmentInOutLine.getMovementQuantity().toString()
                 : shipmentInOutLine.getOperativeQuantity().toString());
