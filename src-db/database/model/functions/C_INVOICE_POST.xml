@@ -1430,6 +1430,7 @@ IF (NOT FINISH_PROCESS) THEN
         -- Invoice-PO Match
         Cur_ILines_PO RECORD;
         v_Qty NUMBER;
+        v_QtyAlreadyMatched NUMBER;
         v_MatchInv_ID VARCHAR2(32) ;
         v_MatchPO_ID VARCHAR2(32) ;
       BEGIN
@@ -1452,6 +1453,16 @@ IF (NOT FINISH_PROCESS) THEN
             WHERE C_INVOICELINE_ID=Cur_ILines_Receipt.C_InvoiceLine_ID
               AND M_INOUTLINE_ID=Cur_ILines_Receipt.M_INOUTLINE_ID;
             IF (v_Count=0) THEN
+              SELECT COALESCE(SUM(QTY), 0) INTO v_QtyAlreadyMatched
+              FROM M_MATCHINV
+              WHERE M_INOUTLINE_ID=Cur_ILines_Receipt.M_INOUTLINE_ID;
+
+              IF (ABS(v_QtyAlreadyMatched + Cur_ILines_Receipt.QtyInvoiced) > ABS(Cur_ILines_Receipt.MovementQty)) THEN
+                v_Message := '@NotPossibleCompleteInvoice@' || ' ' || v_DocumentNo;
+                v_Message := v_Message || ': ' || '@QtyInvoicedHigherReceived@' || '.';
+                RAISE_APPLICATION_ERROR(-20000, v_Message);
+              END IF;
+
               v_Qty:=Cur_ILines_Receipt.QtyInvoiced;
               v_MatchInv_ID := get_uuid();
               v_ResultStr:='InsertMatchInv ' || v_MatchInv_ID;

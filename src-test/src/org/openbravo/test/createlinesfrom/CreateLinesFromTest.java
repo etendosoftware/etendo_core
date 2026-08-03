@@ -19,8 +19,12 @@
 
 package org.openbravo.test.createlinesfrom;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +36,7 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +45,7 @@ import org.openbravo.base.weld.test.ParameterCdiTest;
 import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromProcess;
+import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.invoice.Invoice;
@@ -47,6 +53,7 @@ import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
+import org.openbravo.model.procurement.ReceiptInvoiceMatch;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.test.createlinesfrom.data.CLFTestDataPO_02;
 import org.openbravo.test.createlinesfrom.data.CLFTestDataSO_01;
@@ -187,6 +194,67 @@ public class CreateLinesFromTest extends WeldBaseTest {
     data.assertDraftInvoice(invoice);
     invoice = processInvoice(invoice);
     data.assertCompletedInvoice(invoice);
+  }
+
+  /**
+   * Verifies that an order quantity not physically received is not linked to a receipt line already
+   * used by another line in the same draft invoice.
+   */
+  @Test
+  public void testUnreceivedOrderQuantityIsNotLinkedToReceipt() throws JSONException {
+    Assume.assumeFalse(data.isSales());
+
+    Order order = data.createOrder();
+    order.setDocumentAction("CO");
+    order = processOrder(order);
+    OrderLine orderLine = order.getOrderLineList().get(0);
+
+    ShipmentInOut receipt = data.createShipmentInOut();
+    receipt.setSalesOrder(order);
+    ShipmentInOutLine receiptLine = receipt.getMaterialMgmtShipmentInOutLineList().get(0);
+    receiptLine.setSalesOrderLine(orderLine);
+    receiptLine.setMovementQuantity(new BigDecimal("9"));
+    OBDal.getInstance().save(receiptLine);
+    OBDal.getInstance().save(receipt);
+    OBDal.getInstance().flush();
+    receipt.setDocumentAction("CO");
+    receipt = processShipmentInOut(receipt);
+    receiptLine = receipt.getMaterialMgmtShipmentInOutLineList().get(0);
+    OBDal.getInstance().refresh(orderLine);
+
+    Invoice invoice = data.createInvoiceHeader();
+    CreateInvoiceLinesFromProcess createLinesFromProcess = WeldUtils
+        .getInstanceFromStaticBeanManager(CreateInvoiceLinesFromProcess.class);
+
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(
+        createSelectedLinesFromShipmentInOut(receipt), invoice, ShipmentInOutLine.class);
+
+    JSONArray remainingOrderQuantity = createSelectedLinesFromOrder(order);
+    JSONObject selectedOrderLine = remainingOrderQuantity.getJSONObject(0);
+    selectedOrderLine.put("orderedQuantity", BigDecimal.ONE.toString());
+    selectedOrderLine.put("operativeQuantity", BigDecimal.ONE.toString());
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(remainingOrderQuantity, invoice,
+        OrderLine.class);
+
+    OBDal.getInstance().refresh(invoice);
+    InvoiceLine unreceivedInvoiceLine = invoice.getInvoiceLineList()
+        .stream()
+        .filter(line -> BigDecimal.ONE.compareTo(line.getInvoicedQuantity()) == 0)
+        .findFirst()
+        .orElse(null);
+    assertNotNull("The invoice line for the unreceived unit was not created",
+        unreceivedInvoiceLine);
+    assertNull("The unreceived unit must not be linked to a goods receipt line",
+        unreceivedInvoiceLine.getGoodsShipmentLine());
+
+    invoice = processInvoice(invoice);
+    OBDal.getInstance().refresh(receiptLine);
+    BigDecimal matchedQuantity = receiptLine.getProcurementReceiptInvoiceMatchList()
+        .stream()
+        .map(ReceiptInvoiceMatch::getQuantity)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    assertEquals("Matched quantity must equal the quantity physically received", 0,
+        new BigDecimal("9").compareTo(matchedQuantity));
   }
 
   private Order processOrder(Order testOrder) {
