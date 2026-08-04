@@ -83,6 +83,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
   // Shipment Complete Procedure
   private static final String SHIPMENT_INOUT_COMPLETE_PROCEDURE_NAME = "m_inout_post";
   private static final String OPERATIVE_QUANTITY = "operativeQuantity";
+  private static final String ORDERED_QUANTITY = "orderedQuantity";
 
   // Test information
   private String testNumber;
@@ -243,14 +244,14 @@ public class CreateLinesFromTest extends WeldBaseTest {
 
     JSONArray receivedOrderQuantity = createSelectedLinesFromOrder(order);
     JSONObject selectedReceivedOrderLine = receivedOrderQuantity.getJSONObject(0);
-    selectedReceivedOrderLine.put("orderedQuantity", new BigDecimal("6").toString());
+    selectedReceivedOrderLine.put(ORDERED_QUANTITY, new BigDecimal("6").toString());
     selectedReceivedOrderLine.put(OPERATIVE_QUANTITY, new BigDecimal("6").toString());
     createLinesFromProcess.createInvoiceLinesFromDocumentLines(receivedOrderQuantity, invoice,
         OrderLine.class);
 
     JSONArray remainingOrderQuantity = createSelectedLinesFromOrder(order);
     JSONObject selectedOrderLine = remainingOrderQuantity.getJSONObject(0);
-    selectedOrderLine.put("orderedQuantity", BigDecimal.ONE.toString());
+    selectedOrderLine.put(ORDERED_QUANTITY, BigDecimal.ONE.toString());
     selectedOrderLine.put(OPERATIVE_QUANTITY, BigDecimal.ONE.toString());
     createLinesFromProcess.createInvoiceLinesFromDocumentLines(remainingOrderQuantity, invoice,
         OrderLine.class);
@@ -314,7 +315,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
         line.put("product", orderLine.getProduct().getId());
         line.put("product$_identifier", orderLine.getProduct().getIdentifier());
         line.put("lineNo", orderLine.getLineNo());
-        line.put("orderedQuantity", orderLine.getOrderedQuantity().toString());
+        line.put(ORDERED_QUANTITY, orderLine.getOrderedQuantity().toString());
         line.put(OPERATIVE_QUANTITY,
             orderLine.getOperativeQuantity() == null ? orderLine.getOrderedQuantity().toString()
                 : orderLine.getOperativeQuantity().toString());
