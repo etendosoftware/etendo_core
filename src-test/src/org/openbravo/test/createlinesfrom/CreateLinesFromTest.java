@@ -36,7 +36,6 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -203,7 +202,9 @@ public class CreateLinesFromTest extends WeldBaseTest {
    */
   @Test
   public void testUnreceivedOrderQuantityIsNotLinkedToReceipt() throws JSONException {
-    Assume.assumeFalse(data.isSales());
+    if (data.isSales()) {
+      return;
+    }
 
     Order order = data.createOrder();
     order.setDocumentAction("CO");
@@ -227,8 +228,25 @@ public class CreateLinesFromTest extends WeldBaseTest {
     CreateInvoiceLinesFromProcess createLinesFromProcess = WeldUtils
         .getInstanceFromStaticBeanManager(CreateInvoiceLinesFromProcess.class);
 
-    createLinesFromProcess.createInvoiceLinesFromDocumentLines(
-        createSelectedLinesFromShipmentInOut(receipt), invoice, ShipmentInOutLine.class);
+    JSONArray partiallyInvoicedReceipt = createSelectedLinesFromShipmentInOut(receipt);
+    JSONObject selectedReceiptLine = partiallyInvoicedReceipt.getJSONObject(0);
+    selectedReceiptLine.put("movementQuantity", new BigDecimal("4").toString());
+    selectedReceiptLine.put(OPERATIVE_QUANTITY, new BigDecimal("4").toString());
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(partiallyInvoicedReceipt, invoice,
+        ShipmentInOutLine.class);
+
+    OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
+    invoice = OBDal.getInstance().get(Invoice.class, invoice.getId());
+    order = OBDal.getInstance().get(Order.class, order.getId());
+    receiptLine = OBDal.getInstance().get(ShipmentInOutLine.class, receiptLine.getId());
+
+    JSONArray receivedOrderQuantity = createSelectedLinesFromOrder(order);
+    JSONObject selectedReceivedOrderLine = receivedOrderQuantity.getJSONObject(0);
+    selectedReceivedOrderLine.put("orderedQuantity", new BigDecimal("6").toString());
+    selectedReceivedOrderLine.put(OPERATIVE_QUANTITY, new BigDecimal("6").toString());
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(receivedOrderQuantity, invoice,
+        OrderLine.class);
 
     JSONArray remainingOrderQuantity = createSelectedLinesFromOrder(order);
     JSONObject selectedOrderLine = remainingOrderQuantity.getJSONObject(0);
@@ -249,7 +267,8 @@ public class CreateLinesFromTest extends WeldBaseTest {
         unreceivedInvoiceLine.getGoodsShipmentLine());
 
     processInvoice(invoice);
-    OBDal.getInstance().refresh(receiptLine);
+    receiptLine = OBDal.getInstance()
+        .get(ShipmentInOutLine.class, receiptLine.getId());
     BigDecimal matchedQuantity = receiptLine.getProcurementReceiptInvoiceMatchList()
         .stream()
         .map(ReceiptInvoiceMatch::getQuantity)
