@@ -18,8 +18,8 @@ package org.openbravo.erpCommon.utility; // NOSONAR - package name fixed by Eten
 
 /**
  * Dependency-free shape predicate for stored computed column definitions (EPL-1807). This is the
- * single source of truth for the shape rule V1–V3, living in core {@code src/} so it can be shared by
- * both trees that need it without creating an illegal dependency edge:
+ * single source of truth for the shape rule V1–V3, shared by both trees that need it without creating
+ * an illegal dependency edge:
  *
  * <ul>
  * <li>the runtime DAL guard {@code org.openbravo.event.ColumnStoredComputedHandler} (compiled into the
@@ -28,9 +28,23 @@ package org.openbravo.erpCommon.utility; // NOSONAR - package name fixed by Eten
  *     separately under {@code src-util/modulescript/}), whose own {@code checkShape} delegates here.</li>
  * </ul>
  *
- * <p>This class is the core-{@code src/} (webapp / DAL classpath) home of the shape checks, extracted
- * here so the DAL observer can reach them without an illegal core&nbsp;&rarr;&nbsp;modulescript
- * dependency. It enforces only the <b>shape</b> subset of the catalogue; the full V-catalogue
+ * <p><b>Why this class lives in {@code src-core/} and MUST NOT be moved back to {@code src/}.</b> The
+ * build-time consumer runs inside {@code GenerateStoredComputedTriggers} during
+ * {@code update.database}, whose Ant {@code runtime-classpath}
+ * ({@code src-db/database/build.xml}) carries {@code build/classes} but does <b>not</b> depend on any
+ * target that populates it: {@code src/} is compiled by {@code compile.complete}, which runs
+ * <i>after</i> {@code update.database} in the standard flow (pull &rarr; update.database &rarr;
+ * smartbuild). A copy of this class under {@code src/} therefore resolves only on machines that happen
+ * to hold a stale {@code build/classes} from an earlier compile, and throws
+ * {@code NoClassDefFoundError} on every clean checkout. {@code src-core/} has no such hole: it is
+ * packaged into {@code openbravo-core.jar} by the {@code core.lib} target, which
+ * {@code compile.modulescript} declares as a dependency ({@code build.xml}, {@code depends="init,
+ * core.lib"}), so it is guaranteed present before any modulescript exists. This is the same placement
+ * that lets {@code org.openbravo.utils.FormatUtilities} and {@code org.openbravo.data.UtilSql} be used
+ * from modulescripts today. The resulting split of package {@code org.openbravo.erpCommon.utility}
+ * across two source trees is deliberate and mirrors the existing split of {@code org.openbravo.base}.</p>
+ *
+ * <p>It enforces only the <b>shape</b> subset of the catalogue; the full V-catalogue
  * (V4–V11, V14–V16 and the composite-PK target rule) lives in the modulescript
  * {@code StoredComputedValidator}, whose class javadoc holds the canonical Rule index.</p>
  *
