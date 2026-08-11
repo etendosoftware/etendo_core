@@ -29,8 +29,8 @@ package org.openbravo.erpCommon.utility; // NOSONAR - package name fixed by Eten
  * </ul>
  *
  * <p><b>Why this class lives in {@code src-core/} and MUST NOT be moved back to {@code src/}.</b> The
- * build-time consumer runs inside {@code GenerateStoredComputedTriggers} during
- * {@code update.database}, whose Ant {@code runtime-classpath}
+ * build-time consumer runs inside {@code GenerateStoredComputedTriggers} as a post-update step of
+ * {@code update.database} (EPL-1810), whose Ant {@code runtime-classpath}
  * ({@code src-db/database/build.xml}) carries {@code build/classes} but does <b>not</b> depend on any
  * target that populates it: {@code src/} is compiled by {@code compile.complete}, which runs
  * <i>after</i> {@code update.database} in the standard flow (pull &rarr; update.database &rarr;
