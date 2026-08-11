@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.tools.ant.BuildException;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,15 +64,15 @@ public class PostUpdateModuleScriptHandlerTest {
   private PostUpdateModuleScriptHandler handler;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     handler = new PostUpdateModuleScriptHandler();
-    RecordingScript.executions = 0;
+    RecordingScript.EXECUTIONS.set(0);
   }
 
   @Test
-  public void runScriptExecutesAConcreteScript() {
+  void runScriptExecutesAConcreteScript() {
     handler.runScript(RecordingScript.class.getName(), EMPTY_VERSIONS);
-    assertEquals(1, RecordingScript.executions);
+    assertEquals(1, RecordingScript.EXECUTIONS.get());
   }
 
   /**
@@ -79,15 +80,15 @@ public class PostUpdateModuleScriptHandlerTest {
    * instantiating it would fail, so abstract classes must be filtered out.
    */
   @Test
-  public void runScriptSkipsAbstractClasses() {
+  void runScriptSkipsAbstractClasses() {
     assertDoesNotThrow(
         () -> handler.runScript(PostUpdateModuleScript.class.getName(), EMPTY_VERSIONS));
     assertDoesNotThrow(() -> handler.runScript(AbstractScript.class.getName(), EMPTY_VERSIONS));
-    assertEquals(0, RecordingScript.executions);
+    assertEquals(0, RecordingScript.EXECUTIONS.get());
   }
 
   @Test
-  public void runScriptSkipsClassesThatAreNotPostUpdateModuleScripts() {
+  void runScriptSkipsClassesThatAreNotPostUpdateModuleScripts() {
     assertDoesNotThrow(() -> handler.runScript("java.lang.String", EMPTY_VERSIONS));
     // A plain ModuleScript found in the same folders belongs to ModuleScriptHandler, not here
     assertDoesNotThrow(() -> handler.runScript(ModuleScript.class.getName(), EMPTY_VERSIONS));
@@ -99,27 +100,27 @@ public class PostUpdateModuleScriptHandlerTest {
    * with the generic failure message.
    */
   @Test
-  public void runScriptRethrowsBuildExceptionsUntouched() {
+  void runScriptRethrowsBuildExceptionsUntouched() {
     BuildException thrown = assertThrows(BuildException.class,
         () -> handler.runScript(ReportingFailingScript.class.getName(), EMPTY_VERSIONS));
     assertEquals("detailed validator report", thrown.getMessage());
   }
 
   @Test
-  public void runScriptWrapsAnyOtherFailureIntoABuildException() {
+  void runScriptWrapsAnyOtherFailureIntoABuildException() {
     BuildException thrown = assertThrows(BuildException.class,
         () -> handler.runScript(CrashingScript.class.getName(), EMPTY_VERSIONS));
     assertTrue(thrown.getMessage().contains("Execution of postUpdateModuleScript"));
   }
 
   @Test
-  public void runScriptWrapsUnresolvableClassNamesIntoABuildException() {
+  void runScriptWrapsUnresolvableClassNamesIntoABuildException() {
     assertThrows(BuildException.class,
         () -> handler.runScript("org.openbravo.modulescript.DoesNotExist", EMPTY_VERSIONS));
   }
 
   @Test
-  public void listModuleClassesDirsFindsSortedModuleClassesFolders(@TempDir Path projectRoot)
+  void listModuleClassesDirsFindsSortedModuleClassesFolders(@TempDir Path projectRoot)
       throws IOException {
     // Build, under every configured modules root, two modules with compiled classes (named so
     // that creation order differs from the expected sorted order), one module without them, and
@@ -145,13 +146,13 @@ public class PostUpdateModuleScriptHandlerTest {
   }
 
   @Test
-  public void listModuleClassesDirsToleratesMissingModuleRoots(@TempDir Path emptyRoot) {
+  void listModuleClassesDirsToleratesMissingModuleRoots(@TempDir Path emptyRoot) {
     List<File> dirs = handler.listModuleClassesDirs(emptyRoot.toFile());
     assertTrue(dirs.isEmpty());
   }
 
   @Test
-  public void listModuleClassesDirsIgnoresAFileWhereAModulesRootIsExpected(
+  void listModuleClassesDirsIgnoresAFileWhereAModulesRootIsExpected(
       @TempDir Path projectRoot) throws IOException {
     Files.createFile(projectRoot.resolve(ModulesUtil.moduleDirs[0]));
     assertDoesNotThrow(() -> {
@@ -161,14 +162,14 @@ public class PostUpdateModuleScriptHandlerTest {
     });
   }
 
-  /** Concrete script fixture; counts executions through a static field (the handler builds its
-   * own instance, so an instance field would be unreachable from the test). */
+  /** Concrete script fixture; counts executions through a static counter (the handler builds
+   * its own instance, so an instance field would be unreachable from the test). */
   public static class RecordingScript extends PostUpdateModuleScript {
-    static int executions = 0;
+    static final AtomicInteger EXECUTIONS = new AtomicInteger();
 
     @Override
     public void execute() {
-      executions++;
+      EXECUTIONS.incrementAndGet();
     }
   }
 

@@ -55,6 +55,10 @@ import org.junit.jupiter.api.Test;
 public class PostUpdateModuleScriptTest {
 
   private static final String MODULE_ID = "0";
+  /** The version the dependent module is at when {@code preExecute} runs. */
+  private static final String CURRENT_VERSION = "3.0.10000";
+  /** A version below {@link #CURRENT_VERSION}, used as a limit boundary. */
+  private static final String OLDER_VERSION = "3.0.9000";
 
   /** Non-empty module-versions map: core at a fixed, known version. */
   private static Map<String, OpenbravoVersion> versionMap(String coreVersion) {
@@ -64,7 +68,7 @@ public class PostUpdateModuleScriptTest {
   }
 
   @Test
-  public void isNotAModuleScriptSoItNeverRunsMidUpdate() {
+  void isNotAModuleScriptSoItNeverRunsMidUpdate() {
     assertFalse(ModuleScript.class.isAssignableFrom(PostUpdateModuleScript.class),
         "PostUpdateModuleScript must NOT extend ModuleScript: ModuleScriptHandler executes "
             + "anything assignable to ModuleScript, so extending it would also run these "
@@ -72,55 +76,55 @@ public class PostUpdateModuleScriptTest {
   }
 
   @Test
-  public void typeNameIdentifiesTheNewScriptType() {
+  void typeNameIdentifiesTheNewScriptType() {
     assertEquals("PostUpdateModuleScript", new FakeScript().typeName());
   }
 
   @Test
-  public void executionLimitsDefaultToNull() {
+  void executionLimitsDefaultToNull() {
     assertNull(new FakeScript().getPostUpdateModuleScriptExecutionLimits());
   }
 
   @Test
-  public void executesWhenNoLimitsAreDefined() {
+  void executesWhenNoLimitsAreDefined() {
     FakeScript script = new FakeScript();
-    script.preExecute(versionMap("3.0.10000"));
+    script.preExecute(versionMap(CURRENT_VERSION));
     assertTrue(script.wasExecuted);
   }
 
   @Test
-  public void executesWhenCurrentVersionIsInsideTheLimits() {
+  void executesWhenCurrentVersionIsInsideTheLimits() {
     FakeScript script = new FakeScript();
-    script.limits = new ModuleScriptExecutionLimits(MODULE_ID, new OpenbravoVersion("3.0.9000"),
+    script.limits = new ModuleScriptExecutionLimits(MODULE_ID, new OpenbravoVersion(OLDER_VERSION),
         new OpenbravoVersion("3.0.11000"));
-    script.preExecute(versionMap("3.0.10000"));
+    script.preExecute(versionMap(CURRENT_VERSION));
     assertTrue(script.wasExecuted);
   }
 
   @Test
-  public void skipsWhenCurrentVersionIsAboveTheLastLimit() {
+  void skipsWhenCurrentVersionIsAboveTheLastLimit() {
     FakeScript script = new FakeScript();
     script.limits = new ModuleScriptExecutionLimits(MODULE_ID, new OpenbravoVersion("3.0.8000"),
-        new OpenbravoVersion("3.0.9000"));
-    script.preExecute(versionMap("3.0.10000"));
+        new OpenbravoVersion(OLDER_VERSION));
+    script.preExecute(versionMap(CURRENT_VERSION));
     assertFalse(script.wasExecuted);
   }
 
   @Test
-  public void skipsWhenCurrentVersionIsBelowTheFirstLimit() {
+  void skipsWhenCurrentVersionIsBelowTheFirstLimit() {
     FakeScript script = new FakeScript();
     script.limits = new ModuleScriptExecutionLimits(MODULE_ID, new OpenbravoVersion("3.0.11000"),
         new OpenbravoVersion("3.0.12000"));
-    script.preExecute(versionMap("3.0.10000"));
+    script.preExecute(versionMap(CURRENT_VERSION));
     assertFalse(script.wasExecuted);
   }
 
   @Test
-  public void skipsWhenLimitsAreIncorrectlyDefined() {
+  void skipsWhenLimitsAreIncorrectlyDefined() {
     FakeScript script = new FakeScript();
     script.limits = new ModuleScriptExecutionLimits(MODULE_ID, new OpenbravoVersion("3.0.12000"),
-        new OpenbravoVersion("3.0.9000"));
-    script.preExecute(versionMap("3.0.10000"));
+        new OpenbravoVersion(OLDER_VERSION));
+    script.preExecute(versionMap(CURRENT_VERSION));
     assertFalse(script.wasExecuted);
   }
 
@@ -129,17 +133,17 @@ public class PostUpdateModuleScriptTest {
    * {@code executeOnInstall()} decides.
    */
   @Test
-  public void moduleNotInstalledYetHonorsExecuteOnInstall() {
+  void moduleNotInstalledYetHonorsExecuteOnInstall() {
     FakeScript executed = new FakeScript();
     executed.limits = new ModuleScriptExecutionLimits("NOT-IN-MAP", null, null);
     executed.onInstall = true;
-    executed.preExecute(versionMap("3.0.10000"));
+    executed.preExecute(versionMap(CURRENT_VERSION));
     assertTrue(executed.wasExecuted);
 
     FakeScript skipped = new FakeScript();
     skipped.limits = new ModuleScriptExecutionLimits("NOT-IN-MAP", null, null);
     skipped.onInstall = false;
-    skipped.preExecute(versionMap("3.0.10000"));
+    skipped.preExecute(versionMap(CURRENT_VERSION));
     assertFalse(skipped.wasExecuted);
   }
 
@@ -149,7 +153,7 @@ public class PostUpdateModuleScriptTest {
    * {@code executeOnInstall()} semantics.
    */
   @Test
-  public void emptyVersionMapFallsBackToExecuteOnInstall() {
+  void emptyVersionMapFallsBackToExecuteOnInstall() {
     FakeScript executed = new FakeScript();
     executed.onInstall = true;
     executed.preExecute(new HashMap<>());
@@ -162,7 +166,7 @@ public class PostUpdateModuleScriptTest {
   }
 
   @Test
-  public void handleErrorWrapsIntoIllegalStateExceptionPreservingTheCause() {
+  void handleErrorWrapsIntoIllegalStateExceptionPreservingTheCause() {
     FakeScript script = new FakeScript();
     RuntimeException cause = new RuntimeException("boom");
     IllegalStateException thrown = assertThrows(IllegalStateException.class,
