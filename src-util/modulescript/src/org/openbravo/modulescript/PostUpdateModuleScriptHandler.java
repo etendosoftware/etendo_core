@@ -94,9 +94,10 @@ public class PostUpdateModuleScriptHandler extends Task {
 
   /**
    * Lists, in deterministic (sorted) order, the {@code build/classes} folder of every module
-   * found under each of the {@link ModulesUtil#moduleDirs} roots.
+   * found under each of the {@link ModulesUtil#moduleDirs} roots. Package-private so the unit
+   * tests (same package) can exercise it directly.
    */
-  private List<File> listModuleClassesDirs(File projectRoot) {
+  List<File> listModuleClassesDirs(File projectRoot) {
     List<File> moduleFolders = new ArrayList<>();
     for (String moduleDirName : ModulesUtil.moduleDirs) {
       File moduleDir = new File(projectRoot, moduleDirName);
@@ -125,8 +126,9 @@ public class PostUpdateModuleScriptHandler extends Task {
    * {@link PostUpdateModuleScript}; anything else found in the scanned folders is skipped. A
    * {@link BuildException} thrown by the script itself (e.g. a validator carrying its own
    * detailed report) is rethrown untouched; any other failure is wrapped into a generic one.
+   * Package-private so the unit tests (same package) can exercise it directly.
    */
-  private void runScript(String className, Map<String, OpenbravoVersion> modulesVersionMap) {
+  void runScript(String className, Map<String, OpenbravoVersion> modulesVersionMap) {
     try {
       Class<?> clazz = Class.forName(className);
       if (!PostUpdateModuleScript.class.isAssignableFrom(clazz)
