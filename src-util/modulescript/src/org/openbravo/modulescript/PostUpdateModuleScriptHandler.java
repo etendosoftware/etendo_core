@@ -33,7 +33,6 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.openbravo.buildvalidation.BuildValidationHandler;
 import org.openbravo.database.CPStandAlone;
-import org.openbravo.database.ConnectionProvider;
 import org.openbravo.ddlutils.util.ModulesUtil;
 
 /**
@@ -58,172 +57,126 @@ import org.openbravo.ddlutils.util.ModulesUtil;
 public class PostUpdateModuleScriptHandler extends Task {
   private static final Logger log4j = LogManager.getLogger();
 
+  /** Relative path, inside core or inside a module, of the compiled-classes folder to scan. */
+  private static final String CLASSES_SUBDIR = "build/classes";
+
   private File basedir;
-  private String moduleJavaPackage;
   private String propertiesFile;
 
   @Override
   public void execute() {
-    List<String> classes = new ArrayList<String>();
-
-    // Update the modules dir to search
-    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
-
-    File auxBasedir = basedir;
-
-    // The core is in Jar
-    if (!ModulesUtil.coreInSources) {
-      auxBasedir = new File(ModulesUtil.getProjectRootDir());
-    }
-
-    if (moduleJavaPackage != null) {
-      // We will only be executing the PostUpdateModuleScripts of a specific module
-      for (String module : ModulesUtil.moduleDirs) {
-        File moduleDir = new File(auxBasedir,
-            module + File.separator + moduleJavaPackage + "/build/classes");
-        if (moduleDir.exists()) {
-          log4j.info("PostUpdate Module Script Handler - Reading class files from: "
-              + moduleDir.getAbsolutePath());
-          BuildValidationHandler.readClassFiles(classes, moduleDir);
-          break;
-        }
-      }
-
-    } else {
-
-      /**
-       * basedir should point to the base dir where the build.xml file is found.
-       */
-      File coreBuildFolder = new File(basedir, "src-util/modulescript/build/classes");
-      BuildValidationHandler.readClassFiles(classes, coreBuildFolder);
-
-      ArrayList<File> modFolders = new ArrayList<File>();
-
-      /**
-       * auxBaseDir is the root dir of the project
-       */
-      for (String module : ModulesUtil.moduleDirs) {
-        File auxModule = new File(auxBasedir, module);
-        if (auxModule.exists() && auxModule.isDirectory()) {
-          log4j.info("PostUpdate Module Script Handler - Adding modules directories from: "
-              + auxModule.getAbsolutePath());
-          modFolders.addAll(Arrays.asList(auxModule.listFiles()));
-        }
-      }
-
-      Collections.sort(modFolders);
-      for (File modFolder : modFolders) {
-        if (modFolder.isDirectory()) {
-          File classesFolder = new File(modFolder, "build/classes");
-          if (classesFolder.exists()) {
-            BuildValidationHandler.readClassFiles(classes, classesFolder);
-          }
-        }
-      }
-
-    }
-    Map<String, OpenbravoVersion> modulesVersionMap = getModulesVersionMap();
-    for (String s : classes) {
-      try {
-        Class<?> myClass = Class.forName(s);
-        if (PostUpdateModuleScript.class.isAssignableFrom(myClass)
-            && !Modifier.isAbstract(myClass.getModifiers())) {
-          PostUpdateModuleScript instance = (PostUpdateModuleScript) myClass
-              .getDeclaredConstructor()
-              .newInstance();
-          instance.setBaseDir(basedir);
-          instance.preExecute(modulesVersionMap);
-        }
-      } catch (Exception e) {
-        log4j.error("Error executing postUpdateModuleScript: " + s, e);
-        throw new BuildException("Execution of postUpdateModuleScript " + s + " failed.");
-      }
+    Map<String, OpenbravoVersion> modulesVersionMap = readModulesVersionMap();
+    for (String className : collectCandidateClassNames()) {
+      runScript(className, modulesVersionMap);
     }
   }
 
   /**
-   * Returns a File with the base directory
-   *
-   * @return a File with the base directory
+   * Collects the fully qualified names of every compiled class found in the scanned folders:
+   * the core's {@code src-util/modulescript/build/classes} plus each module's
+   * {@code build/classes}. Filtering by type happens later, in {@link #runScript}.
    */
-  public File getBasedir() {
-    return basedir;
+  private List<String> collectCandidateClassNames() {
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+    // basedir points to where build.xml lives; when the core ships as a jar the modules hang from
+    // the project root instead.
+    File projectRoot = ModulesUtil.coreInSources ? basedir
+        : new File(ModulesUtil.getProjectRootDir());
+
+    List<String> classNames = new ArrayList<>();
+    BuildValidationHandler.readClassFiles(classNames,
+        new File(basedir, "src-util/modulescript/" + CLASSES_SUBDIR));
+    for (File moduleClassesDir : listModuleClassesDirs(projectRoot)) {
+      BuildValidationHandler.readClassFiles(classNames, moduleClassesDir);
+    }
+    return classNames;
   }
 
   /**
-   * Sets the base directory
-   *
-   * @param basedir
-   *          File used to set the base directory
+   * Lists, in deterministic (sorted) order, the {@code build/classes} folder of every module
+   * found under each of the {@link ModulesUtil#moduleDirs} roots.
+   */
+  private List<File> listModuleClassesDirs(File projectRoot) {
+    List<File> moduleFolders = new ArrayList<>();
+    for (String moduleDirName : ModulesUtil.moduleDirs) {
+      File moduleDir = new File(projectRoot, moduleDirName);
+      File[] entries = moduleDir.isDirectory() ? moduleDir.listFiles() : null;
+      if (entries == null) {
+        continue;
+      }
+      log4j.info("PostUpdate Module Script Handler - Adding modules directories from: "
+          + moduleDir.getAbsolutePath());
+      moduleFolders.addAll(Arrays.asList(entries));
+    }
+    Collections.sort(moduleFolders);
+
+    List<File> classesDirs = new ArrayList<>();
+    for (File moduleFolder : moduleFolders) {
+      File classesDir = new File(moduleFolder, CLASSES_SUBDIR);
+      if (moduleFolder.isDirectory() && classesDir.exists()) {
+        classesDirs.add(classesDir);
+      }
+    }
+    return classesDirs;
+  }
+
+  /**
+   * Instantiates and executes {@code className} if (and only if) it is a concrete
+   * {@link PostUpdateModuleScript}; anything else found in the scanned folders is skipped. A
+   * {@link BuildException} thrown by the script itself (e.g. a validator carrying its own
+   * detailed report) is rethrown untouched; any other failure is wrapped into a generic one.
+   */
+  private void runScript(String className, Map<String, OpenbravoVersion> modulesVersionMap) {
+    try {
+      Class<?> clazz = Class.forName(className);
+      if (!PostUpdateModuleScript.class.isAssignableFrom(clazz)
+          || Modifier.isAbstract(clazz.getModifiers())) {
+        return;
+      }
+      PostUpdateModuleScript instance = (PostUpdateModuleScript) clazz.getDeclaredConstructor()
+          .newInstance();
+      instance.setBaseDir(basedir);
+      instance.preExecute(modulesVersionMap);
+    } catch (BuildException e) {
+      throw e;
+    } catch (Exception e) {
+      log4j.error("Error executing postUpdateModuleScript: " + className, e);
+      throw new BuildException("Execution of postUpdateModuleScript " + className + " failed.");
+    }
+  }
+
+  /**
+   * Reads the current (POST-update) module versions from {@code AD_MODULE} through a standalone
+   * connection built from {@link #propertiesFile}. On any failure an empty map is returned, in
+   * which case the scripts fall back to their {@code executeOnInstall()} behavior (same
+   * semantics as {@code org.openbravo.buildvalidation.BuildValidationHandler}).
+   */
+  private Map<String, OpenbravoVersion> readModulesVersionMap() {
+    Map<String, OpenbravoVersion> modulesVersion = new HashMap<>();
+    try (PreparedStatement ps = new CPStandAlone(propertiesFile)
+        .getPreparedStatement("SELECT ad_module_id, version FROM ad_module");
+        ResultSet rs = ps.executeQuery()) {
+      while (rs.next()) {
+        modulesVersion.put(rs.getString(1), new OpenbravoVersion(rs.getString(2)));
+      }
+    } catch (Exception e) {
+      log4j.error("Not possible to recover the current version of modules", e);
+    }
+    return modulesVersion;
+  }
+
+  /**
+   * Ant property: base directory, i.e. where {@code src-db/database/build.xml} lives.
    */
   public void setBasedir(File basedir) {
     this.basedir = basedir;
   }
 
   /**
-   * Returns the java package
-   *
-   * @return a String with the module java package
-   */
-  public String getModuleJavaPackage() {
-    return moduleJavaPackage;
-  }
-
-  /**
-   * Sets the java package
-   *
-   * @param moduleJavaPackage
-   *          String to set the java package
-   */
-  public void setModuleJavaPackage(String moduleJavaPackage) {
-    this.moduleJavaPackage = moduleJavaPackage;
-  }
-
-  /**
-   * Returns the path of the Openbravo.properties file
-   *
-   * @return a String with the path of the Openbravo.properties file
-   */
-  public String getPropertiesFile() {
-    return propertiesFile;
-  }
-
-  /**
-   * Sets the path of the Openbravo.properties file, used to open the standalone database
-   * connection that recovers the current module versions
-   *
-   * @param propertiesFile
-   *          String with the path of the Openbravo.properties file
+   * Ant property: path of the {@code Openbravo.properties} file used to open the standalone
+   * database connection that recovers the current module versions.
    */
   public void setPropertiesFile(String propertiesFile) {
     this.propertiesFile = propertiesFile;
-  }
-
-  /**
-   * Returns a map with the current module versions, read from AD_MODULE. If the versions cannot
-   * be recovered an empty map is returned, in which case the scripts fall back to their
-   * {@code executeOnInstall()} behavior (same semantics as
-   * {@code org.openbravo.buildvalidation.BuildValidationHandler}).
-   *
-   * @return A data structure that contains module versions mapped by module id
-   */
-  private Map<String, OpenbravoVersion> getModulesVersionMap() {
-    Map<String, OpenbravoVersion> modulesVersion = new HashMap<String, OpenbravoVersion>();
-    String strSql = "SELECT ad_module_id AS moduleid, version AS version FROM ad_module";
-    try {
-      ConnectionProvider cp = new CPStandAlone(propertiesFile);
-      PreparedStatement ps = cp.getPreparedStatement(strSql);
-      try {
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-          modulesVersion.put(rs.getString("moduleid"), new OpenbravoVersion(rs.getString("version")));
-        }
-      } finally {
-        ps.close();
-      }
-    } catch (Exception e) {
-      log4j.error("Not possible to recover the current version of modules", e);
-    }
-    return modulesVersion;
   }
 }
