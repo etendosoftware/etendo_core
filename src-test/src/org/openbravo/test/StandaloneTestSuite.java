@@ -169,6 +169,7 @@ import org.openbravo.test.system.Issue29934Test;
 import org.openbravo.test.system.JSONSerialization;
 import org.openbravo.test.system.OBPropertiesProviderTest;
 import org.openbravo.test.system.Sessions;
+import org.openbravo.test.system.SystemInfoHostTest;
 import org.openbravo.test.system.SystemServiceTest;
 import org.openbravo.test.system.SystemValidatorTest;
 import org.openbravo.test.system.TestInfrastructure;
@@ -455,6 +456,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     JobInitializationListenerTest.class, //
     ProcessGroupTest.class, //
     SchedulerTimeUtilsTest.class, //
+    SystemInfoHostTest.class, //
     GroupInfoTest.class, //
     JobDetailProviderTest.class, //
     ProcessMonitorTest.class, //
