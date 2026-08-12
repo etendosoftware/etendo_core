@@ -69,6 +69,7 @@ public class PostUpdateModuleScriptHandler extends Task {
     for (String className : collectCandidateClassNames()) {
       runScript(className, modulesVersionMap);
     }
+    updateDatabaseChecksum();
   }
 
   /**
@@ -165,6 +166,29 @@ public class PostUpdateModuleScriptHandler extends Task {
       log4j.error("Not possible to recover the current version of modules", e);
     }
     return modulesVersion;
+  }
+
+  /**
+   * Re-stamps the database structure checksum ({@code AD_SYSTEM_INFO.DB_CHECKSUM}) once every
+   * script has run. dbsm stamps the checksum at the end of its own update phase — BEFORE this
+   * task runs — so any database object created by a {@link PostUpdateModuleScript} (e.g. the
+   * {@code ad_scd_*} functions and triggers) would otherwise make the next {@code update.database}
+   * abort with "Database has local changes". Re-stamping here blesses the state at the true end
+   * of the update, with the same semantics as dbsm's own {@code DBSMOBUtil.updateCRC()}. A
+   * failure is fatal: silently leaving a stale checksum would make the next
+   * {@code update.database} fail with a misleading message.
+   */
+  private void updateDatabaseChecksum() {
+    try (PreparedStatement ps = new CPStandAlone(propertiesFile)
+        .getPreparedStatement("SELECT ad_db_modified('Y') FROM DUAL");
+        ResultSet rs = ps.executeQuery()) {
+      rs.next();
+      log4j.info("Database checksum re-stamped after postUpdateModuleScripts.");
+    } catch (Exception e) {
+      log4j.error("Could not re-stamp the database checksum", e);
+      throw new BuildException(
+          "Could not re-stamp the database checksum after running the postUpdateModuleScripts.");
+    }
   }
 
   /**
