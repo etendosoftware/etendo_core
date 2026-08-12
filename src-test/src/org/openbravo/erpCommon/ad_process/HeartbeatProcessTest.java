@@ -476,6 +476,47 @@ public class HeartbeatProcessTest extends WeldBaseTest {
     }
   }
 
+  /**
+   * The Heartbeat must report the identity of the server hosting the instance, otherwise the
+   * Hostname and IP Address fields of the instance record stay empty in the License Server.
+   */
+  @Test
+  public void testSetInfoReportsHostnameAndIp() throws Exception {
+    // GIVEN - system info holding the identity of the server
+    java.util.Properties props = new java.util.Properties();
+    props.setProperty(SystemInfo.Item.HOSTNAME.getLabel(), "my-server");
+    props.setProperty(SystemInfo.Item.IP_ADDRESS.getLabel(), "10.0.0.25");
+
+    try (MockedStatic<SystemInfo> mockedSys = mockStatic(SystemInfo.class);
+         MockedStatic<OBPropertiesProvider> mockedOBP = mockStatic(OBPropertiesProvider.class);
+         MockedStatic<ActivationKey> mockedAK = mockStatic(ActivationKey.class)) {
+
+      mockedSys.when(SystemInfo::getSystemInfo).thenReturn(props);
+
+      ActivationKey mockAkInst = mock(ActivationKey.class);
+      mockedAK.when(ActivationKey::getInstance).thenReturn(mockAkInst);
+      when(mockAkInst.getSubscriptionStatus()).thenReturn(mock(ActivationKey.SubscriptionStatus.class));
+
+      OBPropertiesProvider mockOBPInst = mock(OBPropertiesProvider.class);
+      java.util.Properties obProps = new java.util.Properties();
+      obProps.setProperty("dateFormat.java", "dd/MM/yyyy");
+      when(mockOBPInst.getOpenbravoProperties()).thenReturn(obProps);
+      mockedOBP.when(OBPropertiesProvider::getInstance).thenReturn(mockOBPInst);
+
+      // WHEN
+      Method setInfo = HeartbeatProcess.class.getDeclaredMethod("setInfo", String.class);
+      setInfo.setAccessible(true);
+      JSONArray arr = (JSONArray) setInfo.invoke(null, "log-123");
+
+      // THEN
+      assertNotNull(arr);
+      assertEquals(1, arr.length());
+      JSONObject obj = arr.getJSONObject(0);
+      assertEquals("my-server", obj.getString("hostname"));
+      assertEquals("10.0.0.25", obj.getString("ip"));
+    }
+  }
+
   @Test
   public void testParseAlertsAndSaveUpdateAlerts() throws Exception {
     HeartbeatProcess proc = new HeartbeatProcess();

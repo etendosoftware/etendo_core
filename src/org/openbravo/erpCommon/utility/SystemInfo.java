@@ -24,10 +24,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -79,6 +83,17 @@ public class SystemInfo {
   private static final Logger log4j = LogManager.getLogger();
   private static final String IN_CLUSTER_PROPERTY = "cluster";
   private static final String CLUSTER = "cluster";
+  /**
+   * Public address used only to ask the operating system which local interface it would use to
+   * reach the network. No packet is ever sent to it.
+   */
+  @SuppressWarnings("java:S1313") // a probe target, not a hardcoded endpoint the instance talks to
+  private static final String OUTBOUND_PROBE_HOST = "8.8.8.8";
+  private static final int OUTBOUND_PROBE_PORT = 53;
+  private static final String OUTBOUND_IP_UNKNOWN
+      = "The outbound IP address could not be determined, using the local host address";
+  /** Maximum length reported for the hostname, aligned with the operating system name limit. */
+  private static final int MAX_HOSTNAME_LENGTH = 60;
   private static Map<Item, String> systemInfo;
   private static Date firstLogin;
   private static Date lastLogin;
@@ -198,6 +213,12 @@ public class SystemInfo {
         case PROXY_PORT:
           systemInfo.put(i, SystemInfoData.selectProxyPort(conn));
           break;
+        case HOSTNAME:
+          systemInfo.put(i, getHostname());
+          break;
+        case IP_ADDRESS:
+          systemInfo.put(i, getIpAddress());
+          break;
         case OPERATING_SYSTEM:
           String os = System.getProperty("os.name");
           if (os.length() > 60) {
@@ -302,6 +323,72 @@ public class SystemInfo {
       macAddress = calculateMacIdentifier();
     }
     return macAddress;
+  }
+
+  /**
+   * Obtains the network name of the server hosting this instance. The value is truncated to
+   * {@link #MAX_HOSTNAME_LENGTH} characters.
+   * <p>
+   * It is not cached because the value is reported once per heartbeat and the machine can be
+   * renamed or moved between heartbeats.
+   *
+   * @return the hostname of the server, or an empty String if it cannot be resolved
+   */
+  public static String getHostname() {
+    try {
+      return truncate(InetAddress.getLocalHost().getHostName(), MAX_HOSTNAME_LENGTH);
+    } catch (UnknownHostException e) {
+      log4j.error("Could not resolve the hostname of the instance", e);
+      return "";
+    }
+  }
+
+  /**
+   * Obtains the IP address of the interface the server uses to reach the network.
+   * <p>
+   * A datagram socket is connected to a public address so that the operating system selects the
+   * source address it would use to reach the outside. No packet is actually sent. This returns the
+   * real outbound address and avoids loopback and container/bridge interfaces such as docker0,
+   * which a plain scan of the available network interfaces may pick up by mistake.
+   * <p>
+   * If the outbound address cannot be determined, the address of the local host is reported
+   * instead.
+   *
+   * @return the IP address of the server, or an empty String if it cannot be resolved
+   */
+  public static String getIpAddress() {
+    try (DatagramSocket socket = new DatagramSocket()) {
+      socket.connect(InetAddress.getByName(OUTBOUND_PROBE_HOST), OUTBOUND_PROBE_PORT);
+      InetAddress localAddress = socket.getLocalAddress();
+      if (localAddress != null && !localAddress.isAnyLocalAddress()) {
+        return localAddress.getHostAddress();
+      }
+      log4j.warn(OUTBOUND_IP_UNKNOWN);
+    } catch (IOException | UncheckedIOException e) {
+      log4j.warn(OUTBOUND_IP_UNKNOWN, e);
+    }
+    try {
+      return InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      log4j.error("Could not resolve the IP address of the instance", e);
+      return "";
+    }
+  }
+
+  /**
+   * Cuts the given value down to the given maximum length.
+   *
+   * @param value
+   *     the value to truncate, it may be null
+   * @param maxLength
+   *     the maximum number of characters to keep
+   * @return the truncated value, never null
+   */
+  private static String truncate(String value, int maxLength) {
+    if (value == null) {
+      return "";
+    }
+    return value.length() > maxLength ? value.substring(0, maxLength) : value;
   }
 
   private final static String getSystemIdentifier(ConnectionProvider conn) throws ServletException {
@@ -856,6 +943,8 @@ public class SystemInfo {
     SYSTEM_IDENTIFIER("systemIdentifier", true),
     MAC_IDENTIFIER("macId", true),
     DB_IDENTIFIER("dbIdentifier", true),
+    HOSTNAME("hostname", false),
+    IP_ADDRESS("ip", false),
     OPERATING_SYSTEM("os", false),
     OPERATING_SYSTEM_VERSION("osVersion", false),
     DATABASE("db", false),
