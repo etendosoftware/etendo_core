@@ -34,7 +34,13 @@ import org.openbravo.database.ConnectionProvider;
 /**
  * Deploys the stored-computed-column recalculation engine and the per-dependency enqueue triggers.
  *
- * <p>Two halves run on every {@code update.database} (no execution limits), both idempotent:</p>
+ * <p>Runs as a {@link PostUpdateModuleScript} once {@code update.database} has fully completed:
+ * at that point both the DB functions (model) and the {@code AD_COLUMN_COMP_DEPENDENCY} /
+ * {@code AD_COMPDEP_WATCHED_COL} configuration rows (sourcedata) are in their final state, and
+ * all triggers are re-enabled. As a plain {@code ModuleScript} it used to run at an intermediate
+ * stage of the update (new functions, stale configuration), generating wrong or failing triggers
+ * after branch switches (EPL-1810). Two halves run on every update (no execution limits), both
+ * idempotent:</p>
  *
  * <ol>
  *   <li><b>Static engine</b> ({@link #deployEngine}) — a fixed set of {@code ad_scd_*} functions and
@@ -62,7 +68,7 @@ import org.openbravo.database.ConnectionProvider;
  * <b>not</b> deployed at all — the recompute runs entirely in Java (workstream C2). Dialect is
  * detected via {@link ConnectionProvider#getRDBMS()} ({@code "POSTGRE"} / {@code "ORACLE"}).</p>
  */
-public class GenerateStoredComputedTriggers extends ModuleScript {
+public class GenerateStoredComputedTriggers extends PostUpdateModuleScript {
 
   private static final Logger log = LogManager.getLogger();
 
