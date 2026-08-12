@@ -17,7 +17,7 @@
  ************************************************************************
  */
 
-package org.openbravo.erpCommon.utility;
+package org.openbravo.test.systeminfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,6 +28,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.junit.Test;
+import org.openbravo.erpCommon.utility.SystemInfo;
 
 /**
  * Tests the identity of the server hosting the instance, gathered by {@link SystemInfo} and
@@ -102,6 +103,10 @@ public class SystemInfoHostTest {
   /**
    * The IP address must never be null and, when it can be resolved, it must be a numerical label,
    * not a name and not the wildcard address.
+   *
+   * @throws UnknownHostException
+   *     if the reported address is not a numerical label, in which case parsing it back forces a
+   *     name resolution that this environment cannot satisfy
    */
   @Test
   public void testGetIpAddressReturnsANumericalLabel() throws UnknownHostException {

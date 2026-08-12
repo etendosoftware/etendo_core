@@ -69,6 +69,10 @@ import org.openbravo.test.base.TestConstants;
  */
 public class HeartbeatProcessTest extends WeldBaseTest {
 
+  private static final String DATE_FORMAT_PROPERTY = "dateFormat.java";
+  private static final String DATE_FORMAT_PATTERN = "dd/MM/yyyy";
+  private static final String HB_LOG_ID = "log-123";
+
   private HeartbeatProcess heartbeatProcess;
   private ProcessBundle mockBundle;
   private ConnectionProvider mockConnection;
@@ -450,7 +454,7 @@ public class HeartbeatProcessTest extends WeldBaseTest {
         // Mock OBPropertiesProvider to return a date format
         OBPropertiesProvider mockOBPInst = mock(OBPropertiesProvider.class);
         java.util.Properties obProps = new java.util.Properties();
-        obProps.setProperty("dateFormat.java", "dd/MM/yyyy");
+        obProps.setProperty(DATE_FORMAT_PROPERTY, DATE_FORMAT_PATTERN);
         when(mockOBPInst.getOpenbravoProperties()).thenReturn(obProps);
         mockedOBP.when(OBPropertiesProvider::getInstance).thenReturn(mockOBPInst);
 
@@ -458,7 +462,7 @@ public class HeartbeatProcessTest extends WeldBaseTest {
         setInfo.setAccessible(true);
         JSONArray arr;
         try {
-          arr = (JSONArray) setInfo.invoke(null, "log-123");
+          arr = (JSONArray) setInfo.invoke(null, HB_LOG_ID);
         } catch (InvocationTargetException ite) {
           Throwable cause = ite.getCause();
           if (cause != null) {
@@ -471,7 +475,7 @@ public class HeartbeatProcessTest extends WeldBaseTest {
         assertEquals(1, arr.length());
         JSONObject obj = arr.getJSONObject(0);
         assertTrue(obj.getBoolean("active"));
-        assertEquals("log-123", obj.getString("hbLogId"));
+        assertEquals(HB_LOG_ID, obj.getString("hbLogId"));
       }
     }
   }
@@ -481,6 +485,7 @@ public class HeartbeatProcessTest extends WeldBaseTest {
    * Hostname and IP Address fields of the instance record stay empty in the License Server.
    */
   @Test
+  @SuppressWarnings("java:S1313") // test data mirroring the acceptance scenario of the issue
   public void testSetInfoReportsHostnameAndIp() throws Exception {
     // GIVEN - system info holding the identity of the server
     java.util.Properties props = new java.util.Properties();
@@ -499,14 +504,14 @@ public class HeartbeatProcessTest extends WeldBaseTest {
 
       OBPropertiesProvider mockOBPInst = mock(OBPropertiesProvider.class);
       java.util.Properties obProps = new java.util.Properties();
-      obProps.setProperty("dateFormat.java", "dd/MM/yyyy");
+      obProps.setProperty(DATE_FORMAT_PROPERTY, DATE_FORMAT_PATTERN);
       when(mockOBPInst.getOpenbravoProperties()).thenReturn(obProps);
       mockedOBP.when(OBPropertiesProvider::getInstance).thenReturn(mockOBPInst);
 
       // WHEN
       Method setInfo = HeartbeatProcess.class.getDeclaredMethod("setInfo", String.class);
       setInfo.setAccessible(true);
-      JSONArray arr = (JSONArray) setInfo.invoke(null, "log-123");
+      JSONArray arr = (JSONArray) setInfo.invoke(null, HB_LOG_ID);
 
       // THEN
       assertNotNull(arr);
@@ -622,11 +627,11 @@ public class HeartbeatProcessTest extends WeldBaseTest {
       try (MockedStatic<OBPropertiesProvider> mockedOBP = mockStatic(OBPropertiesProvider.class)) {
         OBPropertiesProvider mockOBPInst = mock(OBPropertiesProvider.class);
         java.util.Properties obProps = new java.util.Properties();
-        obProps.setProperty("dateFormat.java", "dd/MM/yyyy");
+        obProps.setProperty(DATE_FORMAT_PROPERTY, DATE_FORMAT_PATTERN);
         when(mockOBPInst.getOpenbravoProperties()).thenReturn(obProps);
         mockedOBP.when(OBPropertiesProvider::getInstance).thenReturn(mockOBPInst);
 
-        boolean show = HeartbeatProcess.isShowHeartbeatRequired("dd/MM/yyyy", mockConnection);
+        boolean show = HeartbeatProcess.isShowHeartbeatRequired(DATE_FORMAT_PATTERN, mockConnection);
         // Since postponeDate in the past, and hbData indicates inactive => should evaluate true/false based on date
         // We can't deterministically know current date; assert no exception and boolean returned
         assertNotNull(show);
