@@ -337,7 +337,7 @@ public class SystemInfo {
   public static String getHostname() {
     try {
       return truncate(InetAddress.getLocalHost().getHostName(), MAX_HOSTNAME_LENGTH);
-    } catch (UnknownHostException e) {
+    } catch (UnknownHostException | SecurityException e) {
       log4j.error("Could not resolve the hostname of the instance", e);
       return "";
     }
@@ -352,7 +352,9 @@ public class SystemInfo {
    * which a plain scan of the available network interfaces may pick up by mistake.
    * <p>
    * If the outbound address cannot be determined, the address of the local host is reported
-   * instead.
+   * instead. Opening the socket is not always possible: a restricted network, a sandbox or a
+   * security policy can reject it, so every failure the JDK declares for these calls is handled
+   * here to keep the promise that the Heartbeat is never interrupted.
    *
    * @return the IP address of the server, or an empty String if it cannot be resolved
    */
@@ -364,12 +366,12 @@ public class SystemInfo {
         return localAddress.getHostAddress();
       }
       log4j.warn(OUTBOUND_IP_UNKNOWN);
-    } catch (IOException | UncheckedIOException e) {
+    } catch (IOException | UncheckedIOException | SecurityException | IllegalArgumentException e) {
       log4j.warn(OUTBOUND_IP_UNKNOWN, e);
     }
     try {
       return InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException e) {
+    } catch (UnknownHostException | SecurityException e) {
       log4j.error("Could not resolve the IP address of the instance", e);
       return "";
     }
