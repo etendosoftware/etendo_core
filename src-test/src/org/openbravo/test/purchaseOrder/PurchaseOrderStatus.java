@@ -6,6 +6,7 @@ import static org.openbravo.test.purchaseOrder.PurchaseOrderUtils.createPurchase
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -55,6 +56,9 @@ public class PurchaseOrderStatus extends WeldBaseTest {
   public void setUp() throws Exception {
     super.setUp();
     Utils.initializeTestContext();
+    // PurchaseOrderUtils stamps accountingDate=new Date() on every header it saves; open today's
+    // fiscal period so the save doesn't fail on a clean env or once the seeded period prefix lapses.
+    PeriodTestUtils.ensureOpenPeriod(new Date());
   }
 
   /**
