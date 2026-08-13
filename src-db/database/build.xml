@@ -29,6 +29,7 @@ export.database.structure: Exports the database structure in the xml's files.
   <property environment="env" />
   <property name="forcedRecreation" value=""/>
   <property name="execute.modulescripts" value="true"/>
+  <property name="execute.postupdatemodulescripts" value="true"/>
   <property name="max.threads" value="-1"/>
   <condition property="bbdd.owner.url" value="${bbdd.url}/${bbdd.sid}" else="${bbdd.url}">
     <and>
@@ -80,6 +81,7 @@ export.database.structure: Exports the database structure in the xml's files.
   <target name="update.database">
     <alterdatabasedataall driver="${bbdd.driver}" url="${bbdd.owner.url}" user="${bbdd.user}" password="${bbdd.password}" excludeobjects="com.openbravo.db.OpenbravoExcludeFilter" model="model" filter="com.openbravo.db.OpenbravoMetadataFilter" input="sourcedata" object="${bbdd.object}" failonerror="false" basedir="${base.modules}/" dirFilter="*/src-db/database/model" datadir="${base.modules}/" dataFilter="*/src-db/database/sourcedata" userId="0" adminMode="true" propertiesFile="${base.config}/Openbravo.properties" force="${force}" onlyIfModified="${onlyIfModified}" forcedRecreation="${forcedRecreation}" executeModuleScripts="${execute.modulescripts}" threads="${max.threads}" systemUser="${bbdd.systemUser}" systemPassword="${bbdd.systemPassword}"/>
     <antcall target="database.postupdate.${bbdd.rdbms}" inheritall="true" inheritrefs="true" />
+    <antcall target="postupdate.modulescripts" inheritall="true" inheritrefs="true" />
     <antcall target="update.dbupdate.timestamp" inheritrefs="true" inheritall="true" />
   </target>
 
@@ -114,6 +116,7 @@ export.database.structure: Exports the database structure in the xml's files.
       <sysproperty key="javax.xml.parsers.SAXParserFactory" value="com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl" />
     </java>
     <antcall target="database.postupdate.${bbdd.rdbms}" inheritrefs="true" inheritall="true" />
+    <antcall target="postupdate.modulescripts" inheritall="true" inheritrefs="true" />
     <antcall target="update.dbupdate.timestamp" inheritrefs="true" inheritall="true"/>
   </target>
 
@@ -174,6 +177,35 @@ export.database.structure: Exports the database structure in the xml's files.
     </taskdef>
     <importsampledata driver="${bbdd.driver}" url="${bbdd.owner.url}" user="${bbdd.user}" password="${bbdd.password}" basedir="${basedir}/../../" executeModuleScripts="${execute.modulescripts}" rdbms="${bbdd.rdbms}" threads="${max.threads}"/>
     <antcall target="database.postupdate.${bbdd.rdbms}" inheritrefs="true" inheritall="true"/>
+    <antcall target="postupdate.modulescripts" inheritall="true" inheritrefs="true" />
+  </target>
+
+  <target name="postupdate.modulescripts.check">
+    <condition property="postupdatemodulescripts.run">
+      <and>
+        <istrue value="${execute.postupdatemodulescripts}" />
+        <available classname="org.openbravo.modulescript.PostUpdateModuleScriptHandler" classpathref="runtime-classpath" />
+      </and>
+    </condition>
+    <condition property="postupdatemodulescripts.unavailable">
+      <and>
+        <istrue value="${execute.postupdatemodulescripts}" />
+        <not>
+          <available classname="org.openbravo.modulescript.PostUpdateModuleScriptHandler" classpathref="runtime-classpath" />
+        </not>
+      </and>
+    </condition>
+  </target>
+
+  <target name="postupdate.modulescripts.warn" depends="postupdate.modulescripts.check" if="postupdatemodulescripts.unavailable">
+    <echo level="warning" message="PostUpdateModuleScriptHandler is not available in the runtime classpath: skipping post-update module scripts. Recompile the module scripts (ant compile.modulescript) and run update.database again to execute them." />
+  </target>
+
+  <target name="postupdate.modulescripts" depends="postupdate.modulescripts.warn" if="postupdatemodulescripts.run">
+    <taskdef name="postupdatemodulescripts" classname="org.openbravo.modulescript.PostUpdateModuleScriptHandler">
+      <classpath refid="runtime-classpath" />
+    </taskdef>
+    <postupdatemodulescripts basedir="${basedir}/../../" propertiesFile="${base.config}/Openbravo.properties" />
   </target>
 
   <target name="database.postupdate.ORACLE">

@@ -180,6 +180,13 @@ public final class StoredComputedValidator {
    * {@link StoredComputedShapeValidator#checkShape(String, String, String, Long)} so both this
    * build-time validator (JDBC) and the {@code src/} observer (DAL) evaluate the exact same predicate.
    *
+   * <p><b>Classpath constraint:</b> the delegate MUST stay in {@code src-core/} (packaged into
+   * {@code openbravo-core.jar} via {@code core.lib}, a declared dependency of
+   * {@code compile.modulescript}). This validator runs inside {@code update.database}, whose
+   * {@code runtime-classpath} does not guarantee {@code build/classes} is populated — {@code src/} is
+   * compiled later, by {@code compile.complete}. Moving the delegate to {@code src/} reintroduces a
+   * {@code NoClassDefFoundError} on every clean checkout; see that class's javadoc.</p>
+   *
    * <p>When {@code computationMode = 'S'} the column is recomputed by a database function, so
    * {@code sqlLogic} MUST be blank, {@code fn} MUST be set, and {@code seq} MUST be a positive number.
    * Returns {@link #ETGO_STORED_COMPUTED_COL_DEF} when any of the three is violated, otherwise

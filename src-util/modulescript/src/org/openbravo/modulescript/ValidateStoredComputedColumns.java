@@ -19,8 +19,12 @@ package org.openbravo.modulescript;
 import org.openbravo.database.ConnectionProvider;
 
 /**
- * Build-time gate for stored computed column definitions (EPL-1807, Phase 5b). Runs on every
- * {@code update.database} and validates the whole-DB set of stored computed columns via
+ * Build-time gate for stored computed column definitions (EPL-1807, Phase 5b). Runs as a
+ * {@link PostUpdateModuleScript} once every {@code update.database} has fully completed — so it
+ * validates the FINAL state (new DB functions AND new AD configuration rows) instead of the
+ * mid-update mix of new functions and stale configuration a plain {@code ModuleScript} observes
+ * (EPL-1810). A failure still marks the update as failed: the step runs before the successful
+ * update timestamp is stamped. It validates the whole-DB set of stored computed columns via
  * {@link StoredComputedValidator#assertDefinitionsValid(ConnectionProvider)}.
  *
  * <p>The validator throws its <b>own</b> {@link org.apache.tools.ant.BuildException} carrying the
@@ -31,7 +35,7 @@ import org.openbravo.database.ConnectionProvider;
  *
  * <p>Read-only and idempotent: it inspects catalog + AD metadata but never writes.</p>
  */
-public class ValidateStoredComputedColumns extends ModuleScript {
+public class ValidateStoredComputedColumns extends PostUpdateModuleScript {
 
   @Override
   public void execute() {
