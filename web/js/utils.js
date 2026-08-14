@@ -1970,6 +1970,25 @@ function reparentComboOptions(combo) {
 }
 
 /**
+* Applies reparentComboOptions to every combo (select) present in the current document.
+* Combos rendered by XmlEngine keep their <option> elements nested inside the SUBREPORT
+* placeholder <div>, which some browsers (Firefox 153+) no longer expose as selectable
+* options. Running this once the DOM is ready normalizes every combo of the page at once,
+* so no per-screen wiring is required. It never throws, so it is safe to call from any
+* onload handler without guarding the call site.
+*/
+function reparentAllComboOptions() {
+  try {
+    var combos = document.getElementsByTagName("select");
+    for (var i = 0; i < combos.length; i++) {
+      reparentComboOptions(combos[i]);
+    }
+  } catch (ignored) {
+    // Combo normalization must never break the onload sequence of any screen
+  }
+}
+
+/**
 * Fills a combo with a data from an Array. Allows to set a default selected item, defined as boolean field in the Array.
 * @param {Object} combo A reference to the combo object.
 * @param {Array} dataArray Array containing the data for the combo. The structure of the array must be value, text, selected. Value is value of the item, text the string that will show the combo, an selected a boolean value to set if the item should appear selected.
@@ -5424,6 +5443,7 @@ function fixIE9WindowBorders() {
 }
 
 function moreOnLoadDoFunctions() {
+  reparentAllComboOptions();
   setMDIEnvironment();
   fixIE9WindowBorders();
 }
