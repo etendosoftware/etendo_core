@@ -60,7 +60,7 @@ function validate() {
 }
 </script>
 </head>
-    <body leftmargin="0" topmargin="0" onload="reparentAllComboOptions();resizeArea();updateMenuIcon('buttonMenu');setFocusFirstControl();" onresize="resizeArea();">
+    <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="resizeArea();updateMenuIcon('buttonMenu');setFocusFirstControl();" onresize="resizeArea();">
 <form method="post" action="ReportPaymentFilter.html" name="frmMain" id="form">
   <input type="hidden" name="Command"></input>
   <input type="hidden" name="inpAuxd" value="" id="functionSumAux1"></input>
@@ -349,5 +349,11 @@ function validate() {
     </tr>
   </table>
 </form>
+<script type="text/javascript">
+  // Firefox 153+ keeps the SUBREPORT placeholder <div> inside the <select>, which
+  // leaves the generated <option> elements out of the layout. Normalize them here:
+  // this screen does not go through onLoadDo() / moreOnLoadDoFunctions().
+  reparentAllComboOptions();
+</script>
 </body>
 </html>

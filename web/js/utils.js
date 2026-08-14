@@ -1974,12 +1974,17 @@ function reparentComboOptions(combo) {
 * Combos rendered by XmlEngine keep their <option> elements nested inside the SUBREPORT
 * placeholder <div>, which some browsers (Firefox 153+) no longer expose as selectable
 * options. Running this once the DOM is ready normalizes every combo of the page at once,
-* so no per-screen wiring is required.
+* so no per-screen wiring is required. It never throws, so it is safe to call from any
+* onload handler without guarding the call site.
 */
 function reparentAllComboOptions() {
-  var combos = document.getElementsByTagName("select");
-  for (var i = 0; i < combos.length; i++) {
-    reparentComboOptions(combos[i]);
+  try {
+    var combos = document.getElementsByTagName("select");
+    for (var i = 0; i < combos.length; i++) {
+      reparentComboOptions(combos[i]);
+    }
+  } catch (ignored) {
+    // Combo normalization must never break the onload sequence of any screen
   }
 }
 
@@ -5438,12 +5443,7 @@ function fixIE9WindowBorders() {
 }
 
 function moreOnLoadDoFunctions() {
-  try {
-    reparentAllComboOptions();
-  } catch (e) {
-    // Combo normalization must never break the page onload sequence
-    console.log(e);
-  }
+  reparentAllComboOptions();
   setMDIEnvironment();
   fixIE9WindowBorders();
 }
