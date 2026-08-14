@@ -651,6 +651,8 @@ public class HeartbeatProcess implements Process {
       heartbeatObj.put("systemID", systemInfo.getProperty(SystemInfo.Item.SYSTEM_IDENTIFIER.getLabel()));
       heartbeatObj.put("databaseID", systemInfo.getProperty(SystemInfo.Item.DB_IDENTIFIER.getLabel()));
       heartbeatObj.put("mACID", systemInfo.getProperty(SystemInfo.Item.MAC_IDENTIFIER.getLabel()));
+      heartbeatObj.put("hostname", systemInfo.getProperty(SystemInfo.Item.HOSTNAME.getLabel()));
+      heartbeatObj.put("ip", systemInfo.getProperty(SystemInfo.Item.IP_ADDRESS.getLabel()));
       heartbeatObj.put("purpose", systemInfo.getProperty(SystemInfo.Item.INSTANCE_PURPOSE.getLabel()));
       heartbeatObj.put("operationSystem", systemInfo.getProperty(SystemInfo.Item.OPERATING_SYSTEM.getLabel()));
       heartbeatObj.put("operationSystemVersion",
