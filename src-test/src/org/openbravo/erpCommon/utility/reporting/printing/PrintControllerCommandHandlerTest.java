@@ -61,6 +61,8 @@ public class PrintControllerCommandHandlerTest {
   private static final String DOC_ID = "DOC001";
   private static final String SUFFIX_DOCUMENTS = ".Documents";
   private static final String PATH_SEND_HTML = "/send.html";
+  private static final String PATH_PRINT_OPTIONS_HTML = "/invoices/PrintOptions.html";
+  private static final String METHOD_IS_PRINT_PATH = "isPrintPath";
 
   /** Context constructor stores all provided fields. */
   @Test
@@ -309,11 +311,58 @@ public class PrintControllerCommandHandlerTest {
   }
 
   /**
-   * ADD command on a path that is neither print nor send calls neither page builder.
+   * ADD command on the PrintOptions.html path delegates to createEmailOptionsPage. This is the
+   * path the "Add Attachment" button of the email options popup posts to, and it must render the
+   * email options page again instead of leaving the response empty.
    * @throws Exception if handle() propagates an unexpected error
    */
   @Test
-  public void testHandle_addCommand_otherPath_callsNeither() throws Exception {
+  public void testHandle_addCommand_printOptionsPath_callsCreateEmailOptionsPage()
+      throws Exception {
+    PrintController ctrl = mock(PrintController.class);
+    HttpServletRequest req = mock(HttpServletRequest.class);
+    HttpServletResponse resp = mock(HttpServletResponse.class);
+    VariablesSecureApp vars = mock(VariablesSecureApp.class);
+    when(vars.commandIn("ADD")).thenReturn(true);
+    when(req.getServletPath()).thenReturn(PATH_PRINT_OPTIONS_HTML);
+
+    PrintControllerCommandHandler handler = new PrintControllerCommandHandler(
+        ctrl, req, resp, vars, makeContext(new String[]{ DOC_ID }, DocumentType.SALESINVOICE));
+    handler.handle();
+
+    verify(ctrl).createEmailOptionsPage(any(), any(), any(), any(), any(), any(), any());
+    verify(ctrl, never()).createPrintOptionsPage(any(), any(), any(), any(), any(), any());
+  }
+
+  /**
+   * ADD command on a document type other than invoice also reaches the email options page, since
+   * the command handler is shared by every printable document.
+   * @throws Exception if handle() propagates an unexpected error
+   */
+  @Test
+  public void testHandle_addCommand_printOptionsPath_salesOrder_callsCreateEmailOptionsPage()
+      throws Exception {
+    PrintController ctrl = mock(PrintController.class);
+    HttpServletRequest req = mock(HttpServletRequest.class);
+    HttpServletResponse resp = mock(HttpServletResponse.class);
+    VariablesSecureApp vars = mock(VariablesSecureApp.class);
+    when(vars.commandIn("ADD")).thenReturn(true);
+    when(req.getServletPath()).thenReturn("/orders/PrintOptions.html");
+
+    PrintControllerCommandHandler handler = new PrintControllerCommandHandler(
+        ctrl, req, resp, vars, makeContext(new String[]{ DOC_ID }, DocumentType.SALESORDER));
+    handler.handle();
+
+    verify(ctrl).createEmailOptionsPage(any(), any(), any(), any(), any(), any(), any());
+  }
+
+  /**
+   * ADD command on any path that is not print.html falls back to the email options page, so the
+   * response is never left empty.
+   * @throws Exception if handle() propagates an unexpected error
+   */
+  @Test
+  public void testHandle_addCommand_otherPath_fallsBackToEmailOptionsPage() throws Exception {
     PrintController ctrl = mock(PrintController.class);
     HttpServletRequest req = mock(HttpServletRequest.class);
     HttpServletResponse resp = mock(HttpServletResponse.class);
@@ -326,7 +375,7 @@ public class PrintControllerCommandHandlerTest {
     handler.handle();
 
     verify(ctrl, never()).createPrintOptionsPage(any(), any(), any(), any(), any(), any());
-    verify(ctrl, never()).createEmailOptionsPage(any(), any(), any(), any(), any(), any(), any());
+    verify(ctrl).createEmailOptionsPage(any(), any(), any(), any(), any(), any(), any());
   }
 
   /**
@@ -456,7 +505,7 @@ public class PrintControllerCommandHandlerTest {
     HttpServletRequest req = mock(HttpServletRequest.class);
     when(req.getServletPath()).thenReturn("/print.html");
 
-    assertTrue(invokeBooleanReflection(req, "isPrintPath"));
+    assertTrue(invokeBooleanReflection(req, METHOD_IS_PRINT_PATH));
   }
 
   /**
@@ -468,19 +517,20 @@ public class PrintControllerCommandHandlerTest {
     HttpServletRequest req = mock(HttpServletRequest.class);
     when(req.getServletPath()).thenReturn(PATH_SEND_HTML);
 
-    assertFalse(invokeBooleanReflection(req, "isPrintPath"));
+    assertFalse(invokeBooleanReflection(req, METHOD_IS_PRINT_PATH));
   }
 
   /**
-   * isSendPath returns true when the servlet path contains "send.html".
+   * isPrintPath returns false for "printoptions.html": the characters following "print" are
+   * "options", not ".html". This is why that path must not rely on isPrintPath to be routed.
    * @throws Exception if reflection fails
    */
   @Test
-  public void testIsSendPath_sendHtml_returnsTrue() throws Exception {
+  public void testIsPrintPath_printOptionsHtml_returnsFalse() throws Exception {
     HttpServletRequest req = mock(HttpServletRequest.class);
-    when(req.getServletPath()).thenReturn(PATH_SEND_HTML);
+    when(req.getServletPath()).thenReturn(PATH_PRINT_OPTIONS_HTML);
 
-    assertTrue(invokeBooleanReflection(req, "isSendPath"));
+    assertFalse(invokeBooleanReflection(req, METHOD_IS_PRINT_PATH));
   }
 
   /**

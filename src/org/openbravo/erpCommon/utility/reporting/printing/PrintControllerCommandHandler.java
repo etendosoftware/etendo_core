@@ -365,10 +365,12 @@ final class PrintControllerCommandHandler {
           docIdsForPage, context.reports);
       return;
     }
-    if (isSendPath()) {
-      controller.createEmailOptionsPage(request, response, vars, context.documentType,
-          docIdsForPage, context.reports, context.checks);
-    }
+    // Every non print.html path renders the email options page: send.html on the initial load and
+    // PrintOptions.html when the popup itself posts back (ADD command). This must stay a fallback
+    // branch instead of a second condition, otherwise an unmatched path silently writes nothing to
+    // the response and the popup renders blank.
+    controller.createEmailOptionsPage(request, response, vars, context.documentType, docIdsForPage,
+        context.reports, context.checks);
   }
 
   private void validateSenderConfiguration(Report report) throws IOException, ServletException {
@@ -395,10 +397,6 @@ final class PrintControllerCommandHandler {
 
   private boolean isPrintOptionsPath() {
     return request.getServletPath().toLowerCase().indexOf("printoptions.html") != -1;
-  }
-
-  private boolean isSendPath() {
-    return request.getServletPath().toLowerCase().indexOf("send.html") != -1;
   }
 
 
