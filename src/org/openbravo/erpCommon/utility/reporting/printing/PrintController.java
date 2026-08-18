@@ -580,8 +580,11 @@ public class PrintController extends HttpSecureAppServlet {
       VariablesSecureApp vars, DocumentType documentType, String strDocumentId,
       Map<String, Report> reports, HashMap<String, Boolean> checks)
       throws IOException, ServletException, ReportingException {
-    String fullDocumentIdentifier = PrintControllerDocumentHelper.normalizeDocumentId(strDocumentId)
-        + documentType.getTableName();
+    // Must use the same allowlist sanitizer as PrintControllerCommandHandler, which reads back the
+    // pocData session entry under this key. normalizeDocumentId() only strips parentheses and
+    // quotes, so the write side and the read side could build different keys for the same document.
+    String fullDocumentIdentifier = PrintControllerDocumentHelper
+        .sanitizeDocumentIdentifier(strDocumentId) + documentType.getTableName();
     PrintControllerEmailOptionsBuilder.Context context =
         new PrintControllerEmailOptionsBuilder.Context(documentType, strDocumentId, reports, checks,
             fullDocumentIdentifier);
