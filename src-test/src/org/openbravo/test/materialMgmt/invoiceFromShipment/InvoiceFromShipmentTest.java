@@ -40,6 +40,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
@@ -56,9 +57,11 @@ import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.plm.Product;
+import org.openbravo.model.financialmgmt.accounting.Costcenter;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
+import org.openbravo.model.project.Project;
 import org.openbravo.service.db.DalConnectionProvider;
 
 /**
@@ -84,6 +87,10 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   private static final String AFTER_DELIVERY = "D";
   private static final String AFTER_ORDER_DELIVERY = "O";
   private static final String PRICE_LIST_SALES_ID = "4028E6C72959682B01295ADC1D55022B";
+  // Test Cost Center
+  private static final String COST_CENTER_ID = "5DDF281D28CF47639E1E05568A262591";
+  // TestProject
+  private static final String PROJECT_ID = "B4731348B2CB48DCB24CC369CBC9DD83";
 
   @Before
   public void initialize() {
@@ -908,4 +915,117 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
         equalTo(priceList.getId()));
   }
 
+  /**
+   * ETP-4762: Generating an invoice from a Goods Shipment must copy the accounting dimensions of
+   * the Goods Shipment header into the Invoice header, for a Shipment linked to a Sales Order
+   */
+  @Test
+  public void invoiceFromShipment_011() {
+    assertInvoiceHeaderInheritsShipmentDimensions("InvoiceFromShipment_011", true, PROJECT_ID,
+        COST_CENTER_ID);
+  }
+
+  /**
+   * ETP-4762: Same as above for a Goods Shipment which is NOT linked to any Sales Order, so the
+   * dimensions can only come from the Goods Shipment header itself
+   */
+  @Test
+  public void invoiceFromShipment_012() {
+    assertInvoiceHeaderInheritsShipmentDimensions("InvoiceFromShipment_012", false, PROJECT_ID,
+        COST_CENTER_ID);
+  }
+
+  /**
+   * ETP-4762: A dimension which is empty in the Goods Shipment header must stay empty in the
+   * Invoice header, instead of being taken from anywhere else
+   */
+  @Test
+  public void invoiceFromShipment_013() {
+    assertInvoiceHeaderInheritsShipmentDimensions("InvoiceFromShipment_013", false, PROJECT_ID,
+        null);
+  }
+
+  /**
+   * Generates an invoice from a Goods Shipment carrying the given dimensions in its header, and
+   * verifies that the generated Invoice header carries exactly the same ones.
+   *
+   * @param testName
+   *          Name used to identify the documents created by the test
+   * @param linkedToSalesOrder
+   *          Whether the Goods Shipment must be linked to a Sales Order or not
+   * @param projectId
+   *          Project to set in the Goods Shipment header, null to leave it empty
+   * @param costCenterId
+   *          Cost Center to set in the Goods Shipment header, null to leave it empty
+   */
+  private void assertInvoiceHeaderInheritsShipmentDimensions(final String testName,
+      final boolean linkedToSalesOrder, final String projectId, final String costCenterId) {
+    OBContext.setAdminMode();
+    try {
+      final Project project = projectId == null ? null
+          : OBDal.getInstance().get(Project.class, projectId);
+      final Costcenter costCenter = costCenterId == null ? null
+          : OBDal.getInstance().get(Costcenter.class, costCenterId);
+
+      final ShipmentInOut shipment = createShipmentWithDimensions(testName, linkedToSalesOrder,
+          project, costCenter);
+      final Invoice invoice = new InvoiceGeneratorFromGoodsShipment(shipment.getId())
+          .createInvoiceConsideringInvoiceTerms(true);
+
+      assertThat("Invoice should not be null", invoice == null, equalTo(false));
+      assertDimension("Project", invoice.getProject(), project);
+      assertDimension("Cost Center", invoice.getCostcenter(), costCenter);
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new OBException(e);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Creates a completed Goods Shipment with the given dimensions in its header, optionally linked
+   * to a Sales Order
+   */
+  private ShipmentInOut createShipmentWithDimensions(final String testName,
+      final boolean linkedToSalesOrder, final Project project, final Costcenter costCenter) {
+    final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID, testName);
+
+    OrderLine orderLine = null;
+    if (linkedToSalesOrder) {
+      final Order salesOrder = createSalesOrderWithInvoiceTerm(SALES_ORDER, testName,
+          AFTER_DELIVERY);
+      orderLine = getOrderLineByLineNo(salesOrder, 10L);
+      setProductInOrderLine(orderLine, product);
+      TestUtils.processOrder(salesOrder);
+    }
+
+    final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID, testName);
+    final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
+    setProductInShipmentLine(shipmentLine, product);
+    if (orderLine != null) {
+      setOrderLineInShipmentLine(shipmentLine, orderLine);
+    }
+
+    shipment.setProject(project);
+    shipment.setCostcenter(costCenter);
+    OBDal.getInstance().save(shipment);
+    OBDal.getInstance().flush();
+
+    TestUtils.processShipmentReceipt(shipment);
+    return shipment;
+  }
+
+  private void assertDimension(final String dimensionName, final BaseOBObject actual,
+      final BaseOBObject expected) {
+    if (expected == null) {
+      assertThat("Invoice header " + dimensionName + " should be empty", actual == null,
+          equalTo(true));
+    } else {
+      assertThat(
+          "Invoice header should have the " + dimensionName + " of the Goods Shipment header",
+          actual.getId(), equalTo(expected.getId()));
+    }
+  }
 }
