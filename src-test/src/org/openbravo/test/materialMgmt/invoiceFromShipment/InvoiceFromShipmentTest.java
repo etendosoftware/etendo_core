@@ -929,10 +929,10 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   public void invoiceFromShipment_011() {
     OBContext.setAdminMode();
     try {
-      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
-          "InvoiceFromShipment_011");
-      final Order salesOrder = createSalesOrderWithInvoiceTerm(SALES_ORDER,
-          "InvoiceFromShipment_011", AFTER_DELIVERY);
+      final String testName = "InvoiceFromShipment_011";
+      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID, testName);
+      final Order salesOrder = createSalesOrderWithInvoiceTerm(SALES_ORDER, testName,
+          AFTER_DELIVERY);
       final OrderLine orderLine = getOrderLineByLineNo(salesOrder, 10L);
       setProductInOrderLine(orderLine, product);
       TestUtils.processOrder(salesOrder);
@@ -940,8 +940,7 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
       final Project project = OBDal.getInstance().get(Project.class, PROJECT_ID);
       final Costcenter costCenter = OBDal.getInstance().get(Costcenter.class, COST_CENTER_ID);
 
-      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID,
-          "InvoiceFromShipment_011");
+      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID, testName);
       final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
       setProductInShipmentLine(shipmentLine, product);
       setOrderLineInShipmentLine(shipmentLine, orderLine);
@@ -974,11 +973,10 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   public void invoiceFromShipment_012() {
     OBContext.setAdminMode();
     try {
-      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
-          "InvoiceFromShipment_012");
+      final String testName = "InvoiceFromShipment_012";
+      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID, testName);
 
-      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID,
-          "InvoiceFromShipment_012");
+      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID, testName);
       final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
       setProductInShipmentLine(shipmentLine, product);
 
@@ -1012,11 +1010,10 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   public void invoiceFromShipment_013() {
     OBContext.setAdminMode();
     try {
-      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
-          "InvoiceFromShipment_013");
+      final String testName = "InvoiceFromShipment_013";
+      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID, testName);
 
-      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID,
-          "InvoiceFromShipment_013");
+      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID, testName);
       final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
       setProductInShipmentLine(shipmentLine, product);
 
