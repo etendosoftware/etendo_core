@@ -56,9 +56,11 @@ import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.plm.Product;
+import org.openbravo.model.financialmgmt.accounting.Costcenter;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
+import org.openbravo.model.project.Project;
 import org.openbravo.service.db.DalConnectionProvider;
 
 /**
@@ -84,6 +86,10 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   private static final String AFTER_DELIVERY = "D";
   private static final String AFTER_ORDER_DELIVERY = "O";
   private static final String PRICE_LIST_SALES_ID = "4028E6C72959682B01295ADC1D55022B";
+  // Test Cost Center
+  private static final String COST_CENTER_ID = "5DDF281D28CF47639E1E05568A262591";
+  // TestProject
+  private static final String PROJECT_ID = "B4731348B2CB48DCB24CC369CBC9DD83";
 
   @Before
   public void initialize() {
@@ -908,4 +914,152 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
         equalTo(priceList.getId()));
   }
 
+  /**
+   * ETP-4762: Generating an invoice from a Goods Shipment linked to a Sales Order must copy the
+   * accounting dimensions of the Goods Shipment header into the Invoice header
+   * <ol>
+   * <li>Create a Sales Order with invoice term "After Delivery".</li>
+   * <li>Create a Goods Shipment linked to that order, with Project and Cost Center in its
+   * header.</li>
+   * <li>Complete the document invoicing if possible.</li>
+   * <li>Verify the Invoice header has the same Project and Cost Center as the Goods Shipment.</li>
+   * </ol>
+   */
+  @Test
+  public void invoiceFromShipment_011() {
+    OBContext.setAdminMode();
+    try {
+      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
+          "InvoiceFromShipment_011");
+      final Order salesOrder = createSalesOrderWithInvoiceTerm(SALES_ORDER,
+          "InvoiceFromShipment_011", AFTER_DELIVERY);
+      final OrderLine orderLine = getOrderLineByLineNo(salesOrder, 10L);
+      setProductInOrderLine(orderLine, product);
+      TestUtils.processOrder(salesOrder);
+
+      final Project project = OBDal.getInstance().get(Project.class, PROJECT_ID);
+      final Costcenter costCenter = OBDal.getInstance().get(Costcenter.class, COST_CENTER_ID);
+
+      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID,
+          "InvoiceFromShipment_011");
+      final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
+      setProductInShipmentLine(shipmentLine, product);
+      setOrderLineInShipmentLine(shipmentLine, orderLine);
+      setDimensionsInShipment(shipment, project, costCenter);
+      TestUtils.processShipmentReceipt(shipment);
+
+      final Invoice invoice = new InvoiceGeneratorFromGoodsShipment(shipment.getId())
+          .createInvoiceConsideringInvoiceTerms(true);
+      assertInvoiceHeaderDimensions(invoice, project, costCenter);
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new OBException(e);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * ETP-4762: Generating an invoice from a Goods Shipment which is NOT linked to any Sales Order
+   * must still copy the accounting dimensions of the Goods Shipment header into the Invoice header
+   * <ol>
+   * <li>Create a Goods Shipment without Sales Order, with Project and Cost Center in its
+   * header.</li>
+   * <li>Complete the document invoicing if possible.</li>
+   * <li>Verify the Invoice header has the same Project and Cost Center as the Goods Shipment.</li>
+   * </ol>
+   */
+  @Test
+  public void invoiceFromShipment_012() {
+    OBContext.setAdminMode();
+    try {
+      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
+          "InvoiceFromShipment_012");
+
+      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID,
+          "InvoiceFromShipment_012");
+      final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
+      setProductInShipmentLine(shipmentLine, product);
+
+      final Project project = OBDal.getInstance().get(Project.class, PROJECT_ID);
+      final Costcenter costCenter = OBDal.getInstance().get(Costcenter.class, COST_CENTER_ID);
+      setDimensionsInShipment(shipment, project, costCenter);
+      TestUtils.processShipmentReceipt(shipment);
+
+      final Invoice invoice = new InvoiceGeneratorFromGoodsShipment(shipment.getId())
+          .createInvoiceConsideringInvoiceTerms(true);
+      assertInvoiceHeaderDimensions(invoice, project, costCenter);
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new OBException(e);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * ETP-4762: A dimension which is empty in the Goods Shipment header must stay empty in the
+   * Invoice header, instead of being taken from anywhere else
+   * <ol>
+   * <li>Create a Goods Shipment with Project informed and Cost Center empty in its header.</li>
+   * <li>Complete the document invoicing if possible.</li>
+   * <li>Verify the Invoice header has the Project informed and the Cost Center empty.</li>
+   * </ol>
+   */
+  @Test
+  public void invoiceFromShipment_013() {
+    OBContext.setAdminMode();
+    try {
+      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
+          "InvoiceFromShipment_013");
+
+      final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID,
+          "InvoiceFromShipment_013");
+      final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
+      setProductInShipmentLine(shipmentLine, product);
+
+      final Project project = OBDal.getInstance().get(Project.class, PROJECT_ID);
+      setDimensionsInShipment(shipment, project, null);
+      TestUtils.processShipmentReceipt(shipment);
+
+      final Invoice invoice = new InvoiceGeneratorFromGoodsShipment(shipment.getId())
+          .createInvoiceConsideringInvoiceTerms(true);
+      assertInvoiceHeaderDimensions(invoice, project, null);
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new OBException(e);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  private void setDimensionsInShipment(final ShipmentInOut shipment, final Project project,
+      final Costcenter costCenter) {
+    shipment.setProject(project);
+    shipment.setCostcenter(costCenter);
+    OBDal.getInstance().save(shipment);
+    OBDal.getInstance().flush();
+  }
+
+  private void assertInvoiceHeaderDimensions(final Invoice invoice, final Project expectedProject,
+      final Costcenter expectedCostCenter) {
+    assertThat("Invoice should not be null", invoice == null, equalTo(false));
+    if (expectedProject == null) {
+      assertThat("Invoice header Project should be empty", invoice.getProject() == null,
+          equalTo(true));
+    } else {
+      assertThat("Invoice header should have the Project of the Goods Shipment header",
+          invoice.getProject().getId(), equalTo(expectedProject.getId()));
+    }
+    if (expectedCostCenter == null) {
+      assertThat("Invoice header Cost Center should be empty", invoice.getCostcenter() == null,
+          equalTo(true));
+    } else {
+      assertThat("Invoice header should have the Cost Center of the Goods Shipment header",
+          invoice.getCostcenter().getId(), equalTo(expectedCostCenter.getId()));
+    }
+  }
 }
