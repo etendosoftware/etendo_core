@@ -576,6 +576,70 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
   }
 
   // -------------------------------------------------------------------------
+  // discardAttachmentsOnFreshOpen (private) via reflection
+  // -------------------------------------------------------------------------
+
+  /**
+   * A fresh open of the popup drops any attachment list left in the session. Closing the popup
+   * sends no request to the server, so attachments uploaded for one record would otherwise still
+   * be listed when the popup is reopened, for that record or for any other one.
+   * @throws Exception if reflection fails
+   */
+  @Test
+  public void testDiscardAttachmentsOnFreshOpen_defaultCommand_removesSessionAttachments()
+      throws Exception {
+    HttpSession session = invokeDiscardAttachmentsOnFreshOpen(false);
+
+    verify(session).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  /**
+   * The ADD postback is not a fresh open: the attachment just uploaded, and every attachment
+   * uploaded before it in the same popup, must survive the re-render.
+   * @throws Exception if reflection fails
+   */
+  @Test
+  public void testDiscardAttachmentsOnFreshOpen_addCommand_keepsSessionAttachments()
+      throws Exception {
+    HttpSession session = invokeDiscardAttachmentsOnFreshOpen(true);
+
+    verify(session, never()).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  /**
+   * The DEL postback is not a fresh open either: removing one attachment must leave the rest of
+   * the list in place.
+   * @throws Exception if reflection fails
+   */
+  @Test
+  public void testDiscardAttachmentsOnFreshOpen_delCommand_keepsSessionAttachments()
+      throws Exception {
+    HttpSession session = invokeDiscardAttachmentsOnFreshOpen(true);
+
+    verify(session, never()).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  private static HttpSession invokeDiscardAttachmentsOnFreshOpen(boolean isAddOrDelPostback)
+      throws Exception {
+    VariablesSecureApp vars = mock(VariablesSecureApp.class);
+    when(vars.commandIn("ADD", "DEL")).thenReturn(isAddOrDelPostback);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    HttpSession session = mock(HttpSession.class);
+    when(request.getSession()).thenReturn(session);
+
+    PrintControllerEmailOptionsBuilder builder =
+        new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
+    setBuilderField(builder, "vars", vars);
+    setBuilderField(builder, "request", request);
+
+    Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
+        "discardAttachmentsOnFreshOpen");
+    m.setAccessible(true);
+    m.invoke(builder);
+    return session;
+  }
+
+  // -------------------------------------------------------------------------
   // applyEditedEmailParams (private) via reflection
   // -------------------------------------------------------------------------
 
