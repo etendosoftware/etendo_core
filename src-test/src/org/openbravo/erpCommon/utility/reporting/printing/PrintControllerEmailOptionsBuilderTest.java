@@ -74,6 +74,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
   private static final String METHOD_RESOLVE_CONTACT = "resolvePreselectedContact";
   private static final String PARAM_CLOSED = "closed";
   private static final String FIELD_CONTEXT = "context";
+  private static final String FIELD_REQUEST = "request";
+  private static final String FIELD_VARS = "vars";
 
   // -------------------------------------------------------------------------
   // instantiation smoke test
@@ -497,7 +499,7 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
     PrintControllerEmailOptionsBuilder b =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
     setBuilderField(b, "controller", ctrl);
-    setBuilderField(b, "vars", vars);
+    setBuilderField(b, FIELD_VARS, vars);
     setBuilderField(b, FIELD_CONTEXT, buildContext(reports));
     return b;
   }
@@ -535,8 +537,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
     PrintControllerEmailOptionsBuilder builder =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
-    setBuilderField(builder, "vars", vars);
-    setBuilderField(builder, "request", request);
+    setBuilderField(builder, FIELD_VARS, vars);
+    setBuilderField(builder, FIELD_REQUEST, request);
     setBuilderField(builder, FIELD_CONTEXT, buildContext(Collections.emptyMap()));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
@@ -562,8 +564,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
     PrintControllerEmailOptionsBuilder builder =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
-    setBuilderField(builder, "vars", vars);
-    setBuilderField(builder, "request", request);
+    setBuilderField(builder, FIELD_VARS, vars);
+    setBuilderField(builder, FIELD_REQUEST, request);
     setBuilderField(builder, FIELD_CONTEXT, buildContext(Collections.emptyMap()));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
@@ -629,8 +631,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
     PrintControllerEmailOptionsBuilder builder =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
-    setBuilderField(builder, "vars", vars);
-    setBuilderField(builder, "request", request);
+    setBuilderField(builder, FIELD_VARS, vars);
+    setBuilderField(builder, FIELD_REQUEST, request);
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
         "discardAttachmentsOnFreshOpen");
