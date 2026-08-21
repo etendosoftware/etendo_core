@@ -62,6 +62,7 @@ final class PrintControllerEmailOptionsBuilder {
 
   void render() throws IOException, ServletException, ReportingException {
     PocData[] pocData = EmailUtilities.getContactDetails(context.documentType, context.strDocumentId, controller);
+    discardAttachmentsOnFreshOpen();
     List<AttachContent> attachments = getSessionAttachments();
     boolean isTheFirstEntry = attachments == null;
     if (attachments == null) {
@@ -102,6 +103,24 @@ final class PrintControllerEmailOptionsBuilder {
     PrintWriter out = response.getWriter();
     out.println(xmlDocument.print());
     out.close();
+  }
+
+  /**
+   * Drops the attachment list left in the session when the popup is being opened fresh, as opposed
+   * to re-rendered by its own ADD or DEL postback.
+   * <p>
+   * The attachment list lives under a single session-wide key, so without this it is shared by
+   * every record for the whole session. Closing the popup sends no request to the server -- the
+   * Cancel button, the ESC shortcut and the popup's close box are all handled client side -- so a
+   * fresh open is the only reliable point at which stale attachments can be dropped. This mirrors
+   * what {@code applyEmailFormData} already does with the recipients, the subject and the body:
+   * kept across an ADD or DEL postback, rebuilt on a fresh open.
+   */
+  private void discardAttachmentsOnFreshOpen() {
+    if (vars.commandIn("ADD", "DEL")) {
+      return;
+    }
+    request.getSession().removeAttribute(PrintController.SESSION_FILES);
   }
 
   @SuppressWarnings("unchecked")
