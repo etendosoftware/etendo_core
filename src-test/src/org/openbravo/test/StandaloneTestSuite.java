@@ -74,6 +74,7 @@ import org.openbravo.test.conversionratedoc.ConversionRateDocUniqueTestSuite;
 import org.openbravo.test.copyLinesFromOrders.CopyLinesFromOrdersTest;
 import org.openbravo.test.costing.TestCosting;
 import org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTest;
+import org.openbravo.test.createlinesfrom.AlternateTaxBaseAmountProratingTest;
 import org.openbravo.test.createlinesfrom.CreateLinesFromTest;
 import org.openbravo.test.dal.AdminContextTest;
 import org.openbravo.test.dal.ComputedColumnsTest;
@@ -206,6 +207,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Create Lines From refactor
     CreateLinesFromTest.class,
+    AlternateTaxBaseAmountProratingTest.class,
 
     // AD_IsOrgIncluded
     Ad_isorgincludedTest.class, //
