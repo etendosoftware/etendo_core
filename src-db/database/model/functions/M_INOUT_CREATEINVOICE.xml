@@ -110,9 +110,26 @@
       v_stdprecision NUMBER;
       --
       v_taxBaseAmt NUMBER;
+      v_prorate_taxbaseamt VARCHAR(1);
+      v_pref_client_id VARCHAR2(32);
+      v_pref_org_id VARCHAR2(32);
       v_LineNetAmt NUMBER;
       -- v_Offer_ID       varchar2(32);
     BEGIN
+      -- Get AlternateTaxBaseAmountProrating value. When it is not enabled the Alternate Tax
+      -- Base Amount is a manual amount and it is inherited without prorating it.
+      v_prorate_taxbaseamt := 'N';
+      BEGIN
+        SELECT AD_Client_ID, AD_Org_ID
+        INTO v_pref_client_id, v_pref_org_id
+        FROM M_INOUT
+        WHERE M_InOut_ID=v_Record_ID;
+        v_prorate_taxbaseamt := AD_GET_PREFERENCE_VALUE('AlternateTaxBaseAmountProrating', 'Y', v_pref_client_id, v_pref_org_id, v_User_ID, NULL, NULL);
+        EXCEPTION
+          WHEN OTHERS THEN
+          -- Nothing to do, v_prorate_taxbaseamt = 'N'
+          DBMS_OUTPUT.PUT_LINE('No AlternateTaxBaseAmountProrating preference found') ;
+      END;
       FOR CUR_Shipment IN
         (SELECT *  FROM M_INOUT  WHERE M_InOut_ID=v_Record_ID)
       LOOP -- Just to have all variables
@@ -296,7 +313,9 @@
               WHERE C_OrderLine_ID=CUR_ShipmentLines.C_OrderLine_ID;
 
 	   -- Get Tax Base Amount
-	      SELECT COALESCE(co.taxbaseamt,0) * C_DIVIDE((l.MovementQty-SUM(COALESCE(mi.Qty,0))),COALESCE(co.qtyordered,1)) as taxbaseamt
+	      SELECT CASE WHEN v_prorate_taxbaseamt = 'Y'
+	                  THEN COALESCE(co.taxbaseamt,0) * C_DIVIDE((l.MovementQty-SUM(COALESCE(mi.Qty,0))),COALESCE(co.qtyordered,1))
+	                  ELSE co.taxbaseamt END as taxbaseamt
 	      INTO v_taxBaseAmt
 	      FROM M_INOUTLINE l left join M_MATCHINV mi on l.M_InOutLine_ID=mi.M_InOutLine_ID
                 left join C_ORDERLINE co ON co.C_ORDERLINE_ID=l.C_ORDERLINE_ID

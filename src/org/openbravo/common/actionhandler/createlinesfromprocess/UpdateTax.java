@@ -34,8 +34,11 @@ import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.businessUtility.Tax;
+import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.order.OrderLine;
@@ -49,6 +52,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 @Qualifier(CreateLinesFromProcessHook.CREATE_LINES_FROM_PROCESS_HOOK_QUALIFIER)
 class UpdateTax extends CreateLinesFromProcessHook {
   private static final Logger log = LogManager.getLogger();
+  private static final String PRORATING_PREFERENCE = "AlternateTaxBaseAmountProrating";
 
   @Override
   public int getOrder() {
@@ -123,25 +127,58 @@ class UpdateTax extends CreateLinesFromProcessHook {
     BigDecimal taxBaseAmt = getInvoiceLine().getLineNetAmount();
     if (isCopiedFromOrderLine()
         || CreateLinesFromUtil.hasRelatedOrderLine((ShipmentInOutLine) getCopiedFromLine())) {
-      taxBaseAmt = calculateAlternateTaxBaseAmtProrating(taxBaseAmt);
+      taxBaseAmt = getAlternateTaxBaseAmt(taxBaseAmt);
     }
     getInvoiceLine().setTaxableAmount(taxBaseAmt);
   }
 
-  private BigDecimal calculateAlternateTaxBaseAmtProrating(final BigDecimal invoiceLineNetAmt) {
-    BigDecimal taxBaseAmt = invoiceLineNetAmt;
+  /**
+   * Gets the Alternate Tax Base Amount to set in the invoice line. It is a manual amount, so by
+   * default it is inherited from the source order line without any adjustment. It is only prorated
+   * according to the invoiced quantity when the AlternateTaxBaseAmountProrating preference is
+   * enabled.
+   *
+   * @param invoiceLineNetAmt
+   *          The net amount of the invoice line, used when the order line has no Alternate Tax Base
+   *          Amount informed
+   * @return The Alternate Tax Base Amount for the invoice line
+   */
+  private BigDecimal getAlternateTaxBaseAmt(final BigDecimal invoiceLineNetAmt) {
     final OrderLine originalOrderLine = (isCopiedFromOrderLine() ? (OrderLine) getCopiedFromLine()
         : ((ShipmentInOutLine) getCopiedFromLine()).getSalesOrderLine());
-    if (originalOrderLine.getTaxableAmount() != null) {
-      BigDecimal originalOrderedQuantity = originalOrderLine.getOrderedQuantity();
-      BigDecimal qtyOrdered = CreateLinesFromUtil.getOrderedQuantity(getPickExecJSONObject());
-      taxBaseAmt = originalOrderLine.getTaxableAmount();
-      if (originalOrderedQuantity.compareTo(BigDecimal.ZERO) != 0) {
-        taxBaseAmt = taxBaseAmt.multiply(qtyOrdered)
-            .divide(originalOrderedQuantity,
-                getInvoice().getCurrency().getStandardPrecision().intValue(), RoundingMode.HALF_UP);
-      }
+    final BigDecimal originalTaxBaseAmt = originalOrderLine.getTaxableAmount();
+    if (originalTaxBaseAmt == null) {
+      return invoiceLineNetAmt;
     }
-    return taxBaseAmt;
+    if (!isAlternateTaxBaseAmtProratingEnabled()) {
+      return originalTaxBaseAmt;
+    }
+    return calculateAlternateTaxBaseAmtProrating(originalOrderLine, originalTaxBaseAmt);
+  }
+
+  private BigDecimal calculateAlternateTaxBaseAmtProrating(final OrderLine originalOrderLine,
+      final BigDecimal originalTaxBaseAmt) {
+    final BigDecimal originalOrderedQuantity = originalOrderLine.getOrderedQuantity();
+    if (originalOrderedQuantity.compareTo(BigDecimal.ZERO) == 0) {
+      return originalTaxBaseAmt;
+    }
+    final BigDecimal qtyOrdered = CreateLinesFromUtil.getOrderedQuantity(getPickExecJSONObject());
+    return originalTaxBaseAmt.multiply(qtyOrdered)
+        .divide(originalOrderedQuantity,
+            getInvoice().getCurrency().getStandardPrecision().intValue(), RoundingMode.HALF_UP);
+  }
+
+  private boolean isAlternateTaxBaseAmtProratingEnabled() {
+    try {
+      final OBContext context = OBContext.getOBContext();
+      return StringUtils.equals(Preferences.YES,
+          Preferences.getPreferenceValue(PRORATING_PREFERENCE, true, context.getCurrentClient(),
+              context.getCurrentOrganization(), context.getUser(), context.getRole(), null));
+    } catch (PropertyException e) {
+      // The preference is not defined: the Alternate Tax Base Amount is not prorated
+      log.debug("Preference {} not found, Alternate Tax Base Amount will not be prorated",
+          PRORATING_PREFERENCE, e);
+      return false;
+    }
   }
 }
