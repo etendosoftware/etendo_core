@@ -40,7 +40,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
@@ -57,11 +56,9 @@ import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.plm.Product;
-import org.openbravo.model.financialmgmt.accounting.Costcenter;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
-import org.openbravo.model.project.Project;
 import org.openbravo.service.db.DalConnectionProvider;
 
 /**
@@ -87,13 +84,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   private static final String AFTER_DELIVERY = "D";
   private static final String AFTER_ORDER_DELIVERY = "O";
   private static final String PRICE_LIST_SALES_ID = "4028E6C72959682B01295ADC1D55022B";
-  private static final String INVOICE_NOT_NULL = "Invoice should not be null";
-  private static final String LINE_DIMENSION_PREFIX = "ETP4762-LINE";
-  private static final int UNIQUE_KEY_SUFFIX_LENGTH = 8;
-  // Test Cost Center
-  private static final String COST_CENTER_ID = "5DDF281D28CF47639E1E05568A262591";
-  // TestProject
-  private static final String PROJECT_ID = "B4731348B2CB48DCB24CC369CBC9DD83";
 
   @Before
   public void initialize() {
@@ -789,7 +779,7 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   private void assertGeneratedInvoiceLine(final Invoice invoice, final Product product,
       final BigDecimal quantity) {
-    assertThat(INVOICE_NOT_NULL, invoice == null, equalTo(false));
+    assertThat("Invoice should not be null", invoice == null, equalTo(false));
     final InvoiceLine invoiceLine = getInvoiceLineByProductQuantity(invoice, product, quantity);
     assertThat("Invoice Line should have the product " + product, invoiceLine == null,
         equalTo(false));
@@ -918,240 +908,4 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
         equalTo(priceList.getId()));
   }
 
-  /**
-   * ETP-4762: Generating an invoice from a Goods Shipment must leave the accounting dimensions of
-   * the Invoice header empty. Dimensions are only inherited at line level: from the Goods Shipment
-   * line and, when the line has none, from the Goods Shipment header.
-   * <p>
-   * Goods Shipment linked to a Sales Order, with dimensions only in its header
-   */
-  @Test
-  public void invoiceFromShipment_011() {
-    assertInvoiceDimensions("InvoiceFromShipment_011", true, PROJECT_ID, COST_CENTER_ID);
-  }
-
-  /**
-   * ETP-4762: Same as above for a Goods Shipment which is NOT linked to any Sales Order, so the
-   * dimensions can only come from the Goods Shipment header itself
-   */
-  @Test
-  public void invoiceFromShipment_012() {
-    assertInvoiceDimensions("InvoiceFromShipment_012", false, PROJECT_ID, COST_CENTER_ID);
-  }
-
-  /**
-   * ETP-4762: A dimension which is empty in the Goods Shipment stays empty in the Invoice line, and
-   * the Invoice header keeps both dimensions empty
-   */
-  @Test
-  public void invoiceFromShipment_013() {
-    assertInvoiceDimensions("InvoiceFromShipment_013", false, PROJECT_ID, null);
-  }
-
-  /**
-   * ETP-4762: A Goods Shipment without dimensions neither in its header nor in its lines generates
-   * an Invoice without dimensions at all
-   */
-  @Test
-  public void invoiceFromShipment_014() {
-    assertInvoiceDimensions("InvoiceFromShipment_014", false, null, null);
-  }
-
-  /**
-   * ETP-4762: The dimensions of the Goods Shipment line take precedence over the ones of the Goods
-   * Shipment header. A line with its own dimensions keeps them in the Invoice line, a line without
-   * dimensions inherits the ones of the Goods Shipment header, and the Invoice header stays empty
-   */
-  @Test
-  public void invoiceFromShipment_015() {
-    OBContext.setAdminMode();
-    try {
-      final String testName = "InvoiceFromShipment_015";
-      final Project headerProject = OBDal.getInstance().get(Project.class, PROJECT_ID);
-      final Costcenter headerCostCenter = OBDal.getInstance().get(Costcenter.class, COST_CENTER_ID);
-      final Project lineProject = cloneProject(headerProject, LINE_DIMENSION_PREFIX);
-      final Costcenter lineCostCenter = cloneCostCenter(headerCostCenter, LINE_DIMENSION_PREFIX);
-
-      final Product productWithLineDimensions = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
-          testName + "-Line");
-      final Product productWithoutLineDimensions = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
-          testName + "-Header");
-
-      final ShipmentInOut shipment = createShipmentReceiptWithTwoLines(GOODS_SHIPMENT_ID, testName);
-      final ShipmentInOutLine lineWithDimensions = getShipmentLineByLineNo(shipment, 10L);
-      final ShipmentInOutLine lineWithoutDimensions = getShipmentLineByLineNo(shipment, 20L);
-      setProductInShipmentLine(lineWithDimensions, productWithLineDimensions);
-      setProductInShipmentLine(lineWithoutDimensions, productWithoutLineDimensions);
-      setLineDimensions(lineWithDimensions, lineProject, lineCostCenter);
-      setLineDimensions(lineWithoutDimensions, null, null);
-      shipment.setProject(headerProject);
-      shipment.setCostcenter(headerCostCenter);
-      OBDal.getInstance().flush();
-      TestUtils.processShipmentReceipt(shipment);
-
-      final Invoice invoice = generateInvoiceFrom(shipment);
-
-      assertInvoiceHeaderHasNoDimensions(invoice);
-      assertLineDimensions(getInvoiceLineByProduct(invoice, productWithLineDimensions), lineProject,
-          lineCostCenter);
-      assertLineDimensions(getInvoiceLineByProduct(invoice, productWithoutLineDimensions),
-          headerProject, headerCostCenter);
-
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      throw new OBException(e);
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-  }
-
-  /**
-   * Generates an invoice from a Goods Shipment which carries the given dimensions in its header and
-   * none in its line, and verifies that the Invoice header has no dimensions while the Invoice line
-   * inherits the ones of the Goods Shipment header
-   *
-   * @param testName
-   *          Name used to identify the documents created by the test
-   * @param linkedToSalesOrder
-   *          Whether the Goods Shipment must be linked to a Sales Order or not
-   * @param projectId
-   *          Project to set in the Goods Shipment header, null to leave it empty
-   * @param costCenterId
-   *          Cost Center to set in the Goods Shipment header, null to leave it empty
-   */
-  private void assertInvoiceDimensions(final String testName, final boolean linkedToSalesOrder,
-      final String projectId, final String costCenterId) {
-    OBContext.setAdminMode();
-    try {
-      final Project project = projectId == null ? null
-          : OBDal.getInstance().get(Project.class, projectId);
-      final Costcenter costCenter = costCenterId == null ? null
-          : OBDal.getInstance().get(Costcenter.class, costCenterId);
-      final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID, testName);
-
-      final ShipmentInOut shipment = createShipmentWithHeaderDimensions(testName, product,
-          linkedToSalesOrder, project, costCenter);
-      final Invoice invoice = generateInvoiceFrom(shipment);
-
-      assertInvoiceHeaderHasNoDimensions(invoice);
-      assertLineDimensions(getInvoiceLineByProduct(invoice, product), project, costCenter);
-
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      throw new OBException(e);
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-  }
-
-  private Invoice generateInvoiceFrom(final ShipmentInOut shipment) {
-    final Invoice invoice = new InvoiceGeneratorFromGoodsShipment(shipment.getId())
-        .createInvoiceConsideringInvoiceTerms(true);
-    assertThat(INVOICE_NOT_NULL, invoice == null, equalTo(false));
-    return invoice;
-  }
-
-  /**
-   * Creates a completed Goods Shipment with the given dimensions in its header and no dimensions in
-   * its line, optionally linked to a Sales Order
-   */
-  private ShipmentInOut createShipmentWithHeaderDimensions(final String testName,
-      final Product product, final boolean linkedToSalesOrder, final Project project,
-      final Costcenter costCenter) {
-    OrderLine orderLine = null;
-    if (linkedToSalesOrder) {
-      final Order salesOrder = createSalesOrderWithInvoiceTerm(SALES_ORDER, testName,
-          AFTER_DELIVERY);
-      salesOrder.setProject(project);
-      salesOrder.setCostcenter(costCenter);
-      orderLine = getOrderLineByLineNo(salesOrder, 10L);
-      setProductInOrderLine(orderLine, product);
-      TestUtils.processOrder(salesOrder);
-    }
-
-    final ShipmentInOut shipment = TestUtils.cloneReceiptShipment(GOODS_SHIPMENT_ID, testName);
-    final ShipmentInOutLine shipmentLine = getShipmentLineByLineNo(shipment, 10L);
-    setProductInShipmentLine(shipmentLine, product);
-    if (orderLine != null) {
-      setOrderLineInShipmentLine(shipmentLine, orderLine);
-    }
-    setLineDimensions(shipmentLine, null, null);
-
-    shipment.setProject(project);
-    shipment.setCostcenter(costCenter);
-    OBDal.getInstance().save(shipment);
-    OBDal.getInstance().flush();
-
-    TestUtils.processShipmentReceipt(shipment);
-    return shipment;
-  }
-
-  private void setLineDimensions(final ShipmentInOutLine shipmentLine, final Project project,
-      final Costcenter costCenter) {
-    shipmentLine.setProject(project);
-    shipmentLine.setCostcenter(costCenter);
-  }
-
-  private Project cloneProject(final Project project, final String keyPrefix) {
-    final Project newProject = (Project) DalUtil.copy(project, false);
-    final String newId = SequenceIdData.getUUID();
-    newProject.setId(newId);
-    newProject.setNewOBObject(true);
-    newProject.setSearchKey(buildUniqueKey(keyPrefix, newId));
-    newProject.setName(buildUniqueKey(keyPrefix, newId));
-    OBDal.getInstance().save(newProject);
-    OBDal.getInstance().flush();
-    return newProject;
-  }
-
-  private Costcenter cloneCostCenter(final Costcenter costCenter, final String keyPrefix) {
-    final Costcenter newCostCenter = (Costcenter) DalUtil.copy(costCenter, false);
-    final String newId = SequenceIdData.getUUID();
-    newCostCenter.setId(newId);
-    newCostCenter.setNewOBObject(true);
-    newCostCenter.setSearchKey(buildUniqueKey(keyPrefix, newId));
-    newCostCenter.setName(buildUniqueKey(keyPrefix, newId));
-    OBDal.getInstance().save(newCostCenter);
-    OBDal.getInstance().flush();
-    return newCostCenter;
-  }
-
-  /**
-   * Builds a key which is unique even if the test is executed more than once in the same instance,
-   * short enough for the Search Key column of Project and Cost Center (40 characters)
-   */
-  private String buildUniqueKey(final String keyPrefix, final String id) {
-    return keyPrefix + "-" + id.substring(0, UNIQUE_KEY_SUFFIX_LENGTH);
-  }
-
-  private InvoiceLine getInvoiceLineByProduct(final Invoice invoice, final Product product) {
-    final String hql = "as il where il.invoice.id = :invoiceId and il.product.id = :productId";
-    final OBQuery<InvoiceLine> query = OBDal.getInstance().createQuery(InvoiceLine.class, hql);
-    query.setNamedParameter("invoiceId", invoice.getId());
-    query.setNamedParameter("productId", product.getId());
-    query.setMaxResult(1);
-    return query.uniqueResult();
-  }
-
-  private void assertInvoiceHeaderHasNoDimensions(final Invoice invoice) {
-    assertDimension("Invoice header Project", invoice.getProject(), null);
-    assertDimension("Invoice header Cost Center", invoice.getCostcenter(), null);
-  }
-
-  private void assertLineDimensions(final InvoiceLine invoiceLine, final Project project,
-      final Costcenter costCenter) {
-    assertThat("Invoice Line should not be null", invoiceLine == null, equalTo(false));
-    assertDimension("Invoice Line Project", invoiceLine.getProject(), project);
-    assertDimension("Invoice Line Cost Center", invoiceLine.getCostcenter(), costCenter);
-  }
-
-  private void assertDimension(final String dimensionName, final BaseOBObject actual,
-      final BaseOBObject expected) {
-    if (expected == null) {
-      assertThat(dimensionName + " should be empty", actual == null, equalTo(true));
-    } else {
-      assertThat(dimensionName + " should be " + expected.getIdentifier(), actual.getId(),
-          equalTo(expected.getId()));
-    }
-  }
 }

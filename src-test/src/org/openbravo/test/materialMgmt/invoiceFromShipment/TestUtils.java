@@ -54,7 +54,7 @@ public class TestUtils {
    *          Name of the original Product
    * @return A new Product clone based on the original one
    */
-  static Product cloneProduct(final String productId, final String name) {
+  public static Product cloneProduct(final String productId, final String name) {
     final Product oldProduct = OBDal.getInstance().get(Product.class, productId);
     final Product newProduct = (Product) DalUtil.copy(oldProduct, false);
     int numberOfProductsWithSameName = getNumberOfProducts(name) + 1;
@@ -179,8 +179,9 @@ public class TestUtils {
    * @param order
    *          Order to be completed
    * @throws OBException
+   *           if the Order cannot be completed
    */
-  static void processOrder(final Order order) throws OBException {
+  public static void processOrder(final Order order) throws OBException {
     final List<Object> parameters = new ArrayList<Object>();
     parameters.add(null);
     parameters.add(order.getId());
@@ -198,7 +199,7 @@ public class TestUtils {
    *          docNo to set to the new Goods Receipt/Shipment
    * @return a Goods Receipt/Shipment not completed
    */
-  static ShipmentInOut cloneReceiptShipment(final String mInoutId, final String docNo) {
+  public static ShipmentInOut cloneReceiptShipment(final String mInoutId, final String docNo) {
     final ShipmentInOut oldInOut = OBDal.getInstance().get(ShipmentInOut.class, mInoutId);
     final ShipmentInOut newInOut = (ShipmentInOut) DalUtil.copy(oldInOut, false);
     int numberOfShipmentsWithSameDocNo = getNumberOfShipments(docNo) + 1;
@@ -241,13 +242,13 @@ public class TestUtils {
    * Returns a new Goods Receipt/Shipment Line based on the given one. It is a clone of the first
    * one but with different product
    * 
-   * @param line
-   *          Original Goods Receipt/Shipment
+   * @param oldLine
+   *          Original Goods Receipt/Shipment Line
    * @param newInOut
    *          new Goods Receipt/Shipment (a clone of the original one)
    * @return A new Goods Receipt/Shipment Line clone based on the original one
    */
-  static ShipmentInOutLine cloneReceiptShipmentLine(final ShipmentInOutLine oldLine,
+  public static ShipmentInOutLine cloneReceiptShipmentLine(final ShipmentInOutLine oldLine,
       final ShipmentInOut newInOut) {
     final ShipmentInOutLine newLine = (ShipmentInOutLine) DalUtil.copy(oldLine, false);
 
@@ -268,8 +269,10 @@ public class TestUtils {
    * @param shipmentReceipt
    *          Shipment or Receipt to be completed
    * @throws OBException
+   *           if the Shipment or Receipt cannot be completed
    */
-  static void processShipmentReceipt(final ShipmentInOut shipmentReceipt) throws OBException {
+  public static void processShipmentReceipt(final ShipmentInOut shipmentReceipt)
+      throws OBException {
     final List<Object> parameters = new ArrayList<Object>();
     parameters.add(null);
     parameters.add(shipmentReceipt.getId());
