@@ -479,36 +479,11 @@ public class InvoiceGeneratorFromGoodsShipment {
     newInvoice.setPaymentMethod(shipment.getBusinessPartner().getPaymentMethod());
     newInvoice.setPaymentTerms(shipment.getBusinessPartner().getPaymentTerms());
 
-    copyAccountingDimensionsFromShipmentHeader(shipment, newInvoice);
-
     checkInvoiceHasAllMandatoryFields(newInvoice);
 
     OBDal.getInstance().save(newInvoice);
     OBDal.getInstance().flush();
     return newInvoice;
-  }
-
-  /**
-   * Copies the accounting dimensions from the Goods Shipment header into the Invoice header.
-   * <p>
-   * The Goods Shipment header already inherits these dimensions from its Sales Order when it is
-   * generated from one, so reading them from the shipment also covers shipments created without a
-   * Sales Order, and honours any manual change done on the shipment header. This mirrors the
-   * legacy M_INOUT_CREATEINVOICE procedure still used by the Purchase flow, and is consistent with
-   * the line level copy performed by UpdateInvoiceLineInformation.
-   *
-   * @param shipment the source Goods Shipment
-   * @param newInvoice the Invoice header being created
-   */
-  private void copyAccountingDimensionsFromShipmentHeader(final ShipmentInOut shipment,
-      final Invoice newInvoice) {
-    newInvoice.setProject(shipment.getProject());
-    newInvoice.setCostcenter(shipment.getCostcenter());
-    newInvoice.setAsset(shipment.getAsset());
-    newInvoice.setStDimension(shipment.getStDimension());
-    newInvoice.setNdDimension(shipment.getNdDimension());
-    newInvoice.setActivity(shipment.getActivity());
-    newInvoice.setTrxOrganization(shipment.getTrxOrganization());
   }
 
   private void createInvoiceAddressFromShipmentOrBPartner (ShipmentInOut shipment, Invoice newInvoice) {
