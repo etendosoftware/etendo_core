@@ -107,6 +107,7 @@ import org.openbravo.test.expression.OBBindingsTest;
 import org.openbravo.test.generalsetup.enterprise.organization.ADOrgPersistInfoTestSuite;
 import org.openbravo.test.inventoryStatus.InventoryStatusTest;
 import org.openbravo.test.invoice.CloneInvoiceTest;
+import org.openbravo.test.invoice.InvoiceDimensionsFromShipmentTest;
 import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromShipmentTest;
 import org.openbravo.test.materialMgmt.iscompletelyinvoicedshipment.IsCompletelyInvoicedShipment;
 import org.openbravo.test.materialMgmt.linevalidation.GoodMovementTest;
@@ -389,6 +390,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     CancelAndReplaceTest.class, //
 
     // Automatic Invoice from Goods Shipment
+    InvoiceDimensionsFromShipmentTest.class,
     InvoiceFromShipmentTest.class,
 
     // Clone Invoice
