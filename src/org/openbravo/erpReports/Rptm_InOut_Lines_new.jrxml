@@ -38,18 +38,19 @@
             FROM M_PRODUCT_CUSTOMER
             WHERE M_PRODUCT_CUSTOMER.M_PRODUCT_ID=M_INOUTLINE.M_PRODUCT_ID
             AND M_PRODUCT_CUSTOMER.C_BPARTNER_ID=M_INOUT.C_BPARTNER_ID)
-            ,M_PRODUCT.NAME) AS NAME,SUM(M_INOUTLINE.MOVEMENTQTY) AS MOVEMENTQTY, M_ATTRIBUTESETINSTANCE.DESCRIPTION AS LOT,
-            REPLACE(M_INOUTLINE.DESCRIPTION, CHR(10), '') AS LLOT, REPLACE(M_INOUT.DESCRIPTION, CHR(10), '') AS DESCRIPTION, M_PRODUCT.UPC, C_UOM.NAME AS UOM
+            ,M_PRODUCT.NAME, M_INOUTLINE.DESCRIPTION) AS NAME,SUM(M_INOUTLINE.MOVEMENTQTY) AS MOVEMENTQTY, M_ATTRIBUTESETINSTANCE.DESCRIPTION AS LOT,
+            REPLACE(M_INOUTLINE.DESCRIPTION, CHR(10), '') AS LLOT, REPLACE(M_INOUT.DESCRIPTION, CHR(10), '') AS DESCRIPTION, M_PRODUCT.UPC, C_UOM.NAME AS UOM,
+            COALESCE(M_INOUTLINE.ISDESCRIPTION, 'N') AS ISDESCRIPTION
         FROM M_INOUTLINE left join C_ORDERLINE on M_INOUTLINE.C_ORDERLINE_ID = C_ORDERLINE.C_ORDERLINE_ID
                          left join C_ORDER on C_ORDERLINE.C_ORDER_ID = C_ORDER.C_ORDER_ID
-                         left join M_ATTRIBUTESETINSTANCE on M_INOUTLINE.M_ATTRIBUTESETINSTANCE_ID = M_ATTRIBUTESETINSTANCE.M_ATTRIBUTESETINSTANCE_ID,
-             M_INOUT, M_PRODUCT, C_UOM
+                         left join M_ATTRIBUTESETINSTANCE on M_INOUTLINE.M_ATTRIBUTESETINSTANCE_ID = M_ATTRIBUTESETINSTANCE.M_ATTRIBUTESETINSTANCE_ID
+                         left join M_PRODUCT on M_INOUTLINE.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
+                         left join C_UOM on M_PRODUCT.C_UOM_ID = C_UOM.C_UOM_ID,
+             M_INOUT
         WHERE M_INOUT.M_INOUT_ID = M_INOUTLINE.M_INOUT_ID
-        AND M_INOUTLINE.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
         AND M_INOUT.M_INOUT_ID = '$P!{M_INOUT_ID}'
-        AND M_PRODUCT.C_UOM_ID = C_UOM.C_UOM_ID
-        GROUP BY C_ORDER.DOCUMENTNO, M_INOUT.C_BPARTNER_ID, C_ORDER.POREFERENCE, M_PRODUCT.VALUE, M_INOUTLINE.M_PRODUCT_ID, M_PRODUCT.NAME, M_ATTRIBUTESETINSTANCE.DESCRIPTION, M_INOUT.DESCRIPTION, M_INOUTLINE.DESCRIPTION, M_PRODUCT.UPC, C_UOM.NAME
-        ORDER BY C_ORDER.DOCUMENTNO, M_PRODUCT.NAME]]>
+        GROUP BY C_ORDER.DOCUMENTNO, M_INOUT.C_BPARTNER_ID, C_ORDER.POREFERENCE, M_PRODUCT.VALUE, M_INOUTLINE.M_PRODUCT_ID, M_PRODUCT.NAME, M_ATTRIBUTESETINSTANCE.DESCRIPTION, M_INOUT.DESCRIPTION, M_INOUTLINE.DESCRIPTION, M_PRODUCT.UPC, C_UOM.NAME, COALESCE(M_INOUTLINE.ISDESCRIPTION, 'N')
+        ORDER BY C_ORDER.DOCUMENTNO, M_PRODUCT.NAME, MIN(M_INOUTLINE.LINE)]]>
 	</queryString>
 	<field name="value" class="java.lang.String"/>
 	<field name="name" class="java.lang.String"/>
@@ -59,6 +60,7 @@
 	<field name="description" class="java.lang.String"/>
 	<field name="upc" class="java.lang.String"/>
 	<field name="uom" class="java.lang.String"/>
+	<field name="isdescription" class="java.lang.String"/>
 	<group name="M_INOUT_ID">
 		<groupExpression><![CDATA[$P{M_INOUT_ID}]]></groupExpression>
 		<groupHeader>
@@ -172,7 +174,9 @@
 			<frame>
 				<reportElement key="frame-1" style="default" stretchType="RelativeToBandHeight" x="0" y="0" width="482" height="21" uuid="f170c6be-337a-45b9-a5bc-be2c6dd1c874"/>
 				<textField isBlankWhenNull="false">
-					<reportElement key="textField-5" style="default" x="386" y="0" width="35" height="21" forecolor="#000000" uuid="9d25a9eb-1dd0-435b-a89f-3250d84f0c20"/>
+					<reportElement key="textField-5" style="default" x="386" y="0" width="35" height="21" forecolor="#000000" uuid="9d25a9eb-1dd0-435b-a89f-3250d84f0c20">
+					<printWhenExpression><![CDATA["N".equals($F{isdescription})]]></printWhenExpression>
+				</reportElement>
 					<textElement verticalAlignment="Middle">
 						<font fontName="DejaVu Sans" size="8"/>
 					</textElement>
@@ -180,7 +184,9 @@
 				</textField>
 			</frame>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement key="textField-1" style="default" x="0" y="0" width="90" height="21" forecolor="#000000" uuid="97ea4cd2-7c66-45e8-bbb0-50ae3fdb2bb5"/>
+				<reportElement key="textField-1" style="default" x="0" y="0" width="90" height="21" forecolor="#000000" uuid="97ea4cd2-7c66-45e8-bbb0-50ae3fdb2bb5">
+					<printWhenExpression><![CDATA["N".equals($F{isdescription})]]></printWhenExpression>
+				</reportElement>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -206,7 +212,9 @@
 				<textFieldExpression><![CDATA[($F{name}==null ? " " : " " + $F{name})]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement key="textField-3" style="default" x="255" y="0" width="130" height="21" forecolor="#000000" uuid="cd437130-1b14-4955-8887-17835e8d310f"/>
+				<reportElement key="textField-3" style="default" x="255" y="0" width="130" height="21" forecolor="#000000" uuid="cd437130-1b14-4955-8887-17835e8d310f">
+					<printWhenExpression><![CDATA["N".equals($F{isdescription})]]></printWhenExpression>
+				</reportElement>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -219,7 +227,9 @@
 				<textFieldExpression><![CDATA[($F{lot}==null ? " " : " " + $F{lot})]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement key="textField-4" style="default" x="422" y="0" width="59" height="21" forecolor="#000000" uuid="5e627541-5158-4d30-8185-b2a0dcc1eac5"/>
+				<reportElement key="textField-4" style="default" x="422" y="0" width="59" height="21" forecolor="#000000" uuid="5e627541-5158-4d30-8185-b2a0dcc1eac5">
+					<printWhenExpression><![CDATA["N".equals($F{isdescription})]]></printWhenExpression>
+				</reportElement>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
