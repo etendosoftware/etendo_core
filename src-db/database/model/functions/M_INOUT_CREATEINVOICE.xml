@@ -260,9 +260,10 @@
               CUR_Shipment.AD_User_ID, NULL, CUR_Shipment.DateOrdered, v_IsDiscountPrinted,
               v_C_Currency_ID, NULL, 0,
               0, 0, v_M_PriceList_ID, CUR_Shipment.C_Campaign_ID,
-              CUR_Shipment.C_Project_ID, CUR_Shipment.C_Activity_ID, CUR_Shipment.AD_OrgTrx_ID, CUR_Shipment.User1_ID,
-              CUR_Shipment.User2_ID, v_fin_paymentmethod_id, CUR_Shipment.C_Costcenter_ID,
-              CUR_Shipment.A_Asset_ID
+              -- Accounting dimensions are only inherited at line level, the Invoice header is left empty
+              NULL, CUR_Shipment.C_Activity_ID, CUR_Shipment.AD_OrgTrx_ID, NULL,
+              NULL, v_fin_paymentmethod_id, NULL,
+              NULL
             )
             ;
           -- Lines
