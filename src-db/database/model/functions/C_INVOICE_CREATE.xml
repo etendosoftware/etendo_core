@@ -92,6 +92,7 @@
     v_uom_preference VARCHAR(1);	
     v_prorate_taxbaseamt VARCHAR(1);
     v_pref_client_id VARCHAR2(32);
+    v_pref_org_id VARCHAR2(32);
     v_default_aum C_UOM.C_UOM_ID%TYPE;
     v_aum_qty NUMBER;
     c_soo_doctype C_DOCTYPE.C_DOCTYPE_ID%TYPE := '01360D369B5F473686354A701A6EA559';
@@ -255,17 +256,29 @@
         -- Get AlternateTaxBaseAmountProrating value. When it is not enabled the Alternate Tax
         -- Base Amount is a manual amount and it is inherited without prorating it.
         v_prorate_taxbaseamt := 'N';
+        v_pref_client_id := NULL;
+        v_pref_org_id := v_AD_Org_ID;
         BEGIN
+          -- The organization is resolved as well: AD_GET_PREFERENCE_VALUE turns a NULL organization
+          -- into '0', and AD_ISORGINCLUDED then discards any preference defined at a specific one.
           IF (p_PInstance_ID IS NOT NULL) THEN
-            SELECT AD_Client_ID INTO v_pref_client_id
-            FROM AD_PINSTANCE
-            WHERE AD_PInstance_ID = p_PInstance_ID;
+            SELECT i.AD_Client_ID, COALESCE(v_AD_Org_ID, i.AD_Org_ID)
+            INTO v_pref_client_id, v_pref_org_id
+            FROM AD_PINSTANCE i
+            WHERE i.AD_PInstance_ID = p_PInstance_ID;
           ELSIF (p_Order_ID IS NOT NULL) THEN
-            SELECT AD_Client_ID INTO v_pref_client_id
-            FROM C_ORDER
-            WHERE C_Order_ID = p_Order_ID;
+            SELECT o.AD_Client_ID, COALESCE(v_AD_Org_ID, o.AD_Org_ID)
+            INTO v_pref_client_id, v_pref_org_id
+            FROM C_ORDER o
+            WHERE o.C_Order_ID = p_Order_ID;
           END IF;
-          v_prorate_taxbaseamt := AD_GET_PREFERENCE_VALUE('AlternateTaxBaseAmountProrating', 'Y', v_pref_client_id, v_AD_Org_ID, v_ADUserId, NULL, NULL);
+          IF (v_pref_client_id IS NULL) THEN
+            -- The client could not be determined, so the preference cannot be resolved and the
+            -- Alternate Tax Base Amount is inherited without prorating it.
+            DBMS_OUTPUT.PUT_LINE('AlternateTaxBaseAmountProrating not evaluated, unknown client') ;
+          ELSE
+            v_prorate_taxbaseamt := AD_GET_PREFERENCE_VALUE('AlternateTaxBaseAmountProrating', 'Y', v_pref_client_id, v_pref_org_id, v_ADUserId, NULL, NULL);
+          END IF;
           EXCEPTION
             WHEN OTHERS THEN
             -- Nothing to do, v_prorate_taxbaseamt = 'N'

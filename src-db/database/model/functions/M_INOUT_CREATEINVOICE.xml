@@ -315,7 +315,7 @@
 	   -- Get Tax Base Amount
 	      SELECT CASE WHEN v_prorate_taxbaseamt = 'Y'
 	                  THEN COALESCE(co.taxbaseamt,0) * C_DIVIDE((l.MovementQty-SUM(COALESCE(mi.Qty,0))),COALESCE(co.qtyordered,1))
-	                  ELSE co.taxbaseamt END as taxbaseamt
+	                  ELSE COALESCE(co.taxbaseamt,0) END as taxbaseamt
 	      INTO v_taxBaseAmt
 	      FROM M_INOUTLINE l left join M_MATCHINV mi on l.M_InOutLine_ID=mi.M_InOutLine_ID
                 left join C_ORDERLINE co ON co.C_ORDERLINE_ID=l.C_ORDERLINE_ID

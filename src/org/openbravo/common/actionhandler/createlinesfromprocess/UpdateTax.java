@@ -39,6 +39,7 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.businessUtility.Tax;
 import org.openbravo.erpCommon.utility.PropertyException;
+import org.openbravo.erpCommon.utility.PropertyNotFoundException;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.order.OrderLine;
@@ -174,9 +175,15 @@ class UpdateTax extends CreateLinesFromProcessHook {
       return StringUtils.equals(Preferences.YES,
           Preferences.getPreferenceValue(PRORATING_PREFERENCE, true, context.getCurrentClient(),
               context.getCurrentOrganization(), context.getUser(), context.getRole(), null));
-    } catch (PropertyException e) {
+    } catch (PropertyNotFoundException e) {
       // The preference is not defined: the Alternate Tax Base Amount is not prorated
       log.debug("Preference {} not found, Alternate Tax Base Amount will not be prorated",
+          PRORATING_PREFERENCE, e);
+      return false;
+    } catch (PropertyException e) {
+      // The preference cannot be resolved to a single value, which is a configuration problem and
+      // must not be hidden. The Alternate Tax Base Amount is not prorated.
+      log.warn("Preference {} could not be resolved, it will not be prorated",
           PRORATING_PREFERENCE, e);
       return false;
     }
