@@ -16,6 +16,7 @@
  */
 package org.openbravo.audittrail;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.Date;
@@ -36,6 +37,8 @@ public final class AuditTrailTimeFormatter {
 
   private static final String CLIENT_TZ_OFFSET_PARAMETER = "inpClientTZOffset";
   private static final String CLIENT_TZ_OFFSET_SESSION_KEY = "AuditTrail.clientTZOffset";
+  /** Pattern used by AuditTrailDeletedRecords to format the event time in its query */
+  private static final String DELETED_RECORDS_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
   private static final int SECONDS_PER_MINUTE = 60;
   /** The largest offset a zone can have, as accepted by {@link ZoneOffset} */
   private static final int MAX_OFFSET_MINUTES = 18 * 60;
@@ -85,6 +88,30 @@ public final class AuditTrailTimeFormatter {
     SimpleDateFormat format = new SimpleDateFormat(vars.getJavaDataTimeFormat());
     format.setTimeZone(getClientTimeZone(vars));
     return format.format(time);
+  }
+
+  /**
+   * Formats the event time of the deleted records view, which comes from the query as a string in
+   * the {@link #DELETED_RECORDS_TIME_FORMAT} pattern, expressed in the timezone of the server.
+   *
+   * @param vars
+   *          the session variables of the current request
+   * @param time
+   *          the moment of the event, as returned by the query
+   * @return the formatted time, or the received value when it cannot be interpreted
+   */
+  public static String format(VariablesSecureApp vars, String time) {
+    if (time == null || time.isEmpty()) {
+      return time;
+    }
+    try {
+      SimpleDateFormat parser = new SimpleDateFormat(DELETED_RECORDS_TIME_FORMAT);
+      parser.setTimeZone(TimeZone.getDefault());
+      return format(vars, parser.parse(time));
+    } catch (ParseException e) {
+      // not expected, the query formats it with a fixed pattern: keep the value as it comes
+      return time;
+    }
   }
 
   /**

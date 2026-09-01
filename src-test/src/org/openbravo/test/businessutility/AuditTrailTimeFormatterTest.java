@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -47,6 +48,7 @@ public class AuditTrailTimeFormatterTest {
   /** UTC-3, as reported by Date.getTimezoneOffset() */
   private static final String OFFSET_UTC_MINUS_3 = "180";
   private static final String INVALID_OFFSET = "';DROP TABLE ad_user;--";
+  private static final String UNPARSEABLE_TIME = "not-a-date";
   /** 2026-08-27 08:45:30 UTC */
   private static final Date EVENT_TIME = Date.from(Instant.parse("2026-08-27T08:45:30Z"));
 
@@ -107,6 +109,30 @@ public class AuditTrailTimeFormatterTest {
     assertEquals(formatInServerTimeZone(), AuditTrailTimeFormatter.format(mockVars, EVENT_TIME));
   }
 
+  /** The deleted records view receives the time as a string in the timezone of the server. */
+  @Test
+  public void formatsTheDeletedRecordsTimeInTheBrowserTimeZone() {
+    givenClientTimeZoneOffset(OFFSET_UTC_MINUS_3);
+
+    assertEquals(expectedLocalTime(-3), AuditTrailTimeFormatter.format(mockVars, serverTime()));
+  }
+
+  /** A deleted records time that cannot be interpreted is shown as it comes. */
+  @Test
+  public void keepsTheDeletedRecordsTimeWhenItCannotBeParsed() {
+    givenClientTimeZoneOffset(OFFSET_UTC_MINUS_3);
+
+    assertEquals(UNPARSEABLE_TIME, AuditTrailTimeFormatter.format(mockVars, UNPARSEABLE_TIME));
+  }
+
+  /** An empty deleted records time is shown as it comes. */
+  @Test
+  public void keepsAnEmptyDeletedRecordsTime() {
+    givenClientTimeZoneOffset(OFFSET_UTC_MINUS_3);
+
+    assertEquals("", AuditTrailTimeFormatter.format(mockVars, ""));
+  }
+
   /** The offset sent by the browser is kept in session for the requests that render the data. */
   @Test
   public void storesTheOffsetSentByTheBrowserInSession() {
@@ -137,6 +163,19 @@ public class AuditTrailTimeFormatterTest {
 
   private void givenClientTimeZoneOffset(String offset) {
     when(mockVars.getSessionValue(TZ_OFFSET_SESSION_KEY)).thenReturn(offset);
+  }
+
+  /** The event time as returned by the deleted records query, in the timezone of the server. */
+  private String serverTime() {
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    format.setTimeZone(TimeZone.getDefault());
+    return format.format(EVENT_TIME);
+  }
+
+  private String expectedLocalTime(int hoursFromUTC) {
+    SimpleDateFormat format = new SimpleDateFormat(DATE_TIME_FORMAT);
+    format.setTimeZone(TimeZone.getTimeZone(ZoneOffset.ofHours(hoursFromUTC)));
+    return format.format(EVENT_TIME);
   }
 
   private String formatInServerTimeZone() {
