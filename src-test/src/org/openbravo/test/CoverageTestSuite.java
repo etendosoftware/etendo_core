@@ -162,6 +162,7 @@ import org.openbravo.erpCommon.businessUtility.AccountTreeTest;
 import org.openbravo.erpCommon.businessUtility.InitialClientSetupTest;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetupTest;
 import org.openbravo.erpCommon.businessUtility.AuditTrailDeletedRecordsTest;
+import org.openbravo.test.businessutility.AuditTrailTimeFormatterTest;
 import org.openbravo.erpCommon.businessUtility.COADataTest;
 import org.openbravo.erpCommon.businessUtility.COAUtilityTest;
 import org.openbravo.erpCommon.businessUtility.CancelLayawayPaymentsHookCallerTest;
@@ -463,6 +464,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // erpCommon.businessUtility
     AccountTreeTest.class,
     AuditTrailDeletedRecordsTest.class,
+    AuditTrailTimeFormatterTest.class,
     COADataTest.class,
     COAUtilityTest.class,
     CancelLayawayPaymentsHookCallerTest.class,
