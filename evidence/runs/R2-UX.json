@@ -1,0 +1,455 @@
+{
+  "schema_version": 1,
+  "tool": {
+    "detectors": [
+      "weak-test",
+      "stub-prod",
+      "new-dep",
+      "syntax-js"
+    ],
+    "syntax_extensions": [
+      ".js",
+      ".mjs",
+      ".cjs"
+    ]
+  },
+  "repository": {
+    "commit": "945bedf5b27f06722024b76a5b681cde3ccea754",
+    "pre_export_dirty": true
+  },
+  "observation": {
+    "rounds": 3,
+    "classifications": {
+      "alignment-warning": 3
+    },
+    "labels": {},
+    "task_flows": {
+      "ready": 10
+    },
+    "plan_events": 0
+  },
+  "plan_events": [],
+  "plan_integrity": {
+    "status": "pass",
+    "findings": []
+  },
+  "governance_health": {
+    "status": "pass",
+    "plan": {
+      "configured": false,
+      "hash": null
+    },
+    "amendments": 0,
+    "integrity": {
+      "findings": []
+    },
+    "findings": {
+      "active": [],
+      "resolved": []
+    }
+  },
+  "rounds": [
+    {
+      "sequence": 1,
+      "mode": "fast",
+      "scope": "declared-fast-checks-only",
+      "classification": "alignment-warning",
+      "changed_file_count": 0,
+      "active_finding_count": 0,
+      "contract": {
+        "hash": "ce43cd721b76ec126b53fc2fe86aaf45aeab954b7aed9b215e77628f52e7dbf8",
+        "objective_id": "O-SKIN-MODERN",
+        "round_id": "R2-UX"
+      },
+      "surface": {
+        "files_changed": 2,
+        "churn": 99,
+        "modules_changed": 2,
+        "module_entropy": 0.098824,
+        "outside_scope_count": 0,
+        "outside_scope_ratio": 0
+      },
+      "alignment": {
+        "signal_mode": "deterministic-contract",
+        "statistical_mode": "passive",
+        "mode": "observe",
+        "targeted_evidence_count": 1,
+        "contribution_ratio": 0.5,
+        "work_context": "normal",
+        "scope_validity": {
+          "status": "valid",
+          "reason": null,
+          "coverage": 1,
+          "minimum_coverage": 0.5
+        },
+        "observations": [],
+        "warnings": [
+          "scope-unobservable"
+        ],
+        "key_results": [
+          {
+            "id": "KR1",
+            "evidence_count": 1
+          }
+        ]
+      },
+      "contract_drift": {
+        "changed": false,
+        "justified": false,
+        "warnings": []
+      },
+      "plan_integrity_delta": {
+        "new_count": 0,
+        "resolved_count": 0
+      },
+      "exceptions": [],
+      "criteria": [
+        {
+          "id": "C-UX-FABLE",
+          "status": "proven",
+          "evidence_kind": "reproducible-check",
+          "evidence": [
+            "ux-source",
+            "ux-dom"
+          ]
+        },
+        {
+          "id": "OBLIGATION-FEATURE-BEHAVIOR",
+          "status": "proven",
+          "evidence_kind": "criterion-reference",
+          "evidence": [
+            "C-UX-FABLE"
+          ]
+        },
+        {
+          "id": "OBLIGATION-FEATURE-COMPATIBILITY",
+          "status": "proven",
+          "evidence_kind": "criterion-reference",
+          "evidence": [
+            "C-UX-FABLE"
+          ]
+        }
+      ],
+      "impact": {
+        "confidence": "declared-workspaces+static-relative-imports+not-configured",
+        "affected_workspace_count": 1,
+        "affected_source_file_count": 0,
+        "public_boundaries": {
+          "affected_ids": [],
+          "consumer_workspace_count": 0,
+          "unknown_consumer_workspace_count": 0,
+          "confidence": "not-configured"
+        },
+        "limitations": [
+          "workspace dependency declarations alone do not prove a changed file is public",
+          "dynamic imports, package aliases, TypeScript paths, non-JavaScript sources, and symbol-level/public API boundaries are not resolved",
+          "boundaries are path declarations, not symbol-level API analysis"
+        ]
+      },
+      "checks": [
+        {
+          "name": "ux-source",
+          "status": "pass",
+          "duration_ms": 37.43,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "ux-dom",
+          "status": "pass",
+          "duration_ms": 29.47,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "package-test",
+          "status": "skipped",
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "diff-check",
+          "status": "pass",
+          "duration_ms": 21.05,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "oguard-list",
+          "status": "pass",
+          "duration_ms": 48.33,
+          "exit_code": 0,
+          "cache_hit": false
+        }
+      ]
+    },
+    {
+      "sequence": 2,
+      "mode": "final",
+      "scope": "declared-final-checks-and-required-criteria",
+      "classification": "alignment-warning",
+      "changed_file_count": 0,
+      "active_finding_count": 0,
+      "contract": {
+        "hash": "ce43cd721b76ec126b53fc2fe86aaf45aeab954b7aed9b215e77628f52e7dbf8",
+        "objective_id": "O-SKIN-MODERN",
+        "round_id": "R2-UX"
+      },
+      "surface": {
+        "files_changed": 3,
+        "churn": 287,
+        "modules_changed": 3,
+        "module_entropy": 0.678352,
+        "outside_scope_count": 1,
+        "outside_scope_ratio": 0.333333
+      },
+      "alignment": {
+        "signal_mode": "deterministic-contract",
+        "statistical_mode": "passive",
+        "mode": "observe",
+        "targeted_evidence_count": 1,
+        "contribution_ratio": 0.333333,
+        "work_context": "normal",
+        "scope_validity": {
+          "status": "valid",
+          "reason": null,
+          "coverage": 0.666667,
+          "minimum_coverage": 0.5
+        },
+        "observations": [],
+        "warnings": [
+          "scope-unobservable"
+        ],
+        "key_results": [
+          {
+            "id": "KR1",
+            "evidence_count": 1
+          }
+        ]
+      },
+      "contract_drift": {
+        "changed": false,
+        "justified": false,
+        "warnings": []
+      },
+      "plan_integrity_delta": {
+        "new_count": 0,
+        "resolved_count": 0
+      },
+      "exceptions": [],
+      "criteria": [
+        {
+          "id": "C-UX-FABLE",
+          "status": "proven",
+          "evidence_kind": "reproducible-check",
+          "evidence": [
+            "ux-source",
+            "ux-dom"
+          ]
+        },
+        {
+          "id": "OBLIGATION-FEATURE-BEHAVIOR",
+          "status": "proven",
+          "evidence_kind": "criterion-reference",
+          "evidence": [
+            "C-UX-FABLE"
+          ]
+        },
+        {
+          "id": "OBLIGATION-FEATURE-COMPATIBILITY",
+          "status": "proven",
+          "evidence_kind": "criterion-reference",
+          "evidence": [
+            "C-UX-FABLE"
+          ]
+        }
+      ],
+      "impact": {
+        "confidence": "declared-workspaces+static-relative-imports+not-configured",
+        "affected_workspace_count": 1,
+        "affected_source_file_count": 0,
+        "public_boundaries": {
+          "affected_ids": [],
+          "consumer_workspace_count": 0,
+          "unknown_consumer_workspace_count": 0,
+          "confidence": "not-configured"
+        },
+        "limitations": [
+          "workspace dependency declarations alone do not prove a changed file is public",
+          "dynamic imports, package aliases, TypeScript paths, non-JavaScript sources, and symbol-level/public API boundaries are not resolved",
+          "boundaries are path declarations, not symbol-level API analysis"
+        ]
+      },
+      "checks": [
+        {
+          "name": "ux-source",
+          "status": "pass",
+          "duration_ms": 40.53,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "ux-dom",
+          "status": "pass",
+          "duration_ms": 28.92,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "package-test",
+          "status": "skipped",
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "diff-check",
+          "status": "pass",
+          "duration_ms": 21.08,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "oguard-list",
+          "status": "pass",
+          "duration_ms": 40.94,
+          "exit_code": 0,
+          "cache_hit": false
+        }
+      ]
+    },
+    {
+      "sequence": 3,
+      "mode": "final",
+      "scope": "declared-final-checks-and-required-criteria",
+      "classification": "alignment-warning",
+      "changed_file_count": 0,
+      "active_finding_count": 0,
+      "contract": {
+        "hash": "ce43cd721b76ec126b53fc2fe86aaf45aeab954b7aed9b215e77628f52e7dbf8",
+        "objective_id": "O-SKIN-MODERN",
+        "round_id": "R2-UX"
+      },
+      "surface": {
+        "files_changed": 2,
+        "churn": 99,
+        "modules_changed": 2,
+        "module_entropy": 0.098824,
+        "outside_scope_count": 0,
+        "outside_scope_ratio": 0
+      },
+      "alignment": {
+        "signal_mode": "deterministic-contract",
+        "statistical_mode": "passive",
+        "mode": "observe",
+        "targeted_evidence_count": 1,
+        "contribution_ratio": 0.5,
+        "work_context": "normal",
+        "scope_validity": {
+          "status": "valid",
+          "reason": null,
+          "coverage": 1,
+          "minimum_coverage": 0.5
+        },
+        "observations": [],
+        "warnings": [
+          "scope-unobservable"
+        ],
+        "key_results": [
+          {
+            "id": "KR1",
+            "evidence_count": 1
+          }
+        ]
+      },
+      "contract_drift": {
+        "changed": false,
+        "justified": false,
+        "warnings": []
+      },
+      "plan_integrity_delta": {
+        "new_count": 0,
+        "resolved_count": 0
+      },
+      "exceptions": [],
+      "criteria": [
+        {
+          "id": "C-UX-FABLE",
+          "status": "proven",
+          "evidence_kind": "reproducible-check",
+          "evidence": [
+            "ux-source",
+            "ux-dom"
+          ]
+        },
+        {
+          "id": "OBLIGATION-FEATURE-BEHAVIOR",
+          "status": "proven",
+          "evidence_kind": "criterion-reference",
+          "evidence": [
+            "C-UX-FABLE"
+          ]
+        },
+        {
+          "id": "OBLIGATION-FEATURE-COMPATIBILITY",
+          "status": "proven",
+          "evidence_kind": "criterion-reference",
+          "evidence": [
+            "C-UX-FABLE"
+          ]
+        }
+      ],
+      "impact": {
+        "confidence": "declared-workspaces+static-relative-imports+not-configured",
+        "affected_workspace_count": 1,
+        "affected_source_file_count": 0,
+        "public_boundaries": {
+          "affected_ids": [],
+          "consumer_workspace_count": 0,
+          "unknown_consumer_workspace_count": 0,
+          "confidence": "not-configured"
+        },
+        "limitations": [
+          "workspace dependency declarations alone do not prove a changed file is public",
+          "dynamic imports, package aliases, TypeScript paths, non-JavaScript sources, and symbol-level/public API boundaries are not resolved",
+          "boundaries are path declarations, not symbol-level API analysis"
+        ]
+      },
+      "checks": [
+        {
+          "name": "ux-source",
+          "status": "pass",
+          "duration_ms": 37.43,
+          "exit_code": 0,
+          "cache_hit": true
+        },
+        {
+          "name": "ux-dom",
+          "status": "pass",
+          "duration_ms": 29.47,
+          "exit_code": 0,
+          "cache_hit": true
+        },
+        {
+          "name": "package-test",
+          "status": "skipped",
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "diff-check",
+          "status": "pass",
+          "duration_ms": 24.27,
+          "exit_code": 0,
+          "cache_hit": false
+        },
+        {
+          "name": "oguard-list",
+          "status": "pass",
+          "duration_ms": 48.99,
+          "exit_code": 0,
+          "cache_hit": false
+        }
+      ]
+    }
+  ]
+}

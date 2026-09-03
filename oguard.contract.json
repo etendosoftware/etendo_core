@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "objective": {
+    "id": "O-SKIN-MODERN",
+    "statement": "Skin moderno de Etendo empaquetado como modulo, con paleta configurable por preferencias del AD y restyle del login, minimizando cambios en core"
+  },
+  "round": {
+    "id": "R2-UX",
+    "statement": "Resolver el feedback de diseno/UX de Fable 5.1: bajar la complejidad percibida de la interfaz manteniendola agradable y visualmente clara",
+    "parent_objective_id": "O-SKIN-MODERN",
+    "contributes_to": [
+      "KR1"
+    ]
+  },
+  "key_results": [
+    {
+      "id": "KR1",
+      "statement": "Primera version contundente del skin",
+      "evidence": [
+        {
+          "kind": "path",
+          "patterns": [
+            "oguard.contract.json",
+            "modules/com.etendoerp.skin.modern/**",
+            "src/org/openbravo/erpCommon/security/Login.html"
+          ]
+        }
+      ]
+    }
+  ],
+  "scope": {
+    "expected_paths": [
+      "oguard.contract.json",
+      "modules/com.etendoerp.skin.modern/**",
+      "src/org/openbravo/erpCommon/security/Login.html"
+    ],
+    "non_goals": []
+  },
+  "policy": {
+    "goal_substitution": "observe",
+    "min_changed_files": 2,
+    "min_churn": 20
+  },
+  "public_boundaries": [],
+  "checks": [
+    {
+      "id": "ux-source",
+      "argv": [
+        "node",
+        "modules/com.etendoerp.skin.modern/verify/check-source.mjs"
+      ],
+      "timeout_ms": 900000
+    },
+    {
+      "id": "ux-dom",
+      "argv": [
+        "node",
+        "modules/com.etendoerp.skin.modern/verify/check-dom.mjs"
+      ],
+      "timeout_ms": 900000
+    }
+  ],
+  "task": {
+    "type": "feature",
+    "acceptance_criteria": [
+      {
+        "id": "C-UX-FABLE",
+        "statement": "Los 13 hallazgos de la critica de diseno F1..F13 quedan resueltos y cada uno pasa su acceptance check medible, verificado sobre el DOM de la app desplegada",
+        "required": true,
+        "evidence": {
+          "checks": [
+            "ux-source",
+            "ux-dom"
+          ]
+        }
+      }
+    ],
+    "obligations": [
+      {
+        "kind": "behavior",
+        "criterion_ids": [
+          "C-UX-FABLE"
+        ]
+      },
+      {
+        "kind": "compatibility",
+        "criterion_ids": [
+          "C-UX-FABLE"
+        ]
+      }
+    ]
+  },
+  "work_context": {
+    "kind": "normal"
+  }
+}
