@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "objective": {
-    "id": "O-SKIN-MODERN",
-    "statement": "Skin moderno de Etendo empaquetado como modulo, con paleta configurable por preferencias del AD y restyle del login, minimizando cambios en core"
+    "id": "O-UIKIT",
+    "statement": "com.etendoerp.uikit: framework sobre SmartClient para construir ventanas custom en Etendo Classic, documentado en capas para que un agente produzca una ventana funcional en una pasada, sin leer core y sin tocar core"
   },
   "round": {
-    "id": "R2-UX",
-    "statement": "Resolver el feedback de diseno/UX de Fable 5.1: bajar la complejidad percibida de la interfaz manteniendola agradable y visualmente clara",
-    "parent_objective_id": "O-SKIN-MODERN",
+    "id": "R0-SPIKE",
+    "statement": "Convertir supuestos en hechos y escribir L0 primero: AGENTS.md (<=120 lineas) y uikit.contract.json contra la API que todavia no existe, mas el gate JSMin ejecutable desde Node",
+    "parent_objective_id": "O-UIKIT",
     "contributes_to": [
       "KR1"
     ]
@@ -15,14 +15,12 @@
   "key_results": [
     {
       "id": "KR1",
-      "statement": "Primera version contundente del skin",
+      "statement": "L0 y el harness de verificacion existen y corren verdes antes de escribir runtime",
       "evidence": [
         {
           "kind": "path",
           "patterns": [
-            "oguard.contract.json",
-            "modules/com.etendoerp.skin.modern/**",
-            "src/org/openbravo/erpCommon/security/Login.html"
+            "modules/com.etendoerp.uikit/**"
           ]
         }
       ]
@@ -31,8 +29,7 @@
   "scope": {
     "expected_paths": [
       "oguard.contract.json",
-      "modules/com.etendoerp.skin.modern/**",
-      "src/org/openbravo/erpCommon/security/Login.html"
+      "modules/com.etendoerp.uikit/**"
     ],
     "non_goals": []
   },
@@ -44,18 +41,10 @@
   "public_boundaries": [],
   "checks": [
     {
-      "id": "ux-source",
+      "id": "uikit-source",
       "argv": [
         "node",
-        "modules/com.etendoerp.skin.modern/verify/check-source.mjs"
-      ],
-      "timeout_ms": 900000
-    },
-    {
-      "id": "ux-dom",
-      "argv": [
-        "node",
-        "modules/com.etendoerp.skin.modern/verify/check-dom.mjs"
+        "modules/com.etendoerp.uikit/verify/check-source.mjs"
       ],
       "timeout_ms": 900000
     }
@@ -64,13 +53,12 @@
     "type": "feature",
     "acceptance_criteria": [
       {
-        "id": "C-UX-FABLE",
-        "statement": "Los 13 hallazgos de la critica de diseno F1..F13 quedan resueltos y cada uno pasa su acceptance check medible, verificado sobre el DOM de la app desplegada",
+        "id": "C-R0",
+        "statement": "El gate S1 corre el JSMin real del kernel desde Node y valida con node --check (acepta ES2018, rechaza sintaxis rota); AGENTS.md no excede 120 lineas y enuncia el workflow de 5 pasos y los invariantes; uikit.contract.json indexa cada doc y cada entrada resuelve",
         "required": true,
         "evidence": {
           "checks": [
-            "ux-source",
-            "ux-dom"
+            "uikit-source"
           ]
         }
       }
@@ -79,13 +67,13 @@
       {
         "kind": "behavior",
         "criterion_ids": [
-          "C-UX-FABLE"
+          "C-R0"
         ]
       },
       {
         "kind": "compatibility",
         "criterion_ids": [
-          "C-UX-FABLE"
+          "C-R0"
         ]
       }
     ]
