@@ -6,7 +6,7 @@
   },
   "round": {
     "id": "R2-UIKIT-DEMOS",
-    "statement": "Demostrar el potencial del framework con cinco ventanas demo sobre datos reales de la instancia -- alertas, cartera AR/AP, preparacion de pedidos, stock por almacen y ficha de tercero -- en el modulo nuevo com.etendoerp.uikit.demos; implementar las cuatro API que el runtime prometia y no tenia (defineAction, fmt, nav, debounce) mas bars y spark; convertir check-window.mjs en runner sobre manifests; y dejar todo versionado como sourcedata XML, reinstalable en otra instancia",
+    "statement": "Demostrar el potencial del framework con cinco ventanas demo sobre datos reales de la instancia -- alertas, cartera AR/AP, preparacion de pedidos, stock por almacen y ficha de tercero -- en com.etendoerp.uikit.samples, el unico modulo de showcase (el framework se instala solo); implementar las cuatro API que el runtime prometia y no tenia (defineAction, fmt, nav, debounce) mas bars y spark; convertir check-window.mjs en runner sobre manifests; y dejar todo versionado como sourcedata XML, reinstalable en otra instancia",
     "parent_objective_id": "O-UIKIT",
     "contributes_to": [
       "KR3"
@@ -36,8 +36,7 @@
           "patterns": [
             "oguard.contract.json",
             "modules/com.etendoerp.uikit/**",
-            "modules/com.etendoerp.uikit.samples/**",
-            "modules/com.etendoerp.uikit.demos/**"
+            "modules/com.etendoerp.uikit.samples/**"
           ]
         }
       ]
@@ -47,8 +46,7 @@
     "expected_paths": [
       "oguard.contract.json",
       "modules/com.etendoerp.uikit/**",
-      "modules/com.etendoerp.uikit.samples/**",
-      "modules/com.etendoerp.uikit.demos/**"
+      "modules/com.etendoerp.uikit.samples/**"
     ],
     "non_goals": [
       "crear tablas nuevas: ninguna demo aporta DDL, todas leen los datos que la instancia ya tiene",
@@ -128,14 +126,13 @@
       },
       {
         "id": "C-R2-VERSIONADO",
-        "statement": "Los tres modulos declaran sus dependencias en AD_MODULE_DEPENDENCY y bajan a src-db/database/ como sourcedata; el modulo de demos se reinstala en una instancia limpia con isindevelopment='N' y update.database, y las cinco vistas aparecen con sus permisos, que aporta un module script idempotente porque OBUIAPP_View_Role_Access no lo cubre el export",
+        "statement": "Los dos modulos declaran sus dependencias en AD_MODULE_DEPENDENCY y bajan a src-db/database/ como sourcedata; el modulo de showcase se reinstala en una instancia limpia con isindevelopment='N' y update.database, y las cinco vistas aparecen con sus permisos, que aporta un module script idempotente porque OBUIAPP_View_Role_Access no lo cubre el export",
         "required": true,
         "evidence": {
           "kind": "path",
           "patterns": [
             "modules/com.etendoerp.uikit/src-db/database/sourcedata/**",
-            "modules/com.etendoerp.uikit.samples/src-db/database/**",
-            "modules/com.etendoerp.uikit.demos/src-db/database/**"
+            "modules/com.etendoerp.uikit.samples/src-db/database/**"
           ]
         }
       }
