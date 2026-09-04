@@ -64,6 +64,7 @@ import org.openbravo.scheduling.quartz.OpenbravoOracleJDBCDelegateTest;
 import org.openbravo.scheduling.quartz.OpenbravoPostgreJDBCDelegateTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
 import org.openbravo.scheduling.trigger.TriggerProviderTest;
+import org.openbravo.test.businessutility.AuditTrailTimeFormatterTest;
 import org.openbravo.test.accounting.PostDocumentTest;
 import org.openbravo.test.accounting.PostedNoDocConfigTest;
 import org.openbravo.test.accounting.RecordID2Test;
@@ -419,6 +420,9 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Landed Cost Type Test
     LandedCostTypeTest.class,
+
+    // Audit Trail popup timezone conversion Test
+    AuditTrailTimeFormatterTest.class,
 
     // Landed Cost Receipt Test
     LandedCostDuplicateReceiptValidatorTest.class,
