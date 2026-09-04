@@ -950,7 +950,9 @@
              IF (v_IsReversedDoc = 'N') THEN
                -- Normal Scenario
                UPDATE C_Order o
-               SET IsDelivered = 'Y'
+               SET IsDelivered = 'Y',
+                   Updated = now(),
+                   UpdatedBy = v_User
                WHERE o.c_order_id = Cur_Order.c_order_id 
                AND o.IsDelivered = 'N'
                AND o.processed = 'Y'                
@@ -963,7 +965,9 @@
              ELSIF (v_IsReversedDoc = 'Y') THEN
                -- Void Scenario
                UPDATE C_Order o
-               SET IsDelivered = 'N'
+               SET IsDelivered = 'N',
+                   Updated = now(),
+                   UpdatedBy = v_User
                WHERE o.c_order_id = Cur_Order.c_order_id
                AND o.IsDelivered = 'Y'
                AND EXISTS (SELECT 1
