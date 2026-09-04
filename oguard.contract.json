@@ -5,11 +5,11 @@
     "statement": "com.etendoerp.uikit: framework sobre SmartClient para construir ventanas custom en Etendo Classic, documentado en capas para que un agente produzca una ventana funcional en una pasada, sin leer core y sin tocar core"
   },
   "round": {
-    "id": "R1-OKR-CLASSIC",
-    "statement": "Construir la revision de OKRs como ventana real de Etendo Classic implementando exactamente docs/samples/okr-review.md: runtime minimo OB.UIKit en com.etendoerp.uikit, mas app, tablas ETOKR y filas de AD en com.etendoerp.uikit.samples, abierta desde AD_MENU en localhost:8888 con datos reales",
+    "id": "R2-UIKIT-DEMOS",
+    "statement": "Demostrar el potencial del framework con cinco ventanas demo sobre datos reales de la instancia -- alertas, cartera AR/AP, preparacion de pedidos, stock por almacen y ficha de tercero -- en el modulo nuevo com.etendoerp.uikit.demos; implementar las cuatro API que el runtime prometia y no tenia (defineAction, fmt, nav, debounce) mas bars y spark; convertir check-window.mjs en runner sobre manifests; y dejar todo versionado como sourcedata XML, reinstalable en otra instancia",
     "parent_objective_id": "O-UIKIT",
     "contributes_to": [
-      "KR2"
+      "KR3"
     ]
   },
   "key_results": [
@@ -26,15 +26,35 @@
           ]
         }
       ]
+    },
+    {
+      "id": "KR3",
+      "statement": "Cinco ventanas ETDEMO_* abren en Classic desde el menu con datos reales; el runtime exporta defineAction, fmt, nav, debounce, bars y spark con su documentacion presente; el runner de ventanas verifica las seis ventanas por manifest incluyendo el gate de CSRF sobre cada escritura; y el modulo se reinstala desde src-db/database/ con update.database",
+      "evidence": [
+        {
+          "kind": "path",
+          "patterns": [
+            "oguard.contract.json",
+            "modules/com.etendoerp.uikit/**",
+            "modules/com.etendoerp.uikit.samples/**",
+            "modules/com.etendoerp.uikit.demos/**"
+          ]
+        }
+      ]
     }
   ],
   "scope": {
     "expected_paths": [
       "oguard.contract.json",
       "modules/com.etendoerp.uikit/**",
-      "modules/com.etendoerp.uikit.samples/**"
+      "modules/com.etendoerp.uikit.samples/**",
+      "modules/com.etendoerp.uikit.demos/**"
     ],
-    "non_goals": []
+    "non_goals": [
+      "crear tablas nuevas: ninguna demo aporta DDL, todas leen los datos que la instancia ya tiene",
+      "sembrar datos de negocio: el dataset termina en 2021 y las demos declaran su fecha de referencia en pantalla en vez de mentir con current_date",
+      "escribir las cinco recetas L1: se cosechan cuando haya al menos dos samples reales por forma, no antes"
+    ]
   },
   "policy": {
     "goal_substitution": "observe",
@@ -52,7 +72,7 @@
       "timeout_ms": 900000
     },
     {
-      "id": "okr-window",
+      "id": "uikit-windows",
       "argv": [
         "node",
         "modules/com.etendoerp.uikit/verify/check-window.mjs"
@@ -70,7 +90,52 @@
         "evidence": {
           "checks": [
             "uikit-source",
-            "okr-window"
+            "uikit-windows"
+          ]
+        }
+      },
+      {
+        "id": "C-R2-RUNTIME",
+        "statement": "El runtime asigna OB.UIKit.defineAction, fmt, nav, debounce, bars y spark; el indice los marca present con su documentacion present; docs/api/uikit.d.ts se regenero desde el JSDoc; y el sample OKR sigue funcionando sin cambios en su codigo de aplicacion",
+        "required": true,
+        "evidence": {
+          "checks": [
+            "uikit-source",
+            "uikit-windows"
+          ]
+        }
+      },
+      {
+        "id": "C-R2-DEMOS",
+        "statement": "Las cinco vistas ETDEMO_Alerts, ETDEMO_Cash, ETDEMO_Picking, ETDEMO_Stock y ETDEMO_Partner360 abren desde AD_MENU con datos reales; cada una declara su manifest con datasources, checks y -- si escribe -- writes; los agregados de navegacion se calculan en SQL ignorando el filtro activo y solo el detalle se estrecha; y cada doc declara en su seccion 0 que limitacion del dataset tiene la demo",
+        "required": true,
+        "evidence": {
+          "checks": [
+            "uikit-source",
+            "uikit-windows"
+          ]
+        }
+      },
+      {
+        "id": "C-R2-CSRF",
+        "statement": "Toda escritura pasa por UikAction, que verifica el token CSRF antes de nada y re-lee el objetivo bajo alcance; el gate W7 prueba por cada entrada de writes[] que un POST sin token es rechazado y con token es aceptado. KernelServlet y BaseActionHandler no verifican CSRF, asi que sin este criterio la promesa es decorativa",
+        "required": true,
+        "evidence": {
+          "checks": [
+            "uikit-windows"
+          ]
+        }
+      },
+      {
+        "id": "C-R2-VERSIONADO",
+        "statement": "Los tres modulos declaran sus dependencias en AD_MODULE_DEPENDENCY y bajan a src-db/database/ como sourcedata; el modulo de demos se reinstala en una instancia limpia con isindevelopment='N' y update.database, y las cinco vistas aparecen con sus permisos, que aporta un module script idempotente porque OBUIAPP_View_Role_Access no lo cubre el export",
+        "required": true,
+        "evidence": {
+          "kind": "path",
+          "patterns": [
+            "modules/com.etendoerp.uikit/src-db/database/sourcedata/**",
+            "modules/com.etendoerp.uikit.samples/src-db/database/**",
+            "modules/com.etendoerp.uikit.demos/src-db/database/**"
           ]
         }
       }
@@ -79,13 +144,22 @@
       {
         "kind": "behavior",
         "criterion_ids": [
-          "C-R1"
+          "C-R1",
+          "C-R2-RUNTIME",
+          "C-R2-DEMOS"
         ]
       },
       {
         "kind": "compatibility",
         "criterion_ids": [
-          "C-R1"
+          "C-R1",
+          "C-R2-RUNTIME"
+        ]
+      },
+      {
+        "kind": "security",
+        "criterion_ids": [
+          "C-R2-CSRF"
         ]
       }
     ]
