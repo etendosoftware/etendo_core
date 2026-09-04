@@ -5,22 +5,24 @@
     "statement": "com.etendoerp.uikit: framework sobre SmartClient para construir ventanas custom en Etendo Classic, documentado en capas para que un agente produzca una ventana funcional en una pasada, sin leer core y sin tocar core"
   },
   "round": {
-    "id": "R0-SPIKE",
-    "statement": "Convertir supuestos en hechos y escribir L0 primero: AGENTS.md (<=120 lineas) y uikit.contract.json contra la API que todavia no existe, mas el gate JSMin ejecutable desde Node",
+    "id": "R1-OKR-CLASSIC",
+    "statement": "Construir la revision de OKRs como ventana real de Etendo Classic implementando exactamente docs/samples/okr-review.md: runtime minimo OB.UIKit en com.etendoerp.uikit, mas app, tablas ETOKR y filas de AD en com.etendoerp.uikit.samples, abierta desde AD_MENU en localhost:8888 con datos reales",
     "parent_objective_id": "O-UIKIT",
     "contributes_to": [
-      "KR1"
+      "KR2"
     ]
   },
   "key_results": [
     {
-      "id": "KR1",
-      "statement": "L0 y el harness de verificacion existen y corren verdes antes de escribir runtime",
+      "id": "KR2",
+      "statement": "La ventana abre en Classic desde el menu, renderiza las cuatro regiones sobre las cinco tablas ETOKR y los numeros derivados coinciden con las formulas de la seccion 5 del sample; G0-G8 siguen verdes y no se toca core",
       "evidence": [
         {
           "kind": "path",
           "patterns": [
-            "modules/com.etendoerp.uikit/**"
+            "oguard.contract.json",
+            "modules/com.etendoerp.uikit/**",
+            "modules/com.etendoerp.uikit.samples/**"
           ]
         }
       ]
@@ -29,7 +31,8 @@
   "scope": {
     "expected_paths": [
       "oguard.contract.json",
-      "modules/com.etendoerp.uikit/**"
+      "modules/com.etendoerp.uikit/**",
+      "modules/com.etendoerp.uikit.samples/**"
     ],
     "non_goals": []
   },
@@ -47,18 +50,27 @@
         "modules/com.etendoerp.uikit/verify/check-source.mjs"
       ],
       "timeout_ms": 900000
+    },
+    {
+      "id": "okr-window",
+      "argv": [
+        "node",
+        "modules/com.etendoerp.uikit/verify/check-window.mjs"
+      ],
+      "timeout_ms": 900000
     }
   ],
   "task": {
     "type": "feature",
     "acceptance_criteria": [
       {
-        "id": "C-R0",
-        "statement": "El gate S1 corre el JSMin real del kernel desde Node y valida con node --check (acepta ES2018, rechaza sintaxis rota); AGENTS.md no excede 120 lineas y enuncia el workflow de 5 pasos y los invariantes; uikit.contract.json indexa cada doc y cada entrada resuelve",
+        "id": "C-R1",
+        "statement": "La ventana ETOKRS_Review se sirve desde OBUIAPP_MainLayout/View, se alcanza desde AD_MENU con el rol admin, el datasource ETOKRS_ReviewTree devuelve ciclo, departamentos, objetivos y KRs en una sola llamada, el filtro por departamento se aplica en el datasource y no en la UI (hecho F6), y avance, ritmo, desvio, score y rollup se calculan como dice docs/samples/okr-review.md seccion 5",
         "required": true,
         "evidence": {
           "checks": [
-            "uikit-source"
+            "uikit-source",
+            "okr-window"
           ]
         }
       }
@@ -67,13 +79,13 @@
       {
         "kind": "behavior",
         "criterion_ids": [
-          "C-R0"
+          "C-R1"
         ]
       },
       {
         "kind": "compatibility",
         "criterion_ids": [
-          "C-R0"
+          "C-R1"
         ]
       }
     ]
