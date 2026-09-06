@@ -13,6 +13,31 @@ java {
 
 sourceSets.main.java.srcDirs = ['src']
 
+// Compile the actual dictionary bootstrap separately from the ERP application.
+sourceSets {
+    bootstrap {
+        java {
+            srcDir '../src'
+            include 'org/openbravo/base/model/ModelProvider.java'
+            include 'org/openbravo/base/gen/GenerateEntitiesTask.java'
+        }
+        resources {
+            srcDir '../src'
+            include 'org/openbravo/base/model/*.hbm.xml'
+            include 'org/openbravo/base/gen/*.ftl'
+            include 'com/etendoerp/sequences/model/*.hbm.xml'
+        }
+    }
+}
+
+configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
+configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
+
+tasks.named('compileBootstrapJava', JavaCompile) {
+    options.sourcepath = files('../src', '../src-core/src')
+    options.compilerArgs += ['-implicit:class']
+}
+
 def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provider {
     def artifacts = fileTree(new File(gradle.gradleUserHomeDir,
             'caches/modules-2/files-2.1/com.etendoerp/dbsm/1.2.0')) {
@@ -40,6 +65,12 @@ dependencies {
     implementation 'org.apache.ant:ant:1.9.2'
     implementation 'org.apache.logging.log4j:log4j-1.2-api:2.25.2'
     runtimeOnly 'org.apache.logging.log4j:log4j-core:2.25.2'
+    bootstrapImplementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
+    bootstrapImplementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    bootstrapImplementation 'org.dom4j:dom4j:2.2.0'
+    bootstrapImplementation 'org.apache.commons:commons-text:1.10.0'
+    bootstrapImplementation 'org.freemarker:freemarker:2.3.34'
+    bootstrapImplementation 'org.redisson:redisson:3.52.0'
 }
 
 tasks.register('verifyPersistenceFoundation', JavaExec) {

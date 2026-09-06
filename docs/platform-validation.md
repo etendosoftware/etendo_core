@@ -108,3 +108,16 @@ dictionary/security dataset, then repeat persistence and upgrade checks using
 real OBDal and generated mappings. Preserve existing Hibernate versions while
 establishing that baseline. Treat the Jakarta branch and artifact provenance as
 separate checks before claiming source-build compatibility.
+
+## Dictionary bootstrap compilation
+
+The bootstrap source set compiles the actual ModelProvider and GenerateEntitiesTask
+from this checkout, resolving their Java source dependencies from src and src-core.
+Run `./gradlew -p platform-validation compileBootstrapJava` with JDK 17.
+This compilation passes without generated ERP entity classes. It includes the
+existing session factory wrapper, PostgreSQL dialect, and metadata classes.
+Redisson is a compile dependency reached through the existing core; this does not
+start Redis or establish that a Redis service is required for the bootstrap.
+
+This is an intermediate build milestone. Database-backed dictionary initialization,
+entity generation, and OBDal acceptance are still pending.
