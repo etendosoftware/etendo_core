@@ -22,13 +22,18 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.alteration.ModelComparator;
+import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /** Real PostgreSQL component probe; deliberately does not claim OBDal compatibility. */
 public final class PersistenceValidation {
@@ -142,6 +147,16 @@ public final class PersistenceValidation {
         }
         pass("PostgreSQL enforced the XML-defined foreign key");
 
+        try (Connection connection = source.getConnection(); var statement = connection.createStatement()) {
+            try {
+                statement.executeUpdate("insert into pp_request(id,title,category_id) values ('NULL_TITLE',null,'GENERAL')");
+                throw new AssertionError("NOT NULL was not enforced");
+            } catch (SQLException expected) {
+                check("23502".equals(expected.getSQLState()), "Unexpected NOT NULL failure");
+            }
+        }
+        pass("PostgreSQL enforced the XML-defined NOT NULL constraint");
+
         Database actual = platform.loadModelFromDatabase(new ExcludeFilter());
         platform.alterTables(actual, v2, false);
         check(scalar(source, "select count(*) from information_schema.columns where table_name='pp_request' and column_name='description'") == 1,
@@ -166,6 +181,58 @@ public final class PersistenceValidation {
         platform.alterTables(afterUpgrade, v2, false);
         check(scalar(source, "select count(*) from pp_request") == 1, "Repeated schema update changed operational rows");
         pass("DBSM detected no further schema changes and a repeated schema update preserved data");
+        verifyManagedData(platform, source, v2);
+    }
+
+    /** Reconciles only module-owned reference rows, never the operational table. */
+    private static void verifyManagedData(PostgreSqlPlatform platform, BasicDataSource source,
+            Database model) throws Exception {
+        try (var connection = source.getConnection(); var statement = connection.createStatement()) {
+            statement.executeUpdate("insert into pp_category(id,name) values ('LOCAL','Local category')");
+            statement.executeUpdate("insert into pp_request(id,title,category_id) values ('LOCAL_REQUEST','Local request','LOCAL')");
+        }
+        DatabaseDataIO io = new DatabaseDataIO();
+        var reader = io.getConfiguredCompareDataReader(model);
+        DataToArraySink sink = (DataToArraySink) reader.getSink();
+        sink.start();
+        io.writeDataToDatabase(reader, new File("fixtures/categories-v2.xml"));
+        sink.end();
+        DatabaseData desired = new DatabaseData(model);
+        desired.insertDynaBeansFromVector("PP_CATEGORY", sink.getVector());
+        OBDataset dataset = new OBDataset(desired);
+        OBDatasetTable managed = new OBDatasetTable();
+        managed.setName("PP_CATEGORY");
+        managed.getIncludedColumns().addAll(List.of("ID", "NAME"));
+        // This fixture explicitly declares ownership; real modules must supply their dataset.
+        managed.setSecondarywhereclause("ID IN ('GENERAL','IT')");
+        dataset.getTableList().add(managed);
+        DataComparator comparator = new DataComparator(platform.getPlatformInfo(), false);
+        comparator.compareToUpdate(model, platform, desired, dataset, null);
+        check(comparator.getChanges().size() == 2, "Expected one managed update and one insertion");
+        try (var connection = source.getConnection()) {
+            platform.alterData(connection, model, comparator.getChanges());
+        }
+        check(scalar(source, "select count(*) from pp_category where id='GENERAL' and name='General service requests'") == 1,
+                "Managed category was not updated");
+        check(scalar(source, "select count(*) from pp_category where id='IT' and name='IT support'") == 1,
+                "Managed category was not added");
+        check(scalar(source, "select count(*) from pp_category where id='LOCAL' and name='Local category'") == 1,
+                "Unmanaged category was changed");
+        check(scalar(source, "select count(*) from pp_request where id='REQUEST_1' and title='Library access'"
+                + " and category_id='GENERAL' and description='Available after schema upgrade'") == 1,
+                "Original operational record was changed");
+        check(scalar(source, "select count(*) from pp_request where id='LOCAL_REQUEST' and title='Local request' and category_id='LOCAL'") == 1,
+                "Local operational record was changed");
+        pass("DBSM reconciled managed XML changes while preserving unmanaged and operational records");
+        DataComparator repeated = new DataComparator(platform.getPlatformInfo(), false);
+        repeated.compareToUpdate(model, platform, desired, dataset, null);
+        check(repeated.getChanges().isEmpty(), "Repeated managed-data update is not empty");
+        try (var connection = source.getConnection()) {
+            platform.alterData(connection, model, repeated.getChanges());
+        }
+        check(scalar(source, "select count(*) from pp_category") == 3, "Repeated update changed category count");
+        check(scalar(source, "select count(*) from pp_request") == 2, "Repeated update changed request count");
+        pass("Repeating DBSM managed-data reconciliation produced an empty delta and preserved rows");
     }
 
     private static SessionFactory sessions(String url, String password, boolean upgraded) {

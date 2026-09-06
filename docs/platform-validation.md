@@ -63,7 +63,7 @@ Hibernate ORM 6.5.2.Final, PostgreSQL JDBC 42.7.8, and a disposable postgres:16
 container. The successful Gradle invocation took 6 seconds on this environment;
 this is a smoke check duration, not a performance benchmark.
 
-Nine assertions completed:
+Twelve checks completed:
 
 1. OBDal and an ERP Product class are absent from the runtime classpath.
 2. DBSM creates exactly two application tables from XML in an empty database.
@@ -71,20 +71,31 @@ Nine assertions completed:
 4. Hibernate/Jakarta persists a request and executes parameterized HQL with a join.
 5. A flushed Hibernate insert is absent after rollback.
 6. PostgreSQL rejects a missing parent with foreign-key SQLSTATE 23503.
-7. DBSM adds the v2 XML column while preserving the existing request.
-8. Hibernate validates the upgraded schema and persists the new property.
-9. DBSM reports no remaining model differences; repeating the schema update
+7. PostgreSQL rejects a null required title with SQLSTATE 23502.
+8. DBSM adds the v2 XML column while preserving the existing request.
+9. Hibernate validates the upgraded schema and persists the new property.
+10. DBSM reports no remaining model differences; repeating the schema update
    preserves operational rows.
+11. DBSM DataComparator and alterData update a managed category and insert another
+    from v2 XML, preserving a local category outside the dataset and both requests.
+12. Repeating managed-data reconciliation produces an empty delta and preserves
+    category and request counts.
 
 The harness writes build/validation-result.txt (under platform-validation).
 It uses manually annotated Java entities and the standard PostgreSQL Hibernate
 dialect. No generated mappings, OBDal, custom Etendo SQL functions, or full module
-system are substituted or mocked. XML data import is verified once; repeat-safe
-managed-data reconciliation and managed-data upgrades are NOT yet verified.
+system are substituted or mocked. Managed-data reconciliation is verified for the
+explicit category dataset, not the full application dictionary or module lifecycle.
 Hibernate's built-in pool warning is expected in this disposable harness; it is
 not a production pool recommendation.
 
 ## Findings that affect extraction
+
+Reference-data reconciliation uses DBSM DataComparator and alterData rather than
+custom upserts. The fixture explicitly owns GENERAL and IT through an OBDataset
+secondary predicate. LOCAL and the operational table are outside its scope.
+Real modules must declare their own ownership; treating all rows as managed could
+delete user-owned data. This remains distinct from full update.database.
 
 - DBSM's createTables alone does not activate foreign keys. Follow its explicit
   NOT NULL and foreign-key activation steps; a successful table creation is not
@@ -150,3 +161,11 @@ base-object dependencies. DalMappingGenerator references DalPropertyAccessStrate
 which reaches BaseOBObject and generated Language/client/organization classes.
 These are the next bootstrap boundary; this successful source-generation test
 does not claim runtime DAL or access-filter validation.
+
+## Accepted v1 compatibility scope
+
+The user explicitly accepts retaining the real generated Warehouse entity in v1
+to reduce extraction cost. OBContext currently exposes this type and initializes
+the user's default warehouse. This does not require implementing warehouse
+business workflows. Removing that dependency is deferred until real DAL,
+security, and upgrade checks pass; it must not be replaced by a fake entity.
