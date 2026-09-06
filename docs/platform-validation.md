@@ -164,8 +164,26 @@ does not claim runtime DAL or access-filter validation.
 
 ## Accepted v1 compatibility scope
 
-The user explicitly accepts retaining the real generated Warehouse entity in v1
+The user explicitly accepts retaining real generated Warehouse and BusinessPartner entities in v1
 to reduce extraction cost. OBContext currently exposes this type and initializes
 the user's default warehouse. This does not require implementing warehouse
 business workflows. Removing that dependency is deferred until real DAL,
 security, and upgrade checks pass; it must not be replaced by a fake entity.
+
+The security-generation profile selects physical columns and corresponding source
+dictionary rows from this checkout. It preserves original entity/package names
+and primitive domain references, while excluding unselected ERP fields. Foreign
+keys exposed through UI selectors are projected to TableDir references to the same
+physical target, using existing core domain code. Selector behavior itself is not
+part of this profile. Generation is an
+intermediate check, not proof of a complete security context or DAL execution.
+
+`./gradlew -p platform-validation verifySecurityGeneration` passes on disposable
+PostgreSQL and generates eleven sources: Category, Request, User, Role, UserRoles,
+RoleOrganization, Client, Language, Organization, Warehouse, and BusinessPartner.
+The last two retain only selected identity/audit fields for now, not ERP workflows.
+Outputs are in build/security-generated-entities and build/security-generation-result.txt.
+Every modeled Java output is checked after fresh generation; stale generated files
+cannot satisfy the check. The probe does not exercise incremental generation,
+whose timestamp path currently expects metadata kinds absent from this minimal
+dictionary. Existing baseline generation uses its separate output directory.

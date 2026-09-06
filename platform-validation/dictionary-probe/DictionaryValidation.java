@@ -23,7 +23,9 @@ public final class DictionaryValidation {
     public static void main(String[] args) throws Exception {
         String container = "etendo-platform-dictionary-" + UUID.randomUUID();
         String password = UUID.randomUUID().toString();
-        Path report = Path.of("build/dictionary-result.txt");
+        boolean security = Boolean.getBoolean("validation.security");
+        Path report = Path.of(security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
+        Path generated = Path.of(security ? "build/security-generated-entities" : "build/generated-entities");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "RUNNING\n");
         Path propertiesFile = null;
@@ -74,7 +76,8 @@ public final class DictionaryValidation {
             properties.setProperty("source.path", new File("build/generator-input").getAbsolutePath());
             OBPropertiesProvider.getInstance().setProperties(properties);
             var model = ModelProvider.getInstance().getModel();
-            if (model.size() != 2) throw new AssertionError("Expected two non-ERP entities, got " + model.size());
+            int expectedEntities = 2 + (Boolean.getBoolean("validation.security") ? SecurityFixture.TABLES.size() : 0);
+            if (model.size() != expectedEntities) throw new AssertionError("Unexpected entity count: " + model.size());
             var request = ModelProvider.getInstance().getEntity("ProofRequest");
             if (!request.getProperty("title").getColumnName().equals("TITLE")) {
                 throw new AssertionError("Dictionary property naming failed");
@@ -91,19 +94,31 @@ public final class DictionaryValidation {
             }
             GenerateEntitiesTask generate = new GenerateEntitiesTask();
             generate.setBasePath(new File("build/generator-input").getAbsolutePath());
-            generate.setSrcGenPath(new File("build/generated-entities").getAbsolutePath());
+            generate.setSrcGenPath(generated.toAbsolutePath().toString());
             generate.setPropertiesFile(propertiesFile.toAbsolutePath().toString());
-            // Remove only this probe's two previous generated outputs to prevent stale success.
-            for (String type : new String[] {"Category", "Request"}) {
-                Files.deleteIfExists(Path.of("build/generated-entities/com/etendoerp/platform/fixture/" + type + ".java"));
-            }
-            generate.execute();
-            for (String type : new String[] {"Category", "Request"}) {
-                if (!Files.exists(Path.of("build/generated-entities/com/etendoerp/platform/fixture/" + type + ".java"))) {
-                    throw new AssertionError("Entity generator did not produce " + type);
+            // This directory is exclusively an ignored output of this probe. Fresh generation
+            // avoids the full-ERP incremental timestamp query against absent metadata kinds.
+            if (Files.exists(generated)) {
+                try (var paths = Files.walk(generated)) {
+                    for (Path path : paths.sorted(java.util.Comparator.reverseOrder()).toList()) Files.delete(path);
                 }
             }
-            System.out.println("PASS: Real entity generator produced both Java entity sources");
+            generate.execute();
+            for (var entity : model) {
+                Path java = generated.resolve(entity.getClassName().replace('.', '/') + ".java");
+                if (!Files.exists(java)) {
+                    throw new AssertionError("Entity generator did not produce " + entity.getClassName());
+                }
+            }
+            if (security) {
+                for (String type : new String[] {"org.openbravo.model.common.enterprise.Warehouse",
+                        "org.openbravo.model.common.businesspartner.BusinessPartner",
+                        "org.openbravo.model.ad.access.User"}) {
+                    String java = Files.readString(generated.resolve(type.replace('.', '/') + ".java"));
+                    if (!java.contains("extends BaseOBObject")) throw new AssertionError("Missing real base object: " + type);
+                }
+            }
+            System.out.println("PASS: Real entity generator produced " + model.size() + " Java entity sources");
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
             throw failure;
@@ -112,7 +127,8 @@ public final class DictionaryValidation {
             if (propertiesFile != null) Files.deleteIfExists(propertiesFile);
             if (started) PersistenceValidation.command("docker", "stop", "--time", "2", container);
         }
-        Files.writeString(report, "PASS\nReal ModelProvider: two related entities\nReal Java entity source generation\n"
+        Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
+                + (security ? "Selected security entities, Warehouse and BusinessPartner generated from core metadata\n" : "")
                 + "NOT YET VERIFIED: generated entity compilation, DAL mappings, OBDal runtime, security filters, metadata upgrades\n");
     }
 }

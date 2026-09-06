@@ -61,6 +61,7 @@ final class DictionaryFixture {
         Table requests = result.findTable("PP_REQUEST");
         requests.findColumn("CATEGORY_ID").setName("PP_CATEGORY_ID");
         requests.getForeignKey(0).getReference(0).setLocalColumnName("PP_CATEGORY_ID");
+        if (Boolean.getBoolean("validation.security")) SecurityFixture.addSchema(result, xml);
         result.initialize();
         xml.write(result, new File("build/dictionary-schema.xml"));
         return result;
@@ -103,13 +104,14 @@ final class DictionaryFixture {
                 row(data, schema, "AD_COLUMN", values);
             }
         }
+        if (Boolean.getBoolean("validation.security")) SecurityFixture.addData(data, schema);
         data.append("</data>\n");
         Path path = Path.of("build", "dictionary-data.xml");
         Files.writeString(path, data);
         return path;
     }
 
-    private static void row(StringBuilder xml, Database schema, String tableName, Map<String, String> supplied) {
+    static void row(StringBuilder xml, Database schema, String tableName, Map<String, String> supplied) {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("UPDATED", UPDATED);
         for (var column : schema.findTable(tableName).getColumns()) {
@@ -121,6 +123,7 @@ final class DictionaryFixture {
         xml.append("  <").append(tableName).append(">\n");
         for (var value : values.entrySet()) {
             if (value.getValue() == null) continue;
+            if (schema.findTable(tableName).findColumn(value.getKey(), false) == null) continue;
             xml.append("    <").append(value.getKey()).append("><![CDATA[")
                     .append(value.getValue()).append("]]></").append(value.getKey()).append(">\n");
         }

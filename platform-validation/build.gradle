@@ -20,6 +20,10 @@ sourceSets {
             srcDir '../src'
             include 'org/openbravo/base/model/ModelProvider.java'
             include 'org/openbravo/base/model/domaintype/TableDirDomainType.java'
+            include 'org/openbravo/base/model/domaintype/BooleanDomainType.java'
+            include 'org/openbravo/base/model/domaintype/DatetimeDomainType.java'
+            include 'org/openbravo/base/model/domaintype/StringEnumerateDomainType.java'
+            include 'org/openbravo/base/model/domaintype/TableDomainType.java'
             include 'org/openbravo/base/session/DalUUIDGenerator.java'
             include 'org/openbravo/base/gen/GenerateEntitiesTask.java'
         }
@@ -106,6 +110,18 @@ tasks.register('verifyDictionaryBootstrap', JavaExec) {
     classpath = sourceSets.dictionaryProbe.runtimeClasspath
     mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
     workingDir = projectDir
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('verifySecurityGeneration', JavaExec) {
+    group = 'verification'
+    description = 'Generate selected real security and Warehouse entities from the source dictionary.'
+    dependsOn dictionaryProbeClasses, bootstrapClasses, prepareGeneratorTemplates
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+    workingDir = projectDir
+    systemProperty 'validation.security', 'true'
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }
 }
