@@ -19,6 +19,8 @@ sourceSets {
         java {
             srcDir '../src'
             include 'org/openbravo/base/model/ModelProvider.java'
+            include 'org/openbravo/base/model/domaintype/TableDirDomainType.java'
+            include 'org/openbravo/base/session/DalUUIDGenerator.java'
             include 'org/openbravo/base/gen/GenerateEntitiesTask.java'
         }
         resources {
@@ -26,12 +28,20 @@ sourceSets {
             include 'org/openbravo/base/model/*.hbm.xml'
             include 'org/openbravo/base/gen/*.ftl'
             include 'com/etendoerp/sequences/model/*.hbm.xml'
+            include 'org/openbravo/dal/core/template*.hbm.xml'
         }
+    }
+    dictionaryProbe {
+        java.srcDirs = ['dictionary-probe']
+        compileClasspath += sourceSets.main.output + sourceSets.bootstrap.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.bootstrap.output
     }
 }
 
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
+configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
+configurations.dictionaryProbeRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
 
 tasks.named('compileBootstrapJava', JavaCompile) {
     options.sourcepath = files('../src', '../src-core/src')
@@ -79,6 +89,22 @@ tasks.register('verifyPersistenceFoundation', JavaExec) {
     dependsOn classes
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.etendoerp.platform.validation.PersistenceValidation'
+    workingDir = projectDir
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('prepareGeneratorTemplates', Copy) {
+    from('../src') { include 'org/openbravo/base/gen/*.ftl' }
+    into layout.buildDirectory.dir('generator-input')
+}
+
+tasks.register('verifyDictionaryBootstrap', JavaExec) {
+    group = 'verification'
+    description = 'Read real dictionary metadata and generate entity sources in disposable PostgreSQL.'
+    dependsOn dictionaryProbeClasses, bootstrapClasses, prepareGeneratorTemplates
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
     workingDir = projectDir
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }

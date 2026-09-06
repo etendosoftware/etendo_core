@@ -121,3 +121,32 @@ start Redis or establish that a Redis service is required for the bootstrap.
 
 This is an intermediate build milestone. Database-backed dictionary initialization,
 entity generation, and OBDal acceptance are still pending.
+
+## Real dictionary and entity generation
+
+`./gradlew -p platform-validation verifyDictionaryBootstrap` now passes with JDK 17.
+It derives nine technical dictionary tables from the existing core HBM definitions
+and DBSM physical table definitions, adds the two non-ERP tables, and imports a
+minimal generated XML dataset. The physical schema is checked with ModelComparator.
+The real ModelProvider resolves the two entities and their relationship, and the
+real GenerateEntitiesTask produces Category.java and Request.java using the core
+FreeMarker templates. No ModelProvider override or mock is used.
+
+Results: platform-validation/build/dictionary-result.txt. Generated schema, data,
+and Java sources are under platform-validation/build. The temporary properties
+file has owner-only permissions and is deleted after the run along with the
+disposable PostgreSQL container. Existing databases and core configuration files
+are not used.
+
+An existing compatibility detail was reproduced: Hibernate's strict schema
+validator rejects NUMERIC dictionary fields mapped to Integer, including
+AD_COLUMN.FIELDLENGTH. This probe keeps the original types, disables Hibernate DDL,
+and validates physical schema equivalence through DBSM before reading metadata.
+The foundation probe continues to exercise Hibernate schema validation for its
+simple annotated entities. Hibernate HBM deprecation warnings remain visible.
+
+Generated source compilation and DAL mappings still require the real security and
+base-object dependencies. DalMappingGenerator references DalPropertyAccessStrategy,
+which reaches BaseOBObject and generated Language/client/organization classes.
+These are the next bootstrap boundary; this successful source-generation test
+does not claim runtime DAL or access-filter validation.

@@ -189,7 +189,7 @@ public final class PersistenceValidation {
         }
     }
 
-    private static void awaitDatabase(String url, String password) throws Exception {
+    static void awaitDatabase(String url, String password) throws Exception {
         long deadline = System.nanoTime() + Duration.ofSeconds(30).toNanos();
         while (System.nanoTime() < deadline) {
             try (var connection = DriverManager.getConnection(url, "postgres", password)) {
@@ -201,7 +201,7 @@ public final class PersistenceValidation {
         throw new IllegalStateException("Disposable PostgreSQL did not start within 30 seconds");
     }
 
-    private static String command(String... args) throws Exception {
+    static String command(String... args) throws Exception {
         Process process = new ProcessBuilder(args).redirectErrorStream(true).start();
         if (!process.waitFor(45, TimeUnit.SECONDS)) {
             process.destroyForcibly();
