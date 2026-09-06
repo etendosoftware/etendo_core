@@ -34,6 +34,11 @@ src-test/build/
 !src-util/diagnostic/WebContent/WEB-INF/web.xml
 !src-wad/.classpath
 docs
+!/docs/
+/docs/*
+!/docs/INDEX.md
+!/docs/index.yaml
+!/docs/platform-validation.md
 log
 src-gen
 src-loc

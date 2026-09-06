@@ -1,0 +1,5 @@
+documents:
+  - path: INDEX.md
+    status: done
+  - path: platform-validation.md
+    status: done

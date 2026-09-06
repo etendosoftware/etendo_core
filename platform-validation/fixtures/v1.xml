@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database name="PLATFORM_PROOF">
+  <table name="PP_CATEGORY" primaryKey="PP_CATEGORY_PK">
+    <column name="ID" primaryKey="true" required="true" type="VARCHAR" size="32"/>
+    <column name="NAME" required="true" type="VARCHAR" size="100"/>
+  </table>
+  <table name="PP_REQUEST" primaryKey="PP_REQUEST_PK">
+    <column name="ID" primaryKey="true" required="true" type="VARCHAR" size="32"/>
+    <column name="TITLE" required="true" type="VARCHAR" size="100"/>
+    <column name="CATEGORY_ID" required="true" type="VARCHAR" size="32"/>
+    <foreign-key foreignTable="PP_CATEGORY" name="PP_REQUEST_CATEGORY_FK">
+      <reference local="CATEGORY_ID" foreign="ID"/>
+    </foreign-key>
+  </table>
+</database>
