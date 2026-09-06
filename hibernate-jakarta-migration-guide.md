@@ -80,6 +80,29 @@ No changes to call sites are required. All methods retain the same signatures:
 
     If you pass the result directly to an `OBCriteria` method without storing it, no change is needed at the call site.
 
+!!! danger "`NoClassDefFoundError: org/hibernate/criterion/Criterion` can also come from helper modules"
+    After migrating your own imports, the same runtime error can still appear if a **shared helper class or dependency jar** was compiled against Hibernate 5 and still exposes or loads `Criterion` internally.
+
+    Typical symptom:
+
+    ```text
+    java.lang.NoClassDefFoundError: org/hibernate/criterion/Criterion
+    ```
+
+    This usually means one of these is still true:
+
+    - a utility class still imports `org.hibernate.criterion.*`
+    - a method signature, field type, or local variable still uses `Criterion`
+    - your module calls a helper from another module/jar that was not rebuilt for Hibernate 6/7
+
+    Recommended fix:
+
+    - search the whole codebase and all maintained modules for `org.hibernate.criterion`
+    - replace `Criterion` with `org.openbravo.dal.service.Restriction`
+    - replace `org.hibernate.criterion.Restrictions` with `org.openbravo.dal.service.Restrictions`
+    - if a helper only needs simple metadata resolution, prefer moving that logic into the migrated module instead of depending on an old helper jar
+    - rebuild/publish the dependent module so runtime classpaths no longer contain code compiled against the removed API
+
 !!! warning "Inline fully-qualified calls"
     If your code uses the fully-qualified form `org.hibernate.criterion.Restrictions.eq(...)` inline (without an import), replace the qualifier too:
 
@@ -116,8 +139,23 @@ Replace the following imports wherever they appear:
 
 The annotation names and semantics are identical — only the package prefix changes.
 
-!!! info "`javax.servlet.*` and JDK javax packages"
-    `javax.servlet.*` also moves to `jakarta.servlet.*` in Jakarta EE 9. This applies to both import statements **and** inline fully-qualified names in method signatures and code bodies (e.g., `extends javax.servlet.http.HttpServletResponseWrapper`). However, `javax.net.ssl.*`, `javax.script.*`, and `javax.mail.*` are JDK or JavaMail packages that remain under `javax` and should **not** be changed.
+!!! info "`javax.servlet.*`, `javax.persistence.*`, and mail imports"
+    `javax.servlet.*` also moves to `jakarta.servlet.*` in Jakarta EE 9. This applies to both import statements **and** inline fully-qualified names in method signatures and code bodies (e.g., `extends javax.servlet.http.HttpServletResponseWrapper`).
+
+    `javax.persistence.*` also moves to `jakarta.persistence.*`:
+
+    | Before | After |
+    |---|---|
+    | `import javax.persistence.PersistenceException;` | `import jakarta.persistence.PersistenceException;` |
+    | `import javax.persistence.criteria.CriteriaBuilder;` | `import jakarta.persistence.criteria.CriteriaBuilder;` |
+
+    For Etendo 27 module builds, mail imports used by application code/tests must also be updated to Jakarta Mail when the classpath provides the Jakarta API:
+
+    | Before | After |
+    |---|---|
+    | `import javax.mail.internet.MimeUtility;` | `import jakarta.mail.internet.MimeUtility;` |
+
+    Packages such as `javax.net.ssl.*` and `javax.script.*` are still JDK packages and should **not** be changed.
 
 ---
 
@@ -202,7 +240,29 @@ String result = session.createNativeQuery("select get_uuid()", String.class)
     OBDal.getInstance().getSession().createNativeQuery(sql, MyResultType.class).setMaxResults(1).uniqueResult();
     ```
 
----
+!!! info "DML native queries"
+    For `UPDATE`, `DELETE`, or other native statements executed only with `executeUpdate()`, use the overload without a result class:
+
+    ```java title="Before"
+    Query update = OBDal.getInstance().getSession().createSQLQuery(sql);
+    ```
+
+    ```java title="After"
+    Query update = OBDal.getInstance().getSession().createNativeQuery(sql);
+    ```
+
+!!! info "Mockito tests"
+    Tests must stub the same overload used by production code. For scalar selects, include the result type matcher:
+
+    ```java title="Before"
+    when(session.createSQLQuery(anyString())).thenReturn(mockQuery);
+    ```
+
+    ```java title="After"
+    when(session.createNativeQuery(anyString(), eq(String.class))).thenReturn(mockQuery);
+    ```
+
+    For DML statements, stub/verify `createNativeQuery(anyString())` instead.
 
 ---
 
@@ -494,6 +554,33 @@ public void getSessionContextAfterInvalidateShouldThrowException() {
 
 ```java title="After"
 // both test methods removed — getSessionContext() no longer exists
+```
+
+---
+
+### 14b. `FIN_Utility.isPeriodOpen(...)` now expects `Date`
+
+Some module tests still mock the old signature of `FIN_Utility.isPeriodOpen(client, documentType, org, dateAsString)`. In Etendo 27 the method expects a `java.util.Date` as the fourth argument.
+
+#### How to migrate
+
+Update Mockito stubs/verifications to use `Date` matchers:
+
+```java title="Before"
+mockedFinUtility.when(() -> FIN_Utility.isPeriodOpen(
+    anyString(), anyString(), anyString(), anyString())).thenReturn(true);
+```
+
+```java title="After"
+mockedFinUtility.when(() -> FIN_Utility.isPeriodOpen(
+    anyString(), anyString(), anyString(), any(java.util.Date.class))).thenReturn(true);
+```
+
+This applies equally to exact matchers on the document type, for example:
+
+```java title="After"
+mockedFinUtility.when(() -> FIN_Utility.isPeriodOpen(
+    anyString(), eq("SOO"), anyString(), any(java.util.Date.class))).thenReturn(true);
 ```
 
 ---

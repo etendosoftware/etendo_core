@@ -47,6 +47,7 @@ import org.openbravo.client.application.GCTab;
 import org.openbravo.client.kernel.BaseTemplateComponent;
 import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.client.kernel.Template;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
@@ -203,11 +204,16 @@ public class StandardWindowComponent extends BaseTemplateComponent {
 
   /** Returns the applicable System Grid Configuration if any. */
   public static Optional<GCSystem> getSystemGridConfig() {
-    OBCriteria<GCSystem> gcSystemCriteria = OBDal.getInstance().createCriteria(GCSystem.class);
-    gcSystemCriteria.addOrderBy(GCTab.PROPERTY_SEQNO, false);
-    gcSystemCriteria.addOrderBy(GCTab.PROPERTY_ID, false);
-    gcSystemCriteria.setMaxResults(1);
-    return Optional.ofNullable((GCSystem) gcSystemCriteria.uniqueResult());
+    OBContext.setAdminMode(false);
+    try {
+      OBCriteria<GCSystem> gcSystemCriteria = OBDal.getInstance().createCriteria(GCSystem.class);
+      gcSystemCriteria.addOrderBy(GCTab.PROPERTY_SEQNO, false);
+      gcSystemCriteria.addOrderBy(GCTab.PROPERTY_ID, false);
+      gcSystemCriteria.setMaxResults(1);
+      return Optional.ofNullable((GCSystem) gcSystemCriteria.uniqueResult());
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   /**

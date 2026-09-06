@@ -1135,7 +1135,9 @@ public class FIN_AddPayment {
     try {
       obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
       obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
-      return obc.uniqueResult(Date.class);
+      obc.setMaxResults(1);
+      List<?> results = obc.list();
+      return results.isEmpty() ? null : (Date) results.get(0);
     } finally {
       OBContext.restorePreviousMode();
     }

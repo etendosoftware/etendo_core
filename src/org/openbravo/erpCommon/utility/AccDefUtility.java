@@ -54,8 +54,7 @@ public class AccDefUtility {
 
   public static Period getCurrentPeriod(Date date, Calendar fiscalCalendar) {
     OBCriteria<Period> obc = OBDal.getInstance().createCriteria(Period.class);
-    obc.createAlias(Period.PROPERTY_YEAR, "y");
-    obc.add(Restrictions.eq("y." + Year.PROPERTY_CALENDAR, fiscalCalendar));
+    obc.add(Restrictions.eq(Period.PROPERTY_YEAR + "." + Year.PROPERTY_CALENDAR, fiscalCalendar));
     obc.add(Restrictions.ge(Period.PROPERTY_ENDINGDATE, date));
     obc.add(Restrictions.ne(Period.PROPERTY_PERIODTYPE, "A"));
     obc.add(Restrictions.le(Period.PROPERTY_STARTINGDATE, date));

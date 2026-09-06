@@ -339,7 +339,6 @@ public class MatchTransactionDao {
     try {
       OBCriteria<FIN_BankStatementLine> obcBsl = OBDal.getInstance()
           .createCriteria(FIN_BankStatementLine.class);
-      obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
           JoinType.LEFT);
 
@@ -353,9 +352,12 @@ public class MatchTransactionDao {
       } else {
         obcBsl.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
       }
-      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT,
+      obcBsl.add(Restrictions.eq(
+          FIN_BankStatementLine.PROPERTY_BANKSTATEMENT + "." + FIN_BankStatement.PROPERTY_ACCOUNT,
           lastReconciliation.getAccount()));
-      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      obcBsl.add(Restrictions.eq(
+          FIN_BankStatementLine.PROPERTY_BANKSTATEMENT + "." + FIN_BankStatement.PROPERTY_PROCESSED,
+          true));
       obcBsl.add(Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
           lastReconciliation.getTransactionDate()));
       ProjectionList projections = Projections.projectionList();
@@ -447,12 +449,14 @@ public class MatchTransactionDao {
     try {
       OBCriteria<FIN_BankStatementLine> obcBsl = OBDal.getInstance()
           .createCriteria(FIN_BankStatementLine.class);
-      obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
           JoinType.LEFT);
-      obcBsl.add(
-          Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, reconciliation.getAccount()));
-      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      obcBsl.add(Restrictions.eq(
+          FIN_BankStatementLine.PROPERTY_BANKSTATEMENT + "." + FIN_BankStatement.PROPERTY_ACCOUNT,
+          reconciliation.getAccount()));
+      obcBsl.add(Restrictions.eq(
+          FIN_BankStatementLine.PROPERTY_BANKSTATEMENT + "." + FIN_BankStatement.PROPERTY_PROCESSED,
+          true));
       obcBsl.add(Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
           reconciliation.getEndingDate()));
       ProjectionList projections = Projections.projectionList();
