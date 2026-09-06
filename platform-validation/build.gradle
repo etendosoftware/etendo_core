@@ -40,12 +40,45 @@ sourceSets {
         compileClasspath += sourceSets.main.output + sourceSets.bootstrap.output
         runtimeClasspath += sourceSets.main.output + sourceSets.bootstrap.output
     }
+    dal {
+        java {
+            srcDir '../src'
+            srcDir 'build/security-generated-entities'
+            srcDir 'dal-probe'
+            include 'DalMappingValidation.java'
+            include 'org/openbravo/dal/service/OBDal.java'
+            include 'org/openbravo/dal/core/DalMappingGenerator.java'
+            include 'org/openbravo/dal/core/DalSessionFactoryController.java'
+            include 'com/etendoerp/sequences/services/*.java'
+            include 'org/openbravo/model/**/*.java'
+            include 'org/openbravo/client/application/*.java'
+            include 'com/etendoerp/platform/fixture/*.java'
+        }
+        compileClasspath += sourceSets.bootstrap.output
+        runtimeClasspath += sourceSets.bootstrap.output
+        resources {
+            srcDir 'build/security-generated-entities'
+            include 'META-INF/services/*'
+        }
+    }
 }
 
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
 configurations.dictionaryProbeRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
+configurations.dalImplementation.extendsFrom(configurations.bootstrapImplementation)
+configurations.dalRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
+
+tasks.named('compileDalJava', JavaCompile) {
+    dependsOn 'verifySecurityGeneration'
+    options.sourcepath = files('../src', '../src-core/src', 'build/security-generated-entities')
+    options.compilerArgs += ['-implicit:class', '-Xmaxerrs', '300']
+}
+
+tasks.named('processDalResources') {
+    dependsOn 'verifySecurityGeneration'
+}
 
 tasks.named('compileBootstrapJava', JavaCompile) {
     options.sourcepath = files('../src', '../src-core/src')
@@ -64,6 +97,7 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    dalImplementation 'io.smallrye:jandex:3.1.2'
     implementation files(dbsmJar)
     implementation 'org.hibernate.orm:hibernate-core:6.5.2.Final'
     implementation 'org.postgresql:postgresql:42.7.8'
@@ -122,6 +156,19 @@ tasks.register('verifySecurityGeneration', JavaExec) {
     mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
     workingDir = projectDir
     systemProperty 'validation.security', 'true'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('verifyDalMappings', JavaExec) {
+    group = 'verification'
+    description = 'Bootstrap the real DAL SessionFactory with generated mappings and entity classes.'
+    dependsOn dalClasses
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath + sourceSets.dal.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+    workingDir = projectDir
+    systemProperty 'validation.security', 'true'
+    systemProperty 'validation.dal', 'true'
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }
 }

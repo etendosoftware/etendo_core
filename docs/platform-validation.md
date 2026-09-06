@@ -179,11 +179,42 @@ part of this profile. Generation is an
 intermediate check, not proof of a complete security context or DAL execution.
 
 `./gradlew -p platform-validation verifySecurityGeneration` passes on disposable
-PostgreSQL and generates eleven sources: Category, Request, User, Role, UserRoles,
-RoleOrganization, Client, Language, Organization, Warehouse, and BusinessPartner.
-The last two retain only selected identity/audit fields for now, not ERP workflows.
+PostgreSQL and now generates fifteen sources: Category, Request, User, Role, UserRoles,
+RoleOrganization, Client, Language, Organization, Warehouse, BusinessPartner,
+TableAccess, Table, ClientInformation, and the technical Process descriptor.
+Warehouse and BusinessPartner retain only selected identity/audit fields for now,
+not ERP workflows.
 Outputs are in build/security-generated-entities and build/security-generation-result.txt.
 Every modeled Java output is checked after fresh generation; stale generated files
 cannot satisfy the check. The probe does not exercise incremental generation,
 whose timestamp path currently expects metadata kinds absent from this minimal
 dictionary. Existing baseline generation uses its separate output directory.
+
+## Real DAL compilation and mapping bootstrap
+
+`./gradlew -p platform-validation verifyDalMappings` passes with JDK 17. It first
+generates and compiles the selected entities with the actual OBDal,
+DalMappingGenerator, DalSessionFactoryController, and their source dependencies.
+It then starts another disposable PostgreSQL, recreates the same dictionary,
+registers every compiled entity with OBProvider, generates the real mappings,
+and opens the real DAL SessionFactory. A parameterized HQL count query against
+ProofRequest returns zero as expected in the empty application table.
+
+No production Java files are modified. No manual ORM mappings or replacement DAL
+classes are used. The actual controller supplies OBInterceptor, the Etendo
+PostgreSQL dialect, and the sequence service contributors emitted by the generator.
+Jandex is an explicit compile dependency for the existing metadata contributor.
+
+The profile adds user defaults and access flags required by the real security
+classes. TableAccess and Table support EntityAccessChecker. ClientInformation
+supports OBContext. The Process descriptor is selected from
+modules_core/org.openbravo.client.application source metadata because
+EntityAccessChecker references its Java type. Selected metadata is assigned to
+the fixture's core-compatibility module; no UI or ERP business module installation
+or process execution occurs. Unselected fields, translation tables, and workflows
+are not validated. Missing Process translation warnings remain visible.
+
+Outputs: build/dal-mapping.hbm.xml and build/dal-mapping-result.txt. The SessionFactory
+and disposable PostgreSQL are closed after the run. This milestone does not yet
+prove OBDal persistence, a populated security context, access filters, or runtime
+dictionary upgrades. Those remain the next acceptance checks, not optional work.

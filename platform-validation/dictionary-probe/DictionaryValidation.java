@@ -24,7 +24,8 @@ public final class DictionaryValidation {
         String container = "etendo-platform-dictionary-" + UUID.randomUUID();
         String password = UUID.randomUUID().toString();
         boolean security = Boolean.getBoolean("validation.security");
-        Path report = Path.of(security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
+        boolean dal = Boolean.getBoolean("validation.dal");
+        Path report = Path.of(dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
         Path generated = Path.of(security ? "build/security-generated-entities" : "build/generated-entities");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "RUNNING\n");
@@ -119,6 +120,9 @@ public final class DictionaryValidation {
                 }
             }
             System.out.println("PASS: Real entity generator produced " + model.size() + " Java entity sources");
+            if (dal) {
+                Class.forName("com.etendoerp.platform.validation.DalMappingValidation").getMethod("verify").invoke(null);
+            }
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
             throw failure;
@@ -129,6 +133,8 @@ public final class DictionaryValidation {
         }
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
                 + (security ? "Selected security entities, Warehouse and BusinessPartner generated from core metadata\n" : "")
-                + "NOT YET VERIFIED: generated entity compilation, DAL mappings, OBDal runtime, security filters, metadata upgrades\n");
+                + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
+                + (dal ? "NOT YET VERIFIED: OBDal persistence, populated security context, security filters, metadata upgrades\n"
+                        : "NOT YET VERIFIED BY THIS TASK: generated entity compilation, DAL mappings, OBDal runtime, security filters, metadata upgrades\n"));
     }
 }
