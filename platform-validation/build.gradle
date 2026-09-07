@@ -27,6 +27,7 @@ sourceSets {
     classicProbe {
         java.srcDirs = ['classic-probe']
         java.exclude 'LegacyContextCaller.java'
+        java.exclude 'UiResourceValidation.java'
     }
     classicJson {
         java {
@@ -133,6 +134,63 @@ def classicServiceSupport = files('build/classic-compatibility/WEB-INF/classes')
         fileTree('build/classic-compatibility/WEB-INF/lib') { include '*.jar' }
 def classicServiceClasses = sourceSets.classicJson.output + sourceSets.classicGenerated.output +
         sourceSets.classicEntities.output + sourceSets.bootstrap.output + sourceSets.classicProbe.output
+// UI-BOUNDARY: this output belongs only to UI compositions, never Classic DAL/REST.
+tasks.register('compileUiComponents', JavaCompile) {
+    dependsOn 'compileClassicJsonJava'
+    source file('../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/ApplicationComponentProvider.java')
+    classpath = classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('ui-components')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
+tasks.register('sharedUiJar', Jar) {
+    dependsOn 'compileUiComponents'
+    archiveFileName = 'platform-ui-components.jar'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+    from(tasks.named('compileUiComponents').flatMap { it.destinationDirectory })
+}
+tasks.register('verifyUiArtifactPackaging') {
+    group = 'verification'
+    dependsOn 'erpUiWar', 'platformWar', 'erpHeadlessWar'
+    doLast {
+        def artifact = tasks.named('sharedUiJar').get().archiveFile.get().asFile.bytes
+        def entry = 'WEB-INF/lib/platform-ui-components.jar'
+        def provider = 'WEB-INF/classes/org/openbravo/client/application/ApplicationComponentProvider.class'
+        new java.util.zip.ZipFile(file('build/libs/platform-erp-ui.war')).withCloseable { zip ->
+            if (zip.getEntry(provider) != null || zip.getEntry(entry) == null) {
+                throw new GradleException('ERP UI must use the shared artifact without a loose provider copy')
+            }
+            def packaged = zip.getInputStream(zip.getEntry(entry)).withCloseable { it.bytes }
+            if (!java.util.Arrays.equals(artifact, packaged)) {
+                throw new GradleException('ERP UI contains a different shared artifact')
+            }
+        }
+        ['platform-validation.war', 'platform-erp-headless.war'].each { name ->
+            new java.util.zip.ZipFile(file("build/libs/${name}")).withCloseable { zip ->
+                if (zip.getEntry(entry) != null || zip.getEntry(provider) != null) {
+                    throw new GradleException("UI artifact leaked into ${name}")
+                }
+            }
+        }
+        logger.lifecycle('PASS: ERP UI owns the exact shared artifact; both headless WARs exclude it')
+    }
+}
+tasks.register('compileUiResourceProbe', JavaCompile) {
+    dependsOn 'sharedUiJar'
+    source file('classic-probe/UiResourceValidation.java')
+    classpath = files(tasks.named('sharedUiJar')) + classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('ui-resource-probe')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
+tasks.register('verifyUiResourceContributions', JavaExec) {
+    group = 'verification'
+    dependsOn 'compileUiResourceProbe'
+    classpath = files(layout.buildDirectory.dir('ui-resource-probe'), tasks.named('sharedUiJar')) +
+            classicServiceClasses + classicServiceSupport
+    mainClass = 'com.etendoerp.platform.validation.UiResourceValidation'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+}
 tasks.register('compileLegacyContextCaller', JavaCompile) {
     dependsOn 'prepareClassicCompatibility'
     source file('classic-probe/LegacyContextCaller.java')
@@ -306,7 +364,7 @@ tasks.register('verifyWarBoundaryRules', JavaExec) {
 tasks.register('erpUiWar', Zip) {
     group = 'build'
     description = 'Assemble the existing ERP UI with refactored shared motor classes, without properties.'
-    dependsOn 'compileClassicJsonJava', 'compileClassicGeneratedJava', ':platform-core:jar'
+    dependsOn 'compileClassicJsonJava', 'compileClassicGeneratedJava', ':platform-core:jar', 'sharedUiJar'
     archiveFileName = 'platform-erp-ui.war'
     destinationDirectory = layout.buildDirectory.dir('libs')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -315,12 +373,14 @@ tasks.register('erpUiWar', Zip) {
     from(sourceSets.classicEntities.output) { into 'WEB-INF/classes'; exclude '**/Log4j2Plugins.dat' }
     from(sourceSets.bootstrap.output) { into 'WEB-INF/classes'; exclude '**/Log4j2Plugins.dat' }
     from(project(':platform-core').tasks.named('jar')) { into 'WEB-INF/lib' }
+    from(tasks.named('sharedUiJar')) { into 'WEB-INF/lib' }
     from(provider { zipTree(file(project.property('classicWar'))) }) {
         include 'WEB-INF/quartz.properties', 'WEB-INF/classes/quartz.properties'
     }
     from(provider { zipTree(file(project.property('classicWar'))) }) {
         exclude '**/*.properties'
         exclude 'WEB-INF/classes/org/openbravo/dal/security/ReadableScopeResolver.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/ApplicationComponentProvider.class'
     }
 }
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)

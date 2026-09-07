@@ -387,6 +387,19 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The first UI artifact, platform-ui-components.jar, compiles the canonical
+ApplicationComponentProvider rather than taking its bytecode from the Classic
+WAR. ERP UI packaging consumes it and excludes the old loose provider class.
+This is an initial ownership boundary, not yet an independent UI engine: the
+provider still compiles against legacy support APIs and the platform consumer
+is pending. REST profiles must not contain this artifact or provider class.
+verifyUiResourceContributions tests the compiled hook, its legacy resource flags
+and order, and an alternative composition using the same provider implementation.
+verifyUiArtifactPackaging compares the packaged JAR bytes with the build output,
+rejects a loose provider duplicate in ERP UI, and rejects that artifact and class
+in either headless WAR. These build checks do not replace ERP browser regression
+after deployment or the still-pending platform original-UI startup.
+
 The next acceptance target is original dictionary-driven UI operation for
 application-owned entities without Product, Warehouse or BusinessPartner, using
 the same UI artifacts as ERP. Both headless compositions must remain UI-free.

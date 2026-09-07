@@ -9,3 +9,7 @@ task uses only the supplied Classic WAR API; verifyLegacyContextLinkage executes
 that binary against the refactored ERP output and checks the actual class origin.
 It covers thread context, Warehouse-typed accessors and the existing UI flag,
 without database access. This is representative linkage, not all module APIs.
+
+UiResourceValidation has its own compile task and verifies the resource extension
+from platform-ui-components.jar, preserving legacy ordering and mode flags while
+allowing alternative application contributions. It does not prove UI startup.
