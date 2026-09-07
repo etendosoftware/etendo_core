@@ -268,6 +268,16 @@ tasks.named('war', War) {
 
 tasks.register('platformWar') { dependsOn war }
 
+tasks.register('prepareClassicCopy', JavaExec) {
+    group = 'verification'
+    description = 'Snapshot Classic read-only into an owned PostgreSQL container for lifecycle tests.'
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicDatabaseCopy'
+    workingDir = projectDir
+    doFirst { args file(project.property('classicProperties')).absolutePath }
+}
+
 tasks.register('verifyProductDatabase', JavaExec) {
     group = 'verification'
     description = 'Compare Product HTTP values with independent read-only PostgreSQL queries.'

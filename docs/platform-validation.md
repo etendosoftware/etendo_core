@@ -328,6 +328,26 @@ Classic lifecycle comparison remains pending. Classic startup includes scheduler
 initialization and process-run updates, so testing that lifecycle must use an
 isolated database copy rather than the user's original database.
 
+`prepareClassicCopy` creates a logical snapshot with pg_dump using a read-only
+source connection and restores it into an owned, loopback-only postgres:16
+container. The source database is not altered. The private copy configuration
+sets background.policy=no-execute and uses fresh database credentials. Its
+directory is mode 0700; credentials and dump files are never versioned. The dump
+is deleted after restore. The copy stays running for lifecycle comparison and
+must be stopped explicitly using its reported container name when finished.
+
+```bash
+./gradlew -p platform-validation prepareClassicCopy \
+  -PclassicProperties=/absolute/path/to/Openbravo.properties
+docker stop <reported-owned-container-name>
+```
+
+This helper requires Docker Desktop host networking through
+`host.docker.internal` and a locally available `postgres:16` image. Both dump
+and restore use the PostgreSQL 16 utilities from that image; the source must be
+compatible with that client version. It does not invoke database migrations.
+The verified Classic snapshot restored 80 persisted Product records.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.
