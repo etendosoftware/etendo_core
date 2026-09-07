@@ -197,6 +197,43 @@ tasks.register('compileUiFieldComponents', JavaCompile) {
     options.sourcepath = files()
     options.compilerArgs += ['-implicit:none', '-proc:none']
 }
+// Integration-only original window composition; not yet a distributable UI artifact.
+tasks.register('compileUiWindowComponents', JavaCompile) {
+    dependsOn 'compileUiFieldComponents'
+    source fileTree('../src') {
+        include 'org/openbravo/base/structure/InheritedAccessEnabled.java'
+        include 'org/openbravo/erpCommon/utility/Property*Exception.java'
+        include 'org/openbravo/erpCommon/utility/Utility.java'
+        include 'org/openbravo/erpCommon/businessUtility/Preferences.java'
+    }
+    source fileTree('../modules_core/org.openbravo.client.application/src') {
+        include '**/window/OBViewTab.java', '**/window/OBViewFormComponent.java'
+        include '**/window/OBViewGridComponent.java', '**/window/OBTreeGridComponent.java'
+        include '**/window/OBViewParameterHandler.java', '**/window/StandardWindowComponent.java'
+        include '**/CachedPreference.java'
+    }
+    source fileTree('../modules_core/org.openbravo.client.kernel/src') {
+        include '**/ComponentProvider.java', '**/BaseComponentProvider.java'
+    }
+    source fileTree('../modules_core/org.openbravo.service.datasource/src') {
+        include '**/DataSourceComponent.java', '**/DataSourceComponentProvider.java'
+        include '**/DataSourceService.java', '**/DataSourceServiceProvider.java', '**/DataSourceProperty.java'
+        include '**/DefaultDataSourceService.java', '**/BaseDataSourceService.java', '**/NoteDataSource.java'
+    }
+    source fileTree('../modules_core/org.openbravo.service.json/src') {
+        include 'org/openbravo/service/json/*.java'
+    }
+    classpath = files(tasks.named('compileUiFieldComponents').get().destinationDirectory) +
+            classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('ui-window')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
+tasks.register('prepareUiWindowTemplates', Sync) {
+    from('../modules_core/org.openbravo.client.application/src') { include '**/templates/*.ftl' }
+    from('../modules_core/org.openbravo.service.datasource/src') { include '**/templates/*.ftl' }
+    into layout.buildDirectory.dir('ui-window-templates')
+}
 tasks.register('verifyUiArtifactPackaging') {
     group = 'verification'
     dependsOn 'erpUiWar', 'platformWar', 'erpHeadlessWar'
@@ -979,7 +1016,7 @@ tasks.register('verifyUiDal', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
-['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true].each { taskName, renderFields ->
+['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true].each { taskName, renderFields ->
     tasks.register(taskName, JavaExec) {
         group = 'verification'
         description = renderFields ? 'Execute the original field handler against the ERP-free visual dictionary.'
@@ -995,9 +1032,13 @@ tasks.register('verifyUiDal', JavaExec) {
         systemProperty 'validation.uiCache', 'true'
         systemProperty 'validation.uiFields', renderFields.toString()
         systemProperty 'validation.uiFieldDefinitions', (taskName == 'verifyUiFieldDefinitions').toString()
+        systemProperty 'validation.uiWindow', (taskName == 'verifyUiWindow').toString()
+        if (taskName == 'verifyUiWindow') dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
         doFirst {
+            def windowRuntime = taskName == 'verifyUiWindow' ? files(layout.buildDirectory.dir('ui-window'),
+                    layout.buildDirectory.dir('ui-window-templates')) : files()
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
-                    tasks.named('sharedUiJar')) + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
+                    tasks.named('sharedUiJar')) + windowRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
         }
         systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
         outputs.upToDateWhen { false }

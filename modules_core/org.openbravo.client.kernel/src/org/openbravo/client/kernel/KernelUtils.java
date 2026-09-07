@@ -468,29 +468,19 @@ public class KernelUtils {
    * @return The list of subtabs of the given tab, an empty List if the tab has none
    */
   public List<Tab> getTabSubtabs(Tab tab, boolean onlyFirstLevel) {
-    ConnectionProvider connection = new DalConnectionProvider(false);
-    Long seqno = tab.getSequenceNumber();
-    Long tabLevel = tab.getTabLevel();
-    String windowId = tab.getWindow().getId();
-    KernelUtilsData[] tabIds = null;
-    try {
-      if (onlyFirstLevel) {
-        tabIds = KernelUtilsData.getFirstLevelSubtabs(connection, windowId, seqno.toString(),
-            tabLevel.toString());
-      } else {
-        tabIds = KernelUtilsData.getAllSubtabs(connection, windowId, seqno.toString(),
-            tabLevel.toString());
-      }
-    } catch (ServletException e) {
-      log.error(e.getMessage(), e);
-    }
-    List<Tab> subTabList = new ArrayList<Tab>();
-    for (int i = 0; i < tabIds.length; i++) {
-      String tabId = tabIds[i].adTabId;
-      Tab subTab = OBDal.getInstance().get(Tab.class, tabId);
-      subTabList.add(subTab);
-    }
-    return subTabList;
+    // Keep SQLC selection semantics, including inactive metadata and its legacy upper bound.
+    String hql = "from " + Tab.ENTITY_NAME + " t where t.window.id = :window"
+        + " and t.sequenceNumber > :sequence"
+        + " and t.sequenceNumber < (select coalesce(min(n.sequenceNumber), 999999) from "
+        + Tab.ENTITY_NAME + " n where n.window.id = :window"
+        + " and n.tabLevel <= :level and n.sequenceNumber > :sequence)"
+        + (onlyFirstLevel ? " and t.tabLevel = :childLevel" : "");
+    var query = OBDal.getInstance().getSession().createQuery(hql, Tab.class)
+        .setParameter("window", tab.getWindow().getId())
+        .setParameter("sequence", tab.getSequenceNumber())
+        .setParameter("level", tab.getTabLevel());
+    if (onlyFirstLevel) query.setParameter("childLevel", tab.getTabLevel() + 1);
+    return query.list();
   }
 
   /**

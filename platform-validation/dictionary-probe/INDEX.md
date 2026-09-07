@@ -65,3 +65,12 @@ rendering, database grid overrides and browser delivery remain pending.
 Separate ui-cache-runtime.log,
 ui-field-runtime.log, ui-field-definitions-runtime.log and ui-dal-runtime.log files keep diagnostics from overwriting
 one another. Neither gate implies browser UI delivery.
+
+verifyUiWindow composes both application windows through the original CDI-managed
+StandardWindowComponent, tab, form, grid and datasource components. Its 55-entity
+dictionary retains complete generic grid-configuration, note, preference,
+model-mapping and datasource-field metadata. It loads canonical templates and
+their dependencies from XML, writes rendered JavaScript under build/, and checks
+seven Hibernate subtab hierarchy cases. ui-window-runtime.log is separate from
+the narrower field gates. Original login/navigation and browser CRUD are pending;
+the working window classpath is not a deliverable shared UI artifact.

@@ -389,6 +389,42 @@ Keep the existing Product validation as a compatibility control throughout.
 
 ## Integration-sized work packages
 
+The next integration gate, `verifyUiWindow`, must use CDI-managed original tab,
+form, grid and datasource components, original database template dependencies and
+real dictionary entities. Its isolated working output is not a production shared
+artifact. Do not override datasource generation or replace template-facing objects
+with maps to make the tab render. Missing generic runtime services belong to this
+composition block; ERP-specific services require explicit extension boundaries.
+
+Move `KernelUtils.getTabSubtabs(Tab, boolean)` to the existing Hibernate session
+without changing its public signature. Preserve the SQLC predicate: same window,
+sequence strictly after the parent and before the next tab at the same or a lower
+level (legacy fallback 999999); optionally restrict to the immediate child level.
+Do not introduce active/client filters or an ordering guarantee absent from the
+original SQL. Test hierarchy boundaries independently of window rendering.
+
+The working `verifyUiWindow` composition now generates 55 entities. It uses the
+real CDI-managed `StandardWindowComponent` for both Requests and Categories,
+including their tab, form, grid, application datasource and original notes
+datasource. Canonical template rows and the tab-to-field template dependency come
+from the original module XML. Grid configuration is selected by the original
+database queries over complete GCSystem/GCTab/GCField metadata (empty overrides
+in this fixture), not injected substitutes in the standard-window path.
+
+Generated JavaScript is written to ignored `build/ui-window-<window-id>.js` files;
+both outputs passed JavaScript syntax parsing. Seven DAL hierarchy cases cover
+immediate/all descendants, peer boundaries, leaf tabs, inactive metadata, foreign
+windows and the legacy upper limit. Existing model/API, field-rendering and
+headless XML/DBSM lifecycle gates passed. These are server-side rendering checks,
+not a browser CRUD or authentication claim.
+
+`compileUiWindowComponents` and `prepareUiWindowTemplates` remain isolated
+integration outputs. They reuse canonical implementations but still include broad
+legacy utility/JSON classes; they must not be packaged wholesale as the final
+generic UI layer. No original-platform login/menu deployment is delivered here.
+Next: original authentication/shell/navigation, explicit ERP contributions and
+shared UI artifact ownership, followed by browser CRUD and four-profile checks.
+
 `verifyUiFieldDefinitions` is the integration gate for the complete canonical
 field macro, distinct from `verifyUiFields` (field construction and form logic).
 It renders real handler definitions using the original FreeMarker processor and

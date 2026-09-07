@@ -23,12 +23,14 @@ final class UiDictionaryFixture {
         arguments.add("dal-probe/UiDalValidation.java");
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
-        String log = Boolean.getBoolean("validation.uiFieldDefinitions") ? "build/ui-field-definitions-runtime.log"
+        String log = Boolean.getBoolean("validation.uiWindow") ? "build/ui-window-runtime.log"
+                : Boolean.getBoolean("validation.uiFieldDefinitions") ? "build/ui-field-definitions-runtime.log"
                 : Boolean.getBoolean("validation.uiFields") ? "build/ui-field-runtime.log"
                 : Boolean.getBoolean("validation.uiCache") ? "build/ui-cache-runtime.log" : "build/ui-dal-runtime.log";
         Process child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin/java").toString(),
                 "-Dvalidation.uiFields=" + Boolean.getBoolean("validation.uiFields"),
                 "-Dvalidation.uiFieldDefinitions=" + Boolean.getBoolean("validation.uiFieldDefinitions"),
+                "-Dvalidation.uiWindow=" + Boolean.getBoolean("validation.uiWindow"),
                 "-Dvalidation.uiCache=" + Boolean.getBoolean("validation.uiCache"),
                 "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
                 "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
@@ -57,6 +59,34 @@ final class UiDictionaryFixture {
                     .equals(row.get("OBCLKER_TEMPLATE_ID"))).findFirst().orElseThrow();
             form.put("AD_MODULE_ID", "0");
             seed(xml, schema, "OBCLKER_TEMPLATE", form);
+            if (Boolean.getBoolean("validation.uiWindow")) {
+                var ids = java.util.Set.of("B5124C0A450D4D3A867AEAC7DF64D6F0", "33E04D0799794C6F95F05149D2E04E78",
+                        "91DD63545B674BE8801E1FA4F48FF4C6", "2BAD445C2A0343C58E455F9BD379C690",
+                        "ADD5EF45333C458098286D0E639B3290");
+                var sources = java.util.List.of(java.nio.file.Path.of("../modules_core/org.openbravo.client.application/src-db/database"),
+                        java.nio.file.Path.of("../modules_core/org.openbravo.service.datasource/src-db/database"));
+                var found = new java.util.HashSet<String>();
+                for (var source : sources) {
+                    for (var row : SecurityFixture.rows(source, "OBCLKER_TEMPLATE")) {
+                        if (!ids.contains(row.get("OBCLKER_TEMPLATE_ID"))) continue;
+                        found.add(row.get("OBCLKER_TEMPLATE_ID"));
+                        row.put("AD_MODULE_ID", "0");
+                        seed(xml, schema, "OBCLKER_TEMPLATE", row);
+                    }
+                }
+                if (!found.equals(ids)) throw new AssertionError("Missing original window templates: " + found);
+                for (var row : SecurityFixture.rows(sources.get(0), "OBCLKER_TEMPLATE_DEPENDENCY")) {
+                    if (ids.contains(row.get("OBCLKER_TEMPLATE_ID")) && ids.contains(row.get("DEPENDSON_TEMPLATE_ID"))) {
+                        row.put("AD_MODULE_ID", "0");
+                        seed(xml, schema, "OBCLKER_TEMPLATE_DEPENDENCY", row);
+                    }
+                }
+                for (var row : SecurityFixture.rows(sources.get(0), "OBSERDS_DATASOURCE")) {
+                    if ("090A37D22E61FE94012E621729090048".equals(row.get("OBSERDS_DATASOURCE_ID"))) {
+                        seed(xml, schema, "OBSERDS_DATASOURCE", row);
+                    }
+                }
+            }
         } catch (Exception failure) { throw new IllegalStateException("Original form template metadata unavailable", failure); }
         seed(xml, schema, "AD_FIELDGROUP", Map.of("AD_FIELDGROUP_ID", "PP_REQUEST_DETAILS",
                 "NAME", "Request details", "ISCOLLAPSED", "N"));

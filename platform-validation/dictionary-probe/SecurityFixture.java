@@ -37,6 +37,10 @@ final class SecurityFixture {
 
     private SecurityFixture() {}
 
+    // Generic window services retain complete metadata tables, not getter-level projections.
+    private static final Set<String> WINDOW_METADATA = Set.of("OBUIAPP_NOTE", "OBSERDS_DATASOURCE_FIELD",
+            "OBUIAPP_GC_SYSTEM", "OBUIAPP_GC_TAB", "OBUIAPP_GC_FIELD", "AD_PREFERENCE", "AD_MODEL_OBJECT_MAPPING");
+
     static Set<String> selectedTables() {
         Set<String> tables = new LinkedHashSet<>(TABLES);
         if (Boolean.getBoolean("validation.originalUi")) {
@@ -48,12 +52,14 @@ final class SecurityFixture {
                     "AD_TABLE_TREE", "OBUIAPP_PROCESS", "OBUIAPP_REF_WINDOW",
                     "OBUISEL_SELECTOR", "OBUISEL_SELECTOR_FIELD", "OBCLKER_REF_MASK", "OBSERDS_DATASOURCE",
                     "OBCLKER_UIDEFINITION", "AD_ELEMENT", "AD_ELEMENT_TRL", "AD_FIELD_TRL", "AD_FIELDGROUP_TRL"));
+            if (Boolean.getBoolean("validation.uiWindow")) tables.addAll(WINDOW_METADATA.stream().sorted().toList());
         }
         return tables;
     }
 
-    private static boolean selectedColumn(String name) {
-        return COLUMNS.contains(name) || (Boolean.getBoolean("validation.originalUi")
+    private static boolean selectedColumn(String table, String name) {
+        return (Boolean.getBoolean("validation.uiWindow") && WINDOW_METADATA.contains(table))
+                || COLUMNS.contains(name) || (Boolean.getBoolean("validation.originalUi")
                 && Set.of("AD_COLUMN_ID", "AD_WINDOW_ID", "AD_TAB_ID", "HELP", "SEQNO",
                         "TABLEVEL", "WINDOWTYPE", "ISDISPLAYED", "SHOWINRELATION", "ISUPDATEABLE",
                         "ISINSERTRECORD", "ISGRIDVIEWDEFAULT", "ISSINGLEROW", "GRID_SEQNO",
@@ -69,7 +75,8 @@ final class SecurityFixture {
                         "ISSECONDARYKEY", "ISPARENT", "ISKEY", "VALIDATEONNEW", "ISAUTOSAVE",
                         "ALLOWSORTING", "ALLOWFILTERING", "IMAGESIZEVALUESACTION", "IMAGEWIDTH", "IMAGEHEIGHT",
                         "ISUSEDSEQUENCE", "ENTITY_ALIAS",
-                        "UIPATTERN", "ISREADONLYTREE", "ISSHOWTREENODEICONS", "WHERECLAUSE", "ORDERBYCLAUSE",
+                        "DATAORIGINTYPE", "TABLENAME", "ISFULLYAUDITED", "ISDELETEABLE", "ISVIEW", "HQLQUERY", "IDFKFILTERING",
+                        "UIPATTERN", "ISINFOTAB", "ISREADONLYTREE", "ISSHOWTREENODEICONS", "WHERECLAUSE", "ORDERBYCLAUSE",
                         "HQLWHERECLAUSE", "HQLORDERBYCLAUSE", "HQLFILTERCLAUSE", "FILTERCLAUSE", "FILTERNAME",
                         "DISABLE_PARENT_KEY_PROPERTY", "ISTRANSLATIONTAB", "DEFAULTTREEVIEWLOGIC",
                         "SHOWPARENTBUTTONS", "HQLTREEWHERECLAUSE", "EM_OBUIAPP_SELECTION", "EM_OBUIAPP_CAN_ADD",
@@ -77,6 +84,7 @@ final class SecurityFixture {
                         "EM_OBUIAPP_NEWFN", "EM_OBUIAPP_REMOVEFN", "EM_OBUIAPP_SHOW_CLONE_BUTTON", "EM_OBUIAPP_CLONE_CHILDREN",
                         "ISFIRSTFOCUSEDFIELD", "DISPLAYLOGIC_SERVER", "EM_OBUIAPP_COLSPAN", "EM_OBUIAPP_ROWSPAN",
                         "EM_OBUIAPP_VALIDATOR", "EM_OBUIAPP_SUMMARYFN",
+                        "SORTNO", "EM_OBUIAPP_DEFAULT_EXPRESSION", "EM_OBUISEL_OUTFIELD_ID", "ISTHREADSAFE",
                         "AD_VAL_RULE_ID", "CODE", "AD_CALLOUT_ID", "AD_PROCESS_ID",
                         "OBUIAPP_PROCESS_ID", "EM_OBUIAPP_PROCESS_ID", "AD_REF_TREE_ID", "AD_TABLE_TREE_ID",
                         "OBUISEL_SELECTOR_ID", "AD_KEY", "AD_DISPLAY", "DISPLAYFIELD_ID", "OBSERDS_DATASOURCE_ID")
@@ -100,7 +108,7 @@ final class SecurityFixture {
                     Path extension = uiSource.resolve("model/modifiedTables/" + name + ".xml");
                     if (!Files.exists(extension)) continue;
                     for (var column : xml.readplain(extension.toFile()).getTable(0).getColumns()) {
-                        if (selectedColumn(column.getName())) {
+                        if (selectedColumn(name, column.getName())) {
                             if (original.findColumn(column.getName()) != null) {
                                 throw new AssertionError("Duplicate UI extension column: " + name + "." + column.getName());
                             }
@@ -112,7 +120,7 @@ final class SecurityFixture {
             if (model.findTable(name) != null) {
                 if (Boolean.getBoolean("validation.originalUi")) {
                     for (var column : original.getColumns()) {
-                        if (selectedColumn(column.getName()) && model.findTable(name).findColumn(column.getName()) == null) {
+                        if (selectedColumn(name, column.getName()) && model.findTable(name).findColumn(column.getName()) == null) {
                             model.findTable(name).addColumn((org.apache.ddlutils.model.Column) column.clone());
                         }
                     }
@@ -123,7 +131,7 @@ final class SecurityFixture {
             selected.setName(name);
             selected.setPrimaryKey(original.getPrimaryKey());
             for (var column : original.getColumns()) {
-                if (column.isPrimaryKey() || selectedColumn(column.getName())) {
+                if (column.isPrimaryKey() || selectedColumn(name, column.getName())) {
                     selected.addColumn((org.apache.ddlutils.model.Column) column.clone());
                 }
             }
@@ -176,7 +184,7 @@ final class SecurityFixture {
             String table = tableIds.get(row.get("AD_TABLE_ID"));
             if (table == null || model.findTable(table).findColumn(row.get("COLUMNNAME"), false) == null) continue;
             String column = row.get("COLUMNNAME").toUpperCase(Locale.ROOT);
-            if (!selectedColumn(column) && !"Y".equals(row.get("ISKEY"))) continue;
+            if (!selectedColumn(table, column) && !"Y".equals(row.get("ISKEY"))) continue;
             if (Boolean.getBoolean("validation.originalUi")) referenceModules.add(row.get("AD_MODULE_ID"));
             else row.put("AD_MODULE_ID", "0");
             String target = column.equals("CREATEDBY") || column.equals("UPDATEDBY") ? "AD_USER"

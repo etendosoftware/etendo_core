@@ -169,9 +169,32 @@ public final class UiDalValidation {
                     Class<?> cacheType = Class.forName(
                             "org.openbravo.client.application.window.ApplicationDictionaryCachedStructures");
                     cacheType.getDeclaredMethods();
-                    try (var container = jakarta.enterprise.inject.se.SeContainerInitializer.newInstance()
-                            .disableDiscovery().addBeanClasses(cacheType)
-                            .initialize()) {
+                    var initializer = jakarta.enterprise.inject.se.SeContainerInitializer.newInstance()
+                            .disableDiscovery().addBeanClasses(cacheType);
+                    if (Boolean.getBoolean("validation.uiWindow")) {
+                        for (String bean : java.util.List.of(
+                                "org.openbravo.base.weld.WeldUtils",
+                                "org.openbravo.client.kernel.TemplateProcessor$Registry",
+                                "org.openbravo.client.kernel.freemarker.FreemarkerTemplateProcessor",
+                                "org.openbravo.client.application.window.OBViewTab",
+                                "org.openbravo.client.application.window.StandardWindowComponent",
+                                "org.openbravo.client.application.window.OBViewFieldHandler",
+                                "org.openbravo.client.application.window.OBViewFormComponent",
+                                "org.openbravo.client.application.window.OBViewGridComponent",
+                                "org.openbravo.client.application.CachedPreference",
+                                "org.openbravo.service.datasource.DataSourceComponent",
+                                "org.openbravo.service.datasource.DataSourceComponentProvider",
+                                "org.openbravo.service.datasource.DataSourceServiceProvider",
+                                "org.openbravo.service.datasource.DefaultDataSourceService",
+                                "org.openbravo.service.datasource.NoteDataSource")) {
+                            Class<?> beanType = Class.forName(bean);
+                            // Resolve signatures before Weld can silently discard an incomplete bean.
+                            for (var method : beanType.getDeclaredMethods()) method.getGenericReturnType();
+                            for (var member : beanType.getDeclaredFields()) member.getGenericType();
+                            initializer.addBeanClasses(beanType);
+                        }
+                    }
+                    try (var container = initializer.initialize()) {
                         Object cache = Class.forName("org.openbravo.base.weld.WeldUtils")
                                 .getMethod("getInstanceFromStaticBeanManager", Class.class).invoke(null, cacheType);
                         if (!Boolean.TRUE.equals(cacheType.getMethod("useCache").invoke(cache))) {
@@ -247,6 +270,44 @@ public final class UiDalValidation {
                                 throw new AssertionError("Original field handler/form rendering failed");
                             }
                             System.out.println("PASS: Original field handler builds fields and renders the original form template");
+                            if (Boolean.getBoolean("validation.uiWindow")) {
+                                Class<?> viewType = Class.forName("org.openbravo.client.application.window.OBViewTab");
+                                Object view = container.select(viewType).get();
+                                viewType.getMethod("setTab", org.openbravo.model.ad.ui.Tab.class).invoke(view,
+                                        OBDal.getInstance().get(org.openbravo.model.ad.ui.Tab.class, tabId));
+                                viewType.getMethod("setRootTab", boolean.class).invoke(view, true);
+                                viewType.getMethod("setGCSettings", java.util.Optional.class, java.util.Map.class)
+                                        .invoke(view, java.util.Optional.empty(), java.util.Map.of(tabId, java.util.Optional.empty()));
+                                var parameters = new java.util.HashMap<String, Object>();
+                                parameters.put("Constants_FIELDSEPARATOR", "$");
+                                parameters.put("Constants_IDENTIFIER", "_identifier");
+                                viewType.getMethod("setParameters", java.util.Map.class).invoke(view, parameters);
+                                String windowOutput = (String) viewType.getMethod("generate").invoke(view);
+                                if (!windowOutput.contains("name: 'title'") || !windowOutput.contains("OBViewDataSource")
+                                        || !windowOutput.contains("OBViewForm.create") || !windowOutput.contains("OBViewGrid")) {
+                                    throw new AssertionError("Original tab omitted its fields, datasource, form or grid");
+                                }
+                                System.out.println("PASS: CDI-managed original tab composes application datasource, form and grid");
+                                Class<?> windowType = Class.forName("org.openbravo.client.application.window.StandardWindowComponent");
+                                for (var applicationWindow : dalWindows()) {
+                                    Object windowComponent = container.select(windowType).get();
+                                    windowType.getMethod("setWindow", org.openbravo.model.ad.ui.Window.class)
+                                            .invoke(windowComponent, applicationWindow);
+                                    windowType.getMethod("setParameters", java.util.Map.class).invoke(windowComponent,
+                                            new java.util.HashMap<>(parameters));
+                                    String completeWindow = (String) windowType.getMethod("generate").invoke(windowComponent);
+                                    if (!completeWindow.contains("isc.ClassFactory.defineClass")
+                                            || !completeWindow.contains("isc.OBStandardWindow")
+                                            || !completeWindow.contains("isc.OBViewGrid.create")
+                                            || !completeWindow.contains(applicationWindow.getId())) {
+                                        throw new AssertionError("Original standard window was incomplete: " + applicationWindow.getName());
+                                    }
+                                    java.nio.file.Files.writeString(java.nio.file.Path.of("build", "ui-window-"
+                                            + applicationWindow.getId() + ".js"), completeWindow);
+                                }
+                                System.out.println("PASS: Both original standard windows render through database-selected grid configuration");
+                                verifySubtabHierarchy(tabId);
+                            }
                             if (Boolean.getBoolean("validation.uiFieldDefinitions")) {
                                 var settings = handlerClass.getDeclaredMethod("setGCSettings",
                                         java.util.Optional.class, java.util.Map.class);
@@ -286,6 +347,67 @@ public final class UiDalValidation {
                 try { if (factory != null) factory.close(); }
                 finally { SessionFactoryController.setInstance(null); }
             }
+        }
+    }
+
+    private static java.util.List<org.openbravo.model.ad.ui.Window> dalWindows() {
+        var windows = OBDal.getInstance().createQuery(org.openbravo.model.ad.ui.Window.class, "").list();
+        if (windows.size() != 2) throw new AssertionError("Expected both application windows");
+        return windows;
+    }
+
+    /** Exercises SQLC-compatible hierarchy boundaries through the canonical Hibernate API. */
+    private static void verifySubtabHierarchy(String rootId) throws Exception {
+        var dal = OBDal.getInstance();
+        var root = dal.get(org.openbravo.model.ad.ui.Tab.class, rootId);
+        var added = new java.util.ArrayList<org.openbravo.model.ad.ui.Tab>();
+        long[][] positions = {{20, 1}, {30, 2}, {40, 1}, {50, 0}, {60, 1}, {999999, 1}, {25, 1}};
+        try {
+            for (long[] position : positions) {
+                var child = org.openbravo.base.provider.OBProvider.getInstance().get(org.openbravo.model.ad.ui.Tab.class);
+                child.setClient(root.getClient());
+                child.setOrganization(root.getOrganization());
+                child.setModule(root.getModule());
+                child.setTable(root.getTable());
+                child.setWindow(position[0] == 25 ? dalWindows().stream()
+                        .filter(window -> !window.getId().equals(root.getWindow().getId())).findFirst().orElseThrow()
+                        : root.getWindow());
+                child.setName("Hierarchy " + position[0]);
+                child.setSequenceNumber(position[0]);
+                child.setTabLevel(position[1]);
+                child.setUIPattern("STD");
+                child.setActive(position[0] != 40);
+                dal.save(child);
+                added.add(child);
+            }
+            dal.flush();
+            Class<?> kernelType = Class.forName("org.openbravo.client.kernel.KernelUtils");
+            Object kernel = kernelType.getMethod("getInstance").invoke(null);
+            var traversal = kernelType.getMethod("getTabSubtabs", org.openbravo.model.ad.ui.Tab.class, boolean.class);
+            Object[][] cases = {
+                    {root, false, java.util.Set.of(20L, 30L, 40L)},
+                    {root, true, java.util.Set.of(20L, 40L)},
+                    {added.get(0), false, java.util.Set.of(30L)},
+                    {added.get(0), true, java.util.Set.of(30L)},
+                    {added.get(1), false, java.util.Set.of()},
+                    {added.get(3), false, java.util.Set.of(60L)},
+                    {added.get(3), true, java.util.Set.of(60L)}
+            };
+            for (Object[] test : cases) {
+                var actual = new java.util.HashSet<Long>();
+                for (Object result : (java.util.List<?>) traversal.invoke(kernel, test[0], test[1])) {
+                    var child = (org.openbravo.model.ad.ui.Tab) result;
+                    if (!child.getWindow().getId().equals(root.getWindow().getId())) {
+                        throw new AssertionError("Subtab traversal crossed window boundaries");
+                    }
+                    actual.add(child.getSequenceNumber());
+                }
+                if (!actual.equals(test[2])) throw new AssertionError("Subtab hierarchy mismatch: " + actual + " != " + test[2]);
+            }
+            System.out.println("PASS: Hibernate subtab traversal preserves seven SQLC hierarchy and inactive-metadata cases");
+        } finally {
+            for (var child : added) dal.remove(child);
+            dal.flush();
         }
     }
 }
