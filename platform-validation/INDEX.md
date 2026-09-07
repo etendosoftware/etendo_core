@@ -14,6 +14,8 @@ See ../docs/platform-validation.md for prerequisites, provenance, and limits.
 - web and webapp: deployable WAR runtime and Servlet 6.0 descriptor.
 - tomcat-probe: real WAR deployment, HTTP checks, and redeployment in isolated Tomcat.
 - classic-probe: read-only external dictionary bootstrap and entity generation.
+- classicJson source set: original JSON/datasource implementations compiled against
+  explicit Classic WAR support classes; runtime integration remains separate.
 
 Build the WAR with `./gradlew -p platform-validation war`; verify deployment with
 `./gradlew -p platform-validation verifyTomcat`. Neither leaves a server running.

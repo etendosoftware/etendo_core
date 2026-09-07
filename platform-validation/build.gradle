@@ -26,6 +26,14 @@ sourceSets {
     classicProbe {
         java.srcDirs = ['classic-probe']
     }
+    classicJson {
+        java {
+            srcDir '../modules_core/org.openbravo.service.datasource/src'
+            srcDir '../modules_core/org.openbravo.service.json/src'
+            include 'org/openbravo/service/datasource/DefaultDataSourceService.java'
+            include 'org/openbravo/service/json/DefaultJsonDataService.java'
+        }
+    }
     classicGenerated {
         java.srcDirs = ['build/classic-generated-entities']
         resources {
@@ -97,6 +105,8 @@ configurations.classicProbeRuntimeOnly.extendsFrom(configurations.bootstrapRunti
 configurations.classicProbeImplementation.extendsFrom(configurations.classicEntitiesImplementation)
 configurations.classicGeneratedImplementation.extendsFrom(configurations.classicEntitiesImplementation)
 sourceSets.classicGenerated.compileClasspath += sourceSets.bootstrap.output + sourceSets.classicEntities.output
+sourceSets.classicJson.compileClasspath += sourceSets.classicGenerated.output + sourceSets.classicEntities.output + sourceSets.bootstrap.output
+configurations.classicJsonImplementation.extendsFrom(configurations.classicEntitiesImplementation)
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
@@ -122,6 +132,28 @@ tasks.named('compileClassicEntitiesJava', JavaCompile) {
     source fileTree('../modules_core/org.openbravo.userinterface.selector/src') { include '**/domaintype/*.java' }
     options.sourcepath = files('../src', '../src-core/src', '../src-gen')
     options.compilerArgs += ['-implicit:class', '-Xmaxerrs', '30']
+}
+
+tasks.named('compileClassicJsonJava', JavaCompile) {
+    dependsOn 'prepareClassicCompatibility'
+    classpath += files('build/classic-compatibility/WEB-INF/classes')
+    classpath += fileTree('build/classic-compatibility/WEB-INF/lib') { include '*.jar' }
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-Xmaxerrs', '40']
+}
+
+tasks.register('prepareClassicCompatibility', Sync) {
+    into layout.buildDirectory.dir('classic-compatibility')
+    from(provider {
+        if (!project.hasProperty('classicWar')) {
+            throw new GradleException('Supply -PclassicWar=/absolute/path/to/classic.war for legacy support classes')
+        }
+        zipTree(file(project.property('classicWar')))
+    }) {
+        include 'WEB-INF/classes/**'
+        include 'WEB-INF/lib/*.jar'
+        exclude '**/*.properties'
+    }
 }
 
 tasks.named('processDalResources') {

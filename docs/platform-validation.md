@@ -184,6 +184,26 @@ the full generated Classic model and runs Product HQL. It explicitly checks that
 the DAL JDBC connection is read-only and rolls back the query transaction.
 It does not establish role security or datasource HTTP compatibility by itself.
 
+The Classic JSON compatibility source set compiles DefaultDataSourceService and
+DefaultJsonDataService from the existing modules. Compilation dependencies will
+be inspected before runtime wiring; no empty replacement services or proxy to
+Classic may stand in for their fetch behavior.
+
+Direct compilation exposed transitive references to Quartz, Jasper, and generated
+SQLC utilities through shared Classic helpers. The initial compatibility layer
+therefore accepts `-PclassicWar=/absolute/path/to/classic.war` as an explicit local
+support artifact. Only `WEB-INF/classes` and `WEB-INF/lib` are extracted for
+compilation; web.xml and property files are excluded. Listener classes may be
+present, but no Classic listener registrations or deployment configuration are
+activated. This is a broad legacy support layer, not a minimal platform dependency
+claim. The local artifact inspected contains 3,110 class files and 219 library
+JARs. Starting any subsystem or packaging this support requires separate runtime
+wiring and verification; successful compilation alone is not module startup.
+The current `compileClassicJsonJava` gate passes with the explicit support WAR.
+It compiles both service implementations from repository sources; supporting
+classes come from the supplied artifact. Runtime CDI, security and fetch behavior
+remain to be verified before this support is packaged for HTTP use.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.
