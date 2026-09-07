@@ -400,8 +400,22 @@ The probe supplies a small view-model to exercise template behavior; it does not
 replace or yet test OBViewFieldHandler, and does not claim end-user form operation.
 The expanded shared artifact still uses Classic APIs at compile time. Its new
 template classes are exercised on the ERP-free runtime without Classic support
-classes; deploying this expanded artifact to ERP and rerunning the browser gate
-remains required before claiming both consumers verified for this checkpoint.
+classes. The expanded artifact is now also verified in the original ERP UI:
+the browser gate passed shell/session initialization, Product projection and
+reference identifiers, filtering, ordering, pagination, anonymous denial and
+independent database equality across six restricted roles (40 default-scope rows).
+
+After the validation containers disappeared, the authorized Classic database
+container was started and a fresh owned copy was restored using a read-only
+snapshot. No source database migration or source Tomcat startup was performed.
+The ERP validation Tomcat was started on loopback port 8093 against that copy.
+`verifyUiDal` and `verifyUiArtifactPackaging` passed again: the 23-entity
+ERP-free runtime executes the original template processor, ERP UI packages the
+same shared JAR, and both headless WARs exclude that artifact.
+The copy configuration/container pointer is generated in
+`platform-validation/build/classic-copy-location.txt`; do not reuse historical
+container names after an environment restart. This checkpoint does not establish
+original platform login, field-handler execution or browser CRUD for app entities.
 
 verifyUiDal compiles the optional generated visual entities against the actual
 minimal DAL classpath and starts a separate JVM while its disposable PostgreSQL
