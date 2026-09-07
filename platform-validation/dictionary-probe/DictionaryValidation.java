@@ -26,7 +26,8 @@ public final class DictionaryValidation {
         boolean security = Boolean.getBoolean("validation.security");
         boolean dal = Boolean.getBoolean("validation.dal");
         boolean obdal = Boolean.getBoolean("validation.obdal");
-        Path report = Path.of(obdal ? "build/obdal-result.txt" : dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
+        boolean upgrade = Boolean.getBoolean("validation.upgrade");
+        Path report = Path.of(upgrade ? "build/platform-result.txt" : obdal ? "build/obdal-result.txt" : dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
         Path generated = Path.of(security ? "build/security-generated-entities" : "build/generated-entities");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "RUNNING\n");
@@ -128,18 +129,26 @@ public final class DictionaryValidation {
             if (dal) {
                 Class.forName("com.etendoerp.platform.validation.DalMappingValidation").getMethod("verify").invoke(null);
             }
+            if (upgrade) UpgradeValidation.verify(platform, source, schema, propertiesFile);
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
             throw failure;
         } finally {
-            source.close();
-            if (propertiesFile != null) Files.deleteIfExists(propertiesFile);
-            if (started) PersistenceValidation.command("docker", "stop", "--time", "2", container);
+            try {
+                source.close();
+            } finally {
+                try {
+                    if (propertiesFile != null) Files.deleteIfExists(propertiesFile);
+                } finally {
+                    if (started) PersistenceValidation.command("docker", "stop", "--time", "2", container);
+                }
+            }
         }
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
                 + (security ? "Selected security entities, Warehouse and BusinessPartner generated from core metadata\n" : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
-                + (obdal ? "Real non-admin context; OBDal persistence, filters, rollback and restricted table grants passed\n"
+                + (upgrade ? "Complete generated DAL v1/v2 lifecycle: persistence, security, constraints, XML schema and managed data, preservation and idempotence\n"
+                        : obdal ? "Real non-admin context; OBDal persistence, filters, rollback and restricted table grants passed\n"
                         + "NOT YET VERIFIED: runtime metadata upgrades, full update.database and module installation\n"
                         : dal ? "NOT YET VERIFIED: OBDal persistence, populated security context, security filters, metadata upgrades\n"
                         : "NOT YET VERIFIED BY THIS TASK: generated entity compilation, DAL mappings, OBDal runtime, security filters, metadata upgrades\n"));

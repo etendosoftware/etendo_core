@@ -4,4 +4,5 @@ DalMappingValidation registers compiled generated classes, uses the core mapping
 generator and session factory controller, then executes parameterized HQL.
 verifyOBDal additionally initializes the real context from XML security data and
 checks non-admin persistence, client/organization/active filters, flushed rollback,
-and restrictive table grants. Runtime schema/data upgrades remain pending.
+and restrictive table grants. verifyPlatform runs v1 and regenerated v2 classes in
+separate JVMs, verifies the new accessor through OBDal and HQL, and repeats v2.

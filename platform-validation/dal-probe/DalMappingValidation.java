@@ -17,6 +17,12 @@ import com.etendoerp.platform.fixture.Request;
 public final class DalMappingValidation {
     private DalMappingValidation() {}
 
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) throw new IllegalArgumentException("Expected disposable properties path");
+        org.openbravo.base.session.OBPropertiesProvider.getInstance().setProperties(args[0]);
+        verify();
+    }
+
     public static void verify() throws Exception {
         for (var entity : ModelProvider.getInstance().getModel()) {
             Class<?> type = entity.getMappingClass();
@@ -39,7 +45,8 @@ public final class DalMappingValidation {
                 if (count != 0) throw new AssertionError("Unexpected application data");
             }
             System.out.println("PASS: Real DAL SessionFactory loaded all generated entities and executed parameterized HQL");
-            if (Boolean.getBoolean("validation.obdal")) verifyPersistence();
+            if ("v2".equals(System.getProperty("validation.phase"))) verifyUpgradedEntity();
+            else if (Boolean.getBoolean("validation.obdal")) verifyPersistence();
         } finally {
             try {
                 if (SessionHandler.existsOpenedSessions()) OBDal.getInstance().rollbackAndClose();
@@ -50,17 +57,47 @@ public final class DalMappingValidation {
         }
     }
 
+    private static void verifyUpgradedEntity() throws Exception {
+        OBContext.setOBContext("U1", "R1", "C1", "O1", "en_US");
+        var property = ModelProvider.getInstance().getEntity("ProofRequest").getProperty("description");
+        if (!"DESCRIPTION".equals(property.getColumnName())) throw new AssertionError("Missing upgraded dictionary property");
+        var getter = Request.class.getMethod("getDescription");
+        var setter = Request.class.getMethod("setDescription", String.class);
+        Request request = OBDal.getInstance().get(Request.class, "REQUEST_1");
+        if (!"Library access".equals(request.getTitle()) || !"General service requests".equals(request.getCategory().getName())) {
+            throw new AssertionError("Operational row or managed category was not preserved/upgraded");
+        }
+        setter.invoke(request, "Updated through generated DAL v2");
+        OBDal.getInstance().commitAndClose();
+        var query = OBDal.getInstance().createQuery(Request.class, "description=:description")
+                .setNamedParameter("description", "Updated through generated DAL v2");
+        if (query.list().size() != 1 || !"Updated through generated DAL v2".equals(getter.invoke(query.list().get(0)))) {
+            throw new AssertionError("Generated v2 property did not round-trip through OBDal");
+        }
+        if (OBDal.getInstance().createQuery(Request.class, "").list().size() != 1) throw new AssertionError("Upgrade lost access filters");
+        OBDal.getInstance().commitAndClose();
+        System.out.println("PASS: Generated v2 Java accessor, dictionary mapping and OBDal HQL use the XML-added property");
+    }
+
     private static void verifyPersistence() {
+        try {
+            Request.class.getDeclaredMethod("getDescription");
+            throw new AssertionError("The v1 process unexpectedly loaded a v2 generated entity");
+        } catch (NoSuchMethodException expected) {
+            // The second JVM must genuinely load a different generated Java shape.
+        }
         OBContext.setOBContext("U1", "R1", "C1", "O1", "en_US");
         if (!OBContext.getOBContext().isInitialized() || OBContext.getOBContext().isInAdministratorMode()) {
             throw new AssertionError("Expected a real initialized non-admin context");
         }
-        Category category = new Category();
-        category.setId("GENERAL");
-        category.setNewOBObject(true);
-        category.setName("General requests");
-        category.setActive(true);
-        OBDal.getInstance().save(category);
+        Category category = OBDal.getInstance().get(Category.class, "GENERAL");
+        if (category == null || !"General requests".equals(category.getName())) throw new AssertionError("Missing v1 managed XML category");
+        Category local = new Category();
+        local.setId("LOCAL_CREATED");
+        local.setNewOBObject(true);
+        local.setName("Created through OBDal");
+        local.setActive(true);
+        OBDal.getInstance().save(local);
         Request request = new Request();
         request.setId("REQUEST_1");
         request.setNewOBObject(true);

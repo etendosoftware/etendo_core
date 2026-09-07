@@ -186,3 +186,18 @@ tasks.register('verifyOBDal', JavaExec) {
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }
 }
+
+tasks.register('verifyPlatform', JavaExec) {
+    group = 'verification'
+    description = 'Verify the complete disposable platform lifecycle, including generated DAL v1/v2.'
+    dependsOn dalClasses
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+    workingDir = projectDir
+    systemProperty 'validation.security', 'true'
+    systemProperty 'validation.obdal', 'true'
+    systemProperty 'validation.upgrade', 'true'
+    systemProperty 'validation.dalClasspath', sourceSets.dal.runtimeClasspath.asPath
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
+}

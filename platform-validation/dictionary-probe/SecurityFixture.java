@@ -161,6 +161,8 @@ final class SecurityFixture {
                     "PP_CATEGORY_ID", suffix, "AD_CLIENT_ID", client, "AD_ORG_ID", org,
                     "ISACTIVE", suffix.equals("INACTIVE") ? "N" : "Y"));
         }
+        seed(data, model, "PP_CATEGORY", Map.of("ID", "GENERAL", "NAME", "General requests",
+                "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
         data.append("</data>\n");
         Path output = Path.of("build/security-data.xml");
         Files.writeString(output, data);

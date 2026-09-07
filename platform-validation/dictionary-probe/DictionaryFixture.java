@@ -88,7 +88,7 @@ final class DictionaryFixture {
             int position = 0;
             for (var column : application.getColumns()) {
                 Map<String, String> values = new LinkedHashMap<>();
-                values.put("AD_COLUMN_ID", name + "_" + column.getName());
+                values.put("AD_COLUMN_ID", columnId(name, column.getName()));
                 values.put("AD_TABLE_ID", name);
                 values.put("AD_MODULE_ID", "PLATFORM");
                 values.put("COLUMNNAME", column.getName());
@@ -114,6 +114,12 @@ final class DictionaryFixture {
         Path path = Path.of("build", "dictionary-data.xml");
         Files.writeString(path, data);
         return path;
+    }
+
+    static String columnId(String table, String column) {
+        // DBSM compares metadata primary keys numerically in radix 32.
+        return java.util.UUID.nameUUIDFromBytes((table + ":" + column)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString().replace("-", "").toUpperCase(Locale.ROOT);
     }
 
     static void row(StringBuilder xml, Database schema, String tableName, Map<String, String> supplied) {
