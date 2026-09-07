@@ -38,6 +38,7 @@ sourceSets {
         }
     }
     classicServiceProbe { java.srcDirs = ['classic-service-probe'] }
+    compatWeb { java.srcDirs = ['compat-web'] }
     classicGenerated {
         java.srcDirs = ['build/classic-generated-entities']
         resources {
@@ -112,12 +113,43 @@ sourceSets.classicGenerated.compileClasspath += sourceSets.bootstrap.output + so
 sourceSets.classicJson.compileClasspath += sourceSets.classicGenerated.output + sourceSets.classicEntities.output + sourceSets.bootstrap.output
 configurations.classicJsonImplementation.extendsFrom(configurations.classicEntitiesImplementation)
 configurations.classicServiceProbeImplementation.extendsFrom(configurations.classicEntitiesImplementation)
+configurations.classicServiceProbeRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
 def classicServiceSupport = files('build/classic-compatibility/WEB-INF/classes') +
         fileTree('build/classic-compatibility/WEB-INF/lib') { include '*.jar' }
 def classicServiceClasses = sourceSets.classicJson.output + sourceSets.classicGenerated.output +
         sourceSets.classicEntities.output + sourceSets.bootstrap.output + sourceSets.classicProbe.output
 sourceSets.classicServiceProbe.compileClasspath += classicServiceClasses + classicServiceSupport
 sourceSets.classicServiceProbe.runtimeClasspath += classicServiceClasses + classicServiceSupport
+configurations.compatWebImplementation.extendsFrom(configurations.classicEntitiesImplementation)
+sourceSets.compatWeb.compileClasspath += classicServiceClasses + classicServiceSupport
+tasks.named('compileCompatWebJava') { dependsOn 'compileClassicJsonJava' }
+
+tasks.register('compatibilityWar', War) {
+    group = 'build'
+    description = 'Package the existing Product service behind the platform-only web lifecycle.'
+    dependsOn compatWebClasses, 'compileClassicJsonJava', 'prepareClassicCompatibility'
+    archiveFileName = 'platform-compatibility.war'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    webXml = file('compat-web/web.xml')
+    classpath = files()
+    from(sourceSets.compatWeb.output) { into 'WEB-INF/classes' }
+    from(sourceSets.classicJson.output) { into 'WEB-INF/classes' }
+    from(sourceSets.classicGenerated.output) { into 'WEB-INF/classes' }
+    from(sourceSets.classicEntities.output) { into 'WEB-INF/classes' }
+    from(sourceSets.bootstrap.output) { into 'WEB-INF/classes' }
+    from('fixtures/log4j2.xml') { into 'WEB-INF/classes' }
+    from('build/classic-compatibility/WEB-INF/classes') {
+        into 'WEB-INF/classes'
+        exclude '**/*.properties', '**/log4j*.xml', '**/beans.xml'
+    }
+    from(configurations.classicServiceProbeRuntimeClasspath.filter { !it.name.startsWith('jakarta.servlet-api-') }) {
+        into 'WEB-INF/lib'
+    }
+    from('build/classic-compatibility/WEB-INF/lib') {
+        into 'WEB-INF/lib'
+        exclude '*servlet-api*', 'log4j-core-*', 'log4j-api-*', 'log4j-1.2-api-*', 'hibernate-core-*', 'postgresql-*'
+    }
+}
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
@@ -188,6 +220,7 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    tomcatProbeImplementation 'org.codehaus.jettison:jettison:1.5.4'
     classicEntitiesImplementation 'io.smallrye:jandex:3.1.2'
     classicEntitiesImplementation 'org.codehaus.jettison:jettison:1.5.4'
     classicEntitiesImplementation 'commons-codec:commons-codec:1.17.1'
@@ -233,6 +266,33 @@ tasks.named('war', War) {
 }
 
 tasks.register('platformWar') { dependsOn war }
+
+tasks.register('verifyProductHttp', JavaExec) {
+    group = 'verification'
+    description = 'Verify the Product contract against an already running compatibility WAR.'
+    dependsOn tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ProductHttpValidation'
+    workingDir = projectDir
+    args 'http://127.0.0.1:' + (project.findProperty('platformPort') ?: '8090') +
+            '/etendo/org.openbravo.service.datasource/Product'
+}
+
+tasks.register('runCompatibility', JavaExec) {
+    group = 'application'
+    description = 'Run the platform Product endpoint on a separate loopback Tomcat port.'
+    dependsOn 'compatibilityWar', tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.CompatibilityServer'
+    workingDir = projectDir
+    jvmArgs '--add-opens=java.base/java.lang=ALL-UNNAMED', '--add-opens=java.base/java.io=ALL-UNNAMED',
+            '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
+    doFirst {
+        args file('build/libs/platform-compatibility.war').absolutePath,
+                file(project.property('classicProperties')).absolutePath,
+                project.findProperty('platformPort') ?: '8090'
+    }
+}
 
 tasks.register('verifyClassicModel', JavaExec) {
     group = 'verification'

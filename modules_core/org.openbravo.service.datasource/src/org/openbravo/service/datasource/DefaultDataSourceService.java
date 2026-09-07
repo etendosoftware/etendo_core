@@ -71,6 +71,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
 
   @Inject
   private CachedPreference cachedPreference;
+  private DefaultJsonDataService configuredJsonService;
 
   /** Default constructor for the existing CDI-managed lifecycle. */
   public DefaultDataSourceService() {
@@ -88,6 +89,18 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     cachedPreference = java.util.Objects.requireNonNull(preferences, "preferences");
   }
 
+  /** Creates a datasource with an explicitly scoped JSON service. */
+  public DefaultDataSourceService(CachedPreference preferences,
+      org.openbravo.client.application.window.ApplicationDictionaryCachedStructures structures,
+      DefaultJsonDataService jsonService) {
+    this(preferences, structures);
+    configuredJsonService = java.util.Objects.requireNonNull(jsonService, "jsonService");
+  }
+
+  private DefaultJsonDataService getJsonService() {
+    return configuredJsonService == null ? DefaultJsonDataService.getInstance() : configuredJsonService;
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -103,7 +116,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     OBContext.setAdminMode(shouldFilterOnRedeableOrganizations);
     try {
       addFetchParameters(parameters);
-      return DefaultJsonDataService.getInstance()
+      return getJsonService()
           .fetch(parameters, shouldFilterOnRedeableOrganizations);
     } finally {
       OBContext.restorePreviousMode();
@@ -114,7 +127,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     OBContext.setAdminMode(true);
     try {
       addFetchParameters(parameters);
-      DefaultJsonDataService.getInstance().fetch(parameters, writer);
+      getJsonService().fetch(parameters, writer);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -215,7 +228,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     OBContext.setAdminMode(shouldFilterOnRedeableOrganizations);
     try {
       parameters.put(JsonConstants.ENTITYNAME, getEntity().getName());
-      return DefaultJsonDataService.getInstance().remove(parameters);
+      return getJsonService().remove(parameters);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -237,7 +250,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     try {
       parameters.put(JsonConstants.ENTITYNAME, getEntity().getName());
       testAccessPermissions(parameters, content);
-      return DefaultJsonDataService.getInstance().add(parameters, content);
+      return getJsonService().add(parameters, content);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -254,7 +267,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     try {
       parameters.put(JsonConstants.ENTITYNAME, getEntity().getName());
       testAccessPermissions(parameters, content);
-      return DefaultJsonDataService.getInstance().update(parameters, content);
+      return getJsonService().update(parameters, content);
     } finally {
       OBContext.restorePreviousMode();
     }

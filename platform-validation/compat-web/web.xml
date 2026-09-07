@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" version="6.0" metadata-complete="true">
+  <display-name>Platform Product Compatibility</display-name>
+  <absolute-ordering/>
+  <listener><listener-class>com.etendoerp.platform.compat.CompatibilityLifecycle</listener-class></listener>
+  <servlet>
+    <servlet-name>Product</servlet-name>
+    <servlet-class>com.etendoerp.platform.compat.ProductServlet</servlet-class>
+  </servlet>
+  <servlet-mapping><servlet-name>Product</servlet-name><url-pattern>/org.openbravo.service.datasource/Product</url-pattern></servlet-mapping>
+</web-app>

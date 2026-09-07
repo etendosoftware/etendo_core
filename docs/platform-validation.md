@@ -238,6 +238,63 @@ equivalence or custom module hooks. Its explicit hook list is currently empty.
 The cache's module-development query uses a named boolean parameter to preserve
 the existing Y/N database mapping under Hibernate 6.
 
+The next HTTP gate packages a compatibility WAR with a platform-specific
+descriptor, external read-only database configuration and the exact Product URL.
+HTTP Basic credentials are checked against the existing password hash without
+upgrading it. This local validation adapter is loopback-only, not production
+authentication. Each request owns its preferences, dictionary cache and JSON
+service instance; no request identity is stored in a global service singleton.
+
+### Running the compatibility endpoint
+
+Use JDK 17 and an existing Classic configuration and WAR:
+
+```sh
+./gradlew -p platform-validation runCompatibility \
+  -PclassicProperties=/absolute/path/to/Openbravo.properties \
+  -PclassicWar=/absolute/path/to/classic.war \
+  -PplatformPort=8090
+```
+
+This foreground command starts a separate loopback Tomcat at the `/etendo`
+context. Stop it with Ctrl-C; it does not stop Classic or PostgreSQL. The output
+WAR is `platform-validation/build/libs/platform-compatibility.war`. This artifact
+currently supports only the platform lifecycle; the classic/platform-core switch
+remains pending. The compatibility support is intentionally broad and is not an
+independent platform-core module.
+
+The following curl prompts for the password rather than recording it in a file:
+
+```sh
+curl --user admin \
+  'http://127.0.0.1:8090/etendo/org.openbravo.service.datasource/Product' \
+  --data-urlencode '_operationType=fetch' \
+  --data-urlencode 'windowId=140' \
+  --data-urlencode 'tabId=180' \
+  --data-urlencode '_startRow=0' \
+  --data-urlencode '_endRow=100' \
+  --data-urlencode '_sortBy=searchKey' \
+  --data-urlencode '_selectedProperties=id,name,searchKey,client,organization,uOM,productCategory,taxCategory' \
+  --data-urlencode '_noCount=true' \
+  --data-urlencode '_noActiveFilter=true'
+```
+
+`verifyProductHttp` checks the running server using PLATFORM_TEST_USERNAME and
+PLATFORM_TEST_PASSWORD supplied externally. It verifies authentication failures,
+the exact route, JSON status, reference identifiers, ordering, inclusive-end
+pagination, and rejection of mutations, raw where clauses and unsupported windows.
+The first passing run returned 21 products for the automatically selected active
+role and organization. This is not yet equivalent to the user's 40-row Classic
+example: role/context matching and cross-organization tests remain pending.
+
+Current boundaries: Product fetch only, window 140/tab 180, at most 101 rows,
+HTTP Basic instead of Classic JSESSIONID, loopback-only access, no automatic hash
+upgrade, no custom JSON action hooks, and no general login/lockout/session service.
+The adapter rejects unknown parameters; null @Product.*@ context placeholders are
+accepted as inert. The request parameter allowlist is explicit in ProductServlet.
+Full selected-property parity, arbitrary criteria, explicit role selection and
+production authentication are not established by this check.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.

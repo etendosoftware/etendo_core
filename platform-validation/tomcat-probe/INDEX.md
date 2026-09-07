@@ -5,3 +5,6 @@ launcher. It uses a real Catalina webapp classloader, WAR expansion, lifecycle,
 connector, and loopback HTTP port. No application classes are added to the server
 classpath. HTTP checks run before and after stopping and redeploying the WAR.
 The process and disposable PostgreSQL are stopped at the end of verifyTomcat.
+
+CompatibilityServer runs the external-database WAR at the exact /etendo context
+on a configurable loopback port and remains available until explicitly stopped.
