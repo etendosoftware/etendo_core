@@ -46,6 +46,7 @@ import org.openbravo.base.util.Check;
 import org.openbravo.dal.security.AcctSchemaStructureProvider;
 import org.openbravo.dal.security.EntityAccessChecker;
 import org.openbravo.dal.security.OrganizationStructureProvider;
+import org.openbravo.dal.security.ReadableScopeResolver;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
@@ -596,13 +597,7 @@ public class OBContext implements OBNotSingleton, Serializable {
    *          the role used to initialize the readable clients
    */
   public void setReadableClients(Role role) {
-    if (getUserLevel().equals("S")) {
-      readableClients = new String[] { "0" };
-    } else if (role.getClient().getId().equals("0")) {
-      readableClients = new String[] { "0" };
-    } else {
-      readableClients = new String[] { role.getClient().getId(), "0" };
-    }
+    readableClients = ReadableScopeResolver.clients(getUserLevel(), () -> role.getClient().getId());
   }
 
   // writable organization is determined as follows
@@ -694,22 +689,9 @@ public class OBContext implements OBNotSingleton, Serializable {
 
   private void setReadableOrganizations(Role role) {
     long t = System.currentTimeMillis();
-    final Set<String> os = new HashSet<>(getActiveOrganizationList(role));
-    final Set<String> readableOrgs = new HashSet<String>();
-    if (os.contains("0")) {
-      // if zero is an organization then add them all!
-      readableOrgs.addAll(getOrganizations(getCurrentClient()));
-    } else {
-      for (final String o : os) {
-        readableOrgs.addAll(getOrganizationStructureProvider().getNaturalTree(o));
-      }
-    }
-    readableOrgs.add("0");
-    readableOrganizations = new String[readableOrgs.size()];
-    int i = 0;
-    for (final String s : readableOrgs) {
-      readableOrganizations[i++] = s;
-    }
+    readableOrganizations = ReadableScopeResolver.organizations(getActiveOrganizationList(role),
+        () -> getOrganizations(getCurrentClient()),
+        organization -> getOrganizationStructureProvider().getNaturalTree(organization));
     log.debug("setReadableOrganizations " + (System.currentTimeMillis() - t));
   }
 

@@ -24,6 +24,7 @@ public final class DalMappingValidation {
     }
 
     public static void verify() throws Exception {
+        verifyReadableScopeRules();
         for (String absentType : new String[] {
                 "org.openbravo.client.application.Process",
                 "org.openbravo.model.common.businesspartner.BusinessPartner"}) {
@@ -87,6 +88,29 @@ public final class DalMappingValidation {
         if (OBDal.getInstance().createQuery(Request.class, "").list().size() != 1) throw new AssertionError("Upgrade lost access filters");
         OBDal.getInstance().commitAndClose();
         System.out.println("PASS: Generated v2 Java accessor, dictionary mapping and OBDal HQL use the XML-added property");
+    }
+
+    private static void verifyReadableScopeRules() {
+        var system = org.openbravo.dal.security.ReadableScopeResolver.clients("S", () -> {
+            throw new AssertionError("System scope must not load the role client");
+        });
+        if (!java.util.Arrays.equals(system, new String[] {"0"})) throw new AssertionError("System scope changed");
+        for (String level : new String[] {"C", "O", "CO"}) {
+            var clients = org.openbravo.dal.security.ReadableScopeResolver.clients(level, () -> "C1");
+            if (!java.util.Arrays.equals(clients, new String[] {"C1", "0"})) throw new AssertionError("Client scope changed");
+        }
+        var root = org.openbravo.dal.security.ReadableScopeResolver.organizations(java.util.List.of("0", "O1"),
+                () -> java.util.List.of("O1", "O2"), ignored -> { throw new AssertionError("Root grant must use client scope"); });
+        if (!java.util.Set.of(root).equals(java.util.Set.of("0", "O1", "O2"))) throw new AssertionError("Root expansion changed");
+        var branch = org.openbravo.dal.security.ReadableScopeResolver.organizations(java.util.List.of("O1", "O1"),
+                () -> { throw new AssertionError("Branch grant must not expand to the entire client"); },
+                ignored -> java.util.List.of("O1", "CHILD"));
+        if (!java.util.Set.of(branch).equals(java.util.Set.of("0", "O1", "CHILD"))) throw new AssertionError("Branch expansion changed");
+        var empty = org.openbravo.dal.security.ReadableScopeResolver.organizations(java.util.List.of(),
+                () -> { throw new AssertionError("No grant must not load client organizations"); },
+                ignored -> { throw new AssertionError("No grant must not load a tree"); });
+        if (!java.util.Arrays.equals(empty, new String[] {"0"})) throw new AssertionError("Shared root scope changed");
+        System.out.println("PASS: Shared readable-scope rules preserve client, root and branch isolation");
     }
 
     private static void verifyPersistence() {

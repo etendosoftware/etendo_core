@@ -27,6 +27,16 @@ boundary, document the conflict and request approval before introducing a visibl
 breaking change. Do not silently replace typed APIs with Object, generics or new
 packages. Package moves must not leave callers without their original facade.
 
+Platform-only alternative classes are an explicitly accepted fallback, not the
+first choice. Prefer composition and adapters; when legacy ERP-typed signatures
+prevent an ERP-free classpath, a separate platform facade may expose only platform
+contracts. Keep the existing ERP facade and signatures intact. Both facades must
+delegate to the same implementation of authorization, persistence and lifecycle
+rules, with shared contract tests. Do not copy OBContext or maintain two security
+engines. Prefer distinct class names; any same-name build variant requires explicit
+packaging isolation and must never coexist on one runtime classpath. Document the
+reason, profile ownership and supported API for each alternative before adding it.
+
 Before each module extraction, compare the exposed API against the pre-extraction
 baseline and run representative existing callers. Add binary linkage checks using
 callers compiled against that baseline where packaging or hierarchy changes. These
@@ -62,6 +72,7 @@ coordinates. Existing packages may remain stable in the compatibility facade.
 | CTX-ERP-INIT | ErpContextSupport | platform-compat-etendo | Calls generated User/Warehouse and the existing SessionHandler; move behind the shared context extension contract, retaining initialization order. |
 | CTX-LEGACY-API | OBContext Warehouse field and accessors | platform-compat-etendo facade | Public JVM signatures refer to Warehouse. Do not erase or replace these signatures without an explicit compatibility strategy and legacy caller tests. |
 | CTX-SHARED | OBContext identity, authorization and session context | platform-core | Still mixed with ERP, accounting and servlet concerns; extract the shared state/lifecycle rather than maintaining two OBContext implementations. |
+| SEC-READ-SCOPE | ReadableScopeResolver | platform-core | Pure client/organization scope rules; only JDK dependencies. OBContext adapts existing Role and organization-tree providers without changing its API. |
 | SEC-UI-DIAGNOSTICS | EntityAccessChecker process-name diagnostics | Compatibility security policy | Use the generic DAL for optional process metadata, not a generated UI class dependency. Minimal table-access security excludes the Process entity; full window/process authorization remains to be separated. |
 
 BusinessPartner is absent from the minimal dictionary and generated User model.
@@ -77,6 +88,17 @@ proof that the dependency has been removed.
    and minimal UI. No Product, Warehouse or BusinessPartner classes or tables.
 3. Platform REST: the same core and application model, without UI artifacts or
    startup dependencies. Verify authenticated CRUD, isolation and absent UI routes.
+4. ERP REST: shared core, compatibility and ERP behavior without UI artifacts or
+   startup dependencies. Verify the original Product REST contract and its
+   authorization against persisted data. Business rules and process permissions
+   currently hosted by UI modules must be separated, not discarded with the UI.
+
+ERP inclusion and UI inclusion are independent composition choices. All four
+combinations are required by the user; the original three-profile goal text is
+supplemented by this requirement. No profile is complete merely because a route
+is hidden. ERP headless must not fall back to weaker table-only permissions to
+avoid extracting the existing authorization policy. Scope business-process
+compatibility claims to actually tested operations.
 
 For every separation, inspect the built runtime classpath/WAR and generated
 schema as well as executing tests. A missing route, an unused class or a smaller
