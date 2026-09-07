@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Platform requests</title>
+<link rel="stylesheet" href="requests.css">
+<main>
+  <h1>Platform requests</h1>
+  <p>Application-owned records, without ERP business entities.</p>
+  <label>Access token <input id="token" type="password" autocomplete="off"></label>
+  <button id="load" type="button">Load requests</button>
+  <form id="editor">
+    <input id="record-id" type="hidden">
+    <label>Title <input id="title" required maxlength="100" pattern="[A-Za-z0-9 ._\-]+"></label>
+    <button type="submit">Save request</button>
+    <button id="new" type="button">New request</button>
+  </form>
+  <p id="status" role="status" aria-live="polite"></p>
+  <table><thead><tr><th>Title</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
+</main>
+<script src="requests.js" defer></script>
+</html>

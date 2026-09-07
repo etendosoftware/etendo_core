@@ -1,0 +1,8 @@
+body { font: 16px system-ui, sans-serif; background: #f4f6fa; color: #1d2939; margin: 0; }
+main { max-width: 800px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 12px; }
+label { display: block; margin: 1rem 0; }
+input { display: block; box-sizing: border-box; width: 100%; padding: .7rem; margin-top: .4rem; }
+button { padding: .6rem 1rem; cursor: pointer; margin: .2rem; }
+table { width: 100%; text-align: left; border-collapse: collapse; }
+td, th { padding: .8rem; border-bottom: 1px solid #d0d5dd; }
+#status { min-height: 1.5rem; }

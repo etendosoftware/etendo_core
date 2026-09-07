@@ -111,6 +111,11 @@ policy coupling from the shared motor.
 
 ## Profile composition and acceptance
 
+`platformUiWar` layers only the minimal request UI assets over `platformWar`.
+The REST WAR does not include those assets. Both use the same authenticated
+Request servlet and generated DAL; UI code does not own persistence or permissions.
+Browser interaction and durable profile startup remain separate acceptance gates.
+
 1. ERP UI: shared core plus PostgreSQL/DBSM, compatibility, ERP and existing UI.
    Verify authenticated original Product behavior against persisted data.
 2. Platform UI: shared core plus PostgreSQL/DBSM, application-owned model, REST

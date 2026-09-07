@@ -368,6 +368,42 @@ tasks.named('war', War) {
 
 tasks.register('platformWar') { dependsOn war }
 
+tasks.register('platformUiWar', Zip) {
+    group = 'build'
+    description = 'Add optional application UI assets to the unchanged minimal REST backend.'
+    dependsOn war
+    archiveFileName = 'platform-ui.war'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+    from(provider { zipTree(tasks.war.archiveFile.get().asFile) })
+    from('ui') { exclude 'INDEX.md' }
+}
+
+tasks.register('verifyProfilePackaging') {
+    group = 'verification'
+    description = 'Verify UI assets are optional and backend bytes are identical.'
+    dependsOn 'platformUiWar'
+    doLast {
+        def rest = new java.util.zip.ZipFile(tasks.war.archiveFile.get().asFile)
+        def ui = new java.util.zip.ZipFile(tasks.platformUiWar.archiveFile.get().asFile)
+        try {
+            ['index.html', 'requests.js', 'requests.css'].each { name ->
+                if (rest.getEntry(name) != null || ui.getEntry(name) == null) {
+                    throw new GradleException("Optional UI packaging failed: ${name}")
+                }
+            }
+            rest.entries().each { entry ->
+                if (!entry.directory) {
+                    def matching = ui.getEntry(entry.name)
+                    if (matching == null || !java.util.Arrays.equals(rest.getInputStream(entry).bytes, ui.getInputStream(matching).bytes)) {
+                        throw new GradleException("Backend differs between profiles: ${entry.name}")
+                    }
+                }
+            }
+        } finally { rest.close(); ui.close() }
+        logger.lifecycle('PASS: Optional UI assets; identical backend bytes in both platform WARs')
+    }
+}
+
 tasks.register('prepareClassicCopy', JavaExec) {
     group = 'verification'
     description = 'Snapshot Classic read-only into an owned PostgreSQL container for lifecycle tests.'
