@@ -387,6 +387,17 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+verifyUiDal compiles the optional generated visual entities against the actual
+minimal DAL classpath and starts a separate JVM while its disposable PostgreSQL
+database is alive. It must resolve window/tab/field relationships with real
+OBDal/Hibernate, reject ERP entity classes and prove that UI entities load from
+the new generated output. This runtime metadata gate precedes servlet/login and
+browser UI wiring; it is not a substitute for the goal's browser CRUD checks.
+The initial runtime test passed for all 20 generated entities, with OBDal reading
+two windows and six Request fields through their generated tab/column/table
+relationships. Visual metadata reads use the original administrative dictionary
+access pattern; this does not yet validate end-user window access or UI CRUD.
+
 The optional original-UI dictionary slice extends the existing security fixture
 with AD_COLUMN, AD_WINDOW, AD_TAB, AD_FIELD and AD_WINDOW_ACCESS metadata selected
 from canonical XML. Its generated sources have a separate output directory so

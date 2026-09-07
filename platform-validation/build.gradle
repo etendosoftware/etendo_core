@@ -867,6 +867,22 @@ tasks.register('verifyUiDictionary', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
+tasks.register('verifyUiDal', JavaExec) {
+    group = 'verification'
+    description = 'Compile visual dictionary entities and query them through original DAL without ERP.'
+    dependsOn dalClasses, dictionaryProbeClasses, prepareGeneratorTemplates
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+    workingDir = projectDir
+    systemProperty 'validation.security', 'true'
+    systemProperty 'validation.originalUi', 'true'
+    systemProperty 'validation.obdal', 'true'
+    systemProperty 'validation.uiDal', 'true'
+    systemProperty 'validation.dalClasspath', sourceSets.dal.runtimeClasspath.asPath
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
+}
+
 tasks.register('verifyDalMappings', JavaExec) {
     group = 'verification'
     description = 'Bootstrap the real DAL SessionFactory with generated mappings and entity classes.'

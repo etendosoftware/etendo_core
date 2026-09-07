@@ -156,6 +156,7 @@ public final class DictionaryValidation {
                 }
             }
             System.out.println("PASS: Real entity generator produced " + model.size() + " Java entity sources");
+            if (Boolean.getBoolean("validation.uiDal")) UiDictionaryFixture.verifyRuntime(generated, propertiesFile);
             if (dal) {
                 Class.forName("com.etendoerp.platform.validation.DalMappingValidation").getMethod("verify").invoke(null);
             }
@@ -184,7 +185,10 @@ public final class DictionaryValidation {
         }
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
                 + (originalUi ? "Original window/tab/field metadata and model relationships verified without ERP entities\n"
-                        + "NOT YET VERIFIED: original UI startup, generated UI entity compilation or UI-driven CRUD\n" : "")
+                        + (Boolean.getBoolean("validation.uiDal")
+                            ? "Compiled UI entities and OBDal visual metadata queries passed in an isolated JVM\n"
+                            : "NOT YET VERIFIED: generated UI entity compilation or DAL runtime\n")
+                        + "NOT YET VERIFIED: original UI startup or UI-driven CRUD\n" : "")
                 + (security ? "Selected security entities generated without Warehouse, BusinessPartner or UI Process\n" : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
                 + (tomcat ? "Actual WAR deployment in isolated Tomcat: HTTP persistence, HQL, security and redeployment passed\n"

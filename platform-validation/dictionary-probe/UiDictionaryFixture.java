@@ -10,6 +10,34 @@ import org.apache.ddlutils.model.Database;
 final class UiDictionaryFixture {
     private UiDictionaryFixture() {}
 
+    static void verifyRuntime(java.nio.file.Path generated, java.nio.file.Path properties) throws Exception {
+        String runtime = System.getProperty("validation.dalClasspath");
+        if (runtime == null || runtime.isBlank()) throw new IllegalArgumentException("Missing minimal DAL classpath");
+        java.nio.file.Path classes = java.nio.file.Files.createTempDirectory(java.nio.file.Path.of("build"), "ui-dal-classes-");
+        java.util.List<String> arguments = new java.util.ArrayList<>(List.of("--release", "17", "-proc:none",
+                "-implicit:none", "-classpath", runtime, "-d", classes.toString()));
+        try (var paths = java.nio.file.Files.walk(generated)) {
+            paths.filter(path -> path.toString().endsWith(".java")).sorted()
+                    .forEach(path -> arguments.add(path.toString()));
+        }
+        arguments.add("dal-probe/UiDalValidation.java");
+        if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
+                arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
+        String log = "build/ui-dal-runtime.log";
+        Process child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin/java").toString(),
+                "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
+                "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
+                "com.etendoerp.platform.validation.UiDalValidation", properties.toAbsolutePath().toString())
+                .redirectErrorStream(true).redirectOutput(new java.io.File(log)).start();
+        try {
+            if (!child.waitFor(50, java.util.concurrent.TimeUnit.SECONDS)) throw new AssertionError("UI DAL timed out: " + log);
+            if (child.exitValue() != 0) throw new AssertionError("UI DAL failed: " + log);
+        } finally {
+            if (child.isAlive()) { child.destroyForcibly(); child.waitFor(5, java.util.concurrent.TimeUnit.SECONDS); }
+        }
+        System.out.println("PASS: Compiled original UI entities executed through the minimal DAL in an isolated JVM");
+    }
+
     static void addData(StringBuilder xml, Database schema) {
         for (String table : List.of("PP_CATEGORY", "PP_REQUEST")) {
             String window = DictionaryFixture.columnId(table, "WINDOW");
