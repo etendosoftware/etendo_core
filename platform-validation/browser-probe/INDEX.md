@@ -10,4 +10,9 @@ then calls the original Product datasource with that browser session. Credential
 come from PLATFORM_TEST_USERNAME and PLATFORM_TEST_PASSWORD, never from source.
 It verifies selected fields and reference identifiers, ordering, inclusive-end
 pagination and the original anonymous login redirect without Product data. Full
-field parity, role isolation and all ERP workflows are not implied by this test.
+field parity and all ERP workflows are not implied by this test.
+
+erp-scope-snapshot.mjs reads independent Product and organization-grant expectations
+from the running labeled Classic copy using Docker/psql and a read-only transaction.
+Set PLATFORM_COPY_CONTAINER to that container name. The browser probe compares
+the default client and restricted session roles, then checks a fresh default login.

@@ -1,9 +1,11 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
+import { readScopeSnapshot, expectedProducts } from './erp-scope-snapshot.mjs';
 
 const username = process.env.PLATFORM_TEST_USERNAME;
 const password = process.env.PLATFORM_TEST_PASSWORD;
 assert(username && password, 'Supply test credentials through the process environment');
+const snapshot = readScopeSnapshot(username);
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 try {
   const page = await browser.newPage();
@@ -61,5 +63,55 @@ try {
       "window.location.href = 'http://127.0.0.1:8093/etendo/security/Login';",
       'Anonymous response must contain only the legacy login redirect, never Product data');
   } finally { await anonymous.close(); }
+  const client = full.data[0].client;
+  const expectedClient = snapshot.products.filter(row => row.client === client);
+  assert.deepEqual(ids(full.data).sort(), ids(expectedClient).sort(), 'Default session must match independent client rows');
+  for (const row of full.data) {
+    const expected = expectedClient.find(product => product.id === row.id);
+    for (const field of ['client', 'organization', 'name', 'searchKey']) assert.equal(row[field], expected[field]);
+  }
+  assert(snapshot.products.some(row => row.client !== client), 'Foreign-client control records are required');
+  const checkedRoles = new Set();
+  let restricted = 0;
+  for (const context of snapshot.contexts) {
+    if (context.client !== client || checkedRoles.has(context.role)) continue;
+    checkedRoles.add(context.role);
+    const expected = expectedProducts(snapshot, context);
+    if (!expected.length || expected.length >= expectedClient.length) continue;
+    const switched = await page.request.post('http://127.0.0.1:8093/etendo/org.openbravo.client.kernel', {
+      params: { _action: 'org.openbravo.client.application.navigationbarcomponents.UserInfoWidgetActionHandler', command: 'save' },
+      data: { role: context.role, organization: context.organization, default: false }
+    });
+    assert.equal(switched.status(), 200);
+    assert.equal((await switched.json()).result, 'success', 'Existing role switch must succeed');
+    const response = await page.request.post(endpoint, { form: { ...form, _noActiveFilter: 'true' } });
+    assert.equal(response.status(), 200);
+    const result = (await response.json()).response;
+    if (result.status !== 0) {
+      assert(!result.data || result.data.length === 0, 'Denied role must not expose rows');
+      continue;
+    }
+    assert.deepEqual(ids(result.data).sort(), ids(expected).sort(), 'Session scope must match independent grants/tree');
+    assert(result.data.every(row => row.client === client));
+    restricted++;
+  }
+  assert(restricted > 0, 'At least one restricted organization role must be verified');
+  // A fresh login must retain the user's defaults after session-only role changes.
+  const fresh = await browser.newContext();
+  try {
+    const login = await fresh.newPage();
+    await login.goto('http://127.0.0.1:8093/etendo/');
+    await login.locator('#user').fill(username);
+    await login.locator('#password').fill(password);
+    await login.locator('#buttonOK').click();
+    await login.waitForURL(url => !url.pathname.includes('/security/Login'), { timeout: 30000 });
+    const response = await fresh.request.post(endpoint, { form });
+    assert.equal(response.status(), 200);
+    const restored = (await response.json()).response;
+    assert.equal(restored.status, 0);
+    assert.deepEqual(ids(restored.data).sort(), ids(full.data).sort(),
+      'Restricted role changes must not leak into a fresh default session');
+  } finally { await fresh.close(); }
+  console.log(`PASS: Independent database equality, foreign-client exclusion and ${restricted} restricted ERP session roles`);
   console.log(`PASS: ERP browser session, projection, references, ordering, paging and anonymous denial (${full.data.length} rows)`);
 } finally { await browser.close(); }

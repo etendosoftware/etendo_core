@@ -201,8 +201,9 @@ smoke test. Existing Hibernate and CDI fallback warnings remain.
 `browser-probe/verify-erp-ui.mjs` uses the original login page in Chrome and its
 session cookie to fetch the original Product datasource. It passed against the
 owned copy with 40 persisted products, without the Basic compatibility adapter.
-Supply `PLATFORM_TEST_USERNAME` and `PLATFORM_TEST_PASSWORD` through the process
-environment, then run:
+Supply `PLATFORM_TEST_USERNAME`, `PLATFORM_TEST_PASSWORD` and
+`PLATFORM_COPY_CONTAINER` (the running labeled copy container name) through the
+process environment, then run:
 
 ```bash
 node platform-validation/browser-probe/verify-erp-ui.mjs
@@ -214,10 +215,20 @@ ascending/descending search-key order and two contiguous five-record pages.
 It preserves the original inclusive `_endRow` semantics. An anonymous request
 must return exactly the existing login redirect script (HTTP 200, JavaScript),
 never Product data. This is legacy UI behavior, not a recommended headless API
-authentication response. Full selected-property coverage, role/client/organization
-scope comparison against independent database reads and general ERP workflow
+authentication response. Full selected-property coverage and general ERP workflow
 compatibility remain unproven on this deployment. ERP headless acceptance remains
 pending.
+
+The ERP session scope regression obtains independent expectations through a
+read-only transaction in the explicitly labeled Classic-copy container. It passed
+for 40 default-client products (including scalar value equality) and six restricted
+roles, excluding foreign-client and out-of-scope same-client products. It switches
+assigned roles using the existing user-profile action with `default=false`
+(session only), compares Product IDs with organization grants and the organization
+tree, then verifies that a fresh login still returns the original default set.
+Business data, user defaults and grants are not changed to make this test pass.
+The tested scope is this existing fixture and its assigned roles, not arbitrary
+module-specific authorization policies or all possible role configurations.
 
 The current headless extraction blockers are concrete service dependencies:
 `BaseDataSourceService` uses `CachedPreference` and
