@@ -177,6 +177,17 @@ operational data, rollback and idempotence checks in both ERP-free profiles.
 
 ## Immediate sequence
 
+Container composition must also separate UI dependencies. Jasper/JSP belongs only
+to the original ERP UI launch classpath, not the shared Tomcat probe or platform
+REST launcher. Disable the default JSP servlet for non-JSP validation deployments
+and verify HTTP persistence with Jasper unavailable. Static platform UI assets do
+not require a JSP engine. This removes a container-level dependency; it does not
+resolve the remaining ERP service dependencies on UI-module classes.
+Both `verifyTomcat` and `verifyTomcat -PplatformUi=true` passed with this
+composition: `JspServlet` unavailable, actual WAR startup, authenticated HTTP
+persistence/update checks and redeployment. The live instances started before
+this change still need restarting to use the reduced container classpath.
+
 `erpUiWar` assembles the existing ERP UI resources and deployment descriptor from
 the supplied Classic WAR, overlaying the refactored motor/generated classes and
 shared-core JAR. It excludes properties files except the inspected, non-secret

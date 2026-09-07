@@ -17,3 +17,8 @@ ErpUiServer verifies the owned Classic-copy Docker label and port before expandi
 the ERP UI WAR into a private deployment directory. Configuration is written only
 there, with scheduler, import, cluster and Redis disabled. It never deploys full
 ERP against the original database configuration.
+
+The shared container classpath excludes Jasper. Non-JSP launches register only
+the default static servlet (plus application servlets from web.xml), not the JSP
+servlet. TomcatProbe asserts that JspServlet is unavailable before exercising
+HTTP persistence. Only runErpUi adds erpUiContainerRuntime and enables JSP defaults.

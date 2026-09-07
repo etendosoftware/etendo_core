@@ -13,6 +13,7 @@ java {
 }
 
 sourceSets.main.java.srcDirs = ['src']
+configurations { erpUiContainerRuntime }
 
 // Compile the actual dictionary bootstrap separately from the ERP application.
 sourceSets {
@@ -358,7 +359,7 @@ dependencies {
     classicEntitiesImplementation 'org.codehaus.jettison:jettison:1.5.4'
     classicEntitiesImplementation 'commons-codec:commons-codec:1.17.1'
     tomcatProbeImplementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.59'
-    tomcatProbeImplementation 'org.apache.tomcat.embed:tomcat-embed-jasper:10.1.59'
+    erpUiContainerRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper:10.1.59'
     dalImplementation 'io.smallrye:jandex:3.1.2'
     implementation files(dbsmJar)
     implementation 'org.hibernate.orm:hibernate-core:6.5.2.Final'
@@ -404,7 +405,8 @@ tasks.register('runErpUi', JavaExec) {
     group = 'application'
     description = 'Start existing ERP UI against a verified owned Classic database copy.'
     dependsOn 'erpUiWar', tomcatProbeClasses
-    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    classpath = sourceSets.tomcatProbe.runtimeClasspath + configurations.erpUiContainerRuntime
+    systemProperty 'validation.jspEnabled', 'true'
     mainClass = 'com.etendoerp.platform.validation.ErpUiServer'
     workingDir = projectDir
     jvmArgs '--add-opens=java.base/java.io=ALL-UNNAMED', '--add-opens=java.base/java.lang=ALL-UNNAMED',

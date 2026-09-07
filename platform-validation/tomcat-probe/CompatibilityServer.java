@@ -12,6 +12,8 @@ public final class CompatibilityServer {
         if (!contextPath.matches("/[a-z][a-z0-9-]*")) throw new IllegalArgumentException("Invalid context path");
         System.setProperty("platform.validation.properties", Path.of(args[1]).toAbsolutePath().toString());
         Tomcat tomcat = new Tomcat();
+        boolean jspEnabled = Boolean.getBoolean("validation.jspEnabled");
+        if (!jspEnabled) tomcat.setAddDefaultWebXmlToWebapp(false);
         Path base = Files.createTempDirectory(Path.of("build"), "compat-tomcat-").toAbsolutePath();
         tomcat.setBaseDir(base.toString());
         tomcat.getHost().setAppBase(Files.createDirectories(base.resolve("webapps")).toString());
@@ -20,6 +22,7 @@ public final class CompatibilityServer {
         tomcat.getConnector().setProperty("maxThreads", "4");
         tomcat.getConnector().setProperty("minSpareThreads", "1");
         var context = tomcat.addWebapp(contextPath, Path.of(args[0]).toAbsolutePath().toString());
+        if (!jspEnabled) configureServletOnly(context);
         context.setParentClassLoader(CompatibilityServer.class.getClassLoader());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try { tomcat.stop(); tomcat.destroy(); }
@@ -33,5 +36,15 @@ public final class CompatibilityServer {
         System.out.println("READY: http://127.0.0.1:" + tomcat.getConnector().getLocalPort()
                 + contextPath + (args.length == 3 ? "/org.openbravo.service.datasource/Product" : "/"));
         tomcat.getServer().await();
+    }
+
+    /** Configure static delivery without Tomcat's default JSP servlet or engine. */
+    static void configureServletOnly(org.apache.catalina.Context context) {
+        Tomcat.addServlet(context, "default", "org.apache.catalina.servlets.DefaultServlet");
+        context.addServletMappingDecoded("/", "default");
+        context.addWelcomeFile("index.html");
+        context.addMimeMapping("html", "text/html");
+        context.addMimeMapping("js", "application/javascript");
+        context.addMimeMapping("css", "text/css");
     }
 }

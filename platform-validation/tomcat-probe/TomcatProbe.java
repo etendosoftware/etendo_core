@@ -33,8 +33,15 @@ public final class TomcatProbe {
         String token = properties.getProperty("platform.validation.token");
         String readOnly = properties.getProperty("platform.validation.readOnlyToken");
         String expected = null;
+        try {
+            Class.forName("org.apache.jasper.servlet.JspServlet", false, TomcatProbe.class.getClassLoader());
+            throw new AssertionError("Platform container must not contain the JSP engine");
+        } catch (ClassNotFoundException expectedAbsence) {
+            System.out.println("PASS: Platform container has no JSP engine");
+        }
         for (int iteration = 0; iteration < 2; iteration++) {
             Tomcat tomcat = new Tomcat();
+            tomcat.setAddDefaultWebXmlToWebapp(false);
             Path base = Files.createTempDirectory(Path.of("build"), "tomcat-").toAbsolutePath();
             tomcat.setBaseDir(base.toString());
             tomcat.getHost().setAppBase(Files.createDirectories(base.resolve("webapps")).toString());
@@ -43,6 +50,7 @@ public final class TomcatProbe {
             tomcat.getConnector().setProperty("maxThreads", "1");
             tomcat.getConnector().setProperty("minSpareThreads", "1");
             var context = tomcat.addWebapp("/platform", war.toString());
+            CompatibilityServer.configureServletOnly(context);
             context.setParentClassLoader(TomcatProbe.class.getClassLoader());
             try {
                 tomcat.start();
