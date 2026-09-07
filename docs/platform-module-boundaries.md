@@ -1,5 +1,36 @@
 # Platform module boundaries
 
+## Immediate delivery priority
+
+The next milestone is one retained, runnable platform UI application, not another
+isolated component probe. Deliver this browser path first:
+
+1. Start Tomcat against the owned platform database and log in through the original
+   authentication implementation.
+2. Load the original shell and open the dictionary-driven Request window using
+   the same UI components packaged for ERP.
+3. Create and edit a Request through that window with the authorized user, then
+   restart Tomcat and read the persisted values through the same window.
+4. Verify that an unauthorized user cannot perform the same operation. Preserve
+   ERP browser regression and the two headless UI-exclusion checks.
+
+The platform runtime must not require Product, Warehouse or BusinessPartner.
+Technical dependencies and a large WAR are acceptable temporarily when explicitly
+recorded. Do not duplicate authentication, persistence or UI implementations to
+reach the milestone. Preserve existing module-facing signatures.
+
+The critical path is retained fixture/configuration and generated classes,
+original HTTP/UI composition, then browser CRUD and restart verification. Extend
+metadata or introduce a composition seam only when this path requires it. The
+current platform UI WAR still serves the validation frontend; isolated login and
+component tests do not establish delivery of the original platform application.
+
+Defer WAR reduction, general dependency cleanup, further analyzer development,
+and additional isolated lifecycle experiments. Implement lifecycle behavior needed
+by the runnable application, but do not expand a separate probe as a prerequisite.
+After this first milestone, cover the second entity, relationships, broader
+security cases and more granular module separation. The full goal remains open.
+
 ## Status and rule
 
 This is the extraction map for ET-27, not a claim that the modules already exist.
@@ -273,6 +304,16 @@ API/shared-artifact/headless/nested boundary checks passed in
 parent fixture owns database cleanup. No production servlet or WAR was replaced.
 This proves only the stateful web authentication path: expiry/reset, logout/session
 listener cleanup, stateless licensing paths and the platform shell remain unproven.
+
+The deferred HTTP lifecycle experiment replaces the harness's pre-authentication business
+identity with the original system context (`0`) and installs canonical SessionListener
+with ConnectionProviderImpl. The UI-only dictionary composes full SystemInformation
+and Image metadata for original technical configuration/branding, not ERP business
+entities. System audit configuration remains explicit. Validate database session
+deactivation on logout and container shutdown; do not treat swallowed listener errors
+as success. The current experiment is unverified: fixture creation fails on required
+SystemInformation maturity metadata. Further isolated probe work must not displace
+delivery of the application shell and production HTTP composition.
 The optional UI artifact owns these canonical classes and the navigation-bar/layout
 templates; ERP excludes their former loose copies. `verifyUiLogin` checks each
 generated script with Node's syntax checker (Node is a test prerequisite).
