@@ -139,6 +139,12 @@ def classicServiceClasses = sourceSets.classicJson.output + sourceSets.classicGe
 tasks.register('compileUiComponents', JavaCompile) {
     dependsOn 'compileClassicJsonJava'
     source file('../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/ApplicationComponentProvider.java')
+    source fileTree('../modules_core/org.openbravo.client.kernel/src') {
+        include 'org/openbravo/client/kernel/BaseTemplateProcessor.java'
+        include 'org/openbravo/client/kernel/TemplateProcessor.java'
+        include 'org/openbravo/client/kernel/TemplateResolver.java'
+        include 'org/openbravo/client/kernel/freemarker/FreemarkerTemplateProcessor.java'
+    }
     classpath = classicServiceClasses + classicServiceSupport
     destinationDirectory = layout.buildDirectory.dir('ui-components')
     options.sourcepath = files()
@@ -150,20 +156,32 @@ tasks.register('sharedUiJar', Jar) {
     destinationDirectory = layout.buildDirectory.dir('libs')
     from(tasks.named('compileUiComponents').flatMap { it.destinationDirectory })
     from('fixtures/ui-beans.xml') { into 'META-INF'; rename { 'beans.xml' } }
+    from('../modules_core/org.openbravo.client.application/src') {
+        include 'org/openbravo/client/application/templates/ob-view-form.js.ftl'
+    }
 }
 tasks.register('verifyUiArtifactPackaging') {
     group = 'verification'
     dependsOn 'erpUiWar', 'platformWar', 'erpHeadlessWar'
     doLast {
         def artifact = tasks.named('sharedUiJar').get().archiveFile.get().asFile.bytes
+        def ownedUiPaths = []
         new java.util.zip.ZipFile(tasks.named('sharedUiJar').get().archiveFile.get().asFile).withCloseable { zip ->
             if (zip.getEntry('META-INF/beans.xml') == null) {
                 throw new GradleException('Shared UI provider requires an explicit CDI bean archive')
+            }
+            zip.entries().each { item ->
+                if (item.name.endsWith('.class') || item.name.endsWith('.ftl')) ownedUiPaths.add(item.name)
             }
         }
         def entry = 'WEB-INF/lib/platform-ui-components.jar'
         def provider = 'WEB-INF/classes/org/openbravo/client/application/ApplicationComponentProvider.class'
         new java.util.zip.ZipFile(file('build/libs/platform-erp-ui.war')).withCloseable { zip ->
+            ownedUiPaths.each { path ->
+                if (zip.getEntry("WEB-INF/classes/${path}") != null) {
+                    throw new GradleException("Loose copy of shared UI resource: ${path}")
+                }
+            }
             if (zip.getEntry(provider) != null || zip.getEntry(entry) == null) {
                 throw new GradleException('ERP UI must use the shared artifact without a loose provider copy')
             }
@@ -388,6 +406,11 @@ tasks.register('erpUiWar', Zip) {
         exclude '**/*.properties'
         exclude 'WEB-INF/classes/org/openbravo/dal/security/ReadableScopeResolver.class'
         exclude 'WEB-INF/classes/org/openbravo/client/application/ApplicationComponentProvider.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/kernel/BaseTemplateProcessor*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateProcessor*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateResolver*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/kernel/freemarker/FreemarkerTemplateProcessor*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/templates/ob-view-form.js.ftl'
     }
 }
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
@@ -870,7 +893,7 @@ tasks.register('verifyUiDictionary', JavaExec) {
 tasks.register('verifyUiDal', JavaExec) {
     group = 'verification'
     description = 'Compile visual dictionary entities and query them through original DAL without ERP.'
-    dependsOn dalClasses, dictionaryProbeClasses, prepareGeneratorTemplates
+    dependsOn dalClasses, dictionaryProbeClasses, prepareGeneratorTemplates, 'sharedUiJar'
     classpath = sourceSets.dictionaryProbe.runtimeClasspath
     mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
     workingDir = projectDir
@@ -878,7 +901,9 @@ tasks.register('verifyUiDal', JavaExec) {
     systemProperty 'validation.originalUi', 'true'
     systemProperty 'validation.obdal', 'true'
     systemProperty 'validation.uiDal', 'true'
-    systemProperty 'validation.dalClasspath', sourceSets.dal.runtimeClasspath.asPath
+    doFirst {
+        systemProperty 'validation.dalClasspath', (files(tasks.named('sharedUiJar')) + sourceSets.dal.runtimeClasspath).asPath
+    }
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }
 }

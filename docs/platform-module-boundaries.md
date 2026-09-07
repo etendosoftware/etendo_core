@@ -387,6 +387,22 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The original template processor requires module, template and template-dependency
+entities in addition to window metadata. The optional UI slice selects these from
+the core/kernel XML, imports the original form-template row, and packages the
+canonical FreeMarker processor/resolver and form template in the shared UI JAR.
+The runtime gate must exercise that processor against the database-loaded
+template without adding UI classes to headless classpaths. Full field-handler,
+servlet and browser integration remains a separate, required goal step.
+The isolated runtime now generates 23 entities and successfully resolves and
+renders the canonical form template through the shared FreeMarker implementation.
+The probe supplies a small view-model to exercise template behavior; it does not
+replace or yet test OBViewFieldHandler, and does not claim end-user form operation.
+The expanded shared artifact still uses Classic APIs at compile time. Its new
+template classes are exercised on the ERP-free runtime without Classic support
+classes; deploying this expanded artifact to ERP and rerunning the browser gate
+remains required before claiming both consumers verified for this checkpoint.
+
 verifyUiDal compiles the optional generated visual entities against the actual
 minimal DAL classpath and starts a separate JVM while its disposable PostgreSQL
 database is alive. It must resolve window/tab/field relationships with real

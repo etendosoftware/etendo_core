@@ -36,6 +36,7 @@ final class SecurityFixture {
         Set<String> tables = new LinkedHashSet<>(TABLES);
         if (Boolean.getBoolean("validation.originalUi")) {
             tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_FIELD", "AD_WINDOW_ACCESS"));
+            tables.addAll(List.of("AD_MODULE", "OBCLKER_TEMPLATE", "OBCLKER_TEMPLATE_DEPENDENCY"));
         }
         return tables;
     }
@@ -44,15 +45,29 @@ final class SecurityFixture {
         return COLUMNS.contains(name) || (Boolean.getBoolean("validation.originalUi")
                 && Set.of("AD_COLUMN_ID", "AD_WINDOW_ID", "AD_TAB_ID", "HELP", "SEQNO",
                         "TABLEVEL", "WINDOWTYPE", "ISDISPLAYED", "SHOWINRELATION", "ISUPDATEABLE",
-                        "ISINSERTRECORD", "ISGRIDVIEWDEFAULT", "ISSINGLEROW", "GRID_SEQNO")
+                        "ISINSERTRECORD", "ISGRIDVIEWDEFAULT", "ISSINGLEROW", "GRID_SEQNO",
+                        "AD_MODULE_ID", "ISINDEVELOPMENT", "TEMPLATE", "TEMPLATECLASSPATHLOCATION",
+                        "TEMPLATE_LANGUAGE", "COMPONENT_TYPE", "OVERRIDES_TEMPLATE_ID",
+                        "OBCLKER_TEMPLATE_ID", "DEPENDSON_TEMPLATE_ID")
                         .contains(name));
     }
 
     static void addSchema(Database model, DatabaseIO xml) throws Exception {
         for (String name : selectedTables()) {
-            if (model.findTable(name) != null) continue;
-            Table original = xml.readplain(CORE
+            Path source = name.startsWith("OBCLKER_")
+                    ? Path.of("../modules_core/org.openbravo.client.kernel/src-db/database") : CORE;
+            Table original = xml.readplain(source
                     .resolve("model/tables/" + name + ".xml").toFile()).getTable(0);
+            if (model.findTable(name) != null) {
+                if (Boolean.getBoolean("validation.originalUi")) {
+                    for (var column : original.getColumns()) {
+                        if (selectedColumn(column.getName()) && model.findTable(name).findColumn(column.getName()) == null) {
+                            model.findTable(name).addColumn((org.apache.ddlutils.model.Column) column.clone());
+                        }
+                    }
+                }
+                continue;
+            }
             Table selected = new Table();
             selected.setName(name);
             selected.setPrimaryKey(original.getPrimaryKey());
@@ -194,10 +209,14 @@ final class SecurityFixture {
     /** Streams the existing source-data format without loading the entire XML DOM. */
     private static List<Map<String, String>> rows(String table) throws Exception {
         List<Map<String, String>> result = new ArrayList<>(rows(CORE, table));
+        if (Boolean.getBoolean("validation.originalUi")) {
+            result.addAll(rows(Path.of("../modules_core/org.openbravo.client.kernel/src-db/database"), table));
+        }
         return result;
     }
 
-    private static List<Map<String, String>> rows(Path source, String table) throws Exception {
+    static List<Map<String, String>> rows(Path source, String table) throws Exception {
+        if (!Files.exists(source.resolve("sourcedata/" + table + ".xml"))) return List.of();
         XMLInputFactory factory = XMLInputFactory.newFactory();
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);

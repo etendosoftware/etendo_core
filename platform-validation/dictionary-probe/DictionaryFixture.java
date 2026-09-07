@@ -125,6 +125,11 @@ final class DictionaryFixture {
 
     static void row(StringBuilder xml, Database schema, String tableName, Map<String, String> supplied) {
         Map<String, String> values = new LinkedHashMap<>();
+        if (Boolean.getBoolean("validation.originalUi")) {
+            values.putAll(Map.of("AD_CLIENT_ID", "0", "AD_ORG_ID", "0", "CREATED", UPDATED,
+                    "CREATEDBY", "0", "UPDATEDBY", "0"));
+            if (tableName.equals("AD_MODULE")) values.put("DESCRIPTION", "Platform validation module metadata");
+        }
         values.put("UPDATED", UPDATED);
         for (var column : schema.findTable(tableName).getColumns()) {
             if (column.getType().equals("CHAR") && "1".equals(column.getSize())) {

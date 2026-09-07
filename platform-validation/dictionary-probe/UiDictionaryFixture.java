@@ -39,6 +39,14 @@ final class UiDictionaryFixture {
     }
 
     static void addData(StringBuilder xml, Database schema) {
+        try {
+            var templates = SecurityFixture.rows(java.nio.file.Path.of(
+                    "../modules_core/org.openbravo.client.application/src-db/database"), "OBCLKER_TEMPLATE");
+            var form = templates.stream().filter(row -> "C1D176407A354A40815DC46D24D70EB8"
+                    .equals(row.get("OBCLKER_TEMPLATE_ID"))).findFirst().orElseThrow();
+            form.put("AD_MODULE_ID", "0");
+            seed(xml, schema, "OBCLKER_TEMPLATE", form);
+        } catch (Exception failure) { throw new IllegalStateException("Original form template metadata unavailable", failure); }
         for (String table : List.of("PP_CATEGORY", "PP_REQUEST")) {
             String window = DictionaryFixture.columnId(table, "WINDOW");
             String tab = DictionaryFixture.columnId(table, "TAB");
@@ -62,7 +70,7 @@ final class UiDictionaryFixture {
 
     private static void seed(StringBuilder xml, Database schema, String table, Map<String, String> values) {
         Map<String, String> row = new LinkedHashMap<>(Map.of("AD_CLIENT_ID", "0", "AD_ORG_ID", "0",
-                "CREATED", "2026-09-07 00:00:00", "CREATEDBY", "0", "UPDATEDBY", "0"));
+                "CREATED", "2026-09-07 00:00:00", "CREATEDBY", "0", "UPDATEDBY", "0", "AD_MODULE_ID", "PLATFORM"));
         row.putAll(values);
         DictionaryFixture.row(xml, schema, table, row);
     }

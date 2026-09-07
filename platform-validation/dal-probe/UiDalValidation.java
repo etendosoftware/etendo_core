@@ -57,6 +57,23 @@ public final class UiDalValidation {
                     }
                 }
                 System.out.println("PASS: OBDal reads two windows and six request fields through generated UI relationships");
+                var template = OBDal.getInstance().get(org.openbravo.client.kernel.Template.class,
+                        "C1D176407A354A40815DC46D24D70EB8");
+                if (template == null) throw new AssertionError("Original form template missing");
+                var processor = new org.openbravo.client.kernel.freemarker.FreemarkerTemplateProcessor();
+                if (!processor.getClass().getProtectionDomain().getCodeSource().getLocation().toString()
+                        .endsWith("/platform-ui-components.jar")) throw new AssertionError("Template processor is not shared");
+                processor.validate(template);
+                var handler = java.util.Map.of("hasStatusBarFields", false, "hasFieldsWithReadOnlyIf", true,
+                        "hasFieldsWithShowIf", false, "fields", java.util.List.of(java.util.Map.of(
+                                "name", "title", "readOnly", false, "readOnlyIf", "true", "showIf", "")));
+                var data = new java.util.HashMap<String, Object>();
+                data.put("data", java.util.Map.of("fieldHandler", handler));
+                String rendered = processor.process(template, data);
+                if (!rendered.contains("onFieldChanged") || !rendered.contains("f.disableItem('title', true)")) {
+                    throw new AssertionError("Original form template failed to render its read-only rule");
+                }
+                System.out.println("PASS: Shared original FreeMarker processor resolves and renders database form template");
             } finally { OBContext.restorePreviousMode(); }
         } finally {
             try {
