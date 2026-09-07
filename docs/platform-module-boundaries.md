@@ -57,6 +57,21 @@ read-only query against the retained container confirmed two windows and zero
 Product/Warehouse/BusinessPartner tables. This verifies retained inputs only; the
 next implementation step is an original HTTP/UI server consuming them.
 
+The retained UI launcher is a transitional platform composition, not a new
+authentication engine. Its HTTP facade delegates credential verification to
+DefaultAuthenticationManager and context initialization to LoginUtils. It must
+never run a probe main class as an application. Original UI rendering will be
+connected to that same session and DAL; no replacement frontend is introduced.
+This launcher is not the final WAR packaging boundary and does not establish UI
+completion until browser CRUD is exercised.
+
+`MODULE-BOUNDARY ui-http` marks this optional host in `ui-runtime`. It is compiled
+only by `compileRetainedUiRuntime` and consumed by `runOriginalUi`; no existing
+WAR or headless source set includes it. Initial live tests verified anonymous and
+bad-password rejection, canonical login, cookie scope U1/R1/C1/O1 and anonymous
+isolation. A Tomcat restart rejected the old cookie and accepted the persisted
+credential. This is not proof of entity CRUD persistence or original UI delivery.
+
 ## Status and rule
 
 This is the extraction map for ET-27, not a claim that the modules already exist.

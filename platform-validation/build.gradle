@@ -952,6 +952,58 @@ tasks.named('war', War) {
 
 tasks.register('platformWar') { dependsOn war }
 
+def retainedUiInstance = providers.provider {
+    def pointer = file('build/original-ui-instance-location.txt')
+    if (!pointer.isFile()) throw new GradleException('Run prepareOriginalUiInstance first')
+    def lines = pointer.readLines()
+    if (lines.size() != 3 || !lines[1].matches('etendo-platform-dictionary-[a-f0-9-]+')) {
+        throw new GradleException('Invalid owned UI instance pointer')
+    }
+    lines
+}
+def retainedUiClasspath = providers.provider {
+    def manifest = new File(retainedUiInstance.get()[2], 'runtime-classpath.txt')
+    def entries = manifest.readLines().collect { file(it) }
+    if (entries.any { !it.exists() }) throw new GradleException('Retained UI classpath artifact is missing')
+    files(entries)
+}
+tasks.register('compileRetainedUiRuntime', JavaCompile) {
+    source fileTree('ui-runtime') { include '*.java' }
+    classpath = files(retainedUiClasspath)
+    destinationDirectory = layout.buildDirectory.dir('retained-ui-runtime')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
+tasks.register('runOriginalUi', JavaExec) {
+    group = 'application'
+    description = 'Run original UI HTTP integration against the retained owned platform instance.'
+    dependsOn 'compileRetainedUiRuntime'
+    classpath = files(tasks.named('compileRetainedUiRuntime').map { it.destinationDirectory }) + files(retainedUiClasspath)
+    mainClass = 'com.etendoerp.platform.ui.RetainedUiServer'
+    workingDir = projectDir
+    jvmArgs '--add-opens=java.base/java.io=ALL-UNNAMED', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+            '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    doFirst {
+        def instance = retainedUiInstance.get()
+        def ownership = new ByteArrayOutputStream()
+        project.exec {
+            commandLine 'docker', 'inspect', '--format', '{{ index .Config.Labels "etendo.platform.validation" }}', instance[1]
+            standardOutput = ownership
+        }
+        if (ownership.toString().trim() != 'true') throw new GradleException('UI container ownership label is missing')
+        def binding = new ByteArrayOutputStream()
+        project.exec { commandLine 'docker', 'port', instance[1], '5432/tcp'; standardOutput = binding }
+        def properties = new Properties()
+        file(instance[0]).withInputStream { properties.load(it) }
+        if (properties.getProperty('bbdd.url') != 'jdbc:postgresql://' + binding.toString().trim()
+                || properties.getProperty('bbdd.sid') != 'platform_proof') {
+            throw new GradleException('UI configuration does not target its owned container')
+        }
+        args file(instance[0]).absolutePath, (project.findProperty('platformPort') ?: '8091')
+    }
+}
+
 tasks.register('runErpUi', JavaExec) {
     group = 'application'
     description = 'Start existing ERP UI against a verified owned Classic database copy.'

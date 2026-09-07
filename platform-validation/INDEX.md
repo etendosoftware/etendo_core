@@ -16,6 +16,7 @@ See ../docs/platform-validation.md for prerequisites, provenance, and limits.
 - impact-classpath.init.gradle: guarded export of the UI login child classpath without executing the fixture.
 - ui-navigation-validation.mjs: evaluate original generated navigation descriptors and dynamic role gating without launching a browser.
 - web and webapp: deployable WAR runtime and Servlet 6.0 descriptor.
+- ui-runtime: retained platform HTTP composition for original UI integration.
 - tomcat-probe: real WAR deployment, HTTP checks, and redeployment in isolated Tomcat.
 - classic-probe: read-only external dictionary bootstrap and entity generation.
 - classic-service-probe: authenticated original Product datasource fetch validation.
