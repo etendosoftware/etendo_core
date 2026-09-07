@@ -314,6 +314,20 @@ requires the test administrator to see the complete client dataset (at most 101
 products); it is not a generic expected-result rule for restricted roles.
 Restricted-organization checks and Classic lifecycle comparison remain pending.
 
+The restricted-organization gate uses existing user-role memberships and computes
+readable organizations independently with JDBC: direct grants plus ancestors and
+descendants in the client's organization tree (or all client organizations for a
+root grant). It requires a role exposing a nonempty proper subset of the client's
+products, compares exact HTTP IDs, and verifies that denied context requests do
+not change the subsequent administrator result. No fixture permissions are added
+to the existing database.
+The gate passed for six existing restricted roles: each returned exactly its
+independently computed 19- or 21-product subset, excluding the other same-client
+products. The administrator's complete 40-product set was restored afterward.
+Classic lifecycle comparison remains pending. Classic startup includes scheduler
+initialization and process-run updates, so testing that lifecycle must use an
+isolated database copy rather than the user's original database.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.
