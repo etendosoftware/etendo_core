@@ -146,6 +146,31 @@ the user's saved defaults.
 
 ## Evidence boundaries
 
+### Acceptance checkpoint: 2026-09-07
+
+The deployment-profile validation milestone passed its consolidated regression
+run: verifyPersistenceFoundation, verifyPlatform, verifyTomcat,
+verifyProfilePackaging, verifyContextApi, verifyLegacyContextLinkage,
+verifySharedCoreIntegration, verifyPlatformNestedBoundary and
+verifyErpNestedBoundary. A separate verifyTomcat run with platformUi=true passed
+HTTP checks, persistence and redeployment. Both live browser probes were rerun:
+the minimal UI created, updated and reloaded a persisted record and rejected a
+read-only write; the original ERP UI returned 40 products and matched independent
+database expectations across six restricted roles. The ERP headless HTTP/JDBC
+probe also passed its Product and six-role checks.
+
+All four validation instances remain on the ports listed above. The live ERP
+headless JVM loaded ProductServlet without the audited kernel servlet, template,
+login/menu or Jasper entry points. Together with the nested archive checks, this
+supports the tested headless composition; it is not an assertion that every
+legacy dependency has already been extracted or eliminated.
+
+ERP and UI are independent composition choices. The fourth composition is an
+additional verified Product slice, not a claim that all ERP processes already run
+headlessly. Full module compatibility, production authentication, broad ERP
+workflow coverage and extraction of the remaining motor into separate artifacts
+remain subsequent work, outside this deployment-profile validation milestone.
+
 The latest ERP UI rebuild, including the shared datasource route constant, passed
 the original browser-session Product contract and six-role database comparison
 on 2026-09-07. All four validation ports were confirmed listening alongside the
