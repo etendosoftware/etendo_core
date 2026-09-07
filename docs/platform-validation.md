@@ -7,9 +7,21 @@ Gradle, DBSM XML, PostgreSQL, the real dictionary, entity generator, OBDal,
 Hibernate mappings, security context, interceptor, and PostgreSQL dialect.
 It does not install ERP business modules or replace the DAL with mocks.
 
-Warehouse and BusinessPartner are explicitly accepted v1 compatibility entities.
-Their selected identity/audit fields remain; their business workflows are not
-installed. Removing these dependencies is deferred to a later extraction.
+The extraction now proceeds incrementally in the existing motor, not through a
+second implementation inside this validation project. Warehouse remains a v1
+compatibility entity. The first cut makes the user business-partner association
+optional in OBContext and removes BusinessPartner from the minimal dictionary.
+ERP dictionaries retain that association and its eager initialization behavior.
+This is not yet an ERP-free core: Warehouse, accounting and process dependencies
+still require explicit extraction. The runtime selector is deferred while these
+dependency boundaries are addressed.
+
+The first extraction regression runs `verifyPlatform verifyTomcat` without
+BusinessPartner and `verifyClassicJson` against the external read-only Classic
+database. The minimal dictionary explicitly rejects reintroducing the entity or
+its User property. This validates the tested Product access path, not all ERP
+processes or every non-null business-partner relationship. The metadata-based
+initialization is a transitional compatibility seam, not the final extension API.
 
 ## Run the complete proof
 
@@ -34,7 +46,7 @@ Generated Java, XML, classes, and logs remain under platform-validation/build.
 | Requirement | Executable evidence |
 | --- | --- |
 | XML schema and initial data | DBSM creates the projected schema and imports dictionary, security, and managed category XML into empty PostgreSQL. |
-| Real dictionary and generated Java | ModelProvider resolves metadata; GenerateEntitiesTask emits eighteen entity classes, compiled with existing DAL sources. |
+| Real dictionary and generated Java | ModelProvider resolves metadata; GenerateEntitiesTask emits seventeen entity classes, compiled with existing DAL sources. |
 | Real non-admin context | OBContext loads the fixture user, role, client, organization, language, and organization tree. |
 | OBDal persistence and HQL | v1 creates a local category and an operational request referencing the XML-managed category, commits, and queries the relationship with a named parameter. |
 | Isolation | Default queries see only the current client's allowed organization and active rows. Separate control queries disable filters and expose the expected additional rows. |
@@ -69,8 +81,8 @@ descriptor comes from client.application because the access checker references
 its Java type; no UI module is installed. Selected metadata belongs to the
 fixture's core-compatibility module.
 
-The eighteen entities are Category, Request, User, Role, UserRoles,
-RoleOrganization, Client, Language, Organization, Warehouse, BusinessPartner,
+The seventeen entities are Category, Request, User, Role, UserRoles,
+RoleOrganization, Client, Language, Organization, Warehouse,
 TableAccess, Table, ClientInformation, Tree, TreeNode, OrganizationType, and Process.
 Physical dictionary tables also exist but do not all become runtime entities.
 This is a minimal projection, not a promise of unchanged legacy-module compatibility.
@@ -222,7 +234,7 @@ Independent platform startup is a mandatory architectural requirement, even
 though removing all ERP compatibility entities is deferred beyond this HTTP
 milestone. Classic support must remain opt-in: `verifyPlatform` and `verifyTomcat`
 must run without classicWar or classicProperties. Those existing minimal profiles
-still contain Warehouse and BusinessPartner compatibility entities; they do not
+still contain the Warehouse compatibility entity; they do not
 yet prove a completely ERP-free core. Final independence requires a standalone
 build and startup using only an application-owned model, with no Classic artifact
 or ERP entities. The runtime switch is not evidence of that independence.

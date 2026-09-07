@@ -860,8 +860,10 @@ public class OBContext implements OBNotSingleton, Serializable {
       Hibernate.initialize(getUser().getDefaultClient());
       Hibernate.initialize(getUser().getDefaultRole());
       Hibernate.initialize(getUser().getDefaultLanguage());
-      if (getUser().getBusinessPartner() != null) {
-        Hibernate.initialize(getUser().getBusinessPartner());
+      // The ERP association is optional in platform-only dictionaries. Resolve it
+      // through metadata so the generated User does not require an ERP Java type.
+      if (getUser().getEntity().hasProperty("businessPartner")) {
+        Hibernate.initialize(getUser().get("businessPartner"));
       }
 
       organizationStructureProviderByClient = new HashMap<String, OrganizationStructureProvider>();

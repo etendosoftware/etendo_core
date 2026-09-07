@@ -18,14 +18,14 @@ import org.apache.ddlutils.model.Table;
 /** Selects original dictionary rows for the first security/compatibility generation slice. */
 final class SecurityFixture {
     static final Set<String> TABLES = new LinkedHashSet<>(List.of("AD_USER", "AD_ROLE",
-            "AD_USER_ROLES", "AD_ROLE_ORGACCESS", "AD_CLIENT", "AD_LANGUAGE", "AD_ORG", "M_WAREHOUSE", "C_BPARTNER",
+            "AD_USER_ROLES", "AD_ROLE_ORGACCESS", "AD_CLIENT", "AD_LANGUAGE", "AD_ORG", "M_WAREHOUSE",
             "AD_TABLE_ACCESS", "AD_TABLE", "AD_CLIENTINFO", "OBUIAPP_PROCESS", "AD_TREE", "AD_TREENODE", "AD_ORGTYPE"));
     private static final Set<String> COLUMNS = Set.of("AD_CLIENT_ID", "AD_ORG_ID", "AD_USER_ID",
             "AD_ROLE_ID", "ISACTIVE", "CREATED", "CREATEDBY", "UPDATED", "UPDATEDBY", "NAME",
             "VALUE", "DESCRIPTION", "USERNAME", "ISPORTAL", "ISWEBSERVICEENABLED", "USERLEVEL",
             "AD_LANGUAGE", "ISRTL", "ISBASELANGUAGE", "ISSYSTEMLANGUAGE", "IS_CLIENT_ADMIN",
             "DEFAULT_AD_CLIENT_ID", "DEFAULT_AD_ORG_ID", "DEFAULT_AD_ROLE_ID", "DEFAULT_AD_LANGUAGE",
-            "DEFAULT_M_WAREHOUSE_ID", "C_BPARTNER_ID", "AD_TABLE_ID", "ISREADONLY", "ISEXCLUDE",
+            "DEFAULT_M_WAREHOUSE_ID", "AD_TABLE_ID", "ISREADONLY", "ISEXCLUDE",
             "AD_TREE_ID", "NODE_ID", "PARENT_ID", "ISREADY", "AD_ORGTYPE_ID", "ISLEGALENTITY",
             "ISBUSINESSUNIT", "ISTRANSACTIONSALLOWED", "ISPERIODCONTROLALLOWED");
     private static final Path CORE = Path.of("../src-db/database");

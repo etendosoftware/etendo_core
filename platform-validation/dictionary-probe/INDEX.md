@@ -11,7 +11,8 @@ redeployment checks, then checks persistence and rejects server lifecycle leaks.
 ## Security profile
 
 SecurityFixture selects original physical columns and source dictionary rows for
-seven security entities plus Warehouse and BusinessPartner compatibility entities.
+seven security entities plus the Warehouse compatibility entity. BusinessPartner
+and the user business-partner property are intentionally absent.
 It also selects TableAccess, Table, ClientInformation, and a Process descriptor
 as required by the existing access checker and context. Original user-default
 references are retained through their reference-table metadata.

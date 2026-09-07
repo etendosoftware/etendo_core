@@ -90,6 +90,10 @@ public final class DictionaryValidation {
             var model = ModelProvider.getInstance().getModel();
             int expectedEntities = 2 + (Boolean.getBoolean("validation.security") ? SecurityFixture.TABLES.size() : 0);
             if (model.size() != expectedEntities) throw new AssertionError("Unexpected entity count: " + model.size());
+            if (security && (model.stream().anyMatch(entity -> "BusinessPartner".equals(entity.getName()))
+                    || ModelProvider.getInstance().getEntity("ADUser").hasProperty("businessPartner"))) {
+                throw new AssertionError("Minimal security must not require the ERP business-partner association");
+            }
             var request = ModelProvider.getInstance().getEntity("ProofRequest");
             if (!request.getProperty("title").getColumnName().equals("TITLE")) {
                 throw new AssertionError("Dictionary property naming failed");
@@ -124,7 +128,6 @@ public final class DictionaryValidation {
             }
             if (security) {
                 for (String type : new String[] {"org.openbravo.model.common.enterprise.Warehouse",
-                        "org.openbravo.model.common.businesspartner.BusinessPartner",
                         "org.openbravo.model.ad.access.User"}) {
                     String java = Files.readString(generated.resolve(type.replace('.', '/') + ".java"));
                     if (!java.contains("extends BaseOBObject")) throw new AssertionError("Missing real base object: " + type);
@@ -151,7 +154,7 @@ public final class DictionaryValidation {
             }
         }
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
-                + (security ? "Selected security entities, Warehouse and BusinessPartner generated from core metadata\n" : "")
+                + (security ? "Selected security entities and Warehouse generated without BusinessPartner\n" : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
                 + (tomcat ? "Actual WAR deployment in isolated Tomcat: HTTP persistence, HQL, security and redeployment passed\n"
                         : upgrade ? "Complete generated DAL v1/v2 lifecycle: persistence, security, constraints, XML schema and managed data, preservation and idempotence\n"
