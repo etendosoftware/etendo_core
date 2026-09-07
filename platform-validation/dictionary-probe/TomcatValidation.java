@@ -13,7 +13,8 @@ final class TomcatValidation {
                 "--add-opens=java.base/java.io=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED",
                 "-cp", System.getProperty("validation.tomcatClasspath"), "com.etendoerp.platform.validation.TomcatProbe",
-                new File("build/libs/platform-validation.war").getAbsolutePath(), properties.toAbsolutePath().toString())
+                new File(Boolean.getBoolean("validation.ui") ? "build/libs/platform-ui.war" : "build/libs/platform-validation.war").getAbsolutePath(),
+                properties.toAbsolutePath().toString(), Boolean.toString(Boolean.getBoolean("validation.ui")))
                 .redirectErrorStream(true).redirectOutput(new File("build/tomcat-http.log")).start();
         try {
             if (!child.waitFor(55, TimeUnit.SECONDS)) throw new AssertionError("Tomcat verification timed out; inspect build/tomcat-http.log");
@@ -23,7 +24,7 @@ final class TomcatValidation {
         }
         String serverLog = java.nio.file.Files.readString(Path.of("build/tomcat-http.log"));
         if (serverLog.contains("SEVERE") || serverLog.contains("forcibly unregistered")
-                || serverLog.contains("failed to remove")) {
+                || serverLog.contains("failed to remove") || serverLog.contains("could not find a logging provider")) {
             throw new AssertionError("Tomcat lifecycle errors or resource leaks; inspect build/tomcat-http.log");
         }
         try (var connection = source.getConnection(); var statement = connection.createStatement();

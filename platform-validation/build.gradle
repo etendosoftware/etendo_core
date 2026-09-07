@@ -157,6 +157,7 @@ configurations.dictionaryProbeRuntimeOnly.extendsFrom(configurations.bootstrapRu
 configurations.dalImplementation.extendsFrom(configurations.bootstrapImplementation)
 configurations.dalRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
 configurations.webImplementation.extendsFrom(configurations.dalImplementation)
+configurations.webRuntimeOnly.extendsFrom(configurations.dalRuntimeOnly)
 
 def platformContextDirectory = layout.buildDirectory.dir('platform-context-source')
 tasks.register('generatePlatformContext') {
@@ -521,6 +522,10 @@ tasks.register('verifyClassicDatabase', JavaExec) {
 }
 
 tasks.register('verifyTomcat', JavaExec) {
+    if (providers.gradleProperty('platformUi').orElse('false').get() == 'true') {
+        dependsOn 'platformUiWar'
+        systemProperty 'validation.ui', 'true'
+    }
     group = 'verification'
     description = 'Deploy the WAR in isolated Tomcat and verify real OBDal over HTTP.'
     dependsOn platformWar, tomcatProbeClasses

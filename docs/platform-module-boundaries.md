@@ -115,6 +115,10 @@ policy coupling from the shared motor.
 The REST WAR does not include those assets. Both use the same authenticated
 Request servlet and generated DAL; UI code does not own persistence or permissions.
 Browser interaction and durable profile startup remain separate acceptance gates.
+Run `verifyTomcat` for the REST profile or `verifyTomcat -PplatformUi=true` for
+the optional UI profile. Both execute the same authenticated persistence/update
+checks and redeployment test; static UI routes must return 404 in REST and be
+served in UI mode. These HTTP checks do not execute browser JavaScript.
 
 1. ERP UI: shared core plus PostgreSQL/DBSM, compatibility, ERP and existing UI.
    Verify authenticated original Product behavior against persisted data.

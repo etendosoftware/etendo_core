@@ -19,6 +19,7 @@ public final class TomcatProbe {
 
     public static void main(String[] args) throws Exception {
         Path war = Path.of(args[0]).toAbsolutePath();
+        boolean ui = args.length > 2 && Boolean.parseBoolean(args[2]);
         Properties properties = new Properties();
         try (var reader = Files.newBufferedReader(Path.of(args[1]))) { properties.load(reader); }
         System.setProperty("platform.validation.properties", Path.of(args[1]).toAbsolutePath().toString());
@@ -47,6 +48,12 @@ public final class TomcatProbe {
                 tomcat.start();
                 if (!context.getState().isAvailable()) throw new AssertionError("WAR failed deployment");
                 String url = "http://127.0.0.1:" + tomcat.getConnector().getLocalPort() + "/platform/requests";
+                String applicationUrl = url.substring(0, url.lastIndexOf('/') + 1);
+                for (String asset : new String[] {"index.html", "requests.js", "requests.css"}) {
+                    var assetResponse = send(applicationUrl + asset, "GET", null);
+                    expect(assetResponse, ui ? 200 : 404);
+                    if (ui && assetResponse.body().isBlank()) throw new AssertionError("Empty UI asset: " + asset);
+                }
                 expect(send(url, "GET", null), 401);
                 expect(send(url, "GET", "invalid"), 401);
                 if (iteration == 0) {
