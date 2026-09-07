@@ -8,11 +8,10 @@ Hibernate mappings, security context, interceptor, and PostgreSQL dialect.
 It does not install ERP business modules or replace the DAL with mocks.
 
 The extraction now proceeds incrementally in the existing motor, not through a
-second implementation inside this validation project. Warehouse remains a v1
-compatibility entity. The first cut makes the user business-partner association
+second implementation inside this validation project. The first cut makes the user business-partner association
 optional in OBContext and removes BusinessPartner from the minimal dictionary.
 ERP dictionaries retain that association and its eager initialization behavior.
-This is not yet an ERP-free core: Warehouse, accounting and process dependencies
+This is not yet a fully extracted core: accounting and process dependencies
 still require explicit extraction. The runtime selector is deferred while these
 dependency boundaries are addressed.
 
@@ -23,12 +22,11 @@ its User property. This validates the tested Product access path, not all ERP
 processes or every non-null business-partner relationship. The metadata-based
 initialization is a transitional compatibility seam, not the final extension API.
 
-The next extraction isolates ERP context initialization in ErpContextSupport.
-OBContext retains its existing typed Warehouse accessors for binary compatibility
-while delegating default warehouse loading, selection and proxy initialization.
-This intermediate step preserves execution order and behavior; it does not yet
-remove Warehouse from the runtime. The typed facade must be separated from the
-shared context before an ERP-free distribution can be claimed.
+ERP context initialization is isolated in ErpContextSupport. The ERP build retains
+the original OBContext Warehouse signatures. The minimal build generates a variant
+from the same source, excluding only explicitly marked ERP sections. It omits
+Warehouse from the dictionary and runtime; no second context implementation is
+maintained. See platform-module-boundaries.md for variant isolation constraints.
 
 ## Run the complete proof
 
@@ -53,7 +51,7 @@ Generated Java, XML, classes, and logs remain under platform-validation/build.
 | Requirement | Executable evidence |
 | --- | --- |
 | XML schema and initial data | DBSM creates the projected schema and imports dictionary, security, and managed category XML into empty PostgreSQL. |
-| Real dictionary and generated Java | ModelProvider resolves metadata; GenerateEntitiesTask emits sixteen entity classes, compiled with existing DAL sources. |
+| Real dictionary and generated Java | ModelProvider resolves metadata; GenerateEntitiesTask emits fifteen entity classes, compiled with existing DAL sources. |
 | Real non-admin context | OBContext loads the fixture user, role, client, organization, language, and organization tree. |
 | OBDal persistence and HQL | v1 creates a local category and an operational request referencing the XML-managed category, commits, and queries the relationship with a named parameter. |
 | Isolation | Default queries see only the current client's allowed organization and active rows. Separate control queries disable filters and expose the expected additional rows. |
@@ -88,8 +86,8 @@ Process descriptor and generated Java class are no longer required by the minima
 access checker. Selected metadata belongs to the
 fixture's core-compatibility module.
 
-The sixteen entities are Category, Request, User, Role, UserRoles,
-RoleOrganization, Client, Language, Organization, Warehouse,
+The fifteen entities are Category, Request, User, Role, UserRoles,
+RoleOrganization, Client, Language, Organization,
 TableAccess, Table, ClientInformation, Tree, TreeNode, and OrganizationType.
 Physical dictionary tables also exist but do not all become runtime entities.
 This is a minimal projection, not a promise of unchanged legacy-module compatibility.
@@ -241,7 +239,7 @@ Independent platform startup is a mandatory architectural requirement, even
 though removing all ERP compatibility entities is deferred beyond this HTTP
 milestone. Classic support must remain opt-in: `verifyPlatform` and `verifyTomcat`
 must run without classicWar or classicProperties. Those existing minimal profiles
-still contain the Warehouse compatibility entity; they do not
+exclude Warehouse, BusinessPartner and UI Process, but do not
 yet prove a completely ERP-free core. Final independence requires a standalone
 build and startup using only an application-owned model, with no Classic artifact
 or ERP entities. The runtime switch is not evidence of that independence.

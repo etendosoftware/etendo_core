@@ -26,6 +26,7 @@ public final class DalMappingValidation {
     public static void verify() throws Exception {
         verifyReadableScopeRules();
         for (String absentType : new String[] {
+                "org.openbravo.model.common.enterprise.Warehouse",
                 "org.openbravo.client.application.Process",
                 "org.openbravo.model.common.businesspartner.BusinessPartner"}) {
             try {
@@ -173,7 +174,7 @@ public final class DalMappingValidation {
             throw new AssertionError("OBDal flushed insert survived rollback");
         }
         try {
-            OBDal.getInstance().createQuery(org.openbravo.model.common.enterprise.Warehouse.class, "").list();
+            OBDal.getInstance().createQuery(org.openbravo.model.ad.system.Language.class, "").list();
             throw new AssertionError("Missing table grant did not deny access");
         } catch (org.openbravo.base.exception.OBSecurityException expected) {
             // A missing grant must not inherit access from an absent ERP window.

@@ -37,6 +37,16 @@ engines. Prefer distinct class names; any same-name build variant requires expli
 packaging isolation and must never coexist on one runtime classpath. Document the
 reason, profile ownership and supported API for each alternative before adding it.
 
+The minimal OBContext build variant is generated from the canonical source by
+excluding explicitly marked `ERP-COMPAT-BEGIN` / `ERP-COMPAT-END` sections. This
+fallback is necessary because the Warehouse return/parameter JVM descriptors
+cannot exist in an ERP-free classpath without retaining that entity. No context
+logic is copied or independently edited. ERP compiles the original source with
+all signatures; platform compiles the generated variant without Warehouse APIs
+and initialization hooks. The two same-name classes must never share a runtime.
+The build rejects malformed markers and residual Warehouse references. This is
+a transitional compilation boundary, not a second security implementation.
+
 Before each module extraction, compare the exposed API against the pre-extraction
 baseline and run representative existing callers. Add binary linkage checks using
 callers compiled against that baseline where packaging or hierarchy changes. These
@@ -95,8 +105,9 @@ JAVA_HOME=/path/to/jdk-17 ./gradlew -p platform-core clean build --console=plain
 
 BusinessPartner is absent from the minimal dictionary and generated User model.
 Its optional initialization still belongs to CTX-ERP-INIT when the ERP dictionary
-defines it. Warehouse is still present: isolating its code is preparation, not
-proof that the dependency has been removed.
+defines it. Warehouse remains in the ERP facade but is excluded from the minimal
+variant, dictionary and runtime. This does not remove all remaining ERP or UI
+policy coupling from the shared motor.
 
 ## Profile composition and acceptance
 

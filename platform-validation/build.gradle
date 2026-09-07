@@ -158,7 +158,39 @@ configurations.dalImplementation.extendsFrom(configurations.bootstrapImplementat
 configurations.dalRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
 configurations.webImplementation.extendsFrom(configurations.dalImplementation)
 
+def platformContextDirectory = layout.buildDirectory.dir('platform-context-source')
+tasks.register('generatePlatformContext') {
+    def original = file('../src/org/openbravo/dal/core/OBContext.java')
+    inputs.file(original)
+    outputs.dir(platformContextDirectory)
+    doLast {
+        boolean excluded = false
+        int regions = 0
+        def lines = []
+        original.readLines().each { line ->
+            if (line.trim() == '// ERP-COMPAT-BEGIN') {
+                if (excluded) throw new GradleException('Nested ERP context marker')
+                excluded = true
+                regions++
+            } else if (line.trim() == '// ERP-COMPAT-END') {
+                if (!excluded) throw new GradleException('Unmatched ERP context marker')
+                excluded = false
+            } else if (!excluded) { lines.add(line) }
+        }
+        if (excluded || regions != 7) throw new GradleException('Unexpected ERP context regions')
+        def source = lines.join('\n') + '\n'
+        if (source.contains('Warehouse') || source.contains('ErpContextSupport')) {
+            throw new GradleException('ERP types leaked into platform context')
+        }
+        def target = new File(platformContextDirectory.get().asFile, 'org/openbravo/dal/core/OBContext.java')
+        target.parentFile.mkdirs()
+        target.text = source
+    }
+}
+
 tasks.named('compileDalJava', JavaCompile) {
+    dependsOn 'generatePlatformContext'
+    source platformContextDirectory
     dependsOn 'verifySecurityGeneration'
     options.sourcepath = files('../src', '../src-core/src', 'build/security-generated-entities')
     options.compilerArgs += ['-implicit:class', '-Xmaxerrs', '300']

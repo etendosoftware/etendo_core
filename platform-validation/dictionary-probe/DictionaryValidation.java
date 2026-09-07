@@ -130,8 +130,7 @@ public final class DictionaryValidation {
                 }
             }
             if (security) {
-                for (String type : new String[] {"org.openbravo.model.common.enterprise.Warehouse",
-                        "org.openbravo.model.ad.access.User"}) {
+                for (String type : new String[] {"org.openbravo.model.ad.access.User"}) {
                     String java = Files.readString(generated.resolve(type.replace('.', '/') + ".java"));
                     if (!java.contains("extends BaseOBObject")) throw new AssertionError("Missing real base object: " + type);
                 }
@@ -157,7 +156,7 @@ public final class DictionaryValidation {
             }
         }
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
-                + (security ? "Selected security entities and Warehouse generated without BusinessPartner\n" : "")
+                + (security ? "Selected security entities generated without Warehouse, BusinessPartner or UI Process\n" : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
                 + (tomcat ? "Actual WAR deployment in isolated Tomcat: HTTP persistence, HQL, security and redeployment passed\n"
                         : upgrade ? "Complete generated DAL v1/v2 lifecycle: persistence, security, constraints, XML schema and managed data, preservation and idempotence\n"

@@ -55,7 +55,9 @@ import org.openbravo.model.ad.access.UserRoles;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.common.enterprise.Organization;
+  // ERP-COMPAT-BEGIN
 import org.openbravo.model.common.enterprise.Warehouse;
+  // ERP-COMPAT-END
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.http.HttpServletRequest;
@@ -102,7 +104,9 @@ public class OBContext implements OBNotSingleton, Serializable {
   private transient User user;
   private transient Language language;
   private transient boolean translationInstalled;
+  // ERP-COMPAT-BEGIN
   private transient Warehouse warehouse;
+  // ERP-COMPAT-END
   private transient List<String> organizationList;
   private transient List<String> deactivatedOrganizationList;
   private transient String[] readableOrganizations;
@@ -842,11 +846,15 @@ public class OBContext implements OBNotSingleton, Serializable {
       Hibernate.initialize(getUser().getClient());
       Hibernate.initialize(getUser().getOrganization());
       Hibernate.initialize(getUser().getDefaultOrganization());
+      // ERP-COMPAT-BEGIN
       ErpContextSupport.initializeDefaultWarehouse(getUser());
+      // ERP-COMPAT-END
       Hibernate.initialize(getUser().getDefaultClient());
       Hibernate.initialize(getUser().getDefaultRole());
       Hibernate.initialize(getUser().getDefaultLanguage());
+      // ERP-COMPAT-BEGIN
       ErpContextSupport.initializeBusinessPartner(getUser());
+      // ERP-COMPAT-END
 
       organizationStructureProviderByClient = new HashMap<String, OrganizationStructureProvider>();
       acctSchemaStructureProviderByClient = new HashMap<String, AcctSchemaStructureProvider>();
@@ -1013,7 +1021,9 @@ public class OBContext implements OBNotSingleton, Serializable {
 
       setReadableClients(role);
 
+      // ERP-COMPAT-BEGIN
       ErpContextSupport.selectWarehouse(this, warehouseId);
+      // ERP-COMPAT-END
 
       // initialize some proxys
       Hibernate.initialize(getCurrentOrganization().getClient());
@@ -1022,7 +1032,9 @@ public class OBContext implements OBNotSingleton, Serializable {
       Hibernate.initialize(getRole().getOrganization());
       Hibernate.initialize(getLanguage().getClient());
       Hibernate.initialize(getLanguage().getOrganization());
+      // ERP-COMPAT-BEGIN
       ErpContextSupport.initializeWarehouse(this);
+      // ERP-COMPAT-END
 
       // TODO: add logging of all context information
     } finally {
@@ -1256,6 +1268,7 @@ public class OBContext implements OBNotSingleton, Serializable {
     return (String) session.getAttribute(param.toUpperCase());
   }
 
+  // ERP-COMPAT-BEGIN
   // MODULE-BOUNDARY CTX-LEGACY-API: preserve these JVM signatures in the compatibility
   // facade; the eventual shared context must not require the generated Warehouse type.
   public Warehouse getWarehouse() {
@@ -1265,6 +1278,7 @@ public class OBContext implements OBNotSingleton, Serializable {
   public void setWarehouse(Warehouse warehouse) {
     this.warehouse = warehouse;
   }
+  // ERP-COMPAT-END
 
   public boolean isNewUI() {
     return newUI;
