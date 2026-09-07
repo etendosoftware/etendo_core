@@ -5,3 +5,5 @@ documents:
     status: modificar
   - path: platform-module-boundaries.md
     status: modificar
+  - path: platform-profiles.md
+    status: modificar
