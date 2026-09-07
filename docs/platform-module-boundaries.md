@@ -139,6 +139,19 @@ fixture-scoped; they are not an authentication design for production. Stop each
 foreground server with Ctrl-C before stopping the database. Do not clean the
 validation build directory while using its retained configuration or deployments.
 
+Browser acceptance is reproducible with locally installed Playwright and Chrome:
+
+```bash
+node platform-validation/browser-probe/verify-platform.mjs /absolute/private.properties
+```
+
+The probe exercises actual page controls: authenticated load, create, edit,
+reload with a read-only token, denied update and unchanged persisted title.
+It rejects JavaScript errors and retains one clearly named test record per run
+in the owned fixture database. It does not print or store the tokens. This passed
+against the running UI profile; full production identity and ERP UI acceptance
+remain outside this result.
+
 1. ERP UI: shared core plus PostgreSQL/DBSM, compatibility, ERP and existing UI.
    Verify authenticated original Product behavior against persisted data.
 2. Platform UI: shared core plus PostgreSQL/DBSM, application-owned model, REST
