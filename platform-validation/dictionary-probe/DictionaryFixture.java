@@ -110,6 +110,7 @@ final class DictionaryFixture {
             }
         }
         if (Boolean.getBoolean("validation.security")) SecurityFixture.addData(data, schema);
+        if (Boolean.getBoolean("validation.originalUi")) UiDictionaryFixture.addData(data, schema);
         data.append("</data>\n");
         Path path = Path.of("build", "dictionary-data.xml");
         Files.writeString(path, data);

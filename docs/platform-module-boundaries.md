@@ -387,6 +387,14 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The optional original-UI dictionary slice extends the existing security fixture
+with AD_COLUMN, AD_WINDOW, AD_TAB, AD_FIELD and AD_WINDOW_ACCESS metadata selected
+from canonical XML. Its generated sources have a separate output directory so
+headless entity generation remains unchanged. verifyUiDictionary must create and
+read that dictionary through PostgreSQL/DBSM and the original ModelProvider and
+entity generator. This initial projection supplies two app-owned windows and
+their tabs/fields; it is not yet a complete dictionary for original UI startup.
+
 The first UI artifact, platform-ui-components.jar, compiles the canonical
 ApplicationComponentProvider rather than taking its bytecode from the Classic
 WAR. ERP UI packaging consumes it and excludes the old loose provider class.

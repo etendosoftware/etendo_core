@@ -32,8 +32,24 @@ final class SecurityFixture {
 
     private SecurityFixture() {}
 
+    static Set<String> selectedTables() {
+        Set<String> tables = new LinkedHashSet<>(TABLES);
+        if (Boolean.getBoolean("validation.originalUi")) {
+            tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_FIELD", "AD_WINDOW_ACCESS"));
+        }
+        return tables;
+    }
+
+    private static boolean selectedColumn(String name) {
+        return COLUMNS.contains(name) || (Boolean.getBoolean("validation.originalUi")
+                && Set.of("AD_COLUMN_ID", "AD_WINDOW_ID", "AD_TAB_ID", "HELP", "SEQNO",
+                        "TABLEVEL", "WINDOWTYPE", "ISDISPLAYED", "SHOWINRELATION", "ISUPDATEABLE",
+                        "ISINSERTRECORD", "ISGRIDVIEWDEFAULT", "ISSINGLEROW", "GRID_SEQNO")
+                        .contains(name));
+    }
+
     static void addSchema(Database model, DatabaseIO xml) throws Exception {
-        for (String name : TABLES) {
+        for (String name : selectedTables()) {
             if (model.findTable(name) != null) continue;
             Table original = xml.readplain(CORE
                     .resolve("model/tables/" + name + ".xml").toFile()).getTable(0);
@@ -41,7 +57,7 @@ final class SecurityFixture {
             selected.setName(name);
             selected.setPrimaryKey(original.getPrimaryKey());
             for (var column : original.getColumns()) {
-                if (column.isPrimaryKey() || COLUMNS.contains(column.getName())) {
+                if (column.isPrimaryKey() || selectedColumn(column.getName())) {
                     selected.addColumn((org.apache.ddlutils.model.Column) column.clone());
                 }
             }
@@ -70,12 +86,12 @@ final class SecurityFixture {
         Set<String> packages = new LinkedHashSet<>();
         for (var row : rows("AD_TABLE")) {
             String name = row.get("TABLENAME").toUpperCase(Locale.ROOT);
-            if (!TABLES.contains(name)) continue;
+            if (!selectedTables().contains(name)) continue;
             tableIds.put(row.get("AD_TABLE_ID"), name);
             packages.add(row.get("AD_PACKAGE_ID"));
             DictionaryFixture.row(data, model, "AD_TABLE", row);
         }
-        if (tableIds.size() != TABLES.size()) throw new AssertionError("Missing source security tables");
+        if (tableIds.size() != selectedTables().size()) throw new AssertionError("Missing source security/UI tables");
         DictionaryFixture.row(data, model, "AD_MODULE", Map.of("AD_MODULE_ID", "0", "NAME", "Core compatibility",
                 "JAVAPACKAGE", "org.openbravo", "SEQNO", "0"));
         for (var row : rows("AD_PACKAGE")) {
@@ -89,11 +105,11 @@ final class SecurityFixture {
             String table = tableIds.get(row.get("AD_TABLE_ID"));
             if (table == null || model.findTable(table).findColumn(row.get("COLUMNNAME"), false) == null) continue;
             String column = row.get("COLUMNNAME").toUpperCase(Locale.ROOT);
-            if (!COLUMNS.contains(column) && !"Y".equals(row.get("ISKEY"))) continue;
+            if (!selectedColumn(column) && !"Y".equals(row.get("ISKEY"))) continue;
             row.put("AD_MODULE_ID", "0");
             String target = column.equals("CREATEDBY") || column.equals("UPDATEDBY") ? "AD_USER"
                     : column.endsWith("_ID") ? column.substring(0, column.length() - 3) : "";
-            if (!"Y".equals(row.get("ISKEY")) && TABLES.contains(target)) {
+            if (!"Y".equals(row.get("ISKEY")) && selectedTables().contains(target)) {
                 // Project UI selectors to the same physical relationship for this headless profile.
                 row.put("AD_REFERENCE_ID", "19");
                 row.remove("AD_REFERENCE_VALUE_ID");

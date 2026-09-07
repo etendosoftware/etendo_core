@@ -27,3 +27,8 @@ match DBSM's numeric primary-key comparison.
 Run verifySecurityGeneration to exercise the real generator with this selection.
 UI selector references for conventional foreign keys become equivalent TableDir
 references; no replacement Java entity or ORM mapping is handwritten.
+# Original UI dictionary slice
+
+UiDictionaryFixture supplies application-owned window/tab/field rows using the
+original dictionary schema. verifyUiDictionary uses a disposable PostgreSQL
+database and separate ui-generated-entities output; headless generation is unchanged.
