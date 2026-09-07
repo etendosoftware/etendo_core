@@ -63,6 +63,10 @@ import jakarta.servlet.http.HttpSession;
 /**
  * Models the context in which Data Access Layer actions are executed. Contains the user, the client
  * and the allowed organizations.
+ *
+ * <p>MODULE-BOUNDARY CTX-SHARED: shared context behavior is targeted for platform-core.
+ * This class still contains legacy ERP and servlet contracts; see
+ * docs/platform-module-boundaries.md before moving or extending those dependencies.
  * 
  * This class contains specific logic to compute the allowed organizations and clients for both read
  * and write access.
@@ -856,15 +860,11 @@ public class OBContext implements OBNotSingleton, Serializable {
       Hibernate.initialize(getUser().getClient());
       Hibernate.initialize(getUser().getOrganization());
       Hibernate.initialize(getUser().getDefaultOrganization());
-      Hibernate.initialize(getUser().getDefaultWarehouse());
+      ErpContextSupport.initializeDefaultWarehouse(getUser());
       Hibernate.initialize(getUser().getDefaultClient());
       Hibernate.initialize(getUser().getDefaultRole());
       Hibernate.initialize(getUser().getDefaultLanguage());
-      // The ERP association is optional in platform-only dictionaries. Resolve it
-      // through metadata so the generated User does not require an ERP Java type.
-      if (getUser().getEntity().hasProperty("businessPartner")) {
-        Hibernate.initialize(getUser().get("businessPartner"));
-      }
+      ErpContextSupport.initializeBusinessPartner(getUser());
 
       organizationStructureProviderByClient = new HashMap<String, OrganizationStructureProvider>();
       acctSchemaStructureProviderByClient = new HashMap<String, AcctSchemaStructureProvider>();
@@ -1031,21 +1031,7 @@ public class OBContext implements OBNotSingleton, Serializable {
 
       setReadableClients(role);
 
-      // note sometimes the warehouseId is an empty string
-      // this happens when it is set from the session variables
-      if (warehouseId != null && warehouseId.trim().length() > 0) {
-        // @formatter:off
-        final String warehouseQryStr = "select w"
-            + " from Warehouse w"
-            + " where w.id=:id";
-        // @formatter:on
-        final Query<Warehouse> qry = SessionHandler.getInstance()
-            .createQuery(warehouseQryStr, Warehouse.class)
-            .setParameter("id", warehouseId);
-        setWarehouse(qry.uniqueResult());
-      } else if (getUser().getDefaultWarehouse() != null) {
-        setWarehouse(getUser().getDefaultWarehouse());
-      }
+      ErpContextSupport.selectWarehouse(this, warehouseId);
 
       // initialize some proxys
       Hibernate.initialize(getCurrentOrganization().getClient());
@@ -1054,11 +1040,7 @@ public class OBContext implements OBNotSingleton, Serializable {
       Hibernate.initialize(getRole().getOrganization());
       Hibernate.initialize(getLanguage().getClient());
       Hibernate.initialize(getLanguage().getOrganization());
-      if (getWarehouse() != null) {
-        Hibernate.initialize(getWarehouse());
-        Hibernate.initialize(getWarehouse().getClient());
-        Hibernate.initialize(getWarehouse().getOrganization());
-      }
+      ErpContextSupport.initializeWarehouse(this);
 
       // TODO: add logging of all context information
     } finally {
@@ -1292,6 +1274,8 @@ public class OBContext implements OBNotSingleton, Serializable {
     return (String) session.getAttribute(param.toUpperCase());
   }
 
+  // MODULE-BOUNDARY CTX-LEGACY-API: preserve these JVM signatures in the compatibility
+  // facade; the eventual shared context must not require the generated Warehouse type.
   public Warehouse getWarehouse() {
     return warehouse;
   }

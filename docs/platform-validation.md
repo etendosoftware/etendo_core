@@ -23,6 +23,13 @@ its User property. This validates the tested Product access path, not all ERP
 processes or every non-null business-partner relationship. The metadata-based
 initialization is a transitional compatibility seam, not the final extension API.
 
+The next extraction isolates ERP context initialization in ErpContextSupport.
+OBContext retains its existing typed Warehouse accessors for binary compatibility
+while delegating default warehouse loading, selection and proxy initialization.
+This intermediate step preserves execution order and behavior; it does not yet
+remove Warehouse from the runtime. The typed facade must be separated from the
+shared context before an ERP-free distribution can be claimed.
+
 ## Run the complete proof
 
 From the repository root, with JDK 17, Docker, and a local postgres:16 image:

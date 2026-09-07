@@ -3,3 +3,5 @@ documents:
     status: done
   - path: platform-validation.md
     status: modificar
+  - path: platform-module-boundaries.md
+    status: modificar
