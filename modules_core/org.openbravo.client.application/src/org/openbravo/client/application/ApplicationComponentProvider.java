@@ -501,6 +501,20 @@ public class ApplicationComponentProvider extends BaseComponentProvider {
               + skin
               + "/org.openbravo.client.application/ob-rtl-styles.js", false));
     }
+    addApplicationSpecificResources(globalResources);
+    return globalResources;
+  }
+
+  /**
+   * Appends application contributions after the shared UI resources.
+   *
+   * <p>The legacy default preserves the existing ERP resource order and Classic-mode
+   * flags. Alternative application compositions can override this hook without
+   * copying the common UI resource registration or changing its public API.</p>
+   *
+   * @param globalResources the ordered resource list to extend
+   */
+  protected void addApplicationSpecificResources(List<ComponentResource> globalResources) {
     globalResources.add(createStaticResource("web/js/periodControlStatus.js", true));
     globalResources.add(createStaticResource("web/js/productCharacteristicsProcess.js", true));
     globalResources.add(createStaticResource("web/js/recalculatePermissionsProcess.js", true));
@@ -513,7 +527,6 @@ public class ApplicationComponentProvider extends BaseComponentProvider {
     // Cancel and Replace
     globalResources.add(createStaticResource("web/js/cancelAndReplace.js", false));
 
-    return globalResources;
   }
 
   private static boolean existsDynamicNavigationBarComponents() {

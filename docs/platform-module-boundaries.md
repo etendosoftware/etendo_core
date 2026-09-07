@@ -407,6 +407,14 @@ as ERP business entities. Run with `--self-test` to verify its matching rules.
 
 The first extraction should separate ERP resource contributions from the shared
 application provider while preserving the ERP resource ordering and public API.
+The initial seam is a protected addApplicationSpecificResources hook at the exact
+existing tail position. Its legacy default retains all seven registrations,
+including permission recalculation, without changing order or Classic-mode flags.
+This is a backward-compatible extension point, not yet the modular extraction:
+the default implementation still belongs to the legacy provider. The platform
+composition must explicitly supply its applicable contributions before it can
+claim independence; permission recalculation must not be discarded merely because
+it currently resides next to ERP scripts.
 Then separate user-context ERP preferences and expand the minimal XML dictionary
 for original login, menu, windows, tabs, fields and references. Passing this
 inventory alone does not satisfy the UI goal.
