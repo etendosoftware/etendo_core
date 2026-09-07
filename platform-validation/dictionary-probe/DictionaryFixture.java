@@ -156,6 +156,12 @@ final class DictionaryFixture {
             if (column.getType().equals("CHAR") && "1".equals(column.getSize())) {
                 values.put(column.getName(), column.getName().equals("ISACTIVE") ? "Y" : "N");
             }
+            // Preserve canonical UI flag defaults instead of making all optional features false.
+            // Only literal Y/N defaults are data; never evaluate SQL default expressions here.
+            if (Boolean.getBoolean("validation.originalUi")
+                    && ("Y".equals(column.getDefaultValue()) || "N".equals(column.getDefaultValue()))) {
+                values.put(column.getName(), column.getDefaultValue());
+            }
         }
         values.putAll(supplied);
         xml.append("  <").append(tableName).append(">\n");

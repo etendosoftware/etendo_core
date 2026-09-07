@@ -40,7 +40,7 @@ final class SecurityFixture {
     static Set<String> selectedTables() {
         Set<String> tables = new LinkedHashSet<>(TABLES);
         if (Boolean.getBoolean("validation.originalUi")) {
-            tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_FIELD", "AD_WINDOW_ACCESS"));
+            tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_TAB_TRL", "AD_FIELD", "AD_WINDOW_ACCESS"));
             tables.addAll(List.of("AD_MODULE", "OBCLKER_TEMPLATE", "OBCLKER_TEMPLATE_DEPENDENCY",
                     "AD_FIELDGROUP", "AD_REFERENCE", "AD_PROCESS", "AD_AUXILIARINPUT",
                     "OBUIAPP_PARAMETER", "AD_MODEL_OBJECT", "AD_VAL_RULE", "AD_CALLOUT",
@@ -66,6 +66,15 @@ final class SecurityFixture {
                         "AD_REFERENCE_ID", "AD_REFERENCE_VALUE_ID", "MODEL_IMPL", "UI_IMPL", "ISBASEREFERENCE", "PARENTREFERENCE_ID",
                         "JAVAPACKAGE", "CLASSNAME", "AD_ELEMENT_ID", "AD_FIELD_ID", "ISTRANSLATED",
                         "SQLLOGIC", "ISSESSIONATTR", "FIELDLENGTH", "DEFAULTVALUE", "ISMANDATORY",
+                        "ISSECONDARYKEY", "ISPARENT", "ISKEY", "VALIDATEONNEW", "ISAUTOSAVE",
+                        "ALLOWSORTING", "ALLOWFILTERING", "IMAGESIZEVALUESACTION", "IMAGEWIDTH", "IMAGEHEIGHT",
+                        "ISUSEDSEQUENCE", "ENTITY_ALIAS",
+                        "UIPATTERN", "ISREADONLYTREE", "ISSHOWTREENODEICONS", "WHERECLAUSE", "ORDERBYCLAUSE",
+                        "HQLWHERECLAUSE", "HQLORDERBYCLAUSE", "HQLFILTERCLAUSE", "FILTERCLAUSE", "FILTERNAME",
+                        "DISABLE_PARENT_KEY_PROPERTY", "ISTRANSLATIONTAB", "DEFAULTTREEVIEWLOGIC",
+                        "SHOWPARENTBUTTONS", "HQLTREEWHERECLAUSE", "EM_OBUIAPP_SELECTION", "EM_OBUIAPP_CAN_ADD",
+                        "EM_OBUIAPP_CAN_DELETE", "EM_OBUIAPP_SHOW_SELECT", "EM_OBUIAPP_SELECTION_TYPE",
+                        "EM_OBUIAPP_NEWFN", "EM_OBUIAPP_REMOVEFN", "EM_OBUIAPP_SHOW_CLONE_BUTTON", "EM_OBUIAPP_CLONE_CHILDREN",
                         "ISFIRSTFOCUSEDFIELD", "DISPLAYLOGIC_SERVER", "EM_OBUIAPP_COLSPAN", "EM_OBUIAPP_ROWSPAN",
                         "EM_OBUIAPP_VALIDATOR", "EM_OBUIAPP_SUMMARYFN",
                         "AD_VAL_RULE_ID", "CODE", "AD_CALLOUT_ID", "AD_PROCESS_ID",

@@ -23,10 +23,12 @@ final class UiDictionaryFixture {
         arguments.add("dal-probe/UiDalValidation.java");
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
-        String log = Boolean.getBoolean("validation.uiFields") ? "build/ui-field-runtime.log"
+        String log = Boolean.getBoolean("validation.uiFieldDefinitions") ? "build/ui-field-definitions-runtime.log"
+                : Boolean.getBoolean("validation.uiFields") ? "build/ui-field-runtime.log"
                 : Boolean.getBoolean("validation.uiCache") ? "build/ui-cache-runtime.log" : "build/ui-dal-runtime.log";
         Process child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin/java").toString(),
                 "-Dvalidation.uiFields=" + Boolean.getBoolean("validation.uiFields"),
+                "-Dvalidation.uiFieldDefinitions=" + Boolean.getBoolean("validation.uiFieldDefinitions"),
                 "-Dvalidation.uiCache=" + Boolean.getBoolean("validation.uiCache"),
                 "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
                 "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
@@ -65,7 +67,7 @@ final class UiDictionaryFixture {
                     "NAME", table.equals("PP_REQUEST") ? "Requests" : "Categories", "WINDOWTYPE", "M"));
             seed(xml, schema, "AD_TAB", Map.of("AD_TAB_ID", tab, "AD_WINDOW_ID", window,
                     "AD_TABLE_ID", table, "NAME", table.equals("PP_REQUEST") ? "Request" : "Category",
-                    "SEQNO", "10", "TABLEVEL", "0", "ISINSERTRECORD", "Y", "ISGRIDVIEWDEFAULT", "Y"));
+                    "SEQNO", "10", "TABLEVEL", "0", "ISINSERTRECORD", "Y", "ISGRIDVIEWDEFAULT", "Y", "UIPATTERN", "STD"));
             int position = 0;
             for (var column : schema.findTable(table).getColumns()) {
                 String id = DictionaryFixture.columnId(table, column.getName());

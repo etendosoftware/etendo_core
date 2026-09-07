@@ -57,7 +57,11 @@ template. It checks application field names, original String/YesNo/FKCombo edito
 types and complementary active-state display/read-only rules. The fixture retains
 original UI definition rows, required audit elements, translation relationships and
 module layout columns; application fields receive valid display lengths.
-Complete field/tab definition rendering and browser delivery remain pending.
+verifyUiFieldDefinitions renders the unchanged full field macro, including editor
+and grid properties, against the real handler with empty grid overrides. Its
+48-entity fixture retains canonical Column/Tab flags and Tab translation metadata.
+Literal Y/N XML defaults are preserved for UI seed data. Complete tab/window
+rendering, database grid overrides and browser delivery remain pending.
 Separate ui-cache-runtime.log,
-ui-field-runtime.log and ui-dal-runtime.log files keep diagnostics from overwriting
+ui-field-runtime.log, ui-field-definitions-runtime.log and ui-dal-runtime.log files keep diagnostics from overwriting
 one another. Neither gate implies browser UI delivery.

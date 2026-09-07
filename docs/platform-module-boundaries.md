@@ -389,6 +389,29 @@ Keep the existing Product validation as a compatibility control throughout.
 
 ## Integration-sized work packages
 
+`verifyUiFieldDefinitions` is the integration gate for the complete canonical
+field macro, distinct from `verifyUiFields` (field construction and form logic).
+It renders real handler definitions using the original FreeMarker processor and
+the repository's unchanged field template. The test-only wrapper invokes the
+macro; it is not a replacement frontend or a deployed template. A failing gate
+records unfinished runtime integration and must not be reported as UI delivery.
+
+The gate now passes with 48 generated entities after composing canonical Column
+and Tab scalar metadata, application-owned Tab extension columns and AD_TAB_TRL.
+This includes the complete field macro's editor and grid-property branches, not
+just the form-logic template. The fixture preserves literal Y/N XML defaults
+instead of forcing flags such as sorting/filtering to false. Empty grid-configuration
+overrides are supplied through the original handler's existing package-private
+setter in the test; database-driven grid-configuration overrides remain pending.
+The source macro is read directly for this integration test and has not yet been
+added to the deliverable shared UI artifact. Complete tab/window rendering,
+original shell startup and browser CRUD remain unproven.
+
+The refreshed bytecode inventory has no missing direct Column methods and only
+`Tab.isAccountingTab()` remaining among the previously measured Tab methods.
+This is model API coverage, not ERP feature coverage. `verifyUiFieldDefinitions`,
+`verifyUiFields` and `verifyPlatform` passed together against disposable databases.
+
 Do not estimate remaining work by counting resolved exceptions. The selective UI
 fixture has omitted both API properties and valid field defaults; those omissions
 are not evidence of ERP coupling. Inventory the complete original UI entry set and

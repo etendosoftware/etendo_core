@@ -247,6 +247,33 @@ public final class UiDalValidation {
                                 throw new AssertionError("Original field handler/form rendering failed");
                             }
                             System.out.println("PASS: Original field handler builds fields and renders the original form template");
+                            if (Boolean.getBoolean("validation.uiFieldDefinitions")) {
+                                var settings = handlerClass.getDeclaredMethod("setGCSettings",
+                                        java.util.Optional.class, java.util.Map.class);
+                                settings.setAccessible(true);
+                                settings.invoke(originalHandler, java.util.Optional.empty(),
+                                        java.util.Map.of(tabId, java.util.Optional.empty()));
+                                String fieldSource = java.nio.file.Files.readString(java.nio.file.Path.of(
+                                        "../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/templates/ob-view-field.js.ftl"));
+                                // Invoke the unchanged production macro, including editor and grid properties.
+                                String source = fieldSource + "\n[<#list fields as field><@createField field/>"
+                                        + "<#if field_has_next>,</#if></#list>]";
+                                var macroProcessor = new org.openbravo.client.kernel.freemarker.FreemarkerTemplateProcessor() {
+                                    String render(String text, java.util.Map<String, Object> values) {
+                                        return processTemplate(createTemplateImplementation(template, text), values);
+                                    }
+                                };
+                                var values = new java.util.HashMap<String, Object>();
+                                values.put("fields", originalFields);
+                                values.put("Constants_FIELDSEPARATOR", "$");
+                                values.put("Constants_IDENTIFIER", "_identifier");
+                                String fieldOutput = macroProcessor.render(source, values);
+                                if (!fieldOutput.contains("name: 'title'") || !fieldOutput.contains("name: 'category'")
+                                        || !fieldOutput.contains("gridProps:")) {
+                                    throw new AssertionError("Original field macro omitted application editors or grid properties");
+                                }
+                                System.out.println("PASS: Complete original field macro renders application editors and grid definitions");
+                            }
                         }
                     }
                 }

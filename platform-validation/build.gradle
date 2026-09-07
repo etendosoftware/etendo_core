@@ -979,7 +979,7 @@ tasks.register('verifyUiDal', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
-['verifyUiCache': false, 'verifyUiFields': true].each { taskName, renderFields ->
+['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true].each { taskName, renderFields ->
     tasks.register(taskName, JavaExec) {
         group = 'verification'
         description = renderFields ? 'Execute the original field handler against the ERP-free visual dictionary.'
@@ -994,6 +994,7 @@ tasks.register('verifyUiDal', JavaExec) {
         systemProperty 'validation.uiDal', 'true'
         systemProperty 'validation.uiCache', 'true'
         systemProperty 'validation.uiFields', renderFields.toString()
+        systemProperty 'validation.uiFieldDefinitions', (taskName == 'verifyUiFieldDefinitions').toString()
         doFirst {
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
                     tasks.named('sharedUiJar')) + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
