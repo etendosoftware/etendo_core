@@ -16,6 +16,19 @@ sourceSets.main.java.srcDirs = ['src']
 
 // Compile the actual dictionary bootstrap separately from the ERP application.
 sourceSets {
+    classicEntities {
+        java.srcDirs = ['../src-gen']
+        resources {
+            srcDir '../modules_core/org.openbravo.userinterface.selector/src'
+            include '**/domaintype/*.hbm.xml'
+        }
+    }
+    classicProbe {
+        java.srcDirs = ['classic-probe']
+    }
+    classicGenerated {
+        java.srcDirs = ['build/classic-generated-entities']
+    }
     web {
         java.srcDirs = ['web']
     }
@@ -71,6 +84,15 @@ sourceSets {
 }
 
 sourceSets.web.compileClasspath += sourceSets.bootstrap.output + sourceSets.dal.output
+sourceSets.classicEntities.compileClasspath += sourceSets.bootstrap.output
+sourceSets.classicProbe.compileClasspath += sourceSets.bootstrap.output + sourceSets.classicEntities.output
+sourceSets.classicProbe.runtimeClasspath += sourceSets.classicEntities.output + sourceSets.bootstrap.output
+configurations.classicEntitiesImplementation.extendsFrom(configurations.bootstrapImplementation)
+configurations.classicProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
+configurations.classicProbeRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
+configurations.classicProbeImplementation.extendsFrom(configurations.classicEntitiesImplementation)
+configurations.classicGeneratedImplementation.extendsFrom(configurations.classicEntitiesImplementation)
+sourceSets.classicGenerated.compileClasspath += sourceSets.bootstrap.output + sourceSets.classicEntities.output
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
@@ -83,6 +105,13 @@ tasks.named('compileDalJava', JavaCompile) {
     dependsOn 'verifySecurityGeneration'
     options.sourcepath = files('../src', '../src-core/src', 'build/security-generated-entities')
     options.compilerArgs += ['-implicit:class', '-Xmaxerrs', '300']
+}
+
+tasks.named('compileClassicEntitiesJava', JavaCompile) {
+    source fileTree('../src') { include 'org/openbravo/base/model/domaintype/*.java' }
+    source fileTree('../modules_core/org.openbravo.userinterface.selector/src') { include '**/domaintype/*.java' }
+    options.sourcepath = files('../src', '../src-core/src', '../src-gen')
+    options.compilerArgs += ['-implicit:class', '-Xmaxerrs', '30']
 }
 
 tasks.named('processDalResources') {
@@ -106,6 +135,8 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    classicEntitiesImplementation 'org.codehaus.jettison:jettison:1.5.4'
+    classicEntitiesImplementation 'commons-codec:commons-codec:1.17.1'
     tomcatProbeImplementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.59'
     tomcatProbeImplementation 'org.apache.tomcat.embed:tomcat-embed-jasper:10.1.59'
     dalImplementation 'io.smallrye:jandex:3.1.2'
@@ -148,6 +179,29 @@ tasks.named('war', War) {
 }
 
 tasks.register('platformWar') { dependsOn war }
+
+tasks.register('verifyClassicModel', JavaExec) {
+    group = 'verification'
+    description = 'Read the existing Classic dictionary with its generated entity classes.'
+    dependsOn 'verifyClassicDatabase', classicGeneratedClasses
+    classpath = sourceSets.classicGenerated.output + sourceSets.classicProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicModelValidation'
+    workingDir = projectDir
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    doFirst { args file(project.property('classicProperties')).absolutePath }
+}
+
+tasks.register('generateClassicEntities', JavaExec) {
+    dependsOn 'verifyClassicDatabase', classicProbeClasses, prepareGeneratorTemplates
+    classpath = sourceSets.classicProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicModelValidation'
+    workingDir = projectDir
+    systemProperty 'validation.generateClassic', 'true'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    doFirst { args file(project.property('classicProperties')).absolutePath }
+}
+
+tasks.named('compileClassicGeneratedJava') { dependsOn 'generateClassicEntities' }
 
 tasks.register('verifyClassicDatabase', JavaExec) {
     group = 'verification'

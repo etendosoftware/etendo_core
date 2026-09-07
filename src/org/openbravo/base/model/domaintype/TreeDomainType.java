@@ -97,11 +97,12 @@ public class TreeDomainType extends BaseForeignKeyDomainType {
             "select c " +
             "  from Column as c " +
             " where c.table.id = :tableId " +
-            "   and c.key = true " +
+            "   and c.key = :isKey " +
             " order by c.position asc";
     //@formatter:on
     Query<Column> query = session.createQuery(hql, Column.class)
-        .setParameter("tableId", table.getId());
+        .setParameter("tableId", table.getId())
+        .setParameter("isKey", true);
 
     List<Column> keyColumns = query.list();
     if (keyColumns.isEmpty()) {

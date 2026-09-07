@@ -161,6 +161,20 @@ The report is `build/classic-database-result.txt`; passing this preflight does n
 prove that the module or HTTP endpoint works. The runtime profile will remain
 separate from the disposable fixture profile and will not run automatic DDL.
 
+`verifyClassicModel` additionally reads the real Classic dictionary with
+ModelProvider and generates sources into `build/classic-generated-entities`.
+Existing `src-gen` entities bootstrap a separate compatibility source set; freshly
+generated classes take precedence in the verification JVM. The check requires
+fresh generated source and a mapping class for every persistent entity, including
+Product. Virtual datasource/HQL entities are excluded exactly as in the generator.
+This deliberately retains the installed entity model for compatibility; it does
+not claim to have extracted Product from all ERP entity dependencies.
+The first successful database check found 656 dictionary entities and generated
+636 persistent entity classes. The profile includes the real selector domain
+implementations and their metadata mappings. A TreeDomainType HQL predicate now
+binds its boolean parameter so the existing Y/N mapping performs conversion.
+This validates dictionary bootstrap, not yet a DAL SessionFactory or HTTP service.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.
