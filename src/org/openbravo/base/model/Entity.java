@@ -730,6 +730,21 @@ public class Entity {
     return identifierProperties;
   }
 
+  /**
+   * Determines whether identifier joins must preserve rows with optional properties.
+   * This model operation does not initialize UI services or a web context.
+   *
+   * @return true when at least one identifier property is not mandatory
+   */
+  public boolean hasNullableIdentifierProperties() {
+    for (Property property : getIdentifierProperties()) {
+      if (!property.isMandatory()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void setIdentifierProperties(List<Property> identifierProperties) {
     this.identifierProperties = identifierProperties;
   }

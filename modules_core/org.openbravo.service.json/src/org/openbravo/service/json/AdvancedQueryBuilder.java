@@ -279,7 +279,7 @@ public class AdvancedQueryBuilder {
         String joinType = null;
         // if all the identifier properties of the subentity are mandatory, an inner join can be
         // used
-        if (KernelUtils.hasNullableIdentifierProperties(subEntity)) {
+        if (subEntity.hasNullableIdentifierProperties()) {
           joinType = " left join ";
         } else {
           joinType = " inner join ";
@@ -1878,7 +1878,7 @@ public class AdvancedQueryBuilder {
         // entity is used only in where clauses resulting from filtering the grid, an inner join can
         // be used
         if (Entity.COMPUTED_COLUMNS_PROXY_PROPERTY.equals(property.getName())
-            || KernelUtils.hasNullableIdentifierProperties(property.getTargetEntity())
+            || property.getTargetEntity().hasNullableIdentifierProperties()
             || !(Boolean.TRUE.equals(useInnerJoinMap.get(property.getName())))) {
           joinType = " left join ";
         } else {

@@ -31,9 +31,12 @@ sourceSets {
             srcDir '../modules_core/org.openbravo.client.application/src'
             srcDir '../modules_core/org.openbravo.service.datasource/src'
             srcDir '../modules_core/org.openbravo.service.json/src'
+            srcDir '../modules_core/org.openbravo.client.kernel/src'
             include 'org/openbravo/service/datasource/DefaultDataSourceService.java'
             include 'org/openbravo/service/datasource/BaseDataSourceService.java'
             include 'org/openbravo/service/json/DefaultJsonDataService.java'
+            include 'org/openbravo/service/json/AdvancedQueryBuilder.java'
+            include 'org/openbravo/client/kernel/KernelUtils.java'
             include 'org/openbravo/client/application/window/ApplicationDictionaryCachedStructures.java'
         }
     }
@@ -101,6 +104,14 @@ sourceSets {
 }
 
 sourceSets.web.compileClasspath += sourceSets.bootstrap.output + sourceSets.dal.output
+tasks.register('verifyEntityMetadata', JavaExec) {
+    group = 'verification'
+    description = 'Verify identifier metadata without loading the UI kernel or a database.'
+    dependsOn dictionaryProbeClasses
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.EntityMetadataValidation'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+}
 sourceSets.classicEntities.compileClasspath += sourceSets.bootstrap.output
 sourceSets.classicProbe.compileClasspath += sourceSets.bootstrap.output + sourceSets.classicEntities.output
 sourceSets.classicProbe.runtimeClasspath += sourceSets.classicEntities.output + sourceSets.bootstrap.output
@@ -662,6 +673,7 @@ tasks.register('verifyOBDal', JavaExec) {
 }
 
 tasks.register('verifyPlatform', JavaExec) {
+    dependsOn 'verifyEntityMetadata'
     group = 'verification'
     description = 'Verify the complete disposable platform lifecycle, including generated DAL v1/v2.'
     dependsOn dalClasses

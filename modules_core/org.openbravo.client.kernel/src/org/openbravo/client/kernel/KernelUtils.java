@@ -588,12 +588,7 @@ public class KernelUtils {
    *         false if all of them are mandatory
    */
   public static boolean hasNullableIdentifierProperties(Entity entity) {
-    List<Property> identifierProperties = entity.getIdentifierProperties();
-    for (Property property : identifierProperties) {
-      if (!property.isMandatory()) {
-        return true;
-      }
-    }
-    return false;
+    // MODULE-BOUNDARY: preserve the legacy API; metadata behavior belongs to the model.
+    return entity.hasNullableIdentifierProperties();
   }
 }

@@ -239,6 +239,19 @@ must survive extraction; deleting their current UI-module locations is not a
 valid headless implementation. Keep the original ERP UI HTTP regression as the
 behavioral control while separating these dependencies.
 
+First extraction: identifier nullability belongs to `base.model.Entity`, not the
+UI kernel. Add the model operation and retain
+`KernelUtils.hasNullableIdentifierProperties(Entity)` as a forwarding compatibility
+method. JSON query construction will call the entity directly so this metadata
+check cannot initialize the UI kernel singleton/CDI cache. Other KernelUtils and
+RequestContext usages still require extraction; this step alone is not headless
+completion. `verifyEntityMetadata` passed for empty, mandatory and optional
+identifiers with `KernelUtils` absent from the test classpath. Both the legacy
+facade and updated query service compile from source. `verifyClassicJson` passed
+against the owned copy with the updated classes: 80 persisted products through
+HQL and an 11-row original datasource fetch. The running HTTP deployments still
+need rebuilding/restarting before their browser regression covers this extraction.
+
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI
 type dependencies next. Promote the extracted implementation into independently

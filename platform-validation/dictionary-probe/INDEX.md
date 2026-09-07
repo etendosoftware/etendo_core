@@ -7,6 +7,9 @@ schema/data upgrades, operational preservation, and repeat-safe reconciliation.
 UpgradeValidation orchestrates the v1/v2 JVMs and compares complete table snapshots.
 TomcatValidation keeps the disposable database alive during actual WAR HTTP and
 redeployment checks, then checks persistence and rejects server lifecycle leaks.
+EntityMetadataValidation checks identifier nullability for empty, mandatory and
+optional identifiers with no database and no UI kernel on its runtime classpath.
+It is also required by verifyPlatform.
 
 ## Security profile
 
