@@ -22,3 +22,7 @@ The shared container classpath excludes Jasper. Non-JSP launches register only
 the default static servlet (plus application servlets from web.xml), not the JSP
 servlet. TomcatProbe asserts that JspServlet is unavailable before exercising
 HTTP persistence. Only runErpUi adds erpUiContainerRuntime and enables JSP defaults.
+
+WarBoundaryValidation scans loose and nested-JAR classes, including multi-release
+entries, against explicit UI/ERP boundaries. Ignored reports include artifact
+SHA-256, violations and every class origin; no application classes are loaded.

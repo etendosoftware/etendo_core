@@ -177,6 +177,23 @@ operational data, rollback and idempotence checks in both ERP-free profiles.
 
 ## Immediate sequence
 
+Nested artifact audit: inspect all class entries in WEB-INF/classes and every
+WEB-INF/lib JAR, including multi-release entries. ERP-free artifacts must not
+contain ERP business entity classes or Openbravo client/UI packages. The ERP
+headless audit rejects known UI servlet/rendering entry points and JSP engine
+classes even when hidden inside a dependency. Record artifact SHA-256 and class
+origins in ignored build reports so audits are tied to exact bytes. These are
+explicit boundary rules, not a semantic proof that every remaining library is
+needed; retained legacy dependencies still require classification.
+`verifyPlatformNestedBoundary` and `verifyErpNestedBoundary` passed, including
+negative/positive rule controls for inner and multi-release class names. The
+current artifacts contain 73 libraries / 31,532 class entries (platform) and 227
+libraries / 81,017 class entries (ERP headless). Reports are
+`build/platform-war-boundary.txt` and `build/erp-headless-war-boundary.txt` under
+platform-validation. Counts include third-party classes and are not a measure of
+extracted core ownership or executed code. The ERP gate checks named UI entry
+points, not all possible custom-module UI implementations.
+
 ERP-free regression must explicitly reject Product, Warehouse and BusinessPartner
 runtime classes, generated mappings and physical tables. Do not infer their absence
 from successful application CRUD or a small entity count. Apply the check inside

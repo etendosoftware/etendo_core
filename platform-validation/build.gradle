@@ -248,6 +248,32 @@ tasks.register('verifyErpHeadlessPackaging') {
     }
 }
 
+tasks.register('verifyPlatformNestedBoundary', JavaExec) {
+    group = 'verification'
+    dependsOn 'platformWar', 'verifyWarBoundaryRules', tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.WarBoundaryValidation'
+    args file('build/libs/platform-validation.war').absolutePath, 'platform',
+            file('build/platform-war-boundary.txt').absolutePath
+}
+
+tasks.register('verifyErpNestedBoundary', JavaExec) {
+    group = 'verification'
+    dependsOn 'verifyErpHeadlessPackaging', 'verifyWarBoundaryRules', tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.WarBoundaryValidation'
+    args file('build/libs/platform-erp-headless.war').absolutePath, 'erp-headless',
+            file('build/erp-headless-war-boundary.txt').absolutePath
+}
+
+tasks.register('verifyWarBoundaryRules', JavaExec) {
+    group = 'verification'
+    dependsOn tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.WarBoundaryValidation'
+    args '--verify-rules'
+}
+
 tasks.register('erpUiWar', Zip) {
     group = 'build'
     description = 'Assemble the existing ERP UI with refactored shared motor classes, without properties.'
