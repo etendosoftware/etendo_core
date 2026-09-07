@@ -13,6 +13,8 @@ pagination and the original anonymous login redirect without Product data. Full
 field parity and all ERP workflows are not implied by this test.
 It also waits for the original MainView tab set and OBViewGrid class, and checks
 an exact search-key filter. A loading screen with a working session is a failure.
+The generated original user profile must also contain its current session role and
+organization, and retain the selected ERP warehouse in that organization's options.
 
 erp-scope-snapshot.mjs reads independent Product and organization-grant expectations
 from the running labeled Classic copy using Docker/psql and a read-only transaction.

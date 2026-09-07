@@ -285,16 +285,16 @@ final class SecurityFixture {
         }
         seed(data, model, "AD_USER", Map.of("AD_USER_ID", "0", "NAME", "System"));
         seed(data, model, "AD_USER", Map.of("AD_USER_ID", "U1", "NAME", "Platform user", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
-        seed(data, model, "AD_ROLE", Map.of("AD_ROLE_ID", "R1", "NAME", "Platform role", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1", "USERLEVEL", "O"));
-        seed(data, model, "AD_USER_ROLES", Map.of("AD_USER_ROLES_ID", "UR1", "AD_USER_ID", "U1", "AD_ROLE_ID", "R1", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
+        seed(data, model, "AD_ROLE", Map.of("AD_ROLE_ID", "R1", "NAME", "Platform role", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "0", "USERLEVEL", "O"));
+        seed(data, model, "AD_USER_ROLES", Map.of("AD_USER_ROLES_ID", "UR1", "AD_USER_ID", "U1", "AD_ROLE_ID", "R1", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "0"));
         seed(data, model, "AD_ROLE_ORGACCESS", Map.of("AD_ROLE_ORGACCESS_ID", "RO1", "AD_ROLE_ID", "R1", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
         for (String table : List.of("PP_CATEGORY", "PP_REQUEST")) {
             seed(data, model, "AD_TABLE_ACCESS", Map.of("AD_TABLE_ACCESS_ID", table, "AD_TABLE_ID", table,
                     "AD_ROLE_ID", "R1", "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
         }
         for (String role : List.of("R_READ", "R_EXCLUDE", "R_INACTIVE")) {
-            seed(data, model, "AD_ROLE", Map.of("AD_ROLE_ID", role, "NAME", role, "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1", "USERLEVEL", "O"));
-            seed(data, model, "AD_USER_ROLES", Map.of("AD_USER_ROLES_ID", role, "AD_USER_ID", "U1", "AD_ROLE_ID", role, "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
+            seed(data, model, "AD_ROLE", Map.of("AD_ROLE_ID", role, "NAME", role, "AD_CLIENT_ID", "C1", "AD_ORG_ID", "0", "USERLEVEL", "O"));
+            seed(data, model, "AD_USER_ROLES", Map.of("AD_USER_ROLES_ID", role, "AD_USER_ID", "U1", "AD_ROLE_ID", role, "AD_CLIENT_ID", "C1", "AD_ORG_ID", "0"));
             seed(data, model, "AD_ROLE_ORGACCESS", Map.of("AD_ROLE_ORGACCESS_ID", role, "AD_ROLE_ID", role, "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1"));
             seed(data, model, "AD_TABLE_ACCESS", Map.of("AD_TABLE_ACCESS_ID", role, "AD_TABLE_ID", "PP_REQUEST",
                     "AD_ROLE_ID", role, "AD_CLIENT_ID", "C1", "AD_ORG_ID", "O1", "ISREADONLY", role.equals("R_READ") ? "Y" : "N",

@@ -13,3 +13,8 @@ without database access. This is representative linkage, not all module APIs.
 UiResourceValidation has its own compile task and verifies the resource extension
 from platform-ui-components.jar, preserving legacy ordering and mode flags while
 allowing alternative application contributions. It does not prove UI startup.
+
+## Profile policy composition
+
+`UserInfoPolicyValidation` checks explicit platform/default ERP selection, immutable
+application policy and fail-closed blank/missing/wrong-type configuration in fresh JVMs.

@@ -37,6 +37,18 @@ try {
   await page.waitForURL(url => !url.pathname.includes('/security/Login'), { timeout: 30000 });
   await page.waitForFunction(() => Boolean(window.OB?.MainView?.TabSet && window.isc?.OBViewGrid),
     undefined, { timeout: 60000 });
+  const profile = await page.evaluate(() => window.OB.User.userInfo);
+  const currentRole = profile.role.roles.find(role => role.id === profile.initialValues.role);
+  assert(currentRole, 'Original profile must include the current ERP role');
+  assert(currentRole.organizationValueMap.some(org => org.id === profile.initialValues.organization),
+    'Original profile must include the current ERP organization');
+  assert(profile.role.valueMap.some(role => role.id === currentRole.id), 'Profile role selector is incomplete');
+  if (profile.initialValues.warehouse) {
+    assert(currentRole.warehouseOrgMap.some(org => org.orgId === profile.initialValues.organization
+      && org.warehouseMap.some(warehouse => warehouse.id === profile.initialValues.warehouse)),
+    'ERP profile lost its domain warehouse contribution');
+  }
+  console.log('PASS: Original browser profile contains session role, organization and ERP warehouse contribution');
   const endpoint = new URL('org.openbravo.service.datasource/Product', baseUrl).href;
   const form = { _operationType: 'fetch', windowId: '140', tabId: '180', _startRow: '0', _endRow: '100',
     _sortBy: 'searchKey', _selectedProperties: 'id,name,searchKey,client,organization,productCategory' };

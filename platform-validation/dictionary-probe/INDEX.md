@@ -20,6 +20,8 @@ It also selects TableAccess, Table and ClientInformation
 as required by the existing access checker and context. UI Process metadata and
 its generated Java type are intentionally absent. Original user-default
 references are retained through their reference-table metadata.
+Role and user-role fixture records use organization `0`, as required by the original
+client-level DAL access rules. Organization access grants still select `O1`.
 Tree, TreeNode, and OrganizationType support the real organization access tree.
 Security data and cross-tenant control rows are generated as XML for verifyOBDal
 and verifyPlatform. Application column metadata uses stable hexadecimal IDs to
@@ -28,6 +30,11 @@ Run verifySecurityGeneration to exercise the real generator with this selection.
 UI selector references for conventional foreign keys become equivalent TableDir
 references; no replacement Java entity or ORM mapping is handwritten.
 # Original UI dictionary slice
+
+`verifyUiLogin` additionally renders the unchanged user-info template with original
+roles/languages/organization data and empty warehouse options. It selects the
+platform profile policy explicitly; backend-restricted roles, inactive roles and
+inactive user-role assignments remain excluded by the canonical role query.
 
 UiDictionaryFixture supplies application-owned window/tab/field rows using the
 original dictionary schema. verifyUiDictionary uses a disposable PostgreSQL

@@ -69,7 +69,8 @@ final class UiDictionaryFixture {
                         "ADD5EF45333C458098286D0E639B3290"));
                 if (Boolean.getBoolean("validation.uiMenu")) ids.add("4C6825EEBF2C440CA6F97C8A042CCB5F");
                 if (Boolean.getBoolean("validation.uiLogin")) {
-                    ids.addAll(java.util.Set.of("9E97FF309FE44C61A761F50801F79349", "0A9FD7B8976645A380920FF6411AB4A6"));
+                    ids.addAll(java.util.Set.of("9E97FF309FE44C61A761F50801F79349", "0A9FD7B8976645A380920FF6411AB4A6",
+                            "CB89E38CF75545499BF0B91FA6B233E5"));
                     for (var row : SecurityFixture.rows(java.nio.file.Path.of(
                             "../modules_core/org.openbravo.client.application/src-db/database"), "OBUIAPP_NAVBAR_COMPONENT")) {
                         ids.add(row.get("OBCLKER_TEMPLATE_ID"));

@@ -20,6 +20,8 @@ public final class FullLoginValidation implements Runnable {
             OBPropertiesProvider.getInstance().getOpenbravoProperties().setProperty(
                     LoginSessionSupport.IMPLEMENTATION_PROPERTY, PlatformLoginSessionSupport.class.getName());
             OBPropertiesProvider.getInstance().getOpenbravoProperties().setProperty("login.trial.user.lock", "1");
+            OBPropertiesProvider.getInstance().getOpenbravoProperties().setProperty("ui.userInfo.accessPolicy.class",
+                    "org.openbravo.client.application.navigationbarcomponents.PlatformUserInfoAccessPolicy");
             var dal = OBDal.getInstance();
             var user = dal.get(User.class, "U1");
             String password = java.util.UUID.randomUUID().toString();
@@ -69,6 +71,35 @@ public final class FullLoginValidation implements Runnable {
                 throw new AssertionError("Shared original profile did not resolve the platform session");
             }
             String csrf = vars.getSessionValue("#CSRF_Token");
+            var profileRoles = (java.util.List<?>) profile.getClass().getMethod("getUserRolesInfo").invoke(profile);
+            var profileRoleIds = new java.util.HashSet<String>();
+            for (Object entry : profileRoles) {
+                profileRoleIds.add((String) entry.getClass().getMethod("getRoleId").invoke(entry));
+            }
+            if (!profileRoleIds.equals(java.util.Set.of("R1", "R_READ", "R_EXCLUDE", "R_INACTIVE"))) {
+                throw new AssertionError("Original profile role membership changed: " + profileRoleIds);
+            }
+            var restrictedRole = dal.get(org.openbravo.model.ad.access.Role.class, "R_INACTIVE");
+            var assignment = dal.get(org.openbravo.model.ad.access.UserRoles.class, "R_INACTIVE");
+            try {
+                restrictedRole.setRestrictbackend(true);
+                dal.flush();
+                assertRoleHidden(profile.getClass(), "R_INACTIVE");
+                restrictedRole.setRestrictbackend(false);
+                restrictedRole.setActive(false);
+                dal.flush();
+                assertRoleHidden(profile.getClass(), "R_INACTIVE");
+                restrictedRole.setActive(true);
+                assignment.setActive(false);
+                dal.flush();
+                assertRoleHidden(profile.getClass(), "R_INACTIVE");
+            } finally {
+                restrictedRole.setRestrictbackend(false);
+                restrictedRole.setActive(true);
+                assignment.setActive(true);
+                dal.flush();
+            }
+            System.out.println("PASS: Original profile excludes backend-restricted/inactive roles and inactive assignments without ERP policy");
             var roleInfo = Class.forName("org.openbravo.client.application.navigationbarcomponents.RoleInfo")
                     .getConstructor(Object[].class).newInstance((Object) new Object[] {"R1", "Role", "C1", "Client"});
             var organizations = (java.util.Map<?, ?>) roleInfo.getClass().getMethod("getOrganizations").invoke(roleInfo);
@@ -96,5 +127,16 @@ public final class FullLoginValidation implements Runnable {
         } finally {
             OBContext.setOBContext(original);
         }
+    }
+
+    private static void assertRoleHidden(Class<?> profileType, String roleId) throws Exception {
+        Object fresh = profileType.getDeclaredConstructor().newInstance();
+        var entries = (java.util.List<?>) profileType.getMethod("getUserRolesInfo").invoke(fresh);
+        for (Object entry : entries) {
+            if (roleId.equals(entry.getClass().getMethod("getRoleId").invoke(entry))) {
+                throw new AssertionError("Profile exposed a restricted role: " + roleId);
+            }
+        }
+        if (entries.size() != 3) throw new AssertionError("Profile lost unrelated authorized roles");
     }
 }

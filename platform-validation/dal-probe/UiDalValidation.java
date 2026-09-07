@@ -245,6 +245,7 @@ public final class UiDalValidation {
                         for (String bean : java.util.List.of("org.openbravo.client.application.MainLayoutComponent",
                                 "org.openbravo.client.application.NavigationBarComponent",
                                 "org.openbravo.client.application.NavigationBarComponentGenerator",
+                                "org.openbravo.client.application.navigationbarcomponents.UserInfoComponent",
                                 "org.openbravo.client.kernel.BaseTemplateComponent")) {
                             initializer.addBeanClasses(Class.forName(bean));
                         }
@@ -384,8 +385,9 @@ public final class UiDalValidation {
                                                 }
                                                 java.nio.file.Files.writeString(java.nio.file.Path.of("build", "ui-menu-" + role + ".js"), menuOutput);
                                                 if (Boolean.getBoolean("validation.uiLogin")) {
-                                                    for (String name : java.util.List.of("NavigationBarComponent", "MainLayoutComponent")) {
-                                                        Class<?> componentType = Class.forName("org.openbravo.client.application." + name);
+                                                    for (String name : java.util.List.of("NavigationBarComponent", "MainLayoutComponent", "UserInfoComponent")) {
+                                                        Class<?> componentType = Class.forName("org.openbravo.client.application."
+                                                                + (name.equals("UserInfoComponent") ? "navigationbarcomponents." : "") + name);
                                                         if (!componentType.getProtectionDomain().getCodeSource().getLocation().toString().endsWith("platform-ui-components.jar")) {
                                                             throw new AssertionError("Navigation did not load from shared UI artifact");
                                                         }

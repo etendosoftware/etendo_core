@@ -226,6 +226,30 @@ and configures the original menu button as dynamic through XML metadata, preserv
 navbar role access. Do not replace templates or remove the separate ERP licensing
 checks in UserInfoComponent/LoginHandler. Rendering this assembly is still not
 browser delivery or a claim that every widget's backend is integrated.
+The profile role-list policy is extracted as `UserInfoAccessPolicy`: a trusted,
+application-classloader selection defaults to the original ERP build/license policy.
+An explicit platform implementation contributes no ERP restriction, but does not
+replace authentication or the original active-user-role/backend-access query.
+The ERP implementation must live in a separate ERP-only UI contribution artifact;
+invalid configuration fails closed. LoginHandler licensing remains unchanged.
+The server-only property `ui.userInfo.accessPolicy.class` selects
+`org.openbravo.client.application.navigationbarcomponents.PlatformUserInfoAccessPolicy`
+for platform. ERP leaves it unset and loads `ErpUserInfoAccessPolicy` from
+`platform-ui-erp-contributions.jar`, not `platform-ui-components.jar`. Neither
+artifact is allowed in headless WARs. `verifyUiPolicyComposition` exercises six
+fresh JVM selections, including invalid values and the missing default ERP artifact.
+`verifyUiLogin` renders the original user-info template and checks the unchanged
+role query against inactive role/assignment and backend restriction cases.
+Verified in `/private/tmp/et27-ui-policy-v3.log`: ERP-free original user-info
+rendering, role exclusions, six policy selections, shared/ERP-only/headless packaging,
+and XML/DBSM upgrade, restart and zero-delta repetition. Final composition/API/nested
+boundary checks passed in `/private/tmp/et27-ui-policy-gates.log`.
+`/private/tmp/et27-ui-policy-browser.log` confirms original ERP browser profile
+role/organization/warehouse data and the existing Product/six-role regression.
+The negative DAL test exposed invalid fixture role organizations; role and user-role
+XML records now use organization `0`, without weakening access-level validation.
+Platform HTTP login/shell delivery and browser CRUD remain pending; this extraction
+does not assert complete licensing-state coverage or alter LoginHandler checks.
 The optional UI artifact owns these canonical classes and the navigation-bar/layout
 templates; ERP excludes their former loose copies. `verifyUiLogin` checks each
 generated script with Node's syntax checker (Node is a test prerequisite).

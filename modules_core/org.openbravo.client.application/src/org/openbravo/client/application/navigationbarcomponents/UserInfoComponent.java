@@ -28,15 +28,12 @@ import jakarta.servlet.http.HttpSession;
 import org.hibernate.query.Query;
 import org.openbravo.base.secureApp.LoginSessionSupport;
 import org.openbravo.client.kernel.KernelConstants;
-import org.openbravo.client.kernel.KernelServlet;
 import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
-import org.openbravo.erpCommon.obps.ActivationKey;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.system.Language;
-import org.openbravo.model.ad.system.SystemInformation;
 
 /**
  * Component that provides the context information of the current user within the 'Profile' widget.
@@ -93,15 +90,8 @@ public class UserInfoComponent extends SessionDynamicTemplateComponent {
       return userRoles;
     }
     userRoles = new ArrayList<>();
-    SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
-    boolean correctSystemStatus = sysInfo.getSystemStatus() == null
-        || KernelServlet.getGlobalParameters()
-            .getOBProperty("safe.mode", "false")
-            .equalsIgnoreCase("false")
-        || sysInfo.getSystemStatus().equals("RB70");
-
-    if (!correctSystemStatus || ActivationKey.getInstance()
-        .forceSysAdminLogin((HttpSession) getParameters().get(KernelConstants.HTTP_SESSION))) {
+    if (UserInfoAccessPolicy.getInstance()
+        .isSystemAdministratorOnly((HttpSession) getParameters().get(KernelConstants.HTTP_SESSION))) {
       userRoles.add(new RoleInfo(OBDal.getInstance().get(Role.class, "0")));
       return userRoles;
     }
