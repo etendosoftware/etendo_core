@@ -7,8 +7,25 @@ const password = process.env.PLATFORM_TEST_PASSWORD;
 assert(username && password, 'Supply test credentials through the process environment');
 const snapshot = readScopeSnapshot(username);
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const activeRequests = new Map();
+const requestTimeline = [];
+const started = Date.now();
+let phase = 'login';
+function trace(event, request) {
+  if (!['xhr', 'fetch', 'document'].includes(request.resourceType())) return;
+  const url = new URL(request.url());
+  const action = url.searchParams.get('_action');
+  const path = url.pathname + (action && /^[\w.]+$/.test(action) ? ` action=${action}` : '');
+  if (event === 'start') activeRequests.set(request, path);
+  else activeRequests.delete(request);
+  requestTimeline.push({ ms: Date.now() - started, phase, event, path });
+  if (requestTimeline.length > 80) requestTimeline.shift();
+}
 try {
   const page = await browser.newPage();
+  page.on('request', request => trace('start', request));
+  page.on('requestfinished', request => trace('finished', request));
+  page.on('requestfailed', request => trace('failed', request));
   await page.goto('http://127.0.0.1:8093/etendo/');
   await page.locator('#user').fill(username);
   await page.locator('#password').fill(password);
@@ -84,6 +101,7 @@ try {
     checkedRoles.add(context.role);
     const expected = expectedProducts(snapshot, context);
     if (!expected.length || expected.length >= expectedClient.length) continue;
+    phase = `role-switch-${checkedRoles.size}`;
     const switched = await page.request.post('http://127.0.0.1:8093/etendo/org.openbravo.client.kernel', {
       params: { _action: 'org.openbravo.client.application.navigationbarcomponents.UserInfoWidgetActionHandler', command: 'save' },
       data: { role: context.role, organization: context.organization, default: false }
@@ -97,7 +115,8 @@ try {
       assert(!result.data || result.data.length === 0, 'Denied role must not expose rows');
       continue;
     }
-    assert.deepEqual(ids(result.data).sort(), ids(expected).sort(), 'Session scope must match independent grants/tree');
+    assert.deepEqual(ids(result.data).sort(), ids(expected).sort(),
+      `Session scope must match independent grants/tree (${phase}, actual=${result.data.length}, expected=${expected.length})`);
     assert(result.data.every(row => row.client === client));
     restricted++;
   }
@@ -120,4 +139,8 @@ try {
   } finally { await fresh.close(); }
   console.log(`PASS: Independent database equality, foreign-client exclusion and ${restricted} restricted ERP session roles`);
   console.log(`PASS: Original UI shell, ERP session, projection, references, filtering, ordering, paging and anonymous denial (${full.data.length} rows)`);
+} catch (failure) {
+  console.error('Access diagnostic: ' + JSON.stringify({ phase,
+    activeRequests: [...activeRequests.values()], requestTimeline }));
+  throw failure;
 } finally { await browser.close(); }

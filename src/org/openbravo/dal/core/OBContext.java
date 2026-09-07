@@ -422,16 +422,14 @@ public class OBContext implements OBNotSingleton, Serializable {
     synchronized (session) {
       OBContext context = (OBContext) session.getAttribute(CONTEXT_PARAM);
 
-      if (context == null) {
+      if (context == null || !context.isInSync(request)) {
+        // Another request can still hold the previous session context. Never change its scope.
         context = new OBContext();
         if (context.setFromRequest(request)) {
           setOBContextInSession(request, context);
           setOBContext(context);
         }
       } else {
-        if (!context.isInSync(request)) {
-          context.setFromRequest(request);
-        }
         setOBContext(context);
       }
     }

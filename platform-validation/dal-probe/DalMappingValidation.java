@@ -75,7 +75,10 @@ public final class DalMappingValidation {
             }
             System.out.println("PASS: Real DAL SessionFactory loaded all generated entities and executed parameterized HQL");
             if ("v2".equals(System.getProperty("validation.phase"))) verifyUpgradedEntity();
-            else if (Boolean.getBoolean("validation.obdal")) verifyPersistence();
+            else if (Boolean.getBoolean("validation.obdal")) {
+                verifyRequestContextIsolation();
+                verifyPersistence();
+            }
         } finally {
             try {
                 if (SessionHandler.existsOpenedSessions()) OBDal.getInstance().rollbackAndClose();
@@ -84,6 +87,50 @@ public final class DalMappingValidation {
                 SessionFactoryController.setInstance(null);
             }
         }
+    }
+
+    /** Reproduces an earlier request retaining the session context during a role transition. */
+    private static void verifyRequestContextIsolation() {
+        OBContext.setOBContext("U1", "R1", "C1", "O1", "en_US");
+        OBContext earlierRequest = OBContext.getOBContext();
+        var attributes = new java.util.HashMap<String, Object>();
+        attributes.put(OBContext.CONTEXT_PARAM, earlierRequest);
+        attributes.put("#AD_USER_ID", "U1");
+        attributes.put("#AD_ROLE_ID", "R1");
+        attributes.put("#AD_CLIENT_ID", "C1");
+        attributes.put("#AD_ORG_ID", "O1");
+        var session = (jakarta.servlet.http.HttpSession) java.lang.reflect.Proxy.newProxyInstance(
+                DalMappingValidation.class.getClassLoader(), new Class<?>[] {jakarta.servlet.http.HttpSession.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "getAttribute" -> attributes.get(args[0]);
+                    case "setAttribute" -> { attributes.put((String) args[0], args[1]); yield null; }
+                    case "getAttributeNames" -> java.util.Collections.enumeration(attributes.keySet());
+                    default -> throw new AssertionError("Unexpected session method: " + method.getName());
+                });
+        var request = (jakarta.servlet.http.HttpServletRequest) java.lang.reflect.Proxy.newProxyInstance(
+                DalMappingValidation.class.getClassLoader(), new Class<?>[] {jakarta.servlet.http.HttpServletRequest.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("getSession")) return session;
+                    throw new AssertionError("Unexpected request method: " + method.getName());
+                });
+        OBContext.setOBContext(request);
+        if (OBContext.getOBContext() != earlierRequest) throw new AssertionError("Same-scope context must be reused");
+        attributes.put("#AD_ROLE_ID", "R_READ");
+        OBContext.setOBContext(request);
+        OBContext restrictedRequest = OBContext.getOBContext();
+        if (restrictedRequest == earlierRequest || !"R1".equals(earlierRequest.getRole().getId())
+                || !"R_READ".equals(restrictedRequest.getRole().getId())) {
+            throw new AssertionError("Role transition mutated a context retained by an earlier request");
+        }
+        // An earlier request may finish after the role switch and publish its old context.
+        OBContext.setOBContextInSession(request, earlierRequest);
+        OBContext.setOBContext(request);
+        if (!"R_READ".equals(OBContext.getOBContext().getRole().getId())
+                || !"R1".equals(earlierRequest.getRole().getId())
+                || !"R_READ".equals(restrictedRequest.getRole().getId())) {
+            throw new AssertionError("Late request completion corrupted role isolation");
+        }
+        System.out.println("PASS: Request context replacement preserves earlier roles and same-scope reuse");
     }
 
     private static void verifyUpgradedEntity() throws Exception {

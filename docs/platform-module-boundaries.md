@@ -387,6 +387,25 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The ERP role-switch regression had one scope mismatch followed by a successful
+fresh-session run. Record bounded browser request timing on failure, without
+cookies, credentials, bodies or product records, before attributing it to a race.
+Do not retry a mismatched response inside the assertion or relax scope equality.
+The repeated browser gate reproduced 40 rows where a restricted role expected 19,
+with MyOpenbravoActionHandler active. Independently, OBContext.setOBContext(request)
+reinitializes a session context in place when role/client/organization changes;
+an older request can still hold that same object. Add a deterministic retained-
+request regression and replace an out-of-sync context rather than mutating it.
+Keep same-scope reuse and existing public APIs; test a late old-request publish
+followed by another request as well. Browser overlap is diagnostic evidence, not
+by itself proof of the exact production interleaving.
+The retained-request test failed before the fix and passes after context
+replacement, including same-scope reuse and late completion. Five independent
+strict ERP browser runs passed with six restricted roles each. UI DAL, XML/DBSM
+upgrade/rollback, headless HTTP/redeployment, nested packaging and baseline API
+and compiled-caller checks also passed. These checks cover the extracted context
+behavior; they do not claim every possible session-concurrency scenario is solved.
+
 Column-ID property resolution belongs to the model, not the UI kernel. Add the
 lookup to the canonical Entity implementation and make both existing
 KernelUtils.getPropertyFromColumn overloads retain their signatures and delegate.
@@ -398,10 +417,10 @@ The no-database metadata test passes. The reusable descriptor gate
 `verifyModelUiApi` preserves all 87 Entity and 22 KernelUtils baseline declarations;
 `verifyContextApi` still preserves all 74 OBContext declarations. These checks
 used existing generated sources with database prerequisites explicitly excluded.
-Integrated UI DAL/lifecycle/browser verification of this latest lookup extraction
-is pending: Docker fixture startup timed out and the owned-copy database preflight
-failed with SQLSTATE 08001. Do not carry forward the preceding selector checkpoint's
-successful browser result as verification of the later lookup change.
+Integrated verification was initially blocked by Docker startup timeout and
+SQLSTATE 08001. After access recovered, the UI DAL/lifecycle/API/packaging gates
+passed against regenerated models. The deployed lookup change also passed the
+browser checks above with the subsequent context-isolation fix.
 
 The selector increment retains the actual parent/child reference metadata for
 Field.Property and compiles canonical selector domain implementations/mappings into
