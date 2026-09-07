@@ -14,6 +14,8 @@ try {
   await page.locator('#password').fill(password);
   await page.locator('#buttonOK').click();
   await page.waitForURL(url => !url.pathname.includes('/security/Login'), { timeout: 30000 });
+  await page.waitForFunction(() => Boolean(window.OB?.MainView?.TabSet && window.isc?.OBViewGrid),
+    undefined, { timeout: 60000 });
   const endpoint = 'http://127.0.0.1:8093/etendo/org.openbravo.service.datasource/Product';
   const form = { _operationType: 'fetch', windowId: '140', tabId: '180', _startRow: '0', _endRow: '100',
     _sortBy: 'searchKey', _selectedProperties: 'id,name,searchKey,client,organization,productCategory' };
@@ -41,6 +43,10 @@ try {
     assert(!Object.hasOwn(row, 'description'), 'Unselected business fields must not leak into projection');
   }
   const keys = full.data.map(row => row.searchKey);
+  const filtered = await fetch({ criteria: JSON.stringify({ _constructor: 'AdvancedCriteria',
+    operator: 'and', criteria: [{ fieldName: 'searchKey', operator: 'equals', value: full.data[0].searchKey }] }) });
+  assert.deepEqual(ids(filtered.data), ids(full.data.filter(row => row.searchKey === full.data[0].searchKey)),
+    'Exact search-key filter must match independent unfiltered rows');
   assert.deepEqual(keys, [...keys].sort(), 'Fixture search keys must be sorted ascending');
   const descending = await fetch({ _sortBy: '-searchKey' });
   assert.deepEqual(ids(descending.data), ids(full.data).reverse(), 'Descending order must reverse fixture products');
@@ -113,5 +119,5 @@ try {
       'Restricted role changes must not leak into a fresh default session');
   } finally { await fresh.close(); }
   console.log(`PASS: Independent database equality, foreign-client exclusion and ${restricted} restricted ERP session roles`);
-  console.log(`PASS: ERP browser session, projection, references, ordering, paging and anonymous denial (${full.data.length} rows)`);
+  console.log(`PASS: Original UI shell, ERP session, projection, references, filtering, ordering, paging and anonymous denial (${full.data.length} rows)`);
 } finally { await browser.close(); }

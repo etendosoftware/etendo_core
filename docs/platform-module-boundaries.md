@@ -399,6 +399,19 @@ verifyUiArtifactPackaging compares the packaged JAR bytes with the build output,
 rejects a loose provider duplicate in ERP UI, and rejects that artifact and class
 in either headless WAR. These build checks do not replace ERP browser regression
 after deployment or the still-pending platform original-UI startup.
+The ERP browser regression must also wait for the original OB.MainView tab set
+and SmartClient OBViewGrid class, and exercise an exact Product search-key filter.
+An authenticated datasource response alone is insufficient UI startup evidence.
+The first runtime packaging trial passed Product REST but failed original shell
+initialization: application styles/layout were absent from generated resources.
+The UI JAR therefore declares META-INF/beans.xml with annotated discovery, making
+its application-scoped provider an explicit CDI bean archive. Runtime shell
+verification, rather than Java class loading alone, gates this packaging change.
+After the descriptor was added and ERP UI redeployed on the owned copy, the
+strengthened browser test passed original shell initialization, exact Product
+filtering, projection/references/paging and independent six-role data isolation.
+This verifies the ERP consumer of the initial artifact, not yet the ERP-free UI
+consumer or the full UI extraction.
 
 The next acceptance target is original dictionary-driven UI operation for
 application-owned entities without Product, Warehouse or BusinessPartner, using

@@ -148,12 +148,18 @@ tasks.register('sharedUiJar', Jar) {
     archiveFileName = 'platform-ui-components.jar'
     destinationDirectory = layout.buildDirectory.dir('libs')
     from(tasks.named('compileUiComponents').flatMap { it.destinationDirectory })
+    from('fixtures/ui-beans.xml') { into 'META-INF'; rename { 'beans.xml' } }
 }
 tasks.register('verifyUiArtifactPackaging') {
     group = 'verification'
     dependsOn 'erpUiWar', 'platformWar', 'erpHeadlessWar'
     doLast {
         def artifact = tasks.named('sharedUiJar').get().archiveFile.get().asFile.bytes
+        new java.util.zip.ZipFile(tasks.named('sharedUiJar').get().archiveFile.get().asFile).withCloseable { zip ->
+            if (zip.getEntry('META-INF/beans.xml') == null) {
+                throw new GradleException('Shared UI provider requires an explicit CDI bean archive')
+            }
+        }
         def entry = 'WEB-INF/lib/platform-ui-components.jar'
         def provider = 'WEB-INF/classes/org/openbravo/client/application/ApplicationComponentProvider.class'
         new java.util.zip.ZipFile(file('build/libs/platform-erp-ui.war')).withCloseable { zip ->
