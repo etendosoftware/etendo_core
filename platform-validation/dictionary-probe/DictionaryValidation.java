@@ -29,6 +29,12 @@ public final class DictionaryValidation {
         boolean upgrade = Boolean.getBoolean("validation.upgrade");
         boolean tomcat = Boolean.getBoolean("validation.tomcat");
         boolean originalUi = Boolean.getBoolean("validation.originalUi");
+        boolean prepareUiInstance = Boolean.getBoolean("validation.prepareUiInstance");
+        Path uiInstancePointer = Path.of("build/original-ui-instance-location.txt");
+        if (prepareUiInstance && (!originalUi || Files.exists(uiInstancePointer))) {
+            throw new IllegalStateException("Original UI instance requires UI metadata and an unused instance pointer: "
+                    + uiInstancePointer.toAbsolutePath());
+        }
         Path report = Path.of(tomcat ? "build/tomcat-result.txt" : upgrade ? "build/platform-result.txt" : obdal ? "build/obdal-result.txt" : dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
         if (originalUi) report = Path.of("build/ui-dictionary-result.txt");
         Path generated = Path.of(originalUi ? "build/ui-generated-entities"
@@ -169,6 +175,15 @@ public final class DictionaryValidation {
                 System.out.println("Retained owned database container: " + container);
                 retain = true;
             }
+            if (prepareUiInstance) {
+                String classes = System.getProperty("validation.uiInstanceClasses");
+                if (classes == null) throw new IllegalStateException("UI instance classes were not compiled");
+                Files.writeString(uiInstancePointer, propertiesFile.toAbsolutePath() + "\n" + container
+                        + "\n" + classes + "\n", java.nio.file.StandardOpenOption.CREATE_NEW);
+                retain = true;
+                System.out.println("Prepared original UI instance: " + uiInstancePointer.toAbsolutePath());
+                System.out.println("NOT YET VERIFIED: original UI deployment or browser CRUD");
+            }
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
             throw failure;
@@ -185,11 +200,14 @@ public final class DictionaryValidation {
         }
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
                 + (originalUi ? "Original window/tab/field metadata and model relationships verified without ERP entities\n"
-                        + (Boolean.getBoolean("validation.uiDal")
+                        + (prepareUiInstance
+                            ? "UI entity classes compiled and owned database retained; DAL runtime not yet verified for this instance\n"
+                            : Boolean.getBoolean("validation.uiDal")
                             ? "Compiled UI entities and OBDal visual metadata queries passed in an isolated JVM\n"
                             : "NOT YET VERIFIED: generated UI entity compilation or DAL runtime\n")
                         + "NOT YET VERIFIED: original UI startup or UI-driven CRUD\n" : "")
-                + (security ? "Selected security entities generated without Warehouse, BusinessPartner or UI Process\n" : "")
+                + (security ? "Selected security entities generated without Warehouse or BusinessPartner\n"
+                    + (originalUi ? "Optional generic UI metadata included\n" : "UI Process metadata excluded\n") : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
                 + (tomcat ? "Actual WAR deployment in isolated Tomcat: HTTP persistence, HQL, security and redeployment passed\n"
                         : upgrade ? "Complete generated DAL v1/v2 lifecycle: persistence, security, constraints, XML schema and managed data, preservation and idempotence\n"

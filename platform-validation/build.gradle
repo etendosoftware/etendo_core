@@ -72,6 +72,7 @@ sourceSets {
             include 'org/openbravo/base/model/ModelProvider.java'
             include 'org/openbravo/base/model/domaintype/TableDirDomainType.java'
             include 'org/openbravo/base/model/domaintype/BooleanDomainType.java'
+            include 'org/openbravo/base/model/domaintype/BinaryDomainType.java'
             include 'org/openbravo/base/model/domaintype/DatetimeDomainType.java'
             include 'org/openbravo/base/model/domaintype/StringEnumerateDomainType.java'
             include 'org/openbravo/base/model/domaintype/LongDomainType.java'
@@ -285,6 +286,7 @@ tasks.register('compilePlatformLoginSession', JavaCompile) {
     options.compilerArgs += ['-implicit:none', '-proc:none']
 }
 tasks.register('prepareLoginSqlcSources', Sync) {
+    from('../src/org/openbravo/erpCommon/security') { include 'SessionLogin_data.xsql' }
     from('../src/org/openbravo/erpCommon/utility') { include 'DateTime_data.xsql' }
     from('../src/org/openbravo/base/secureApp') {
         include 'Seguridad_data.xsql', 'DefaultOptions_data.xsql', 'DefaultSessionValues_data.xsql', 'SystemPreferences_data.xsql'
@@ -901,6 +903,7 @@ dependencies {
     uiFieldContainerRuntime 'org.codehaus.jettison:jettison:1.5.4'
     webImplementation 'org.codehaus.jettison:jettison:1.5.4'
     bootstrapImplementation project(':platform-core')
+    bootstrapImplementation 'commons-codec:commons-codec:1.17.1'
     tomcatProbeImplementation 'org.postgresql:postgresql:42.7.8'
     tomcatProbeImplementation 'org.codehaus.jettison:jettison:1.5.4'
     classicEntitiesImplementation 'io.smallrye:jandex:3.1.2'
@@ -1262,7 +1265,7 @@ tasks.register('verifyUiDal', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
-['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true, 'verifyUiMenu': true, 'verifyUiLogin': true].each { taskName, renderFields ->
+['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true, 'verifyUiMenu': true, 'verifyUiLogin': true, 'prepareOriginalUiInstance': true].each { taskName, renderFields ->
     tasks.register(taskName, JavaExec) {
         group = 'verification'
         description = renderFields ? 'Execute the original field handler against the ERP-free visual dictionary.'
@@ -1278,20 +1281,27 @@ tasks.register('verifyUiDal', JavaExec) {
         systemProperty 'validation.uiCache', 'true'
         systemProperty 'validation.uiFields', renderFields.toString()
         systemProperty 'validation.uiFieldDefinitions', (taskName == 'verifyUiFieldDefinitions').toString()
-        def renderWindow = taskName in ['verifyUiWindow', 'verifyUiMenu', 'verifyUiLogin']
-        def renderMenu = taskName in ['verifyUiMenu', 'verifyUiLogin']
+        def prepareInstance = taskName == 'prepareOriginalUiInstance'
+        def login = taskName == 'verifyUiLogin' || prepareInstance
+        if (prepareInstance) {
+            group = 'application'
+            description = 'Prepare an owned retained UI database and generated classes for original UI integration.'
+        }
+        systemProperty 'validation.prepareUiInstance', prepareInstance.toString()
+        def renderWindow = taskName in ['verifyUiWindow', 'verifyUiMenu', 'verifyUiLogin', 'prepareOriginalUiInstance']
+        def renderMenu = taskName in ['verifyUiMenu', 'verifyUiLogin', 'prepareOriginalUiInstance']
         systemProperty 'validation.uiWindow', renderWindow.toString()
         systemProperty 'validation.uiMenu', renderMenu.toString()
-        systemProperty 'validation.uiLogin', (taskName == 'verifyUiLogin').toString()
+        systemProperty 'validation.uiLogin', login.toString()
         if (renderMenu) dependsOn 'compilePlatformLoginSession'
-        if (taskName == 'verifyUiLogin') dependsOn 'compilePlatformFullLogin', 'compilePlatformHttpAuthentication'
+        if (login) dependsOn 'compilePlatformFullLogin', 'compilePlatformHttpAuthentication'
         if (renderWindow) dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
         doFirst {
             def windowRuntime = renderWindow ? files(layout.buildDirectory.dir('ui-window'),
                     layout.buildDirectory.dir('ui-window-templates')) : files()
             def loginRuntime = renderMenu ? files(layout.buildDirectory.dir('platform-login-session')) +
                     configurations.loginSessionProbeRuntime : files()
-            if (taskName == 'verifyUiLogin') loginRuntime += files(layout.buildDirectory.dir('platform-full-login'),
+            if (login) loginRuntime += files(layout.buildDirectory.dir('platform-full-login'),
                     layout.buildDirectory.dir('platform-http-authentication')) + configurations.tomcatProbeRuntimeClasspath
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
                     tasks.named('sharedUiJar')) + windowRuntime + loginRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath

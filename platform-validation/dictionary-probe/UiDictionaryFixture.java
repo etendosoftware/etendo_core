@@ -20,10 +20,24 @@ final class UiDictionaryFixture {
             paths.filter(path -> path.toString().endsWith(".java")).sorted()
                     .forEach(path -> arguments.add(path.toString()));
         }
-        arguments.add("dal-probe/UiDalValidation.java");
-        if (Boolean.getBoolean("validation.uiLogin")) arguments.add("dal-probe/UiHttpAuthenticationValidation.java");
+        boolean prepareInstance = Boolean.getBoolean("validation.prepareUiInstance");
+        if (!prepareInstance) {
+            arguments.add("dal-probe/UiDalValidation.java");
+            if (Boolean.getBoolean("validation.uiLogin")) arguments.add("dal-probe/UiHttpAuthenticationValidation.java");
+        }
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
+        if (prepareInstance) {
+            var entries = new java.util.ArrayList<String>();
+            entries.add(classes.toAbsolutePath().toString());
+            for (String entry : runtime.split(java.util.regex.Pattern.quote(java.io.File.pathSeparator))) {
+                entries.add(java.nio.file.Path.of(entry).toAbsolutePath().toString());
+            }
+            java.nio.file.Files.write(classes.resolve("runtime-classpath.txt"), entries);
+            System.setProperty("validation.uiInstanceClasses", classes.toAbsolutePath().toString());
+            System.out.println("PASS: Retained UI entity compilation completed without test harness classes");
+            return;
+        }
         String log = Boolean.getBoolean("validation.uiLogin") ? "build/ui-login-runtime.log"
                 : Boolean.getBoolean("validation.uiMenu") ? "build/ui-menu-runtime.log"
                 : Boolean.getBoolean("validation.uiWindow") ? "build/ui-window-runtime.log"

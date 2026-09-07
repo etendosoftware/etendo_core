@@ -31,6 +31,32 @@ by the runnable application, but do not expand a separate probe as a prerequisit
 After this first milestone, cover the second entity, relationships, broader
 security cases and more granular module separation. The full goal remains open.
 
+`prepareOriginalUiInstance` supplies retained application inputs for this path.
+It creates an owned database from XML and writes a private properties path,
+container identity and compiled UI entity directory to
+`platform-validation/build/original-ui-instance-location.txt`. The generated
+directory includes an ordered runtime classpath manifest. It refuses to replace
+an existing instance pointer. It does not start a servlet, provision a login
+credential or certify browser functionality. The temporary database survives
+Tomcat restart but not Docker container removal; use it only for local validation.
+
+Run with JDK 17 from the repository root:
+
+```sh
+./gradlew -p platform-validation prepareOriginalUiInstance \
+  -PclassicWar=/absolute/path/to/classic.war \
+  -PclassicProperties=/absolute/path/to/owned-copy/Openbravo.properties
+```
+
+Current build support dependencies still require the Classic artifact and a
+read-only dictionary check against the owned ERP copy. No ERP tables are imported
+into the new platform database. Do not use the original business database here.
+
+The initial preparation passed with 71 generated/compiled entities. A subsequent
+read-only query against the retained container confirmed two windows and zero
+Product/Warehouse/BusinessPartner tables. This verifies retained inputs only; the
+next implementation step is an original HTTP/UI server consuming them.
+
 ## Status and rule
 
 This is the extraction map for ET-27, not a claim that the modules already exist.
@@ -311,8 +337,8 @@ with ConnectionProviderImpl. The UI-only dictionary composes full SystemInformat
 and Image metadata for original technical configuration/branding, not ERP business
 entities. System audit configuration remains explicit. Validate database session
 deactivation on logout and container shutdown; do not treat swallowed listener errors
-as success. The current experiment is unverified: fixture creation fails on required
-SystemInformation maturity metadata. Further isolated probe work must not displace
+as success. The current experiment is unverified. The required SystemInformation
+maturity seed now follows the original installer values (`200`). Further isolated probe work must not displace
 delivery of the application shell and production HTTP composition.
 The optional UI artifact owns these canonical classes and the navigation-bar/layout
 templates; ERP excludes their former loose copies. `verifyUiLogin` checks each

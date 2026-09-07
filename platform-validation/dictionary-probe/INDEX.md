@@ -31,6 +31,14 @@ UI selector references for conventional foreign keys become equivalent TableDir
 references; no replacement Java entity or ORM mapping is handwritten.
 # Original UI dictionary slice
 
+`prepareOriginalUiInstance` retains an owned PostgreSQL fixture and compiles its
+UI/login dictionary entities without running disposable probe applications.
+`build/original-ui-instance-location.txt` records the private properties path,
+owned container name and compiled entity directory. The latter contains an ordered
+`runtime-classpath.txt` for server composition. An existing pointer is never
+overwritten. This prepares application inputs, not an original UI deployment.
+The database survives Tomcat restarts, not stopping its temporary Docker container.
+
 `verifyUiLogin` additionally renders the unchanged user-info template with original
 roles/languages/organization data and empty warehouse options. It selects the
 platform profile policy explicitly; backend-restricted roles, inactive roles and

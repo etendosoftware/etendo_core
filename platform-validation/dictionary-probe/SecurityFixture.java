@@ -43,7 +43,7 @@ final class SecurityFixture {
     private static final Set<String> MENU_METADATA = Set.of("AD_MENU", "AD_MENU_TRL", "AD_FORM", "AD_FORM_ACCESS",
             "AD_PROCESS_ACCESS", "AD_TAB_ACCESS", "AD_WINDOW_ACCESS", "OBUIAPP_PROCESS_ACCESS",
             "OBUIAPP_VIEW_ROLE_ACCESS", "OBUIAPP_VIEW_IMPL", "OBUIAPP_MENU_PARAMETERS");
-    private static final Set<String> LOGIN_METADATA = Set.of("AD_SYSTEM", "AD_SESSION",
+    private static final Set<String> LOGIN_METADATA = Set.of("AD_SYSTEM", "AD_SESSION", "AD_SYSTEM_INFO", "AD_IMAGE",
             "OBUIAPP_NAVBAR_COMPONENT", "OBUIAPP_NAVBAR_ROLE_ACCESS");
     private static final Set<String> LOGIN_COLUMNS = Set.of("PASSWORD", "ISLOCKED", "ISEXPIREDPASSWORD",
             "LASTPASSWORDUPDATE", "ISRESTRICTBACKEND", "DAYSTOPASSWORDEXPIRATION");
@@ -266,6 +266,11 @@ final class SecurityFixture {
             seed(data, model, "AD_SYSTEM", Map.of("AD_SYSTEM_ID", "0", "NAME", "Platform validation",
                     "TAD_RECORDRANGE", "500", "TAD_RECORDRANGE_INFO", "500", "TAD_TRANSACTIONALRANGE", "1",
                     "TAD_THEME", "org.openbravo.userinterface.skin.250to300Comp/250to300Comp"));
+            seed(data, model, "AD_SYSTEM_INFO", Map.of("AD_SYSTEM_INFO_ID", "0", "SYSTEM_STATUS", "RB70",
+                    "ISUSAGEAUDITENABLED", "N", "MATURITY_UPDATE", "200", "MATURITY_SEARCH", "200"));
+            seed(data, model, "AD_ROLE", Map.of("AD_ROLE_ID", "0", "NAME", "System administrator", "USERLEVEL", "S"));
+            seed(data, model, "AD_USER_ROLES", Map.of("AD_USER_ROLES_ID", "0", "AD_USER_ID", "0", "AD_ROLE_ID", "0"));
+            seed(data, model, "AD_ROLE_ORGACCESS", Map.of("AD_ROLE_ORGACCESS_ID", "0", "AD_ROLE_ID", "0"));
         }
         seed(data, model, "AD_LANGUAGE", Map.of("AD_LANGUAGE_ID", "LANG", "AD_LANGUAGE", "en_US", "NAME", "English", "ISBASELANGUAGE", "Y"));
         for (String client : List.of("0", "C1", "C2")) {
