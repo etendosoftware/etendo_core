@@ -203,6 +203,55 @@ tasks.named('processDalResources') {
     dependsOn 'verifySecurityGeneration'
 }
 
+tasks.register('verifyContextApi') {
+    group = 'verification'
+    description = 'Preserve OBContext public/protected declarations and JVM descriptors against Classic.'
+    dependsOn 'prepareClassicCompatibility', 'compileClassicEntitiesJava'
+    doLast {
+        def relativeClass = 'org/openbravo/dal/core/OBContext.class'
+        def baseline = layout.buildDirectory.file("classic-compatibility/WEB-INF/classes/${relativeClass}").get().asFile
+        def candidate = layout.buildDirectory.file("classes/java/classicEntities/${relativeClass}").get().asFile
+        def declarations = { File classFile ->
+            if (!classFile.isFile()) throw new GradleException("Missing API class: ${classFile}")
+            def output = new ByteArrayOutputStream()
+            exec {
+                commandLine new File(System.getProperty('java.home'), 'bin/javap').absolutePath,
+                        '-protected', '-s', classFile.absolutePath
+                standardOutput = output
+            }
+            def entries = new LinkedHashSet<String>()
+            String declaration = null
+            output.toString('UTF-8').readLines().each { raw ->
+                def line = raw.trim()
+                if (line.startsWith('public ') || line.startsWith('protected ')) {
+                    declaration = line
+                    if (line.endsWith('{')) entries.add(line)
+                } else if (line.startsWith('descriptor:') && declaration != null) {
+                    entries.add(declaration + ' ' + line)
+                    declaration = null
+                }
+            }
+            if (entries.size() < 10) throw new GradleException('Incomplete OBContext API inspection')
+            entries
+        }
+        def before = declarations(baseline)
+        def after = declarations(candidate)
+        def missing = before - after
+        def digest = java.security.MessageDigest.getInstance('SHA-256')
+        file(project.property('classicWar')).withInputStream { input ->
+            byte[] buffer = new byte[65536]
+            int count
+            while ((count = input.read(buffer)) != -1) digest.update(buffer, 0, count)
+        }
+        def report = layout.buildDirectory.file('context-api-result.txt').get().asFile
+        report.text = "Baseline WAR SHA-256: ${digest.digest().encodeHex()}\n" +
+                "Baseline declarations: ${before.size()}\n" +
+                "Missing or changed declarations: ${missing.size()}\n" + missing.join('\n') + '\n'
+        if (!missing.isEmpty()) throw new GradleException("OBContext API changed; inspect ${report}")
+        logger.lifecycle("PASS: All ${before.size()} baseline OBContext API declarations and descriptors preserved")
+    }
+}
+
 tasks.named('compileBootstrapJava', JavaCompile) {
     options.sourcepath = files('../src', '../src-core/src')
     options.compilerArgs += ['-implicit:class']

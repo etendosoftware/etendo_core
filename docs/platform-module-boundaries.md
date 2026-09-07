@@ -32,6 +32,13 @@ baseline and run representative existing callers. Add binary linkage checks usin
 callers compiled against that baseline where packaging or hierarchy changes. These
 checks are required work, not yet an implemented repository-wide compatibility gate.
 
+`verifyContextApi -PclassicWar=/absolute/path/to/classic.war` compares OBContext's
+public/protected declarations and JVM descriptors with the supplied Classic WAR.
+It rejects removed or changed declarations, including the class declaration,
+while allowing additions. The report identifies the baseline WAR by SHA-256.
+This initial gate does not cover the whole repository, behavior, serialization,
+reflection-only contracts or binary execution of third-party modules.
+
 ## Target ownership
 
 | Destination | Owns | Must not require |
