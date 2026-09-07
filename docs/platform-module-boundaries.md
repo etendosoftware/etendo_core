@@ -250,6 +250,29 @@ The negative DAL test exposed invalid fixture role organizations; role and user-
 XML records now use organization `0`, without weakening access-level validation.
 Platform HTTP login/shell delivery and browser CRUD remain pending; this extraction
 does not assert complete licensing-state coverage or alter LoginHandler checks.
+
+The HTTP integration gate executes canonical `DefaultAuthenticationManager` and
+`AuthenticationManager` in a real loopback Tomcat request against the disposable UI
+dictionary, including `SessionLogin` persistence and `VariablesSecureApp` backed by
+an actual HttpSession. A test-only servlet may wire these services to isolate their
+runtime requirements; it is not a replacement login implementation or an accepted
+platform UI endpoint. Verify incorrect credentials, fresh session ID, persisted
+AD_Session and subsequent cookie authentication before integrating the UI shell.
+Do not route platform REST through the ERP web-service licensing path or disable
+ERP LoginHandler restrictions to make this gate pass.
+`verifyUiLogin` now starts a separate disposable Tomcat JVM after the original UI
+rendering checks. Canonical authentication classes are compiled unchanged; the
+fixture additionally retains Client.DaysToPasswordExpiration. It verifies failed
+and successful AD_Session records, full session values and CSRF initialization,
+rotation immediately around the successful login, rejection of the previous cookie,
+and anonymous isolation using one Tomcat request worker. The fixture admin scope
+is explicitly closed and asserted absent before session publication and on reuse.
+Final HTTP/role/rendering checks passed in `/private/tmp/et27-http-auth-scope.log`;
+API/shared-artifact/headless/nested boundary checks passed in
+`/private/tmp/et27-http-auth-final.log`. The test stops its ephemeral Tomcat and its
+parent fixture owns database cleanup. No production servlet or WAR was replaced.
+This proves only the stateful web authentication path: expiry/reset, logout/session
+listener cleanup, stateless licensing paths and the platform shell remain unproven.
 The optional UI artifact owns these canonical classes and the navigation-bar/layout
 templates; ERP excludes their former loose copies. `verifyUiLogin` checks each
 generated script with Node's syntax checker (Node is a test prerequisite).

@@ -350,6 +350,22 @@ tasks.register('compilePlatformFullLogin', JavaCompile) {
     options.sourcepath = files()
     options.compilerArgs += ['-implicit:none', '-proc:none']
 }
+tasks.register('compilePlatformHttpAuthentication', JavaCompile) {
+    dependsOn 'compilePlatformFullLogin'
+    source '../src/org/openbravo/authentication/AuthenticationManager.java'
+    source '../src/org/openbravo/authentication/AuthenticationException.java'
+    source '../src/org/openbravo/authentication/AuthenticationExpirationPasswordException.java'
+    source '../src/org/openbravo/authentication/basic/DefaultAuthenticationManager.java'
+    source '../src/org/openbravo/base/secureApp/VariablesHistory.java'
+    source '../src/org/openbravo/erpCommon/security/SessionLogin.java'
+    source '../src/org/openbravo/erpCommon/security/SessionListener.java'
+    source '../src-core/src/org/openbravo/base/HttpBaseUtils.java'
+    classpath = files(layout.buildDirectory.dir('platform-full-login'),
+            layout.buildDirectory.dir('platform-login-session')) + classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('platform-http-authentication')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
 def loginCompositionChecks = []
 ['platform', 'blank', 'invalid', 'missing', 'default'].each { mode ->
     def name = 'verifyLoginComposition' + mode.capitalize()
@@ -1268,14 +1284,15 @@ tasks.register('verifyUiDal', JavaExec) {
         systemProperty 'validation.uiMenu', renderMenu.toString()
         systemProperty 'validation.uiLogin', (taskName == 'verifyUiLogin').toString()
         if (renderMenu) dependsOn 'compilePlatformLoginSession'
-        if (taskName == 'verifyUiLogin') dependsOn 'compilePlatformFullLogin'
+        if (taskName == 'verifyUiLogin') dependsOn 'compilePlatformFullLogin', 'compilePlatformHttpAuthentication'
         if (renderWindow) dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
         doFirst {
             def windowRuntime = renderWindow ? files(layout.buildDirectory.dir('ui-window'),
                     layout.buildDirectory.dir('ui-window-templates')) : files()
             def loginRuntime = renderMenu ? files(layout.buildDirectory.dir('platform-login-session')) +
                     configurations.loginSessionProbeRuntime : files()
-            if (taskName == 'verifyUiLogin') loginRuntime += files(layout.buildDirectory.dir('platform-full-login'))
+            if (taskName == 'verifyUiLogin') loginRuntime += files(layout.buildDirectory.dir('platform-full-login'),
+                    layout.buildDirectory.dir('platform-http-authentication')) + configurations.tomcatProbeRuntimeClasspath
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
                     tasks.named('sharedUiJar')) + windowRuntime + loginRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
         }

@@ -21,6 +21,7 @@ final class UiDictionaryFixture {
                     .forEach(path -> arguments.add(path.toString()));
         }
         arguments.add("dal-probe/UiDalValidation.java");
+        if (Boolean.getBoolean("validation.uiLogin")) arguments.add("dal-probe/UiHttpAuthenticationValidation.java");
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
         String log = Boolean.getBoolean("validation.uiLogin") ? "build/ui-login-runtime.log"
@@ -50,6 +51,24 @@ final class UiDictionaryFixture {
             lines.filter(line -> line.startsWith("PASS:")).forEach(System.out::println);
         }
         System.out.println("PASS: Compiled original UI entities executed through the minimal DAL in an isolated JVM");
+        if (Boolean.getBoolean("validation.uiLogin")) {
+            Process http = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin/java").toString(),
+                    "--add-opens=java.base/java.io=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED",
+                    "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
+                    "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
+                    "com.etendoerp.platform.validation.UiHttpAuthenticationValidation", properties.toAbsolutePath().toString())
+                    .redirectErrorStream(true).redirectOutput(new java.io.File("build/ui-http-authentication.log")).start();
+            try {
+                if (!http.waitFor(50, java.util.concurrent.TimeUnit.SECONDS)) throw new AssertionError("HTTP authentication timed out");
+                if (http.exitValue() != 0) throw new AssertionError("HTTP authentication failed: build/ui-http-authentication.log");
+            } finally {
+                if (http.isAlive()) { http.destroyForcibly(); http.waitFor(5, java.util.concurrent.TimeUnit.SECONDS); }
+            }
+            try (var lines = java.nio.file.Files.lines(java.nio.file.Path.of("build/ui-http-authentication.log"))) {
+                lines.filter(line -> line.startsWith("PASS:")).forEach(System.out::println);
+            }
+        }
     }
 
     static void addData(StringBuilder xml, Database schema) {

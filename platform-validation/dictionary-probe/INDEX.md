@@ -35,6 +35,11 @@ references; no replacement Java entity or ORM mapping is handwritten.
 roles/languages/organization data and empty warehouse options. It selects the
 platform profile policy explicitly; backend-restricted roles, inactive roles and
 inactive user-role assignments remain excluded by the canonical role query.
+It then launches a separate HTTP authentication JVM against the same disposable
+database, with generated UI entities and canonical default authentication classes.
+The child uses ephemeral loopback Tomcat, commits only its own credential fixture,
+and verifies cookie-backed sessions and original success/failure AD_Session rows.
+Logs are separate: `build/ui-http-authentication.log`. This is not UI browser CRUD.
 
 UiDictionaryFixture supplies application-owned window/tab/field rows using the
 original dictionary schema. verifyUiDictionary uses a disposable PostgreSQL

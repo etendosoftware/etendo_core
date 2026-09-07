@@ -27,3 +27,11 @@ original SQLC collaborators; browser login remains a separate acceptance gate.
 The full login gate loads the original UserInfoComponent and RoleInfo from the
 shared UI artifact and checks current role/organization, empty warehouse context
 and preserved organization keys with empty warehouse option lists.
+
+## HTTP authentication integration
+
+`UiHttpAuthenticationValidation` is a disposable Tomcat harness for the canonical
+default authenticator, database sessions and cookie-backed login variables. It is
+not a deployed platform endpoint: its pre-authentication metadata context is a
+test fixture identity, and it does not install the original session listener or
+exercise logout/expiration cleanup. Never package this probe as application code.

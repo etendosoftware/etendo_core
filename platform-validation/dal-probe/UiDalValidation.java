@@ -34,9 +34,7 @@ public final class UiDalValidation {
             }
         }
         try {
-            // Fixture setup only: these legacy dictionary seeds have organization O1,
-            // while ADRole's DAL write access level requires organization *. Do not
-            // weaken production access-level checks to stage read-query controls.
+            // Stage read-query controls directly without changing managed entity state.
             dal.getSession().createNativeMutationQuery("update ad_role set isactive='N' where ad_role_id='R1'").executeUpdate();
             if (read.invoke(null, "R1", "U1") != null) throw new AssertionError("Inactive role returned");
             dal.getSession().createNativeMutationQuery("update ad_role set isactive='Y' where ad_role_id='R1'").executeUpdate();

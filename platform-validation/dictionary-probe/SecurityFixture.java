@@ -46,7 +46,7 @@ final class SecurityFixture {
     private static final Set<String> LOGIN_METADATA = Set.of("AD_SYSTEM", "AD_SESSION",
             "OBUIAPP_NAVBAR_COMPONENT", "OBUIAPP_NAVBAR_ROLE_ACCESS");
     private static final Set<String> LOGIN_COLUMNS = Set.of("PASSWORD", "ISLOCKED", "ISEXPIREDPASSWORD",
-            "LASTPASSWORDUPDATE", "ISRESTRICTBACKEND");
+            "LASTPASSWORDUPDATE", "ISRESTRICTBACKEND", "DAYSTOPASSWORDEXPIRATION");
 
     static Set<String> selectedTables() {
         Set<String> tables = new LinkedHashSet<>(TABLES);
