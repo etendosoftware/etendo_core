@@ -74,6 +74,19 @@ public final class UiDalValidation {
                 var titleProperty = ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
                         .getPropertyByColumnName(title.getColumn().getDBColumnName());
                 if (!"title".equals(titleProperty.getName())) throw new AssertionError("Field property resolution failed");
+                if (!"10".equals(title.getColumn().getReference().getId())
+                        || !"String".equals(title.getColumn().getReference().getName())) {
+                    throw new AssertionError("Original column reference was not preserved");
+                }
+                var idField = fields.stream().filter(field -> "ID".equals(field.getColumn().getDBColumnName()))
+                        .findFirst().orElseThrow();
+                if (!"13".equals(idField.getColumn().getReference().getId())
+                        || !"ID".equals(idField.getColumn().getReference().getName())
+                        || !ModelProvider.getInstance().getEntityByTableId("PP_REQUEST").getIdProperties().get(0)
+                                .getDomainType().getClass().getSimpleName().equals("UniqueIdDomainType")) {
+                    throw new AssertionError("Original ID reference/domain was not preserved");
+                }
+                System.out.println("PASS: Generated column reference API preserves original String and ID metadata");
                 if (ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
                         .findPropertyByColumnId(title.getColumn().getId(), true) != titleProperty) {
                     throw new AssertionError("Shared column-ID resolution did not match the real dictionary property");
@@ -88,6 +101,16 @@ public final class UiDalValidation {
                         || !fieldProperty.getDomainType().getClass().getProtectionDomain().getCodeSource()
                                 .getLocation().toString().endsWith("/platform-ui-components.jar")) {
                     throw new AssertionError("Selector reference hierarchy or shared implementation was lost");
+                }
+                var selectorReference = OBDal.getInstance().get(org.openbravo.model.ad.domain.Reference.class,
+                        "45B39681AFBC4808A64C9B776A290BA4");
+                var selectorColumn = OBDal.getInstance().get(org.openbravo.model.ad.datamodel.Column.class,
+                        fieldProperty.getColumnId());
+                if (!"org.openbravo.userinterface.selector".equals(selectorReference.getModule().getJavaPackage())
+                        || !"95E2A8B50A254B2AAE6774B8C2F28120".equals(selectorReference.getParentReference().getId())
+                        || !selectorReference.getId().equals(selectorColumn.getReferenceSearchKey().getId())
+                        || !selectorReference.getParentReference().getId().equals(selectorColumn.getReference().getId())) {
+                    throw new AssertionError("Generated selector reference ownership or hierarchy is incomplete");
                 }
                 title.setProperty("title");
                 OBDal.getInstance().flush();

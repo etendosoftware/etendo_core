@@ -69,6 +69,7 @@ sourceSets {
             include 'org/openbravo/base/model/domaintype/DatetimeDomainType.java'
             include 'org/openbravo/base/model/domaintype/StringEnumerateDomainType.java'
             include 'org/openbravo/base/model/domaintype/LongDomainType.java'
+            include 'org/openbravo/base/model/domaintype/UniqueIdDomainType.java'
             include 'org/openbravo/base/model/domaintype/TableDomainType.java'
             include 'org/openbravo/base/session/DalUUIDGenerator.java'
             include 'org/openbravo/base/gen/GenerateEntitiesTask.java'

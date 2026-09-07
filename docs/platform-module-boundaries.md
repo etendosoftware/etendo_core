@@ -387,6 +387,20 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The current form-metadata slice exposes Column.reference through the generated
+ADReference entity and uses the original String/ID/TableDir reference rows in the
+UI fixture. Preserve their names and domain implementations, because the original
+field handler and reference controller use them. Keep the headless fixture's
+selection unchanged; test reference traversal and IDs through real OBDal.
+The isolated runtime generates 25 entities and verifies Column.getReference(),
+Column.getReferenceSearchKey(), selector parent-reference traversal and the
+owning module's original Java package. The UI fixture imports only the required
+reference-owner module descriptors, failing if one is unavailable. This is
+dictionary ownership, not full module lifecycle or selector widget startup.
+The original UniqueIdDomainType is compiled as a generic model type; no UI type
+is added to headless runtimes. UI DAL, model/context API, XML/DBSM lifecycle and
+shared-artifact/nested-WAR regressions passed for this increment.
+
 The ERP role-switch regression had one scope mismatch followed by a successful
 fresh-session run. Record bounded browser request timing on failure, without
 cookies, credentials, bodies or product records, before attributing it to a race.

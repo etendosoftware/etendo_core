@@ -37,7 +37,7 @@ final class SecurityFixture {
         if (Boolean.getBoolean("validation.originalUi")) {
             tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_FIELD", "AD_WINDOW_ACCESS"));
             tables.addAll(List.of("AD_MODULE", "OBCLKER_TEMPLATE", "OBCLKER_TEMPLATE_DEPENDENCY",
-                    "AD_FIELDGROUP"));
+                    "AD_FIELDGROUP", "AD_REFERENCE"));
         }
         return tables;
     }
@@ -52,7 +52,9 @@ final class SecurityFixture {
                         "OBCLKER_TEMPLATE_ID", "DEPENDSON_TEMPLATE_ID", "AD_FIELDGROUP_ID",
                         "ISCOLLAPSED", "PROPERTY", "DISPLAYLOGIC", "DISPLAYLOGICGRID",
                         "STARTNEWLINE", "STARTINODDCOLUMN", "ISSHOWNINSTATUSBAR", "CLIENTCLASS",
-                        "DISPLAYLENGTH", "ONCHANGEFUNCTION", "COLUMNNAME", "READONLYLOGIC")
+                        "DISPLAYLENGTH", "ONCHANGEFUNCTION", "COLUMNNAME", "READONLYLOGIC",
+                        "AD_REFERENCE_ID", "AD_REFERENCE_VALUE_ID", "MODEL_IMPL", "UI_IMPL", "ISBASEREFERENCE", "PARENTREFERENCE_ID",
+                        "JAVAPACKAGE")
                         .contains(name));
     }
 
@@ -137,10 +139,20 @@ final class SecurityFixture {
             if (row.containsKey("AD_REFERENCE_VALUE_ID")) references.add(row.get("AD_REFERENCE_VALUE_ID"));
             DictionaryFixture.row(data, model, "AD_COLUMN", row);
         }
+        Set<String> referenceModules = new LinkedHashSet<>();
         for (var row : rows("AD_REFERENCE")) {
             if (references.contains(row.get("AD_REFERENCE_ID")) && !Set.of("10", "13", "19").contains(row.get("AD_REFERENCE_ID"))) {
                 DictionaryFixture.row(data, model, "AD_REFERENCE", row);
+                if (Boolean.getBoolean("validation.originalUi")) referenceModules.add(row.get("AD_MODULE_ID"));
             }
+        }
+        referenceModules.remove("0");
+        referenceModules.remove("PLATFORM");
+        if (!referenceModules.isEmpty()) {
+            for (var row : rows("AD_MODULE")) {
+                if (referenceModules.remove(row.get("AD_MODULE_ID"))) DictionaryFixture.row(data, model, "AD_MODULE", row);
+            }
+            if (!referenceModules.isEmpty()) throw new AssertionError("Missing reference-owner modules: " + referenceModules);
         }
         for (var row : rows("AD_REF_LIST")) {
             if (references.contains(row.get("AD_REFERENCE_ID"))) DictionaryFixture.row(data, model, "AD_REF_LIST", row);

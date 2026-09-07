@@ -38,3 +38,6 @@ values through OBDal; it does not yet execute the original field handler.
 Field.Property retains its original selector parent and model-element domain.
 The selector/datasource bootstrap schema reuses the same canonical mapping-to-XML
 projection helper as the core dictionary; headless schemas do not include it.
+The generated ADReference API exposes column reference/search-key relationships,
+parent references and original module ownership. Base UI reference rows come from
+canonical XML; headless entity selection remains unchanged.

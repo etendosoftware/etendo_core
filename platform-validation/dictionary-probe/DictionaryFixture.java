@@ -88,9 +88,15 @@ final class DictionaryFixture {
         row(data, schema, "AD_PACKAGE", Map.of("AD_PACKAGE_ID", "FIXTURE", "NAME", "Fixture entities",
                 "JAVAPACKAGE", "com.etendoerp.platform.fixture", "AD_MODULE_ID", "PLATFORM"));
         for (String id : new String[] {"10", "13", "19"}) {
-            row(data, schema, "AD_REFERENCE", Map.of("AD_REFERENCE_ID", id, "NAME", "Reference " + id,
-                    "ISBASEREFERENCE", "Y", "MODEL_IMPL", "org.openbravo.base.model.domaintype."
-                            + (id.equals("19") ? "TableDirDomainType" : "StringDomainType")));
+            if (Boolean.getBoolean("validation.originalUi")) {
+                var original = SecurityFixture.rows(Path.of("../src-db/database"), "AD_REFERENCE").stream()
+                        .filter(reference -> id.equals(reference.get("AD_REFERENCE_ID"))).findFirst().orElseThrow();
+                row(data, schema, "AD_REFERENCE", original);
+            } else {
+                row(data, schema, "AD_REFERENCE", Map.of("AD_REFERENCE_ID", id, "NAME", "Reference " + id,
+                        "ISBASEREFERENCE", "Y", "MODEL_IMPL", "org.openbravo.base.model.domaintype."
+                                + (id.equals("19") ? "TableDirDomainType" : "StringDomainType")));
+            }
         }
         for (String name : new String[] {"PP_CATEGORY", "PP_REQUEST"}) {
             boolean category = name.equals("PP_CATEGORY");
