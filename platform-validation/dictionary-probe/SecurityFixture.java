@@ -43,7 +43,8 @@ final class SecurityFixture {
     private static final Set<String> MENU_METADATA = Set.of("AD_MENU", "AD_MENU_TRL", "AD_FORM", "AD_FORM_ACCESS",
             "AD_PROCESS_ACCESS", "AD_TAB_ACCESS", "AD_WINDOW_ACCESS", "OBUIAPP_PROCESS_ACCESS",
             "OBUIAPP_VIEW_ROLE_ACCESS", "OBUIAPP_VIEW_IMPL", "OBUIAPP_MENU_PARAMETERS");
-    private static final Set<String> LOGIN_METADATA = Set.of("AD_SYSTEM", "AD_SESSION");
+    private static final Set<String> LOGIN_METADATA = Set.of("AD_SYSTEM", "AD_SESSION",
+            "OBUIAPP_NAVBAR_COMPONENT", "OBUIAPP_NAVBAR_ROLE_ACCESS");
     private static final Set<String> LOGIN_COLUMNS = Set.of("PASSWORD", "ISLOCKED", "ISEXPIREDPASSWORD",
             "LASTPASSWORDUPDATE", "ISRESTRICTBACKEND");
 

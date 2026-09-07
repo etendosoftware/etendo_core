@@ -220,6 +220,31 @@ Local logs: `/private/tmp/et27-profile-final-server.log` and
 `/private/tmp/et27-profile-final-browser.log`. Objective Guard alignment remains
 unconfigured and is not claimed as a passing acceptance gate.
 
+Shell integration uses canonical NavigationBarComponent, its dictionary-driven
+generator and MainLayoutComponent. The fixture composes original navbar registrations
+and configures the original menu button as dynamic through XML metadata, preserving
+navbar role access. Do not replace templates or remove the separate ERP licensing
+checks in UserInfoComponent/LoginHandler. Rendering this assembly is still not
+browser delivery or a claim that every widget's backend is integrated.
+The optional UI artifact owns these canonical classes and the navigation-bar/layout
+templates; ERP excludes their former loose copies. `verifyUiLogin` checks each
+generated script with Node's syntax checker (Node is a test prerequisite).
+`node platform-validation/ui-navigation-validation.mjs` additionally evaluates the
+generated descriptor arrays in isolated contexts, checking static widgets, dynamic
+placeholders and the menu descriptor for editable/read-only/denied roles. It does
+not execute widget callbacks or substitute for browser acceptance.
+
+Navigation extraction regression: `verifyUiLogin` and `verifyUiArtifactPackaging`
+passed with the 69-entity ERP-free fixture; the three-role descriptor evaluator
+passed. `verifyModelUiApi` and `verifyPlatformNestedBoundary` also passed.
+The ERP browser regression on temporary Tomcat 8095 passed original shell/login,
+40-row Product database equality, projection/references/filtering/sorting/paging,
+six restricted roles and anonymous denial with the shared navigation artifact.
+Local logs: `/private/tmp/et27-navbar-final.log`,
+`/private/tmp/et27-navbar-erp-server.log` and
+`/private/tmp/et27-navbar-erp-browser.log`. This does not prove platform HTTP shell
+delivery, widget backends or browser CRUD; those remain acceptance requirements.
+
 | ID | Current code | Intended destination | Remaining coupling and separation gate |
 | --- | --- | --- | --- |
 | CTX-ERP-INIT | ErpContextSupport | platform-compat-etendo | Calls generated User/Warehouse and the existing SessionHandler; move behind the shared context extension contract, retaining initialization order. |

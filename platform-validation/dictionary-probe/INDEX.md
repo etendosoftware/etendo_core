@@ -87,3 +87,9 @@ AD_SESSION and password/lock metadata. It composes the canonical PostgreSQL DUAL
 view and invokes FullLoginValidation using generated original SQLC collaborators.
 It preserves separate ui-login-runtime.log diagnostics; no HTTP/browser session
 is exercised by this service integration gate.
+
+The login/navigation fixture now retains 69 entities: it adds the canonical navbar
+component and role-access tables. Six original registrations/templates are loaded;
+the fixture configures the existing menu button as dynamic and role-restricted to
+exercise both assembly paths. The menu data is generated separately, as required
+by the original UI contract. Other widgets' server backends are not certified here.

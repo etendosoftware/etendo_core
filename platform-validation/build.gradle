@@ -150,6 +150,8 @@ tasks.register('compileUiComponents', JavaCompile) {
         include '**/navigationbarcomponents/UserInfoComponent.java'
         include '**/navigationbarcomponents/UserInfoWidgetActionHandler.java'
         include '**/navigationbarcomponents/RoleInfo.java'
+        include '**/NavigationBarComponent.java', '**/NavigationBarComponentGenerator.java'
+        include '**/MainLayoutComponent.java'
     }
     source fileTree('../modules_core/org.openbravo.client.kernel/src') {
         include 'org/openbravo/client/kernel/BaseTemplateProcessor.java'
@@ -173,6 +175,8 @@ tasks.register('sharedUiJar', Jar) {
     from('fixtures/ui-beans.xml') { into 'META-INF'; rename { 'beans.xml' } }
     from('../modules_core/org.openbravo.client.application/src') {
         include 'org/openbravo/client/application/templates/ob-view-form.js.ftl'
+        include 'org/openbravo/client/application/templates/navigation-bar.js.ftl'
+        include 'org/openbravo/client/application/templates/layout.js.ftl'
     }
     from('../modules_core/org.openbravo.userinterface.selector/src') {
         include '**/model/domaintype/*.hbm.xml'
@@ -607,12 +611,16 @@ tasks.register('erpUiWar', Zip) {
         exclude 'WEB-INF/classes/org/openbravo/client/application/navigationbarcomponents/UserInfoComponent*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/application/navigationbarcomponents/UserInfoWidgetActionHandler*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/application/navigationbarcomponents/RoleInfo*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/NavigationBarComponent*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/MainLayoutComponent*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/BaseTemplateProcessor*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateProcessor*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateResolver*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/freemarker/FreemarkerTemplateProcessor*.class'
         exclude 'WEB-INF/classes/org/openbravo/userinterface/selector/model/domaintype/**'
         exclude 'WEB-INF/classes/org/openbravo/client/application/templates/ob-view-form.js.ftl'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/templates/navigation-bar.js.ftl'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/templates/layout.js.ftl'
     }
 }
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)

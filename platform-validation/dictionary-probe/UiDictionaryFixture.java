@@ -68,6 +68,24 @@ final class UiDictionaryFixture {
                         "91DD63545B674BE8801E1FA4F48FF4C6", "2BAD445C2A0343C58E455F9BD379C690",
                         "ADD5EF45333C458098286D0E639B3290"));
                 if (Boolean.getBoolean("validation.uiMenu")) ids.add("4C6825EEBF2C440CA6F97C8A042CCB5F");
+                if (Boolean.getBoolean("validation.uiLogin")) {
+                    ids.addAll(java.util.Set.of("9E97FF309FE44C61A761F50801F79349", "0A9FD7B8976645A380920FF6411AB4A6"));
+                    for (var row : SecurityFixture.rows(java.nio.file.Path.of(
+                            "../modules_core/org.openbravo.client.application/src-db/database"), "OBUIAPP_NAVBAR_COMPONENT")) {
+                        ids.add(row.get("OBCLKER_TEMPLATE_ID"));
+                        row.put("AD_MODULE_ID", "0");
+                        if ("E404869052A44BC99AE27BDBAE1D6062".equals(row.get("OBUIAPP_NAVBAR_COMPONENT_ID"))) {
+                            row.put("ALLROLES", "N");
+                            row.put("ISSTATICCOMPONENT", "N");
+                        }
+                        seed(xml, schema, "OBUIAPP_NAVBAR_COMPONENT", row);
+                    }
+                    for (String role : List.of("R1", "R_READ")) {
+                        seed(xml, schema, "OBUIAPP_NAVBAR_ROLE_ACCESS", Map.of(
+                                "OBUIAPP_NAVBAR_ROLE_ACCESS_ID", "PP_NAV_" + role,
+                                "OBUIAPP_NAVBAR_COMPONENT_ID", "E404869052A44BC99AE27BDBAE1D6062", "AD_ROLE_ID", role));
+                    }
+                }
                 var sources = java.util.List.of(java.nio.file.Path.of("../modules_core/org.openbravo.client.application/src-db/database"),
                         java.nio.file.Path.of("../modules_core/org.openbravo.service.datasource/src-db/database"));
                 var found = new java.util.HashSet<String>();

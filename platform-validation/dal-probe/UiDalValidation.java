@@ -241,6 +241,14 @@ public final class UiDalValidation {
                             initializer.addBeanClasses(Class.forName(bean));
                         }
                     }
+                    if (Boolean.getBoolean("validation.uiLogin")) {
+                        for (String bean : java.util.List.of("org.openbravo.client.application.MainLayoutComponent",
+                                "org.openbravo.client.application.NavigationBarComponent",
+                                "org.openbravo.client.application.NavigationBarComponentGenerator",
+                                "org.openbravo.client.kernel.BaseTemplateComponent")) {
+                            initializer.addBeanClasses(Class.forName(bean));
+                        }
+                    }
                     try (var container = initializer.initialize()) {
                         Object cache = Class.forName("org.openbravo.base.weld.WeldUtils")
                                 .getMethod("getInstanceFromStaticBeanManager", Class.class).invoke(null, cacheType);
@@ -375,6 +383,31 @@ public final class UiDalValidation {
                                                     throw new AssertionError("Original menu lost read-only window access");
                                                 }
                                                 java.nio.file.Files.writeString(java.nio.file.Path.of("build", "ui-menu-" + role + ".js"), menuOutput);
+                                                if (Boolean.getBoolean("validation.uiLogin")) {
+                                                    for (String name : java.util.List.of("NavigationBarComponent", "MainLayoutComponent")) {
+                                                        Class<?> componentType = Class.forName("org.openbravo.client.application." + name);
+                                                        if (!componentType.getProtectionDomain().getCodeSource().getLocation().toString().endsWith("platform-ui-components.jar")) {
+                                                            throw new AssertionError("Navigation did not load from shared UI artifact");
+                                                        }
+                                                        Object component = container.select(componentType).get();
+                                                        componentType.getMethod("setParameters", java.util.Map.class).invoke(component, new java.util.HashMap<>(parameters));
+                                                        String output = (String) componentType.getMethod("generate").invoke(component);
+                                                        if (name.equals("MainLayoutComponent") && output.contains("OBApplicationMenuButton") != !role.equals("R_EXCLUDE")) {
+                                                            throw new AssertionError("Dynamic navigation lost menu role access: " + role);
+                                                        }
+                                                        if (name.equals("NavigationBarComponent") && !output.contains("OB.Application.navigationBarComponents")) {
+                                                            throw new AssertionError("Original navigation template did not render");
+                                                        }
+                                                        java.nio.file.Files.writeString(java.nio.file.Path.of("build", "ui-" + name + "-" + role + ".js"), output);
+                                                        Process syntax = new ProcessBuilder("node", "--check", "build/ui-" + name + "-" + role + ".js")
+                                                                .inheritIO().start();
+                                                        if (!syntax.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                                                            syntax.destroyForcibly();
+                                                            throw new AssertionError("Navigation JavaScript syntax check timed out");
+                                                        }
+                                                        if (syntax.exitValue() != 0) throw new AssertionError("Invalid original navigation JavaScript");
+                                                    }
+                                                }
                                             } finally { requestContext.deactivate(); }
                                         }
                                     } finally { OBContext.setOBContext(originalContext); }

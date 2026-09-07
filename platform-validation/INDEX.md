@@ -14,6 +14,7 @@ See ../docs/platform-validation.md for prerequisites, provenance, and limits.
 - ui-dependency-inventory.mjs: read-only UI source dependency inventory and matching controls.
 - ui-closure-inventory.mjs: JDK static UI closure and batch generated-model API gap report; not a runtime completeness gate.
 - impact-classpath.init.gradle: guarded export of the UI login child classpath without executing the fixture.
+- ui-navigation-validation.mjs: evaluate original generated navigation descriptors and dynamic role gating without launching a browser.
 - web and webapp: deployable WAR runtime and Servlet 6.0 descriptor.
 - tomcat-probe: real WAR deployment, HTTP checks, and redeployment in isolated Tomcat.
 - classic-probe: read-only external dictionary bootstrap and entity generation.
