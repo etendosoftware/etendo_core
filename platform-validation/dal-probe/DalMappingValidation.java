@@ -24,6 +24,16 @@ public final class DalMappingValidation {
     }
 
     public static void verify() throws Exception {
+        for (String absentType : new String[] {
+                "org.openbravo.client.application.Process",
+                "org.openbravo.model.common.businesspartner.BusinessPartner"}) {
+            try {
+                Class.forName(absentType, false, DalMappingValidation.class.getClassLoader());
+                throw new AssertionError("Excluded module type remains on the minimal runtime: " + absentType);
+            } catch (ClassNotFoundException expected) {
+                // Absence must hold on the actual runtime classpath, not just in the dictionary.
+            }
+        }
         for (var entity : ModelProvider.getInstance().getModel()) {
             Class<?> type = entity.getMappingClass();
             if (type == null) throw new AssertionError("Uncompiled entity " + entity.getClassName());

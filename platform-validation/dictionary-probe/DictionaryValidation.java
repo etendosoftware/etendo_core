@@ -90,6 +90,9 @@ public final class DictionaryValidation {
             var model = ModelProvider.getInstance().getModel();
             int expectedEntities = 2 + (Boolean.getBoolean("validation.security") ? SecurityFixture.TABLES.size() : 0);
             if (model.size() != expectedEntities) throw new AssertionError("Unexpected entity count: " + model.size());
+            if (security && model.stream().anyMatch(entity -> "OBUIAPP_Process".equals(entity.getName()))) {
+                throw new AssertionError("Minimal security must not require the UI Process entity");
+            }
             if (security && (model.stream().anyMatch(entity -> "BusinessPartner".equals(entity.getName()))
                     || ModelProvider.getInstance().getEntity("ADUser").hasProperty("businessPartner"))) {
                 throw new AssertionError("Minimal security must not require the ERP business-partner association");

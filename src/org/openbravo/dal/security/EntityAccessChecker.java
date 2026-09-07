@@ -36,7 +36,6 @@ import org.openbravo.base.model.Property;
 import org.openbravo.base.model.Table;
 import org.openbravo.base.provider.OBNotSingleton;
 import org.openbravo.base.session.OBPropertiesProvider;
-import org.openbravo.client.application.Process;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
@@ -545,7 +544,9 @@ public class EntityAccessChecker implements OBNotSingleton {
     OBContext.setAdminMode(true);
     try {
       for (final String p : set) {
-        names.add(OBDal.getInstance().get(Process.class, p).getName());
+        // MODULE-BOUNDARY SEC-UI-DIAGNOSTICS: optional UI metadata must not impose
+        // a generated UI Java type on the shared table-access security runtime.
+        names.add((String) OBDal.getInstance().get("OBUIAPP_Process", p).get("name"));
       }
     } finally {
       OBContext.restorePreviousMode();

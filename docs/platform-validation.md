@@ -53,7 +53,7 @@ Generated Java, XML, classes, and logs remain under platform-validation/build.
 | Requirement | Executable evidence |
 | --- | --- |
 | XML schema and initial data | DBSM creates the projected schema and imports dictionary, security, and managed category XML into empty PostgreSQL. |
-| Real dictionary and generated Java | ModelProvider resolves metadata; GenerateEntitiesTask emits seventeen entity classes, compiled with existing DAL sources. |
+| Real dictionary and generated Java | ModelProvider resolves metadata; GenerateEntitiesTask emits sixteen entity classes, compiled with existing DAL sources. |
 | Real non-admin context | OBContext loads the fixture user, role, client, organization, language, and organization tree. |
 | OBDal persistence and HQL | v1 creates a local category and an operational request referencing the XML-managed category, commits, and queries the relationship with a named parameter. |
 | Isolation | Default queries see only the current client's allowed organization and active rows. Separate control queries disable filters and expose the expected additional rows. |
@@ -83,14 +83,14 @@ Run duration is a smoke-test observation, not a performance benchmark.
 Technical columns derive from existing dictionary HBM mappings and physical DBSM
 table definitions. Security/entity metadata is selected from core source data.
 UI selector references for conventional foreign keys become equivalent TableDir
-relations. Original user-default reference-table metadata is retained. The Process
-descriptor comes from client.application because the access checker references
-its Java type; no UI module is installed. Selected metadata belongs to the
+relations. Original user-default reference-table metadata is retained. The UI
+Process descriptor and generated Java class are no longer required by the minimal
+access checker. Selected metadata belongs to the
 fixture's core-compatibility module.
 
-The seventeen entities are Category, Request, User, Role, UserRoles,
+The sixteen entities are Category, Request, User, Role, UserRoles,
 RoleOrganization, Client, Language, Organization, Warehouse,
-TableAccess, Table, ClientInformation, Tree, TreeNode, OrganizationType, and Process.
+TableAccess, Table, ClientInformation, Tree, TreeNode, and OrganizationType.
 Physical dictionary tables also exist but do not all become runtime entities.
 This is a minimal projection, not a promise of unchanged legacy-module compatibility.
 
@@ -110,8 +110,8 @@ checks are actual generated/core implementations.
   produced invalid Boolean-versus-CHAR SQL with the existing Y/N type.
 
 Configure the policy before bootstrap; runtime mode switching is not supported.
-A full ERP regression suite has not been run. Hibernate HBM, development pool,
-and missing Process-translation warnings remain visible.
+A full ERP regression suite has not been run. Hibernate HBM and development-pool
+warnings remain visible.
 
 ## DBSM provenance
 

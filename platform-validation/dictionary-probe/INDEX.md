@@ -13,8 +13,9 @@ redeployment checks, then checks persistence and rejects server lifecycle leaks.
 SecurityFixture selects original physical columns and source dictionary rows for
 seven security entities plus the Warehouse compatibility entity. BusinessPartner
 and the user business-partner property are intentionally absent.
-It also selects TableAccess, Table, ClientInformation, and a Process descriptor
-as required by the existing access checker and context. Original user-default
+It also selects TableAccess, Table and ClientInformation
+as required by the existing access checker and context. UI Process metadata and
+its generated Java type are intentionally absent. Original user-default
 references are retained through their reference-table metadata.
 Tree, TreeNode, and OrganizationType support the real organization access tree.
 Security data and cross-tenant control rows are generated as XML for verifyOBDal

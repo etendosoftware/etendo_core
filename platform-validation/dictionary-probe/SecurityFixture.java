@@ -19,7 +19,7 @@ import org.apache.ddlutils.model.Table;
 final class SecurityFixture {
     static final Set<String> TABLES = new LinkedHashSet<>(List.of("AD_USER", "AD_ROLE",
             "AD_USER_ROLES", "AD_ROLE_ORGACCESS", "AD_CLIENT", "AD_LANGUAGE", "AD_ORG", "M_WAREHOUSE",
-            "AD_TABLE_ACCESS", "AD_TABLE", "AD_CLIENTINFO", "OBUIAPP_PROCESS", "AD_TREE", "AD_TREENODE", "AD_ORGTYPE"));
+            "AD_TABLE_ACCESS", "AD_TABLE", "AD_CLIENTINFO", "AD_TREE", "AD_TREENODE", "AD_ORGTYPE"));
     private static final Set<String> COLUMNS = Set.of("AD_CLIENT_ID", "AD_ORG_ID", "AD_USER_ID",
             "AD_ROLE_ID", "ISACTIVE", "CREATED", "CREATEDBY", "UPDATED", "UPDATEDBY", "NAME",
             "VALUE", "DESCRIPTION", "USERNAME", "ISPORTAL", "ISWEBSERVICEENABLED", "USERLEVEL",
@@ -29,14 +29,13 @@ final class SecurityFixture {
             "AD_TREE_ID", "NODE_ID", "PARENT_ID", "ISREADY", "AD_ORGTYPE_ID", "ISLEGALENTITY",
             "ISBUSINESSUNIT", "ISTRANSACTIONSALLOWED", "ISPERIODCONTROLALLOWED");
     private static final Path CORE = Path.of("../src-db/database");
-    private static final Path UI = Path.of("../modules_core/org.openbravo.client.application/src-db/database");
 
     private SecurityFixture() {}
 
     static void addSchema(Database model, DatabaseIO xml) throws Exception {
         for (String name : TABLES) {
             if (model.findTable(name) != null) continue;
-            Table original = xml.readplain((name.equals("OBUIAPP_PROCESS") ? UI : CORE)
+            Table original = xml.readplain(CORE
                     .resolve("model/tables/" + name + ".xml").toFile()).getTable(0);
             Table selected = new Table();
             selected.setName(name);
@@ -179,7 +178,6 @@ final class SecurityFixture {
     /** Streams the existing source-data format without loading the entire XML DOM. */
     private static List<Map<String, String>> rows(String table) throws Exception {
         List<Map<String, String>> result = new ArrayList<>(rows(CORE, table));
-        if (Set.of("AD_TABLE", "AD_COLUMN", "AD_PACKAGE").contains(table)) result.addAll(rows(UI, table));
         return result;
     }
 
