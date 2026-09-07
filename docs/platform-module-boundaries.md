@@ -185,8 +185,13 @@ not require a JSP engine. This removes a container-level dependency; it does not
 resolve the remaining ERP service dependencies on UI-module classes.
 Both `verifyTomcat` and `verifyTomcat -PplatformUi=true` passed with this
 composition: `JspServlet` unavailable, actual WAR startup, authenticated HTTP
-persistence/update checks and redeployment. The live instances started before
-this change still need restarting to use the reduced container classpath.
+persistence/update checks and redeployment. The live platform instances on 8091
+and 8092 were restarted with the reduced container classpath and the same retained
+database. Chrome create/update/read-only rejection passed on 8092; both APIs
+returned the same record IDs and retained a pre-restart record. The 8091 REST
+instance returned 404 for index.html and 401 for anonymous requests. Its live
+runtime now uses the extracted identifier metadata as well. The separate ERP UI
+instance remains unchanged by this platform-only restart.
 
 `erpUiWar` assembles the existing ERP UI resources and deployment descriptor from
 the supplied Classic WAR, overlaying the refactored motor/generated classes and
@@ -265,8 +270,9 @@ its owned-copy instance restarted on 8093. The complete browser Product contract
 independent database equality, six restricted roles and fresh-login isolation
 passed against that updated deployment. Expected `AccessTableNoView` errors were
 logged for roles denied table access; no extraction-related startup failure was
-observed. The other running validation profiles still require rebuilding before
-their HTTP results cover this extraction.
+observed. The two ERP-free live profiles were subsequently rebuilt/restarted and
+verified as described in the container composition check above. The older 8090
+compatibility exploration instance is not part of that restart or current proof.
 
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI
