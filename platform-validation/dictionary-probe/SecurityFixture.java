@@ -46,7 +46,8 @@ final class SecurityFixture {
                     "OBUIAPP_PARAMETER", "AD_MODEL_OBJECT", "AD_VAL_RULE", "AD_CALLOUT",
                     "AD_REF_TABLE", "AD_REF_LIST", "AD_REF_TREE", "AD_REF_TREE_FIELD",
                     "AD_TABLE_TREE", "OBUIAPP_PROCESS", "OBUIAPP_REF_WINDOW",
-                    "OBUISEL_SELECTOR", "OBUISEL_SELECTOR_FIELD", "OBCLKER_REF_MASK", "OBSERDS_DATASOURCE"));
+                    "OBUISEL_SELECTOR", "OBUISEL_SELECTOR_FIELD", "OBCLKER_REF_MASK", "OBSERDS_DATASOURCE",
+                    "OBCLKER_UIDEFINITION", "AD_ELEMENT", "AD_ELEMENT_TRL", "AD_FIELD_TRL", "AD_FIELDGROUP_TRL"));
         }
         return tables;
     }
@@ -63,7 +64,11 @@ final class SecurityFixture {
                         "STARTNEWLINE", "STARTINODDCOLUMN", "ISSHOWNINSTATUSBAR", "CLIENTCLASS",
                         "DISPLAYLENGTH", "ONCHANGEFUNCTION", "COLUMNNAME", "READONLYLOGIC",
                         "AD_REFERENCE_ID", "AD_REFERENCE_VALUE_ID", "MODEL_IMPL", "UI_IMPL", "ISBASEREFERENCE", "PARENTREFERENCE_ID",
-                        "JAVAPACKAGE", "AD_VAL_RULE_ID", "CODE", "AD_CALLOUT_ID", "AD_PROCESS_ID",
+                        "JAVAPACKAGE", "CLASSNAME", "AD_ELEMENT_ID", "AD_FIELD_ID", "ISTRANSLATED",
+                        "SQLLOGIC", "ISSESSIONATTR", "FIELDLENGTH", "DEFAULTVALUE", "ISMANDATORY",
+                        "ISFIRSTFOCUSEDFIELD", "DISPLAYLOGIC_SERVER", "EM_OBUIAPP_COLSPAN", "EM_OBUIAPP_ROWSPAN",
+                        "EM_OBUIAPP_VALIDATOR", "EM_OBUIAPP_SUMMARYFN",
+                        "AD_VAL_RULE_ID", "CODE", "AD_CALLOUT_ID", "AD_PROCESS_ID",
                         "OBUIAPP_PROCESS_ID", "EM_OBUIAPP_PROCESS_ID", "AD_REF_TREE_ID", "AD_TABLE_TREE_ID",
                         "OBUISEL_SELECTOR_ID", "AD_KEY", "AD_DISPLAY", "DISPLAYFIELD_ID", "OBSERDS_DATASOURCE_ID")
                         .contains(name));
@@ -156,6 +161,8 @@ final class SecurityFixture {
             }
         }
         Set<String> references = new LinkedHashSet<>();
+        Set<String> elements = new LinkedHashSet<>(List.of("245", "246", "607", "608"));
+        if (Boolean.getBoolean("validation.originalUi")) references.addAll(List.of("15", "16"));
         for (var row : rows("AD_COLUMN")) {
             String table = tableIds.get(row.get("AD_TABLE_ID"));
             if (table == null || model.findTable(table).findColumn(row.get("COLUMNNAME"), false) == null) continue;
@@ -172,7 +179,23 @@ final class SecurityFixture {
             }
             references.add(row.get("AD_REFERENCE_ID"));
             if (row.containsKey("AD_REFERENCE_VALUE_ID")) references.add(row.get("AD_REFERENCE_VALUE_ID"));
+            if (row.containsKey("AD_ELEMENT_ID")) elements.add(row.get("AD_ELEMENT_ID"));
             DictionaryFixture.row(data, model, "AD_COLUMN", row);
+        }
+        if (Boolean.getBoolean("validation.originalUi")) {
+            for (var row : rows("AD_ELEMENT")) {
+                if (elements.remove(row.get("AD_ELEMENT_ID"))) {
+                    DictionaryFixture.row(data, model, "AD_ELEMENT", row);
+                    referenceModules.add(row.get("AD_MODULE_ID"));
+                }
+            }
+            if (!elements.isEmpty()) throw new AssertionError("Missing UI element metadata: " + elements);
+            for (var row : rows("OBCLKER_UIDEFINITION")) {
+                if (references.contains(row.get("AD_REFERENCE_ID"))) {
+                    DictionaryFixture.row(data, model, "OBCLKER_UIDEFINITION", row);
+                    referenceModules.add(row.get("AD_MODULE_ID"));
+                }
+            }
         }
         for (var row : rows("AD_REFERENCE")) {
             if (references.contains(row.get("AD_REFERENCE_ID")) && !Set.of("10", "13", "19").contains(row.get("AD_REFERENCE_ID"))) {

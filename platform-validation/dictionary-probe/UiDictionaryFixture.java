@@ -46,6 +46,9 @@ final class UiDictionaryFixture {
 
     static void addData(StringBuilder xml, Database schema) {
         try {
+            for (var group : SecurityFixture.rows(java.nio.file.Path.of("../src-db/database"), "AD_FIELDGROUP")) {
+                if ("1000100001".equals(group.get("AD_FIELDGROUP_ID"))) seed(xml, schema, "AD_FIELDGROUP", group);
+            }
             var templates = SecurityFixture.rows(java.nio.file.Path.of(
                     "../modules_core/org.openbravo.client.application/src-db/database"), "OBCLKER_TEMPLATE");
             var form = templates.stream().filter(row -> "C1D176407A354A40815DC46D24D70EB8"
@@ -72,6 +75,8 @@ final class UiDictionaryFixture {
                         "AD_TAB_ID", tab, "AD_COLUMN_ID", id, "NAME", column.getName(),
                         "SEQNO", Integer.toString(++position * 10), "ISDISPLAYED", editable ? "Y" : "N",
                         "SHOWINRELATION", editable ? "Y" : "N", "ISREADONLY", editable ? "N" : "Y"));
+                field.put("DISPLAYLENGTH", column.getSize() == null ? "30"
+                        : Integer.toString(Math.max(1, Math.min(60, Integer.parseInt(column.getSize())))));
                 if (table.equals("PP_REQUEST") && column.getName().equals("TITLE")) {
                     field.putAll(Map.of("AD_FIELDGROUP_ID", "PP_REQUEST_DETAILS", "STARTNEWLINE", "Y",
                             "STARTINODDCOLUMN", "Y", "DISPLAYLOGIC", "@IsActive@='Y'",

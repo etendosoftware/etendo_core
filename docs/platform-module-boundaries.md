@@ -387,6 +387,74 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+## Integration-sized work packages
+
+Do not estimate remaining work by counting resolved exceptions. The selective UI
+fixture has omitted both API properties and valid field defaults; those omissions
+are not evidence of ERP coupling. Inventory the complete original UI entry set and
+its static dependency closure, then compare its bytecode method calls with the
+freshly generated model API in one batch. Keep direct roots, transitive candidates,
+missing generated types, missing methods and forbidden ERP paths separate. Static
+reachability is an upper bound: reflective/CDI, SQL, template and browser behavior
+still require runtime checks.
+
+Execute four work packages: (1) compose the generic UI metadata and dependencies,
+(2) boot original authentication, shell and one generated application window,
+(3) exercise related-entity CRUD/security and restart persistence, and (4) validate
+the shared ERP UI and both headless compositions together. Package (1) must produce
+a categorized dependency report and complete rendering, not another getter-only
+checkpoint. No calendar estimate is justified until the first inventory separates
+fixture incompleteness from actual extraction/adaptation work.
+
+### Measured baseline and next integration blocks
+
+The first JDK bytecode inventory of the prepared original WAR found 364 UI
+implementation roots, 115 directly referenced generated model types, and 143
+missing method descriptors across 24 types already present in the reduced model.
+The largest API gaps were Tab (26), Parameter (13), Column (12) and SelectorField
+(12). After indexing four project-bearing JARs as well as WEB-INF/classes, the
+transitive candidate closure contains 1,558 classes and reaches 479 generated
+types, 434 absent from this fixture. No project-namespace type remains unresolved
+in that static scope. **Do not import that closure**:
+these are static candidates, including ERP functionality, not a platform bill of
+materials or an estimate of required implementation changes.
+
+The direct missing-type inventory identifies the remaining generic feature groups:
+
+| Integration block | Missing examples | Required proof |
+| --- | --- | --- |
+| Window/form/grid runtime | Grid configurations, field/tab access, complete Tab/Column APIs | Original field definitions and generated window render |
+| Authentication and shell | Menu, messages/translations, navbar, preferences, view access | Original login and navigation to an application window |
+| Related-entity interaction | Datasource fields, selector translations, FIC metadata | Browser filter/sort/page/select/create/update and denied writes |
+| Shared UI services | Personalization, notes, attachments, images | Explicit shared modules and compatible ERP behavior |
+| Distribution and lifecycle | Profile assembly, deployment, restart | Four compositions, isolation and restart-persistent CRUD |
+
+Direct forbidden-entity references also identify concrete ERP seams: order/product
+business-logic handlers; product image/characteristic observers;
+CharacteristicsUIDefinition; and Warehouse use in UserInfoComponent and
+UserInfoWidgetActionHandler (including its session setter). Business-specific
+contributions belong in ERP-only composition. User/session UI needs a generic
+extension boundary while preserving existing ERP behavior and visible APIs.
+This list is not exhaustive: indirect SQL/utility dependencies need review too.
+
+Run the reproducible read-only inventory with JDK 17 and an explicit fresh UI
+classes directory printed by the validation workbench:
+
+```sh
+node platform-validation/ui-closure-inventory.mjs --self-test
+node platform-validation/ui-closure-inventory.mjs --generated platform-validation/build/ui-dal-classes-<id>
+```
+
+Its JSON distinguishes direct roots, direct missing model types, transitive
+candidates, exact missing method descriptors/callers and paths to forbidden
+entities. The snapshot above used 45 generated original-model types plus the two
+application entities. It does not measure browser coverage, reflective discovery,
+SQL correctness or remaining elapsed time. Refresh it after each metadata block.
+
+Next, retain canonical UI reference-definition rows and their generated relationship
+to ADReference. Initialize the original reference controller, including its date
+and datetime bootstrap references, without falling back to fabricated editor types.
+
 Execute the canonical OBViewFieldHandler in the isolated UI DAL next. Compile its
 working dependency slice separately while resolving missing generic classes and
 metadata; do not introduce replacement handlers or add Classic runtime support to
@@ -409,10 +477,21 @@ clearing the Hibernate session, including detached field reference reads; the mo
 extension test writes, reloads and unlinks a process reference through unchanged
 generated accessor signatures, within a rolled-back transaction. UI DAL, headless
 XML/DBSM lifecycle, shared-artifact packaging and nested-WAR gates passed.
-`verifyUiFields` remains an explicitly unfinished integration gate: the next
-failure is the missing Reference.getOBCLKERUIDefinitionList() relationship required
-by the original visual reference controller. No original-platform browser UI or
-CRUD is claimed. The expanded working class slice is still outside sharedUiJar.
+The subsequent visual metadata batch generates 47 entities and makes
+`verifyUiFields` pass: canonical reference definitions (including date/datetime),
+required audit elements and translations, field-group metadata and module layout
+extensions let the original handler construct application fields. Assertions cover
+title/category/active, the original String/YesNo/FKCombo editors, complementary
+active-state display/read-only rules and their original form-logic template output.
+Referenced element rows are selected as a set and missing rows fail generation;
+every application field has a valid display length.
+
+This gate does not yet render the complete ob-view-field/ob-view-tab definition or
+exercise original-platform browser UI/CRUD. The expanded working class slice is
+still outside sharedUiJar; its ERP-specific reference implementations must be
+separated before packaging the complete generic UI. UI cache/DAL, XML/DBSM
+lifecycle, shared-artifact packaging and nested-WAR regressions passed with this
+batch. The integration-sized work packages above remain incomplete.
 
 The current form-metadata slice exposes Column.reference through the generated
 ADReference entity and uses the original String/ID/TableDir reference rows in the

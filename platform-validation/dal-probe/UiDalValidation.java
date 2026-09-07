@@ -204,9 +204,46 @@ public final class UiDalValidation {
                             if (!(originalFields instanceof java.util.List<?> list) || list.isEmpty()) {
                                 throw new AssertionError("Original field handler did not produce fields");
                             }
+                            var fieldNames = new java.util.HashSet<String>();
+                            Class<?> fieldDefinitionType = Class.forName(
+                                    "org.openbravo.client.application.window.OBViewFieldHandler$OBViewFieldDefinition");
+                            var fieldNameMethod = fieldDefinitionType.getMethod("getName");
+                            // The original template-facing definition interface is package-private.
+                            fieldNameMethod.setAccessible(true);
+                            Object titleDefinition = null;
+                            for (Object definition : list) {
+                                String name = (String) fieldNameMethod.invoke(definition);
+                                fieldNames.add(name);
+                                if ("title".equals(name)) titleDefinition = definition;
+                            }
+                            if (!fieldNames.containsAll(java.util.Set.of("title", "category", "active"))) {
+                                throw new AssertionError("Original handler omitted application fields: " + fieldNames);
+                            }
+                            String readOnlyRule = (String) titleDefinition.getClass().getMethod("getReadOnlyIf")
+                                    .invoke(titleDefinition);
+                            String displayRule = (String) titleDefinition.getClass().getMethod("getShowIf")
+                                    .invoke(titleDefinition);
+                            if (!readOnlyRule.contains("active") || !displayRule.contains("active")
+                                    || readOnlyRule.equals(displayRule)) {
+                                throw new AssertionError("Original handler lost the complementary active-state rules");
+                            }
+                            Class<?> definitionController = Class.forName("org.openbravo.client.kernel.reference.UIDefinitionController");
+                            Object definitions = definitionController.getMethod("getInstance").invoke(null);
+                            var expectedEditors = java.util.Map.of("TITLE", "StringUIDefinition",
+                                    "ISACTIVE", "YesNoUIDefinition", "PP_CATEGORY_ID", "FKComboUIDefinition");
+                            for (Field applicationField : OBDal.getInstance().get(org.openbravo.model.ad.ui.Tab.class, tabId).getADFieldList()) {
+                                String editor = expectedEditors.get(applicationField.getColumn().getDBColumnName().toUpperCase(java.util.Locale.ROOT));
+                                if (editor == null) continue;
+                                Object definition = definitionController.getMethod("getUIDefinition", String.class)
+                                        .invoke(definitions, applicationField.getColumn().getId());
+                                if (definition == null || !definition.getClass().getSimpleName().equals(editor)) {
+                                    throw new AssertionError("Original editor implementation missing: " + editor);
+                                }
+                            }
                             data.put("data", java.util.Map.of("fieldHandler", originalHandler));
                             String originalForm = processor.process(template, data);
-                            if (!originalForm.contains("onFieldChanged")) {
+                            if (!originalForm.contains("onFieldChanged") || !originalForm.contains("f.disableItem('title'")
+                                    || !originalForm.contains("active")) {
                                 throw new AssertionError("Original field handler/form rendering failed");
                             }
                             System.out.println("PASS: Original field handler builds fields and renders the original form template");

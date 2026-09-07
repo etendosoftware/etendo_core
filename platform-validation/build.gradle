@@ -172,9 +172,16 @@ tasks.register('compileUiFieldComponents', JavaCompile) {
     source '../modules_core/org.openbravo.base.weld/src/org/openbravo/base/weld/WeldUtils.java'
     source '../src/org/openbravo/dal/core/DalContextListener.java'
     source '../src/org/openbravo/erpCommon/utility/ComboTableData.java'
+    source '../src-core/src/org/openbravo/data/FieldProvider.java'
+    source '../src-core/src/org/openbravo/data/Sqlc.java'
+    source fileTree('../modules_core/org.openbravo.userinterface.selector/src') {
+        include '**/reference/*UIDefinition.java'
+    }
     source fileTree('../modules_core/org.openbravo.client.application/src') {
         include 'org/openbravo/client/application/window/OBViewFieldHandler.java'
+        include 'org/openbravo/client/application/window/OBViewUtil.java'
         include 'org/openbravo/client/application/DynamicExpressionParser.java'
+        include 'org/openbravo/client/application/ApplicationUtils.java'
         include 'org/openbravo/client/application/window/ApplicationDictionaryCachedStructures.java'
     }
     source fileTree('../modules_core/org.openbravo.client.kernel/src') {
@@ -182,6 +189,7 @@ tasks.register('compileUiFieldComponents', JavaCompile) {
         include 'org/openbravo/client/kernel/BaseTemplateComponent.java'
         include 'org/openbravo/client/kernel/BaseComponent.java'
         include 'org/openbravo/client/kernel/Component.java'
+        include 'org/openbravo/client/kernel/RequestContext.java'
         include 'org/openbravo/client/kernel/reference/*.java'
     }
     classpath = classicServiceClasses + classicServiceSupport
