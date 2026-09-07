@@ -151,6 +151,10 @@ The endpoint must use existing module services, not proxy Classic or fabricate
 JSON. Acceptance includes selected fields, reference identifiers, pagination,
 sorting, authorization, and client/organization isolation. Unsupported parameters
 and installed-module fields must be reported explicitly.
+The compatibility URL must retain the `/etendo` context and the exact path
+`/org.openbravo.service.datasource/Product`. The local port is configurable:
+use a separate port while Classic occupies 8080; use 8080 only when available.
+Do not replace or stop the existing Classic deployment to claim URL compatibility.
 
 Before DAL bootstrap, `verifyClassicDatabase -PclassicProperties=/absolute/path/to/Openbravo.properties`
 performs a read-only JDBC preflight. It checks PostgreSQL, the Product dictionary
@@ -174,6 +178,11 @@ The first successful database check found 656 dictionary entities and generated
 implementations and their metadata mappings. A TreeDomainType HQL predicate now
 binds its boolean parameter so the existing Y/N mapping performs conversion.
 This validates dictionary bootstrap, not yet a DAL SessionFactory or HTTP service.
+
+The next `verifyClassicDal` gate starts the real DalSessionFactoryController with
+the full generated Classic model and runs Product HQL. It explicitly checks that
+the DAL JDBC connection is read-only and rolls back the query transaction.
+It does not establish role security or datasource HTTP compatibility by itself.
 
 ## Production scope limits
 

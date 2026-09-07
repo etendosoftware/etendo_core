@@ -13,7 +13,8 @@ public final class ClassicModelValidation {
     private ClassicModelValidation() {}
 
     public static void main(String[] args) throws Exception {
-        Path report = Path.of("build/classic-model-result.txt");
+        boolean dal = Boolean.getBoolean("validation.classicDal");
+        Path report = Path.of(dal ? "build/classic-dal-result.txt" : "build/classic-model-result.txt");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "RUNNING\n");
         Properties external = new Properties();
@@ -64,9 +65,38 @@ public final class ClassicModelValidation {
                 product.getProperty(property);
             }
             long persistent = model.stream().filter(entity -> !entity.isDataSourceBased() && !entity.isHQLBased()).count();
+            if (dal) {
+                for (var entity : model) {
+                    if (entity.isDataSourceBased() || entity.isHQLBased()) continue;
+                    Class<?> type = entity.getMappingClass();
+                    org.openbravo.base.provider.OBProvider.getInstance().register(type, type, false);
+                    org.openbravo.base.provider.OBProvider.getInstance().register(entity.getName(), type, false);
+                }
+                SessionFactoryController.setRunningInWebContainer(true);
+                SessionFactoryController.setInstance(new org.openbravo.dal.core.DalSessionFactoryController());
+                var factory = SessionFactoryController.getInstance().getSessionFactory();
+                try (var session = factory.openSession()) {
+                    var transaction = session.beginTransaction();
+                    try {
+                        session.doWork(connection -> {
+                            try (var statement = connection.createStatement();
+                                    var result = statement.executeQuery("show transaction_read_only")) {
+                                if (!result.next() || !"on".equals(result.getString(1))) {
+                                    throw new IllegalStateException("DAL connection is not read-only");
+                                }
+                            }
+                        });
+                        Long products = session.createQuery("select count(p.id) from Product p", Long.class).uniqueResult();
+                        if (products == null || products == 0) throw new IllegalStateException("Product HQL returned no records");
+                        System.out.println("PASS: Actual Classic DAL Product HQL count: " + products);
+                    } finally { transaction.rollback(); }
+                }
+            }
             Files.writeString(report, "PASS\nReal Classic dictionary entities: " + model.size()
                     + "\nPersistent generated mappings resolved: " + persistent
-                    + "\nProduct properties and generated mapping class resolved\nHTTP and DAL startup remain unverified\n");
+                    + "\nProduct properties and generated mapping class resolved\n"
+                    + (dal ? "Actual DAL SessionFactory and read-only Product HQL passed\nHTTP and role security remain unverified\n"
+                            : "HTTP and DAL startup remain unverified\n"));
             System.out.println("PASS: Existing Classic dictionary and generated mapping classes: " + model.size());
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
