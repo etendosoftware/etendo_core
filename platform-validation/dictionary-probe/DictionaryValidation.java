@@ -34,6 +34,7 @@ public final class DictionaryValidation {
         Files.writeString(report, "RUNNING\n");
         Path propertiesFile = null;
         boolean started = false;
+        boolean retain = false;
         BasicDataSource source = new BasicDataSource();
         try {
             PersistenceValidation.command("docker", "run", "--pull=never", "--rm", "-d", "--name", container,
@@ -141,6 +142,13 @@ public final class DictionaryValidation {
             }
             if (upgrade) UpgradeValidation.verify(platform, source, schema, propertiesFile);
             if (tomcat) TomcatValidation.verify(propertiesFile, source);
+            if (tomcat && Boolean.getBoolean("validation.keepDatabase")) {
+                Files.writeString(Path.of("build/platform-instance-location.txt"),
+                        propertiesFile.toAbsolutePath() + "\n" + container + "\n");
+                System.out.println("Retained private configuration: " + propertiesFile.toAbsolutePath());
+                System.out.println("Retained owned database container: " + container);
+                retain = true;
+            }
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
             throw failure;
@@ -149,9 +157,9 @@ public final class DictionaryValidation {
                 source.close();
             } finally {
                 try {
-                    if (propertiesFile != null) Files.deleteIfExists(propertiesFile);
+                    if (propertiesFile != null && !retain) Files.deleteIfExists(propertiesFile);
                 } finally {
-                    if (started) PersistenceValidation.command("docker", "stop", "--time", "2", container);
+                    if (started && !retain) PersistenceValidation.command("docker", "stop", "--time", "2", container);
                 }
             }
         }

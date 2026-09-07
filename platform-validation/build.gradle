@@ -369,6 +369,24 @@ tasks.named('war', War) {
 
 tasks.register('platformWar') { dependsOn war }
 
+tasks.register('runPlatform', JavaExec) {
+    group = 'application'
+    description = 'Run a minimal platform WAR against retained fixture configuration.'
+    def ui = providers.gradleProperty('platformUi').orElse('false').get() == 'true'
+    dependsOn ui ? 'platformUiWar' : 'platformWar'
+    dependsOn tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.CompatibilityServer'
+    workingDir = projectDir
+    jvmArgs '--add-opens=java.base/java.io=ALL-UNNAMED', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+            '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
+    doFirst {
+        args file(ui ? 'build/libs/platform-ui.war' : 'build/libs/platform-validation.war').absolutePath,
+                file(project.property('platformProperties')).absolutePath,
+                (project.findProperty('platformPort') ?: '8091'), '/platform'
+    }
+}
+
 tasks.register('platformUiWar', Zip) {
     group = 'build'
     description = 'Add optional application UI assets to the unchanged minimal REST backend.'
@@ -522,6 +540,7 @@ tasks.register('verifyClassicDatabase', JavaExec) {
 }
 
 tasks.register('verifyTomcat', JavaExec) {
+    systemProperty 'validation.keepDatabase', providers.gradleProperty('keepDatabase').orElse('false').get()
     if (providers.gradleProperty('platformUi').orElse('false').get() == 'true') {
         dependsOn 'platformUiWar'
         systemProperty 'validation.ui', 'true'

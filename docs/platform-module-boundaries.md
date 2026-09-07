@@ -120,6 +120,25 @@ the optional UI profile. Both execute the same authenticated persistence/update
 checks and redeployment test; static UI routes must return 404 in REST and be
 served in UI mode. These HTTP checks do not execute browser JavaScript.
 
+For interactive validation, `verifyTomcat -PkeepDatabase=true` retains its owned
+database and private properties only after all checks pass. Stopping the database
+container removes its temporary data. Stop the reported container when finished.
+
+With JDK 17, use the reported private properties path in separate terminals:
+
+```bash
+./gradlew -p platform-validation runPlatform -PplatformProperties=/absolute/private.properties -PplatformPort=8091
+./gradlew -p platform-validation runPlatform -PplatformProperties=/absolute/private.properties -PplatformPort=8092 -PplatformUi=true
+```
+
+REST is at `http://127.0.0.1:8091/platform/requests`; the optional UI is at
+`http://127.0.0.1:8092/platform/index.html`. The owner-only properties file contains
+`platform.validation.token` and `platform.validation.readOnlyToken`. Enter the
+appropriate token in the UI without committing or sharing that file. Tokens are
+fixture-scoped; they are not an authentication design for production. Stop each
+foreground server with Ctrl-C before stopping the database. Do not clean the
+validation build directory while using its retained configuration or deployments.
+
 1. ERP UI: shared core plus PostgreSQL/DBSM, compatibility, ERP and existing UI.
    Verify authenticated original Product behavior against persisted data.
 2. Platform UI: shared core plus PostgreSQL/DBSM, application-owned model, REST
