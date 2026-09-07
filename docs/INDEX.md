@@ -1,5 +1,8 @@
 # Documentation
 
+- [platform-impact-analysis.md](platform-impact-analysis.md): bounded Java impact
+  analysis of the original UI login validation composition.
+
 - [platform-validation.md](platform-validation.md): scope and findings of the first
   executable persistence feasibility check.
 - index.yaml: document review state.

@@ -1,4 +1,6 @@
 documents:
+  - path: platform-impact-analysis.md
+    status: modificar
   - path: INDEX.md
     status: done
   - path: platform-validation.md

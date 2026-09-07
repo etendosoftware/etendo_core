@@ -1,0 +1,49 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+// Inspect the existing verification composition without running its JavaExec action.
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    project.tasks.register('exportUiLoginImpact') {
+        group = 'verification'
+        description = 'Export the existing UI login child classpath for read-only impact analysis.'
+        doLast {
+            def probe = project.tasks.named('verifyUiLogin').get()
+            if (!(probe instanceof JavaExec) || probe.actions.size() != 2 ||
+                    probe.mainClass.get() != 'com.etendoerp.platform.validation.DictionaryValidation') {
+                throw new GradleException('Verification task shape changed; review the classpath exporter.')
+            }
+            // The first action only configures validation.dalClasspath in build.gradle.
+            // Never execute the following JavaExec action or the task dependency graph.
+            probe.actions.first().execute(probe)
+            def runtime = probe.systemProperties['validation.dalClasspath']
+            if (!runtime) throw new GradleException('Missing child runtime classpath.')
+            def generated = project.file(project.property('impactGeneratedClasses'))
+            if (!new File(generated, 'com/etendoerp/platform/validation/UiDalValidation.class').isFile() ||
+                    !new File(generated, 'org/openbravo/model/ad/ui/Window.class').isFile()) {
+                throw new GradleException('Select an existing compiled UI fixture class directory.')
+            }
+            def artifacts = [generated] + runtime.split(java.util.regex.Pattern.quote(File.pathSeparator))
+                    .collect { new File(it) }
+            artifacts.findAll { !it.exists() }.each { artifact ->
+                if (artifact.name.endsWith('.jar') || !artifact.path.contains('/build/resources/')) {
+                    throw new GradleException("Missing runtime artifact: ${artifact}")
+                }
+                println "Absent Gradle resource directory (no bytecode): ${artifact}"
+            }
+            artifacts = artifacts.findAll { it.exists() }.unique { it.canonicalPath }
+            def template = new JsonSlurper().parse(project.file(project.property('impactTemplate')))
+            template.artifacts = artifacts.collect { artifact ->
+                [path: artifact.canonicalPath, origin: artifact == generated ? 'generated' :
+                    artifact.canonicalPath.startsWith(project.projectDir.canonicalPath + File.separator) ? 'project' : 'external']
+            }
+            template.sourceRoots += ['platform-validation/build/ui-generated-entities', 'modules_core']
+            def output = project.file(project.property('impactOutput'))
+            if (output.exists()) throw new GradleException('Refusing to overwrite an existing impact configuration.')
+            template.output = output.canonicalPath.replaceFirst(/\.json$/, '') + '-report'
+            output.parentFile.mkdirs()
+            output.text = JsonOutput.prettyPrint(JsonOutput.toJson(template)) + '\n'
+            println "Exported ${artifacts.size()} ordered artifacts to ${output}"
+        }
+    }
+}
