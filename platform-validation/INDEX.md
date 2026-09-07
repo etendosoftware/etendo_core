@@ -11,6 +11,7 @@ See ../docs/platform-validation.md for prerequisites, provenance, and limits.
 - dictionary-probe: dictionary, security data, generation, and upgrade orchestration.
 - dal-probe: actual OBDal runtime and security checks in separate JVMs.
 - build.gradle: isolated dependencies and verification tasks.
+- ui-dependency-inventory.mjs: read-only UI source dependency inventory and matching controls.
 - web and webapp: deployable WAR runtime and Servlet 6.0 descriptor.
 - tomcat-probe: real WAR deployment, HTTP checks, and redeployment in isolated Tomcat.
 - classic-probe: read-only external dictionary bootstrap and entity generation.

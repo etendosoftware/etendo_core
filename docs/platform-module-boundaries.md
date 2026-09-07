@@ -385,3 +385,28 @@ context facade from shared context ownership. Address accounting and process/UI
 type dependencies next. Promote the extracted implementation into independently
 buildable Gradle modules only with enforced dependency direction and profile tests.
 Keep the existing Product validation as a compatibility control throughout.
+# Shared original UI extraction checkpoint
+
+The next acceptance target is original dictionary-driven UI operation for
+application-owned entities without Product, Warehouse or BusinessPartner, using
+the same UI artifacts as ERP. Both headless compositions must remain UI-free.
+
+Initial source inspection found Warehouse dependencies in
+UserInfoWidgetActionHandler, Product dependencies in CharacteristicsUIDefinition
+and RemoveImagesEventHandler, and business-process scripts registered globally
+by ApplicationComponentProvider. These must become explicit ERP contributions,
+not empty entity stubs or a copied application frontend.
+
+Run `node platform-validation/ui-dependency-inventory.mjs` for a deterministic
+source inventory of model imports and direct web/js resource registrations in
+the application, kernel and selector modules. This is a discovery tool, not a
+transitive dependency proof: reflective loading, SQL, templates, dynamic resource
+paths, login and servlet initialization still require separate analysis and real
+runtime tests. It does not treat Organization or other shared security metadata
+as ERP business entities. Run with `--self-test` to verify its matching rules.
+
+The first extraction should separate ERP resource contributions from the shared
+application provider while preserving the ERP resource ordering and public API.
+Then separate user-context ERP preferences and expand the minimal XML dictionary
+for original login, menu, windows, tabs, fields and references. Passing this
+inventory alone does not satisfy the UI goal.
