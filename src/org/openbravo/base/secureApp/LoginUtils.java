@@ -14,16 +14,12 @@ package org.openbravo.base.secureApp;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,17 +28,12 @@ import org.openbravo.base.HttpBaseUtils;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.security.OrganizationStructureProvider;
-import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
-import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.XMLUtil;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.security.SessionLogin;
-import org.openbravo.erpCommon.utility.DimensionDisplayUtility;
-import org.openbravo.erpCommon.utility.OBLedgerUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
@@ -51,7 +42,6 @@ import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.ad.system.Client;
-import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -213,6 +203,7 @@ public class LoginUtils {
     }
 
     OBContext currentContext = OBContext.getOBContext();
+    LoginSessionSupport sessionSupport = LoginSessionSupport.getInstance();
     // set the obcontext
     try {
       boolean sameContext = currentContext != null
@@ -222,8 +213,8 @@ public class LoginUtils {
           && currentContext.getCurrentOrganization().getId().equals(strOrg)
           && currentContext.getLanguage() != null
           && currentContext.getLanguage().getLanguage().equals(strLanguage)
-          && currentContext.getWarehouse() != null
-          && currentContext.getWarehouse().getId().equals(strAlmacen);
+          && sessionSupport.getContextWarehouseId() != null
+          && sessionSupport.getContextWarehouseId().equals(strAlmacen);
       if (!lightLogin || !sameContext) {
         OBContext.setOBContext(strUserAuth, strRol, strCliente, strOrg, strLanguage, strAlmacen);
       }
@@ -263,7 +254,7 @@ public class LoginUtils {
     OBContext.setAdminMode();
     try {
       client = OBDal.getInstance().get(Client.class, strCliente);
-      isAccountingDimensionConfigCentrally = client.isAcctdimCentrallyMaintained();
+      isAccountingDimensionConfigCentrally = sessionSupport.isAccountingDimensionConfigCentrally(client);
 
       vars.setSessionValue("#AccessibleOrgTree", StringCollectionUtils
           .commaSeparated(OBContext.getOBContext().getReadableOrganizations()));
@@ -291,75 +282,10 @@ public class LoginUtils {
       vars.setSessionValue("#Client_Value", data[0].value);
       data = null;
 
-      // Get General Ledger of login organization
+      // Optional business-domain session values, before generic UI preferences.
       if (!lightLogin) {
-        AttributeData[] attr = null;
-        String acctSchemaId = OBLedgerUtils.getOrgLedger(strOrg);
-        if (StringUtils.isNotEmpty(acctSchemaId)) {
-          attr = AttributeData.selectAcctSchema(conn, acctSchemaId,
-              Utility.getContext(conn, vars, "#User_Client", "LoginHandler"));
-        }
-
-        // Get General Ledger of context organizations
-        // Before going for all organizations, check if any org has an accounting schema
-        if (ArrayUtils.isEmpty(attr) && existsAnyOrgWithLedgerConfigured()) {
-          String[] orgList = Utility.getContext(conn, vars, "#User_Org", "LoginHandler")
-              .replace("'", "")
-              .split(",");
-          for (String orgId : orgList) {
-            if (!StringUtils.equals(orgId, strOrg)) {
-              acctSchemaId = OBLedgerUtils.getOrgLedger(orgId);
-              if (StringUtils.isNotEmpty(acctSchemaId)) {
-                attr = AttributeData.selectAcctSchema(conn, acctSchemaId,
-                    Utility.getContext(conn, vars, "#User_Client", "LoginHandler"));
-                if (ArrayUtils.isNotEmpty(attr)) {
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        if (attr != null && attr.length > 0) {
-          vars.setSessionValue("$C_AcctSchema_ID", attr[0].value);
-          AttributeData[] orgCurrency = AttributeData.selectOrgCurrency(conn, strOrg, strCliente);
-          if (orgCurrency.length > 0) {
-            vars.setSessionValue("$C_Currency_ID", orgCurrency[0].cCurrencyId);
-          } else {
-            vars.setSessionValue("$C_Currency_ID", attr[0].attribute);
-          }
-          vars.setSessionValue("#StdPrecision",
-              AttributeData.selectStdPrecision(conn, attr[0].attribute,
-                  Utility.getContext(conn, vars, "#User_Client", "LoginHandler"),
-                  Utility.getContext(conn, vars, "#User_Org", "LoginHandler")));
-          vars.setSessionValue("$HasAlias", attr[0].hasalias);
-
-          // Load also old accounting dimension visibility session variables
-          // Some of the dimensions still use old behavior: Activity, Sales Campaign, Asset
-          for (int i = 0; i < attr.length; i++) {
-            vars.setSessionValue("$Element_" + attr[i].elementtype, "Y");
-          }
-        }
-        attr = null;
-
-        // Compute accounting dimensions visibility session variables
-        // Project, Business Partner, Product, Cost Center, User1, User2
-        vars.setSessionValue(DimensionDisplayUtility.IsAcctDimCentrally,
-            isAccountingDimensionConfigCentrally ? "Y" : "N");
-        if (isAccountingDimensionConfigCentrally) {
-          Map<String, String> acctDimMap = DimensionDisplayUtility
-              .getAccountingDimensionConfiguration(client);
-          for (Map.Entry<String, String> entry : acctDimMap.entrySet()) {
-            vars.setSessionValue(entry.getKey(), entry.getValue());
-          }
-        }
-        // Load session variables for computing read only logic for accounting dimension
-        // configuration in in Client window
-        Map<String, String> readOnlySessionVariableMap = DimensionDisplayUtility
-            .getReadOnlyLogicSessionVariables();
-        for (Map.Entry<String, String> entry : readOnlySessionVariableMap.entrySet()) {
-          vars.setSessionValue(entry.getKey(), entry.getValue());
-        }
+        sessionSupport.initializeAccounting(conn, vars, client,
+            isAccountingDimensionConfigCentrally, strOrg, strCliente);
 
         List<Preference> preferences = Preferences.getAllPreferences(strCliente, strOrg,
             strUserAuth, strRol);
@@ -421,13 +347,6 @@ public class LoginUtils {
     return true;
   }
 
-  private static boolean existsAnyOrgWithLedgerConfigured() {
-    OBCriteria<Organization> orgCriteria = OBDal.getInstance().createCriteria(Organization.class);
-    orgCriteria.add(Restrictions.isNotNull(Organization.PROPERTY_GENERALLEDGER));
-    orgCriteria.setMaxResults(1);
-    return orgCriteria.uniqueResult() != null;
-  }
-
   /**
    * Obtains defaults defined for a user and throws DefaultValidationException in case they are not
    * correct.
@@ -461,10 +380,8 @@ public class LoginUtils {
     }
     validateDefault(strClient, strRole, "Client");
 
-    String strWarehouse = DefaultOptionsData.defaultWarehouse(cp, strUserAuth);
-    if (strWarehouse == null) {
-      strWarehouse = getDefaultWarehouse(cp, strClient, strOrg, strRole);
-    }
+    String strWarehouse = LoginSessionSupport.getInstance()
+        .getUserDefaultWarehouse(cp, strUserAuth, strClient, strOrg, strRole);
     RoleDefaults defaults = new RoleDefaults();
     defaults.role = strRole;
     defaults.client = strClient;
@@ -631,28 +548,7 @@ public class LoginUtils {
    */
   public static String getDefaultWarehouse(ConnectionProvider connectionProvider, String strClient,
       String strOrg, String strRole) throws ServletException {
-    long t = System.currentTimeMillis();
-    String strWarehouse;
-    if (!strRole.equals("0")) {
-      // Pick the warehouse using the given organization
-      strWarehouse = DefaultOptionsData.getDefaultWarehouse(connectionProvider, strClient,
-          "'" + strOrg + "'");
-      if (strWarehouse == null || strWarehouse.isEmpty()) {
-        // If no warehouse for the default organization is available, pick using using the
-        // accessible tree
-
-        OrganizationStructureProvider osp = OBContext.getOBContext()
-            .getOrganizationStructureProvider(strClient);
-
-        Set<String> orgNaturalTree = osp.getNaturalTree(strOrg);
-
-        strWarehouse = DefaultOptionsData.getDefaultWarehouse(connectionProvider, strClient,
-            StringCollectionUtils.commaSeparated(orgNaturalTree));
-      }
-    } else {
-      strWarehouse = "";
-    }
-    log4j.debug("getDefaultWarehouse " + (System.currentTimeMillis() - t));
-    return strWarehouse;
+    return LoginSessionSupport.getInstance()
+        .getDefaultWarehouse(connectionProvider, strClient, strOrg, strRole);
   }
 }

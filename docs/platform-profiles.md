@@ -137,6 +137,20 @@ node platform-validation/browser-probe/verify-platform.mjs "$PLATFORM_PROPERTIES
 node platform-validation/browser-probe/verify-erp-ui.mjs
 ```
 
+Original login extraction checks (test credentials supplied privately through the
+same environment variables as the browser probe):
+
+```bash
+./gradlew -p platform-validation verifyClassicLogin verifyPlatformLoginSession verifyModelUiApi \
+  -PclassicProperties="$COPY_PROPERTIES" -PclassicWar="$CLASSIC_WAR"
+```
+
+`verifyClassicLogin` compares the original WAR's login session values with the
+extracted canonical implementation. `verifyPlatformLoginSession` checks only the
+ERP-free domain contribution, not a complete platform login. For a temporary ERP
+deployment, set `PLATFORM_ERP_URL=http://127.0.0.1:8095/etendo/` when running the
+browser probe; it defaults to 8093 and rejects non-loopback URLs.
+
 Product checks require PLATFORM_TEST_USERNAME and PLATFORM_TEST_PASSWORD. The ERP
 browser probe also requires PLATFORM_COPY_CONTAINER, the labeled copy name; its
 independent expectations use a read-only Docker/psql transaction. Browser probes

@@ -107,6 +107,55 @@ JAVA_HOME=/path/to/jdk-17 ./gradlew -p platform-core clean build --console=plain
 
 ## Concrete extraction seams
 
+### Original login session composition (in progress)
+
+The next web integration block retains `LoginHandler`, `LoginUtils`, password
+verification and role/client/organization checks. `LoginUtils` currently also
+selects a warehouse and initializes ledger, currency and accounting-dimension
+session values. Extract these ERP contributions behind a server-owned composition
+contract; the default remains the original ERP implementation. An explicitly
+selected platform implementation must not load those classes or execute their SQL.
+Missing or invalid composition must fail, never silently disable ERP behavior.
+HTTP parameters must not select the implementation. Existing public method
+signatures and the ordering of session initialization remain unchanged.
+
+`LoginSessionSupport` now owns that contract. Trusted server property
+`login.session.support.class` selects its implementation once per application
+class loader. Absent configuration retains `ErpLoginSessionSupport`; empty,
+missing or wrong-type configuration fails initialization. The ERP-free composition
+explicitly selects `org.openbravo.base.secureApp.PlatformLoginSessionSupport`.
+No request parameter or automatic missing-class fallback selects platform mode.
+This is an internal deployment boundary, not an authentication bypass.
+
+`verifyClassicLogin` first executes the baseline WAR's original `LoginUtils`, then
+the extracted canonical class, in separate JVMs over the owned copy. Both execute
+password checks, defaults, full session initialization, same-scope light login and
+invalid role/client/organization rejection. It compares every session string set
+by full login except the random CSRF token, using private value-hash reports; the
+current fixture matched 580 values. It independently checks CSRF rotation and
+context stability. `verifyModelUiApi` also checks `LoginUtils` and `RoleDefaults`
+public/protected declarations and JVM descriptors against the original WAR.
+
+`verifyPlatformLoginSession` loads the same `LoginUtils` warehouse facade with
+the platform contribution and no ERP adapter, Product, Warehouse or BusinessPartner
+classes. Its connection provider rejects any SQL access. Four isolated negative
+configuration checks verify failure rather than fallback. This gate proves only
+the extracted contribution, **not full platform login**. The probe currently
+needs Quartz's exception type through the unchanged `VariablesSecureApp` API;
+this dependency is probe-local, not added to either headless composition.
+
+The newly built ERP WAR also passed real original browser login, shell readiness,
+Product projection/references/filtering/paging/order, anonymous denial, six
+restricted role scopes and fresh-session restoration on temporary port 8095.
+The pre-existing 8093 process was not restarted by this regression.
+
+Remaining login dependencies are explicit: `SeguridadData.select` still queries
+ERP approval/currency and User business-partner columns; generic session-default
+SQLC queries and preferences must run on the minimal schema; `LoginHandler`, the
+login page, web lifecycle/license policy, and the profile widget must be integrated
+without their remaining Warehouse dependencies. This extraction does not make
+the platform UI navigable and must not be presented as completed browser CRUD.
+
 | ID | Current code | Intended destination | Remaining coupling and separation gate |
 | --- | --- | --- | --- |
 | CTX-ERP-INIT | ErpContextSupport | platform-compat-etendo | Calls generated User/Warehouse and the existing SessionHandler; move behind the shared context extension contract, retaining initialization order. |

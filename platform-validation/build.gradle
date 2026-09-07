@@ -13,7 +13,7 @@ java {
 }
 
 sourceSets.main.java.srcDirs = ['src']
-configurations { erpUiContainerRuntime; uiFieldContainerRuntime }
+configurations { erpUiContainerRuntime; uiFieldContainerRuntime; loginSessionProbeRuntime }
 
 // Compile the actual dictionary bootstrap separately from the ERP application.
 sourceSets {
@@ -31,6 +31,7 @@ sourceSets {
     }
     classicJson {
         java {
+            srcDir '../src'
             srcDir '../modules_core/org.openbravo.client.application/src'
             srcDir '../modules_core/org.openbravo.service.datasource/src'
             srcDir '../modules_core/org.openbravo.service.json/src'
@@ -43,6 +44,10 @@ sourceSets {
             include 'org/openbravo/service/json/AdvancedQueryBuilder.java'
             include 'org/openbravo/client/kernel/KernelUtils.java'
             include 'org/openbravo/client/application/window/ApplicationDictionaryCachedStructures.java'
+            include 'org/openbravo/base/secureApp/LoginUtils.java'
+            include 'org/openbravo/base/secureApp/LoginSessionSupport.java'
+            include 'org/openbravo/base/secureApp/ErpLoginSessionSupport.java'
+            include 'org/openbravo/base/secureApp/PlatformLoginSessionSupport.java'
         }
     }
     classicServiceProbe { java.srcDirs = ['classic-service-probe'] }
@@ -236,6 +241,46 @@ tasks.register('prepareUiWindowTemplates', Sync) {
     from('../modules_core/org.openbravo.client.application/src') { include '**/templates/*.ftl' }
     from('../modules_core/org.openbravo.service.datasource/src') { include '**/templates/*.ftl' }
     into layout.buildDirectory.dir('ui-window-templates')
+}
+tasks.register('compilePlatformLoginSession', JavaCompile) {
+    dependsOn 'compileClassicJsonJava', dalClasses
+    source '../src/org/openbravo/base/secureApp/LoginUtils.java'
+    source '../src/org/openbravo/base/secureApp/LoginSessionSupport.java'
+    source '../src/org/openbravo/base/secureApp/PlatformLoginSessionSupport.java'
+    source '../src/org/openbravo/base/secureApp/DefaultValidationException.java'
+    source '../src/org/openbravo/erpCommon/utility/PropertyException.java'
+    source '../src/org/openbravo/base/secureApp/VariablesSecureApp.java'
+    source '../src/org/openbravo/erpCommon/utility/OBError.java'
+    source '../src-core/src/org/openbravo/base/VariablesBase.java'
+    source '../src-core/src/org/openbravo/base/HttpSessionWrapper.java'
+    source '../src-core/src/org/openbravo/utils/FormatUtilities.java'
+    source '../src-core/src/org/openbravo/data/FieldProvider.java'
+    source fileTree('../src-core/src/org/openbravo/base/filter') { include '*.java' }
+    source 'dal-probe/PlatformLoginSessionValidation.java'
+    classpath = classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('platform-login-session')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
+def loginCompositionChecks = []
+['platform', 'blank', 'invalid', 'missing', 'default'].each { mode ->
+    def name = 'verifyLoginComposition' + mode.capitalize()
+    loginCompositionChecks.add(name)
+    tasks.register(name, JavaExec) {
+        group = 'verification'
+        description = "Verify explicit platform session composition (${mode}) without an ERP runtime."
+        dependsOn 'compilePlatformLoginSession'
+        classpath = files(layout.buildDirectory.dir('platform-login-session')) + sourceSets.dal.runtimeClasspath +
+                configurations.loginSessionProbeRuntime
+        mainClass = 'com.etendoerp.platform.validation.PlatformLoginSessionValidation'
+        args mode
+        systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    }
+}
+tasks.register('verifyPlatformLoginSession') {
+    group = 'verification'
+    description = 'Verify ERP-free session contribution and fail-closed server configuration.'
+    dependsOn loginCompositionChecks
 }
 tasks.register('verifyUiArtifactPackaging') {
     group = 'verification'
@@ -625,7 +670,7 @@ def apiDeclarations = { File classFile, int minimumEntries = 10 ->
 
 tasks.register('verifyModelUiApi') {
     group = 'verification'
-    description = 'Preserve Entity, KernelUtils and OBYesNoType public/protected APIs against Classic.'
+    description = 'Preserve extracted model, UI and login public/protected APIs against Classic.'
     dependsOn 'compileClassicJsonJava'
     doLast {
         def report = layout.buildDirectory.file('model-ui-api-result.txt').get().asFile
@@ -633,8 +678,10 @@ tasks.register('verifyModelUiApi') {
         boolean incompatible = false
         ['org/openbravo/base/model/Entity': 'bootstrap',
          'org/openbravo/base/session/OBYesNoType': 'bootstrap',
+         'org/openbravo/base/secureApp/LoginUtils': 'classicJson',
+         'org/openbravo/base/secureApp/LoginUtils$RoleDefaults': 'classicJson',
          'org/openbravo/client/kernel/KernelUtils': 'classicJson'].each { type, sourceSet ->
-            int minimumEntries = type.endsWith('/OBYesNoType') ? 8 : 10
+            int minimumEntries = type.endsWith('/OBYesNoType') ? 8 : type.endsWith('$RoleDefaults') ? 6 : 10
             def before = apiDeclarations(file("build/classic-compatibility/WEB-INF/classes/${type}.class"), minimumEntries)
             def after = apiDeclarations(file("build/classes/java/${sourceSet}/${type}.class"), minimumEntries)
             if (type.endsWith('/OBYesNoType')) {
@@ -649,7 +696,7 @@ tasks.register('verifyModelUiApi') {
         if (incompatible) {
             throw new GradleException("Model/UI API changed; inspect ${report}")
         }
-        logger.lifecycle('PASS: Baseline Entity, KernelUtils and OBYesNoType declarations and JVM descriptors preserved')
+        logger.lifecycle('PASS: Baseline Entity, KernelUtils, OBYesNoType and LoginUtils declarations and JVM descriptors preserved')
     }
 }
 
@@ -696,6 +743,9 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    // VariablesSecureApp's existing scheduler-exception signature; probe only, not a headless dependency.
+    loginSessionProbeRuntime 'org.quartz-scheduler:quartz:2.3.2'
+    loginSessionProbeRuntime 'commons-codec:commons-codec:1.17.1'
     uiFieldContainerRuntime 'org.jboss.weld.se:weld-se-core:5.1.2.Final'
     uiFieldContainerRuntime 'org.codehaus.jettison:jettison:1.5.4'
     webImplementation 'org.codehaus.jettison:jettison:1.5.4'
@@ -916,6 +966,41 @@ tasks.register('verifyClassicJson', JavaExec) {
     workingDir = projectDir
     systemProperty 'validation.classicDal', 'true'
     systemProperty 'validation.classicCallback', 'com.etendoerp.platform.validation.ClassicJsonValidation'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    doFirst { args file(project.property('classicProperties')).absolutePath }
+}
+
+tasks.register('prepareOriginalLoginBaseline', Sync) {
+    dependsOn 'prepareClassicCompatibility'
+    from('build/classic-compatibility/WEB-INF/classes') {
+        include 'org/openbravo/base/secureApp/LoginUtils*.class'
+    }
+    into layout.buildDirectory.dir('original-login-baseline')
+}
+tasks.register('verifyOriginalLoginBaseline', JavaExec) {
+    group = 'verification'
+    description = 'Capture original LoginUtils session behavior before comparing the extraction.'
+    dependsOn classicServiceProbeClasses, 'prepareOriginalLoginBaseline'
+    classpath = files(layout.buildDirectory.dir('original-login-baseline')) + sourceSets.classicServiceProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicModelValidation'
+    workingDir = projectDir
+    systemProperty 'validation.classicDal', 'true'
+    systemProperty 'validation.classicCallback', 'com.etendoerp.platform.validation.ClassicLoginValidation'
+    systemProperty 'validation.loginLocation', '/original-login-baseline/'
+    systemProperty 'validation.loginReport', 'build/original-login-session.txt'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    doFirst { args file(project.property('classicProperties')).absolutePath }
+}
+tasks.register('verifyClassicLogin', JavaExec) {
+    group = 'verification'
+    description = 'Exercise original login defaults and full session initialization on the owned copy.'
+    dependsOn classicServiceProbeClasses, 'verifyOriginalLoginBaseline'
+    classpath = sourceSets.classicServiceProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicModelValidation'
+    workingDir = projectDir
+    systemProperty 'validation.classicDal', 'true'
+    systemProperty 'validation.classicCallback', 'com.etendoerp.platform.validation.ClassicLoginValidation'
+    systemProperty 'validation.loginBaseline', 'build/original-login-session.txt'
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     doFirst { args file(project.property('classicProperties')).absolutePath }
 }

@@ -5,6 +5,10 @@ import { readScopeSnapshot, expectedProducts } from './erp-scope-snapshot.mjs';
 const username = process.env.PLATFORM_TEST_USERNAME;
 const password = process.env.PLATFORM_TEST_PASSWORD;
 assert(username && password, 'Supply test credentials through the process environment');
+const baseUrl = new URL(process.env.PLATFORM_ERP_URL ?? 'http://127.0.0.1:8093/etendo/');
+assert(baseUrl.protocol === 'http:' && baseUrl.hostname === '127.0.0.1'
+  && baseUrl.pathname === '/etendo/' && !baseUrl.username && !baseUrl.password
+  && !baseUrl.search && !baseUrl.hash, 'ERP browser verification requires a loopback /etendo/ URL');
 const snapshot = readScopeSnapshot(username);
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const activeRequests = new Map();
@@ -26,14 +30,14 @@ try {
   page.on('request', request => trace('start', request));
   page.on('requestfinished', request => trace('finished', request));
   page.on('requestfailed', request => trace('failed', request));
-  await page.goto('http://127.0.0.1:8093/etendo/');
+  await page.goto(baseUrl.href);
   await page.locator('#user').fill(username);
   await page.locator('#password').fill(password);
   await page.locator('#buttonOK').click();
   await page.waitForURL(url => !url.pathname.includes('/security/Login'), { timeout: 30000 });
   await page.waitForFunction(() => Boolean(window.OB?.MainView?.TabSet && window.isc?.OBViewGrid),
     undefined, { timeout: 60000 });
-  const endpoint = 'http://127.0.0.1:8093/etendo/org.openbravo.service.datasource/Product';
+  const endpoint = new URL('org.openbravo.service.datasource/Product', baseUrl).href;
   const form = { _operationType: 'fetch', windowId: '140', tabId: '180', _startRow: '0', _endRow: '100',
     _sortBy: 'searchKey', _selectedProperties: 'id,name,searchKey,client,organization,productCategory' };
   async function fetch(overrides = {}) {
@@ -83,7 +87,7 @@ try {
     assert.equal(denied.status(), 200);
     assert.match(denied.headers()['content-type'], /^application\/javascript/);
     assert.equal((await denied.text()).trim(),
-      "window.location.href = 'http://127.0.0.1:8093/etendo/security/Login';",
+      `window.location.href = '${new URL('security/Login', baseUrl).href}';`,
       'Anonymous response must contain only the legacy login redirect, never Product data');
   } finally { await anonymous.close(); }
   const client = full.data[0].client;
@@ -102,7 +106,7 @@ try {
     const expected = expectedProducts(snapshot, context);
     if (!expected.length || expected.length >= expectedClient.length) continue;
     phase = `role-switch-${checkedRoles.size}`;
-    const switched = await page.request.post('http://127.0.0.1:8093/etendo/org.openbravo.client.kernel', {
+    const switched = await page.request.post(new URL('org.openbravo.client.kernel', baseUrl).href, {
       params: { _action: 'org.openbravo.client.application.navigationbarcomponents.UserInfoWidgetActionHandler', command: 'save' },
       data: { role: context.role, organization: context.organization, default: false }
     });
@@ -125,7 +129,7 @@ try {
   const fresh = await browser.newContext();
   try {
     const login = await fresh.newPage();
-    await login.goto('http://127.0.0.1:8093/etendo/');
+    await login.goto(baseUrl.href);
     await login.locator('#user').fill(username);
     await login.locator('#password').fill(password);
     await login.locator('#buttonOK').click();

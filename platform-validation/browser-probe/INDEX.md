@@ -18,3 +18,7 @@ erp-scope-snapshot.mjs reads independent Product and organization-grant expectat
 from the running labeled Classic copy using Docker/psql and a read-only transaction.
 Set PLATFORM_COPY_CONTAINER to that container name. The browser probe compares
 the default client and restricted session roles, then checks a fresh default login.
+
+Set `PLATFORM_ERP_URL=http://127.0.0.1:8095/etendo/` to test a temporary ERP
+deployment without interrupting 8093. Only loopback HTTP `/etendo/` URLs are
+accepted; all login, datasource, role-switch and fresh-session requests use it.
