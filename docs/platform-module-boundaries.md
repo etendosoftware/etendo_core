@@ -249,8 +249,13 @@ completion. `verifyEntityMetadata` passed for empty, mandatory and optional
 identifiers with `KernelUtils` absent from the test classpath. Both the legacy
 facade and updated query service compile from source. `verifyClassicJson` passed
 against the owned copy with the updated classes: 80 persisted products through
-HQL and an 11-row original datasource fetch. The running HTTP deployments still
-need rebuilding/restarting before their browser regression covers this extraction.
+HQL and an 11-row original datasource fetch. The ERP UI WAR was then rebuilt and
+its owned-copy instance restarted on 8093. The complete browser Product contract,
+independent database equality, six restricted roles and fresh-login isolation
+passed against that updated deployment. Expected `AccessTableNoView` errors were
+logged for roles denied table access; no extraction-related startup failure was
+observed. The other running validation profiles still require rebuilding before
+their HTTP results cover this extraction.
 
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI
