@@ -387,6 +387,22 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+Column-ID property resolution belongs to the model, not the UI kernel. Add the
+lookup to the canonical Entity implementation and make both existing
+KernelUtils.getPropertyFromColumn overloads retain their signatures and delegate.
+Preserve first-match ordering and the legacy non-ID preference with ID fallback;
+keep the existing exception in the compatibility wrapper. Test null/unmapped IDs,
+duplicate column IDs and fallback behavior without a database or UI classpath,
+then exercise the same lookup on generated application metadata through OBDal.
+The no-database metadata test passes. The reusable descriptor gate
+`verifyModelUiApi` preserves all 87 Entity and 22 KernelUtils baseline declarations;
+`verifyContextApi` still preserves all 74 OBContext declarations. These checks
+used existing generated sources with database prerequisites explicitly excluded.
+Integrated UI DAL/lifecycle/browser verification of this latest lookup extraction
+is pending: Docker fixture startup timed out and the owned-copy database preflight
+failed with SQLSTATE 08001. Do not carry forward the preceding selector checkpoint's
+successful browser result as verification of the later lookup change.
+
 The selector increment retains the actual parent/child reference metadata for
 Field.Property and compiles canonical selector domain implementations/mappings into
 the optional shared artifact. The child uses ModelElementDomainType, a primitive

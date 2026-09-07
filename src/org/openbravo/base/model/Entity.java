@@ -632,6 +632,31 @@ public class Entity {
     return prop;
   }
 
+  /**
+   * Finds a property by dictionary column ID without requiring the UI kernel.
+   *
+   * @param columnId
+   *          the dictionary column ID; null never matches an unmapped property
+   * @param includeIdColumn
+   *          if false, prefer a non-ID property and fall back to the first ID property
+   * @return the first matching property in model order, or null if none matches
+   */
+  public Property findPropertyByColumnId(String columnId, boolean includeIdColumn) {
+    Property idFallback = null;
+    for (Property property : getProperties()) {
+      if (property.getColumnId() == null || !property.getColumnId().equals(columnId)) {
+        continue;
+      }
+      if (includeIdColumn || !property.isId()) {
+        return property;
+      }
+      if (idFallback == null) {
+        idFallback = property;
+      }
+    }
+    return idFallback;
+  }
+
   public String getPackageName() {
     final int lastIndexOf = getClassName().lastIndexOf('.');
     return getClassName().substring(0, lastIndexOf);

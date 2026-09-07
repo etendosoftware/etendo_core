@@ -74,6 +74,10 @@ public final class UiDalValidation {
                 var titleProperty = ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
                         .getPropertyByColumnName(title.getColumn().getDBColumnName());
                 if (!"title".equals(titleProperty.getName())) throw new AssertionError("Field property resolution failed");
+                if (ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
+                        .findPropertyByColumnId(title.getColumn().getId(), true) != titleProperty) {
+                    throw new AssertionError("Shared column-ID resolution did not match the real dictionary property");
+                }
                 var fieldProperty = ModelProvider.getInstance().getEntity("ADField").getProperty("property");
                 if (!fieldProperty.getDomainType().getClass().getName().equals(
                         "org.openbravo.userinterface.selector.model.domaintype.ModelElementDomainType")

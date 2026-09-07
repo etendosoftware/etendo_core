@@ -108,29 +108,10 @@ public class KernelUtils {
 
   public Property getPropertyFromColumn(Column column, boolean includeIdColumn) {
     final Entity entity = ModelProvider.getInstance().getEntity(column.getTable().getName());
-    final String colId = column.getId();
-    // first ignore id columns
-    for (Property property : entity.getProperties()) {
-      final String propColId = property.getColumnId();
-      if (propColId == null) {
-        continue;
-      }
-      if (property.isId() && !includeIdColumn) {
-        continue;
-      }
-      if (propColId.equals(colId)) {
-        return property;
-      }
-    }
-    // now try without ignoring id columns
-    for (Property property : entity.getProperties()) {
-      final String propColId = property.getColumnId();
-      if (propColId == null) {
-        continue;
-      }
-      if (propColId.equals(colId)) {
-        return property;
-      }
+    // MODULE-BOUNDARY model: preserve this UI-facing API while sharing model lookup.
+    final Property property = entity.findPropertyByColumnId(column.getId(), includeIdColumn);
+    if (property != null) {
+      return property;
     }
     throw new IllegalArgumentException(
         "Column " + column + " does not have a corresponding property in the model");

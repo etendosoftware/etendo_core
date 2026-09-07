@@ -527,6 +527,55 @@ tasks.register('verifySharedCoreIntegration') {
     }
 }
 
+// Reuse the same descriptor inspection for each incremental compatibility boundary.
+def apiDeclarations = { File classFile ->
+    if (!classFile.isFile()) throw new GradleException("Missing API class: ${classFile}")
+    def output = new ByteArrayOutputStream()
+    exec {
+        commandLine new File(System.getProperty('java.home'), 'bin/javap').absolutePath,
+                '-protected', '-s', classFile.absolutePath
+        standardOutput = output
+    }
+    def entries = new LinkedHashSet<String>()
+    String declaration = null
+    output.toString('UTF-8').readLines().each { raw ->
+        def line = raw.trim()
+        if (line.startsWith('public ') || line.startsWith('protected ')) {
+            declaration = line
+            if (line.endsWith('{')) entries.add(line)
+        } else if (line.startsWith('descriptor:') && declaration != null) {
+            entries.add(declaration + ' ' + line)
+            declaration = null
+        }
+    }
+    if (entries.size() < 10) throw new GradleException("Incomplete API inspection: ${classFile}")
+    entries
+}
+
+tasks.register('verifyModelUiApi') {
+    group = 'verification'
+    description = 'Preserve Entity and KernelUtils public/protected APIs against Classic.'
+    dependsOn 'compileClassicJsonJava'
+    doLast {
+        def report = layout.buildDirectory.file('model-ui-api-result.txt').get().asFile
+        def results = []
+        boolean incompatible = false
+        ['org/openbravo/base/model/Entity': 'bootstrap',
+         'org/openbravo/client/kernel/KernelUtils': 'classicJson'].each { type, sourceSet ->
+            def before = apiDeclarations(file("build/classic-compatibility/WEB-INF/classes/${type}.class"))
+            def after = apiDeclarations(file("build/classes/java/${sourceSet}/${type}.class"))
+            def missing = before - after
+            incompatible |= !missing.isEmpty()
+            results.add("${type}: baseline=${before.size()}, missing=${missing.size()}\n" + missing.join('\n'))
+        }
+        report.text = results.join('\n') + '\n'
+        if (incompatible) {
+            throw new GradleException("Model/UI API changed; inspect ${report}")
+        }
+        logger.lifecycle('PASS: Baseline Entity and KernelUtils declarations and JVM descriptors preserved')
+    }
+}
+
 tasks.register('verifyContextApi') {
     group = 'verification'
     description = 'Preserve OBContext public/protected declarations and JVM descriptors against Classic.'
@@ -535,31 +584,8 @@ tasks.register('verifyContextApi') {
         def relativeClass = 'org/openbravo/dal/core/OBContext.class'
         def baseline = layout.buildDirectory.file("classic-compatibility/WEB-INF/classes/${relativeClass}").get().asFile
         def candidate = layout.buildDirectory.file("classes/java/classicEntities/${relativeClass}").get().asFile
-        def declarations = { File classFile ->
-            if (!classFile.isFile()) throw new GradleException("Missing API class: ${classFile}")
-            def output = new ByteArrayOutputStream()
-            exec {
-                commandLine new File(System.getProperty('java.home'), 'bin/javap').absolutePath,
-                        '-protected', '-s', classFile.absolutePath
-                standardOutput = output
-            }
-            def entries = new LinkedHashSet<String>()
-            String declaration = null
-            output.toString('UTF-8').readLines().each { raw ->
-                def line = raw.trim()
-                if (line.startsWith('public ') || line.startsWith('protected ')) {
-                    declaration = line
-                    if (line.endsWith('{')) entries.add(line)
-                } else if (line.startsWith('descriptor:') && declaration != null) {
-                    entries.add(declaration + ' ' + line)
-                    declaration = null
-                }
-            }
-            if (entries.size() < 10) throw new GradleException('Incomplete OBContext API inspection')
-            entries
-        }
-        def before = declarations(baseline)
-        def after = declarations(candidate)
+        def before = apiDeclarations(baseline)
+        def after = apiDeclarations(candidate)
         def missing = before - after
         def digest = java.security.MessageDigest.getInstance('SHA-256')
         file(project.property('classicWar')).withInputStream { input ->
