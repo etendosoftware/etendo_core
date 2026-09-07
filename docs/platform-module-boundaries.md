@@ -72,6 +72,16 @@ bad-password rejection, canonical login, cookie scope U1/R1/C1/O1 and anonymous
 isolation. A Tomcat restart rejected the old cookie and accepted the persisted
 credential. This is not proof of entity CRUD persistence or original UI delivery.
 
+The retained host now composes canonical CDI UI beans and exposes authenticated
+component generation. Live HTTP returned the original menu, navigation, layout
+and Request standard-window JavaScript; all four passed syntax checks. The window
+contains original OBStandardWindow, OBViewForm and OBViewGrid definitions. Window
+routing delegates availability to the original role-filtered MenuManager. An
+actual R_EXCLUDE login was denied Request with 403, and anonymous access returned
+401. The temporary fixture role default was restored. Browser asset/bootstrap
+delivery and datasource CRUD remain the next integration work; generated scripts
+alone do not complete the milestone.
+
 ## Status and rule
 
 This is the extraction map for ET-27, not a claim that the modules already exist.

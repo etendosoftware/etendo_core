@@ -50,7 +50,7 @@ public final class RetainedUiServer {
     SessionFactoryController.setInstance(controller);
     var factory = controller.getSessionFactory();
     Tomcat tomcat = new Tomcat();
-    try {
+    try (var components = new UiComponents()) {
       provisionInitialCredential();
       Path base = Files.createTempDirectory(Path.of("build"), "original-ui-tomcat-").toAbsolutePath();
       tomcat.setBaseDir(base.toString());
@@ -62,9 +62,11 @@ public final class RetainedUiServer {
       context.setParentClassLoader(RetainedUiServer.class.getClassLoader());
       context.addParameter("LoginServlet", "/login");
       context.setSessionTimeout(30);
-      Tomcat.addServlet(context, "platform-session", new SessionServlet()).setLoadOnStartup(1);
+      org.openbravo.client.kernel.RequestContext.setServletContext(context.getServletContext());
+      Tomcat.addServlet(context, "platform-session", new SessionServlet(components)).setLoadOnStartup(1);
       context.addServletMappingDecoded("/login", "platform-session");
       context.addServletMappingDecoded("/session", "platform-session");
+      context.addServletMappingDecoded("/components/*", "platform-session");
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         try { tomcat.stop(); }
         catch (Exception failure) { System.err.println("UI shutdown failed: " + failure.getClass().getSimpleName()); }
@@ -105,18 +107,22 @@ public final class RetainedUiServer {
       if (SessionHandler.isSessionHandlerPresent()) SessionHandler.getInstance().rollback();
     } finally {
       OBContext.setOBContext((OBContext) null);
+      org.openbravo.client.kernel.RequestContext.clear();
       org.openbravo.database.SessionInfo.init();
     }
   }
 
   /** Minimal HTTP composition; credential, lockout and session rules remain canonical. */
   private static final class SessionServlet extends HttpServlet {
+    private final UiComponents components;
+    SessionServlet(UiComponents components) { this.components = components; }
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
       response.setHeader("Cache-Control", "no-store");
       boolean systemScope = false;
       try {
-        if ("/session".equals(request.getServletPath()) && "GET".equals(request.getMethod())) {
+        if (("/session".equals(request.getServletPath()) || "/components".equals(request.getServletPath()))
+            && "GET".equals(request.getMethod())) {
           var session = request.getSession(false);
           if (session == null || session.getAttribute("#Authenticated_user") == null) {
             response.setStatus(401);
@@ -125,6 +131,15 @@ public final class RetainedUiServer {
           OBContext.setOBContext(request);
           if (OBContext.getOBContext().isInAdministratorMode()) throw new IllegalStateException("Elevated user session");
           new DefaultAuthenticationManager(this).authenticate(request, response);
+          if ("/components".equals(request.getServletPath())) {
+            var requestContext = org.openbravo.client.kernel.RequestContext.get();
+            requestContext.setRequest(request);
+            requestContext.setResponse(response);
+            String output = components.render(request.getPathInfo().substring(1), request.getParameter("windowId"));
+            response.setContentType("application/javascript;charset=UTF-8");
+            response.getWriter().write(output);
+            return;
+          }
           response.setContentType("application/json");
           var vars = new VariablesSecureApp(request);
           response.getWriter().write(new org.codehaus.jettison.json.JSONObject()
@@ -154,6 +169,10 @@ public final class RetainedUiServer {
         OBContext.setOBContextInSession(request, OBContext.getOBContext());
         OBDal.getInstance().commitAndClose();
         response.setStatus(204);
+      } catch (SecurityException denied) {
+        response.setStatus(403);
+      } catch (IllegalArgumentException invalid) {
+        response.setStatus(400);
       } catch (AuthenticationException denied) {
         if (request.getSession(false) != null) request.getSession().invalidate();
         response.setStatus(401);
