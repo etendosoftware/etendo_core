@@ -186,6 +186,8 @@ tasks.register('erpHeadlessWar', Zip) {
     group = 'build'
     description = 'Assemble an experimental ERP REST distribution with explicit UI compatibility types.'
     dependsOn 'compatibilityWar'
+    // Closure-based exclusions must invalidate the archive when the policy changes.
+    inputs.file(buildFile)
     archiveFileName = 'platform-erp-headless.war'
     destinationDirectory = layout.buildDirectory.dir('libs')
     def compatibilityTypes = [
@@ -201,6 +203,10 @@ tasks.register('erpHeadlessWar', Zip) {
             def path = details.path
             if (!path.startsWith('WEB-INF/classes/')) return false
             def type = path.substring('WEB-INF/classes/'.length())
+            if (type.startsWith('com/etendoerp/client/application/') ||
+                    type.startsWith('com/smf/smartclient/') ||
+                    type.startsWith('com/smf/userinterface/')) return true
+            if (type ==~ /.*ComponentProvider(?:\$.*)?\.class/) return true
             if (type.startsWith('org/openbravo/service/datasource/DataSourceServlet')) return true
             if (type.startsWith('org/openbravo/erpCommon/ad_forms/') ||
                     type.startsWith('org/openbravo/erpCommon/ad_reports/')) return true

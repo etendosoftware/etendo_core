@@ -78,6 +78,10 @@ public final class WarBoundaryValidation {
         String topLevel = type.split("\\$", 2)[0];
         classes.add(origin + "!" + entry);
         boolean forbidden = type.startsWith("org/apache/jasper/") || UI_ENTRY_POINTS.contains(topLevel);
+        forbidden |= type.startsWith("com/etendoerp/client/application/")
+                || type.startsWith("com/smf/smartclient/") || type.startsWith("com/smf/userinterface/")
+                || ((type.startsWith("org/openbravo/") || type.startsWith("com/etendoerp/")
+                        || type.startsWith("com/smf/")) && topLevel.endsWith("ComponentProvider"));
         if ("platform".equals(profile)) {
             forbidden |= ERP_ENTITIES.contains(topLevel) || type.startsWith("org/openbravo/client/")
                     || type.startsWith("org/openbravo/userinterface/");
@@ -90,6 +94,8 @@ public final class WarBoundaryValidation {
             {"platform", "org/openbravo/model/common/plm/Product.class", "true"},
             {"erp-headless", "org/openbravo/model/common/plm/Product.class", "false"},
             {"platform", "org/openbravo/client/application/Process.class", "true"},
+            {"erp-headless", "com/etendoerp/client/application/UIComponentProvider.class", "true"},
+            {"erp-headless", "com/smf/jobs/defaults/provider/JobsComponentProvider.class", "true"},
             {"erp-headless", "org/openbravo/client/kernel/KernelServlet$Nested.class", "true"},
             {"erp-headless", "META-INF/versions/17/org/apache/jasper/servlet/JspServlet.class", "true"},
             {"platform", "META-INF/versions/17/org/openbravo/model/common/enterprise/Warehouse.class", "true"},

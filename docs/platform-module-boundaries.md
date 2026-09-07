@@ -200,11 +200,23 @@ needed; retained legacy dependencies still require classification.
 `verifyPlatformNestedBoundary` and `verifyErpNestedBoundary` passed, including
 negative/positive rule controls for inner and multi-release class names. The
 current artifacts contain 73 libraries / 31,532 class entries (platform) and 227
-libraries / 81,017 class entries (ERP headless). Reports are
+libraries / 81,007 class entries (ERP headless, after module UI provider removal). Reports are
 `build/platform-war-boundary.txt` and `build/erp-headless-war-boundary.txt` under
 platform-validation. Counts include third-party classes and are not a measure of
 extracted core ownership or executed code. The ERP gate checks named UI entry
 points, not all possible custom-module UI implementations.
+The class-origin inventory exposed additional module UI resource providers under
+com.etendoerp and com.smf, outside the initial Openbravo package filter. Exclude
+component-provider implementations and explicit SmartClient/skin/UI packages from
+the ERP headless assembly, and extend the nested auditor accordingly. Preserve
+generated dictionary entities separately; package names alone do not make them
+renderers. Re-run Product and organization authorization after this removal.
+The strengthened audit initially rejected ten retained provider classes, exposing
+a stale-archive issue: Gradle did not invalidate the ZIP for closure-filter policy
+changes. The headless archive now declares build.gradle as an input. Rebuilding
+removed all ten entries; the nested audit and restarted 8094 Product/HTTP/JDBC
+checks passed, including all six restricted contexts. No removed provider was
+added back to make the test pass.
 
 ERP-free regression must explicitly reject Product, Warehouse and BusinessPartner
 runtime classes, generated mappings and physical tables. Do not infer their absence
