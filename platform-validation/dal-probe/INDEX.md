@@ -24,3 +24,6 @@ defaults and full session initialization against the disposable UI dictionary.
 It checks authorized session values and rejects invalid role/client/organization
 selections without changing the existing context or CSRF token. It uses generated
 original SQLC collaborators; browser login remains a separate acceptance gate.
+The full login gate loads the original UserInfoComponent and RoleInfo from the
+shared UI artifact and checks current role/organization, empty warehouse context
+and preserved organization keys with empty warehouse option lists.

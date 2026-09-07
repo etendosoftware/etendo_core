@@ -29,6 +29,7 @@ import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.LoginUtils;
+import org.openbravo.base.secureApp.LoginSessionSupport;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.client.application.UserInfoWidgetHook;
@@ -44,7 +45,6 @@ import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.common.enterprise.Organization;
-import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.password.PasswordStrengthChecker;
@@ -177,9 +177,10 @@ public class UserInfoWidgetActionHandler extends BaseActionHandler implements Po
     final String clientId = role.getClient().getId();
 
     String warehouseId = getStringValue(json, "warehouse");
-    if (warehouseId == null && OBContext.getOBContext().getWarehouse() != null) {
-      warehouseId = OBContext.getOBContext().getWarehouse().getId();
+    if (warehouseId == null) {
+      warehouseId = LoginSessionSupport.getInstance().getContextWarehouseId();
     }
+    LoginSessionSupport.getInstance().validateWarehouseSelection(warehouseId);
 
     String languageId = getStringValue(json, "language");
     if (languageId == null) {
@@ -265,9 +266,7 @@ public class UserInfoWidgetActionHandler extends BaseActionHandler implements Po
           user.setDefaultOrganization(OBDal.getInstance().get(Organization.class, organizationId));
         }
 
-        if (warehouseId != null) {
-          user.setDefaultWarehouse(OBDal.getInstance().get(Warehouse.class, warehouseId));
-        }
+        LoginSessionSupport.getInstance().setUserDefaultWarehouse(user, warehouseId);
         OBDal.getInstance().save(user);
         OBDal.getInstance().flush();
       }

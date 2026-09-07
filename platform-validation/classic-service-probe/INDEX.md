@@ -9,3 +9,6 @@ the public HTTP adapter and its security checks remain separate.
 JVMs through `verifyClassicLogin`. It checks full/light sessions and denied scopes,
 and compares hashes of all deterministic session strings. Private ignored reports
 exclude CSRF tokens and raw preference values. Both runs use the owned Classic copy.
+The extracted run also loads the canonical UserInfoComponent from the shared UI
+JAR and checks ERP warehouse context, default assignment and scoped options.
+User default changes are restored and the enclosing session is rolled back.

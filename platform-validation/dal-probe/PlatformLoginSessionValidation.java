@@ -56,6 +56,12 @@ public final class PlatformLoginSessionValidation {
             throw new AssertionError("Platform warehouse/accounting semantics changed");
         }
         var vars = new VariablesSecureApp("U1", "C1", "O1");
+        support.setUserDefaultWarehouse(null, null);
+        support.setUserDefaultWarehouse(null, "");
+        try {
+            support.setUserDefaultWarehouse(null, "ERP-WAREHOUSE");
+            throw new AssertionError("Platform accepted a warehouse default");
+        } catch (IllegalArgumentException expected) { }
         vars.setSessionValue("#AD_User_ID", "U1");
         vars.setSessionValue("#AD_Role_ID", "R1");
         support.initializeApproval(noDatabase, vars, "R1", "U1");

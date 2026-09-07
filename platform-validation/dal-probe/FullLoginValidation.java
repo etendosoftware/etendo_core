@@ -59,7 +59,24 @@ public final class FullLoginValidation implements Runnable {
                 throw new AssertionError("Platform session acquired an ERP warehouse");
             }
             var authorizedContext = OBContext.getOBContext();
+            var profile = Class.forName("org.openbravo.client.application.navigationbarcomponents.UserInfoComponent")
+                    .getDeclaredConstructor().newInstance();
+            if (!profile.getClass().getProtectionDomain().getCodeSource().getLocation().toString()
+                    .endsWith("platform-ui-components.jar")
+                    || !"".equals(profile.getClass().getMethod("getContextWarehouseId").invoke(profile))
+                    || !"R1".equals(profile.getClass().getMethod("getContextRoleId").invoke(profile))
+                    || !"O1".equals(profile.getClass().getMethod("getContextOrganizationId").invoke(profile))) {
+                throw new AssertionError("Shared original profile did not resolve the platform session");
+            }
             String csrf = vars.getSessionValue("#CSRF_Token");
+            var roleInfo = Class.forName("org.openbravo.client.application.navigationbarcomponents.RoleInfo")
+                    .getConstructor(Object[].class).newInstance((Object) new Object[] {"R1", "Role", "C1", "Client"});
+            var organizations = (java.util.Map<?, ?>) roleInfo.getClass().getMethod("getOrganizations").invoke(roleInfo);
+            var warehouses = (java.util.Map<?, ?>) roleInfo.getClass().getMethod("getOrganizationWarehouses").invoke(roleInfo);
+            if (organizations.isEmpty() || !organizations.keySet().equals(warehouses.keySet())
+                    || warehouses.values().stream().anyMatch(value -> !((java.util.List<?>) value).isEmpty())) {
+                throw new AssertionError("Original platform profile did not retain organizations without warehouses");
+            }
             for (String[] scope : new String[][] {{"missing-role", "C1", "O1"},
                     {"R1", "C2", "O1"}, {"R1", "C1", "missing-org"}}) {
                 if (LoginUtils.fillSessionArguments(connection, vars, "U1", "en_US", "N",

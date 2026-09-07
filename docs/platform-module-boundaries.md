@@ -189,6 +189,37 @@ context or CSRF mutation. Test credentials are randomly generated in memory and
 fixture changes are rolled back. LoginServlet/LoginHandler HTTP delivery, profile
 switching and browser navigation remain separate uncompleted integration work.
 
+The original profile component and save handler must use LoginSessionSupport for
+warehouse context/default contributions. Keep UI entry signatures unchanged and
+package the canonical profile classes in the optional shared UI artifact. ERP
+retains its DAL warehouse assignment; platform accepts no warehouse default and
+rejects nonempty domain identifiers rather than silently applying an ERP setting.
+Profile authorization and transaction ownership remain in the original handler.
+RoleInfo also delegates its warehouse projection query to this contribution;
+organization selection, natural-tree distribution and the public RoleWarehouseInfo
+shape stay in the shared original UI. The shared artifact now owns UserInfoComponent,
+UserInfoWidgetActionHandler (including its private helper), and RoleInfo (including
+its public nested DTO). ERP WAR assembly excludes their old loose definitions.
+The API gate compares all four externally visible class declarations/descriptors
+against the baseline; the private helper has no public module-facing contract.
+This removes warehouse dependencies from the profile block but does not implement
+platform licensing policy, servlet session reset, password-change integration or
+complete navbar rendering. Those remain explicit integration work, not passing
+claims inferred from the component getter and contribution tests.
+
+Profile extraction verification (2026-09-07): verifyUiLogin and the fail-closed
+platform composition probes pass; verifyClassicLogin preserves 580 deterministic
+session values and checks ERP warehouse defaults/options. The profile API checks
+retain 11 UserInfoComponent, 5 UserInfoWidgetActionHandler, 9 RoleInfo and 5 nested
+RoleWarehouseInfo baseline entries with none missing. Shared artifact ownership
+and headless exclusion pass. The final ERP WAR on temporary port 8095 passes the
+original browser shell/login/Product regression (40 rows, projection, references,
+filtering, ordering, paging, anonymous denial and six restricted roles). This is
+ERP browser coverage, not platform browser profile-save/password-change coverage.
+Local logs: `/private/tmp/et27-profile-final-server.log` and
+`/private/tmp/et27-profile-final-browser.log`. Objective Guard alignment remains
+unconfigured and is not claimed as a passing acceptance gate.
+
 | ID | Current code | Intended destination | Remaining coupling and separation gate |
 | --- | --- | --- | --- |
 | CTX-ERP-INIT | ErpContextSupport | platform-compat-etendo | Calls generated User/Warehouse and the existing SessionHandler; move behind the shared context extension contract, retaining initialization order. |

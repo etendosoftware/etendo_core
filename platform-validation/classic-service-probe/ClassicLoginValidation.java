@@ -76,6 +76,32 @@ public final class ClassicLoginValidation implements Runnable {
             if (baseline != null && !Files.readString(Path.of(baseline)).equals(report.toString())) {
                 throw new AssertionError("ERP session values differ from the original LoginUtils baseline");
             }
+            if (Boolean.getBoolean("validation.profileContribution")) {
+                var profile = Class.forName("org.openbravo.client.application.navigationbarcomponents.UserInfoComponent")
+                        .getDeclaredConstructor().newInstance();
+                if (!profile.getClass().getProtectionDomain().getCodeSource().getLocation().toString()
+                        .endsWith("platform-ui-components.jar")
+                        || !defaults.warehouse.equals(profile.getClass().getMethod("getContextWarehouseId").invoke(profile))) {
+                    throw new AssertionError("Shared ERP profile changed warehouse context");
+                }
+                var support = org.openbravo.base.secureApp.LoginSessionSupport.getInstance();
+                OBContext.setAdminMode();
+                try {
+                    var account = OBDal.getInstance().get(org.openbravo.model.ad.access.User.class, user);
+                    var previous = account.getDefaultWarehouse();
+                    try {
+                        support.setUserDefaultWarehouse(account, null);
+                        if (account.getDefaultWarehouse() != previous) throw new AssertionError("Null default changed user");
+                        if (defaults.warehouse == null || defaults.warehouse.isEmpty()) throw new AssertionError("ERP fixture needs warehouse");
+                        support.setUserDefaultWarehouse(account, defaults.warehouse);
+                        var warehouse = account.getDefaultWarehouse();
+                        if (warehouse == null || !defaults.warehouse.equals(warehouse.getId())) throw new AssertionError("ERP default assignment failed");
+                        var options = support.getRoleWarehouseOptions(java.util.Set.of(warehouse.getOrganization().getId()), defaults.client);
+                        if (options.stream().noneMatch(row -> defaults.warehouse.equals(row[0]))) throw new AssertionError("ERP warehouse missing from options");
+                    } finally { account.setDefaultWarehouse(previous); }
+                } finally { OBContext.restorePreviousMode(); }
+                System.out.println("PASS: Shared ERP profile preserves warehouse context, default assignment and scoped options");
+            }
             System.out.println("PASS: Original password, defaults, full/light session and invalid role/client/organization denial");
             if (baseline != null) System.out.println("PASS: All " + snapshot.size() + " deterministic login session values match original LoginUtils");
         } catch (Exception failure) {

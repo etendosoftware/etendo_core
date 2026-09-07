@@ -27,6 +27,8 @@ import org.openbravo.erpCommon.utility.OBLedgerUtils;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.system.Client;
+import org.openbravo.model.ad.access.User;
+import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.enterprise.Organization;
 
 /**
@@ -37,6 +39,27 @@ import org.openbravo.model.common.enterprise.Organization;
  * collaborators are package-private; the public LoginUtils facade remains stable.
  */
 public final class ErpLoginSessionSupport extends LoginSessionSupport {
+  @Override
+  public void validateWarehouseSelection(String warehouseId) {
+    // Preserve the original ERP handler's validation and context initialization.
+  }
+
+  @Override
+  public java.util.List<Object[]> getRoleWarehouseOptions(Set<String> organizations, String clientId) {
+    return OBDal.getInstance().getSession().createQuery(
+        "select w.id, w.name, w.organization.id from Warehouse w where w.active=true"
+            + " and w.organization.id in (:orgList) and w.client.id=:clientId"
+            + " and w.organization.active=true", Object[].class)
+        .setParameterList("orgList", organizations).setParameter("clientId", clientId).list();
+  }
+
+  @Override
+  public void setUserDefaultWarehouse(User user, String warehouseId) {
+    if (warehouseId != null) {
+      user.setDefaultWarehouse(OBDal.getInstance().get(Warehouse.class, warehouseId));
+    }
+  }
+
   @Override
   public String getContextWarehouseId() {
     return OBContext.getOBContext().getWarehouse() == null ? null

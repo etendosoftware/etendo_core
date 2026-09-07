@@ -26,6 +26,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.http.HttpSession;
 
 import org.hibernate.query.Query;
+import org.openbravo.base.secureApp.LoginSessionSupport;
 import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.client.kernel.KernelServlet;
 import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
@@ -70,10 +71,8 @@ public class UserInfoComponent extends SessionDynamicTemplateComponent {
   }
 
   public String getContextWarehouseId() {
-    if (OBContext.getOBContext().getWarehouse() != null) {
-      return OBContext.getOBContext().getWarehouse().getId();
-    }
-    return "";
+    String warehouse = LoginSessionSupport.getInstance().getContextWarehouseId();
+    return warehouse == null ? "" : warehouse;
   }
 
   public String getContextLanguageId() {

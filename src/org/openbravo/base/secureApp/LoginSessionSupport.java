@@ -11,6 +11,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.util.OBClassLoader;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.model.ad.system.Client;
+import org.openbravo.model.ad.access.User;
 
 /**
  * Optional business-domain contribution to the original login session.
@@ -50,6 +51,27 @@ public abstract class LoginSessionSupport {
 
   /** Returns the current warehouse identifier, or null when this context has no warehouse. */
   public abstract String getContextWarehouseId();
+
+  /**
+   * Applies the optional warehouse default within the caller's authorized transaction.
+   * The base platform behavior has no warehouse state; ERP overrides the assignment.
+   */
+  public void setUserDefaultWarehouse(User user, String warehouseId) {
+    validateWarehouseSelection(warehouseId);
+  }
+
+  /** Validates domain support before the profile handler mutates defaults or session state. */
+  public void validateWarehouseSelection(String warehouseId) {
+    if (warehouseId != null && !warehouseId.isEmpty()) {
+      throw new IllegalArgumentException("This session composition does not support warehouse defaults");
+    }
+  }
+
+  /** Returns id/name/organization projections for the original authorized profile selector. */
+  public java.util.List<Object[]> getRoleWarehouseOptions(java.util.Set<String> organizations,
+      String clientId) {
+    return java.util.List.of();
+  }
 
   /** Resolves a user's warehouse default, including the original organization fallback. */
   public abstract String getUserDefaultWarehouse(ConnectionProvider connection, String user,

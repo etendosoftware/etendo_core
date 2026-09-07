@@ -146,6 +146,11 @@ def classicServiceClasses = sourceSets.classicJson.output + sourceSets.classicGe
 tasks.register('compileUiComponents', JavaCompile) {
     dependsOn 'compileClassicJsonJava'
     source file('../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/ApplicationComponentProvider.java')
+    source fileTree('../modules_core/org.openbravo.client.application/src') {
+        include '**/navigationbarcomponents/UserInfoComponent.java'
+        include '**/navigationbarcomponents/UserInfoWidgetActionHandler.java'
+        include '**/navigationbarcomponents/RoleInfo.java'
+    }
     source fileTree('../modules_core/org.openbravo.client.kernel/src') {
         include 'org/openbravo/client/kernel/BaseTemplateProcessor.java'
         include 'org/openbravo/client/kernel/TemplateProcessor.java'
@@ -599,6 +604,9 @@ tasks.register('erpUiWar', Zip) {
         exclude '**/*.properties'
         exclude 'WEB-INF/classes/org/openbravo/dal/security/ReadableScopeResolver.class'
         exclude 'WEB-INF/classes/org/openbravo/client/application/ApplicationComponentProvider.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/navigationbarcomponents/UserInfoComponent*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/navigationbarcomponents/UserInfoWidgetActionHandler*.class'
+        exclude 'WEB-INF/classes/org/openbravo/client/application/navigationbarcomponents/RoleInfo*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/BaseTemplateProcessor*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateProcessor*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateResolver*.class'
@@ -737,7 +745,7 @@ def apiDeclarations = { File classFile, int minimumEntries = 10 ->
 tasks.register('verifyModelUiApi') {
     group = 'verification'
     description = 'Preserve extracted model, UI and login public/protected APIs against Classic.'
-    dependsOn 'compileClassicJsonJava'
+    dependsOn 'compileClassicJsonJava', 'compileUiComponents'
     doLast {
         def report = layout.buildDirectory.file('model-ui-api-result.txt').get().asFile
         def results = []
@@ -754,6 +762,15 @@ tasks.register('verifyModelUiApi') {
                 // This explicit additive interface is the conversion fix; retain the old superclass.
                 after = after.collect { it.replace(' implements org.hibernate.type.ConvertedBasicType<java.lang.Boolean> {', ' {') }.toSet()
             }
+            def missing = before - after
+            incompatible |= !missing.isEmpty()
+            results.add("${type}: baseline=${before.size()}, missing=${missing.size()}\n" + missing.join('\n'))
+        }
+        ['UserInfoComponent', 'UserInfoWidgetActionHandler',
+         'RoleInfo', 'RoleInfo$RoleWarehouseInfo'].each { name ->
+            String type = "org/openbravo/client/application/navigationbarcomponents/${name}"
+            def before = apiDeclarations(file("build/classic-compatibility/WEB-INF/classes/${type}.class"), 1)
+            def after = apiDeclarations(file("build/ui-components/${type}.class"), 1)
             def missing = before - after
             incompatible |= !missing.isEmpty()
             results.add("${type}: baseline=${before.size()}, missing=${missing.size()}\n" + missing.join('\n'))
@@ -1060,13 +1077,14 @@ tasks.register('verifyOriginalLoginBaseline', JavaExec) {
 tasks.register('verifyClassicLogin', JavaExec) {
     group = 'verification'
     description = 'Exercise original login defaults and full session initialization on the owned copy.'
-    dependsOn classicServiceProbeClasses, 'verifyOriginalLoginBaseline'
-    classpath = sourceSets.classicServiceProbe.runtimeClasspath
+    dependsOn classicServiceProbeClasses, 'verifyOriginalLoginBaseline', 'sharedUiJar'
+    classpath = files(tasks.named('sharedUiJar')) + sourceSets.classicServiceProbe.runtimeClasspath
     mainClass = 'com.etendoerp.platform.validation.ClassicModelValidation'
     workingDir = projectDir
     systemProperty 'validation.classicDal', 'true'
     systemProperty 'validation.classicCallback', 'com.etendoerp.platform.validation.ClassicLoginValidation'
     systemProperty 'validation.loginBaseline', 'build/original-login-session.txt'
+    systemProperty 'validation.profileContribution', 'true'
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     doFirst { args file(project.property('classicProperties')).absolutePath }
 }

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.query.Query;
+import org.openbravo.base.secureApp.LoginSessionSupport;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBDal;
@@ -116,21 +117,8 @@ public class RoleInfo {
       organizationWarehouses.put(orgId, new ArrayList<RoleWarehouseInfo>());
     }
 
-    //@formatter:off
-    String hql = 
-            "select w.id, w.name, w.organization.id " +
-            "  from Warehouse w " +
-            " where w.active=true" +
-            "   and w.organization.id in (:orgList)" +
-            "   and w.client.id=:clientId" +
-            "   and w.organization.active=true ";
-    //@formatter:on
-    Query<Object[]> orgWarehouses = OBDal.getInstance()
-        .getSession()
-        .createQuery(hql, Object[].class)
-        .setParameterList("orgList", getOrganizations().keySet())
-        .setParameter("clientId", clientId);
-    for (Object[] entry : orgWarehouses.list()) {
+    for (Object[] entry : LoginSessionSupport.getInstance()
+        .getRoleWarehouseOptions(getOrganizations().keySet(), clientId)) {
       RoleWarehouseInfo warehouseInfo = new RoleWarehouseInfo(entry);
       for (Map.Entry<String, List<RoleWarehouseInfo>> ow : organizationWarehouses.entrySet()) {
         Set<String> naturalTree = getOrganizationStructureProvider().getNaturalTree(ow.getKey());
