@@ -17,7 +17,11 @@ public final class WarBoundaryValidation {
             "org/openbravo/client/kernel/KernelServlet",
             "org/openbravo/client/kernel/BaseKernelServlet",
             "org/openbravo/client/kernel/BaseTemplateComponent",
-            "org/openbravo/service/datasource/DataSourceServlet");
+            "org/openbravo/service/datasource/DataSourceServlet",
+            "org/openbravo/service/datasource/DataSourceComponent",
+            "org/openbravo/erpCommon/security/Login",
+            "org/openbravo/erpCommon/security/Menu",
+            "org/openbravo/erpCommon/utility/VerticalMenu");
     private static final Set<String> ERP_ENTITIES = Set.of(
             "org/openbravo/model/common/plm/Product",
             "org/openbravo/model/common/enterprise/Warehouse",

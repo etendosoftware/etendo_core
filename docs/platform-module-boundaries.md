@@ -200,7 +200,7 @@ needed; retained legacy dependencies still require classification.
 `verifyPlatformNestedBoundary` and `verifyErpNestedBoundary` passed, including
 negative/positive rule controls for inner and multi-release class names. The
 current artifacts contain 73 libraries / 31,532 class entries (platform) and 227
-libraries / 81,007 class entries (ERP headless, after module UI provider removal). Reports are
+libraries / 81,003 class entries (ERP headless, after provider and legacy-screen removal). Reports are
 `build/platform-war-boundary.txt` and `build/erp-headless-war-boundary.txt` under
 platform-validation. Counts include third-party classes and are not a measure of
 extracted core ownership or executed code. The ERP gate checks named UI entry
@@ -217,6 +217,16 @@ changes. The headless archive now declares build.gradle as an input. Rebuilding
 removed all ten entries; the nested audit and restarted 8094 Product/HTTP/JDBC
 checks passed, including all six restricted contexts. No removed provider was
 added back to make the test pass.
+The next explicit exclusions cover DataSourceComponent (visual datasource
+generation), legacy Login/Menu screens and VerticalMenu. Keep LoginUtils,
+authentication helpers and generated AD menu metadata: those are distinct from
+screen/rendering entry points and may participate in security or dictionary
+compatibility. Validate the Product slice after changing this boundary.
+This exclusion passed the nested audit and the restarted 8094 HTTP/JDBC
+regression: 40 visible client products, 40 excluded foreign-client products and
+six restricted organization contexts. Login/Menu/VerticalMenu and
+DataSourceComponent were not reintroduced. These removals affect only the
+headless artifact; the ERP UI composition retains the original screen classes.
 
 ERP-free regression must explicitly reject Product, Warehouse and BusinessPartner
 runtime classes, generated mappings and physical tables. Do not infer their absence

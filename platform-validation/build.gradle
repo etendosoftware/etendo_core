@@ -203,6 +203,12 @@ tasks.register('erpHeadlessWar', Zip) {
             def path = details.path
             if (!path.startsWith('WEB-INF/classes/')) return false
             def type = path.substring('WEB-INF/classes/'.length())
+            if (['org/openbravo/service/datasource/DataSourceComponent',
+                 'org/openbravo/erpCommon/security/Login',
+                 'org/openbravo/erpCommon/security/Menu',
+                 'org/openbravo/erpCommon/utility/VerticalMenu'].any { uiType ->
+                    type == uiType + '.class' || type.startsWith(uiType + '$')
+                }) return true
             if (type.startsWith('com/etendoerp/client/application/') ||
                     type.startsWith('com/smf/smartclient/') ||
                     type.startsWith('com/smf/userinterface/')) return true
