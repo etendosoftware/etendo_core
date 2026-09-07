@@ -32,3 +32,6 @@ references; no replacement Java entity or ORM mapping is handwritten.
 UiDictionaryFixture supplies application-owned window/tab/field rows using the
 original dictionary schema. verifyUiDictionary uses a disposable PostgreSQL
 database and separate ui-generated-entities output; headless generation is unchanged.
+The optional slice also retains field groups, display/layout flags and column
+read-only expressions. verifyUiDal validates their generated APIs and persisted
+values through OBDal; it does not yet execute the original field handler.

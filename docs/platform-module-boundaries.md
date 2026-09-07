@@ -387,6 +387,25 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The current dictionary increment retains the original field layout/display metadata,
+field groups and column read-only expressions. These are generic UI metadata,
+not ERP entities. Select their schema and generated API from canonical XML;
+validate persisted values and field/column/group relationships with the isolated
+DAL. Do not implement replacement getters or a second field renderer to work
+around a deliberately truncated dictionary. This increment alone is not execution
+of OBViewFieldHandler or proof of browser form behavior.
+The field `Property` is deliberately not included in this increment: its original
+reference is a selector from the selector module, not a plain string reference.
+Adding it exposed missing reference `95E2A8B50A254B2AAE6774B8C2F28120` during
+ModelProvider startup. Preserve that selector's semantics in the next increment;
+do not silently convert the reference to text just to generate its getter.
+`verifyUiDal` now generates 24 entities and passes checks for persisted field
+visibility rules, column read-only logic, layout flags, group membership and
+column-to-property resolution. The original template processor still passes in
+that isolated runtime. `verifyPlatform`, `verifyPlatformNestedBoundary` and
+`verifyUiArtifactPackaging` passed after this metadata-only increment. No
+production class or method signature changed; headless selection remains unchanged.
+
 The original template processor requires module, template and template-dependency
 entities in addition to window metadata. The optional UI slice selects these from
 the core/kernel XML, imports the original form-template row, and packages the

@@ -106,6 +106,8 @@ final class DictionaryFixture {
                 values.put("ISMANDATORY", column.isRequired() ? "Y" : "N");
                 values.put("ISUPDATEABLE", "Y");
                 values.put("ISIDENTIFIER", column.getName().equals("NAME") || column.getName().equals("TITLE") ? "Y" : "N");
+                if (Boolean.getBoolean("validation.originalUi") && name.equals("PP_REQUEST")
+                        && column.getName().equals("TITLE")) values.put("READONLYLOGIC", "@IsActive@='N'");
                 row(data, schema, "AD_COLUMN", values);
             }
         }

@@ -36,7 +36,8 @@ final class SecurityFixture {
         Set<String> tables = new LinkedHashSet<>(TABLES);
         if (Boolean.getBoolean("validation.originalUi")) {
             tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_FIELD", "AD_WINDOW_ACCESS"));
-            tables.addAll(List.of("AD_MODULE", "OBCLKER_TEMPLATE", "OBCLKER_TEMPLATE_DEPENDENCY"));
+            tables.addAll(List.of("AD_MODULE", "OBCLKER_TEMPLATE", "OBCLKER_TEMPLATE_DEPENDENCY",
+                    "AD_FIELDGROUP"));
         }
         return tables;
     }
@@ -48,7 +49,10 @@ final class SecurityFixture {
                         "ISINSERTRECORD", "ISGRIDVIEWDEFAULT", "ISSINGLEROW", "GRID_SEQNO",
                         "AD_MODULE_ID", "ISINDEVELOPMENT", "TEMPLATE", "TEMPLATECLASSPATHLOCATION",
                         "TEMPLATE_LANGUAGE", "COMPONENT_TYPE", "OVERRIDES_TEMPLATE_ID",
-                        "OBCLKER_TEMPLATE_ID", "DEPENDSON_TEMPLATE_ID")
+                        "OBCLKER_TEMPLATE_ID", "DEPENDSON_TEMPLATE_ID", "AD_FIELDGROUP_ID",
+                        "ISCOLLAPSED", "DISPLAYLOGIC", "DISPLAYLOGICGRID",
+                        "STARTNEWLINE", "STARTINODDCOLUMN", "ISSHOWNINSTATUSBAR", "CLIENTCLASS",
+                        "DISPLAYLENGTH", "ONCHANGEFUNCTION", "COLUMNNAME", "READONLYLOGIC")
                         .contains(name));
     }
 

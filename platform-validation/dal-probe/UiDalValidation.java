@@ -57,6 +57,24 @@ public final class UiDalValidation {
                     }
                 }
                 System.out.println("PASS: OBDal reads two windows and six request fields through generated UI relationships");
+                var title = fields.stream().filter(field -> "TITLE".equalsIgnoreCase(
+                        field.getColumn().getDBColumnName())).findFirst().orElseThrow();
+                if (!"@IsActive@='Y'".equals(title.getDisplayLogic())
+                        || !title.getDisplayLogic().equals(title.getDisplaylogicgrid())
+                        || !Boolean.TRUE.equals(title.isStartnewline())
+                        || !Boolean.TRUE.equals(title.isStartinoddcolumn())
+                        || !Boolean.TRUE.equals(title.isShowInGridView())
+                        || !Boolean.FALSE.equals(title.isShownInStatusBar())
+                        || title.getClientclass() != null
+                        || !"@IsActive@='N'".equals(title.getColumn().getReadOnlyLogic())
+                        || !"Request details".equals(title.getFieldGroup().getName())
+                        || !Boolean.FALSE.equals(title.getFieldGroup().isCollapsed())) {
+                    throw new AssertionError("Original field layout/display metadata was lost");
+                }
+                var titleProperty = ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
+                        .getPropertyByColumnName(title.getColumn().getDBColumnName());
+                if (!"title".equals(titleProperty.getName())) throw new AssertionError("Field property resolution failed");
+                System.out.println("PASS: Original field API resolves persisted display/layout rules and field group through OBDal");
                 var template = OBDal.getInstance().get(org.openbravo.client.kernel.Template.class,
                         "C1D176407A354A40815DC46D24D70EB8");
                 if (template == null) throw new AssertionError("Original form template missing");

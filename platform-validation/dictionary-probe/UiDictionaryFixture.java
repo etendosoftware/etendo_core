@@ -47,6 +47,8 @@ final class UiDictionaryFixture {
             form.put("AD_MODULE_ID", "0");
             seed(xml, schema, "OBCLKER_TEMPLATE", form);
         } catch (Exception failure) { throw new IllegalStateException("Original form template metadata unavailable", failure); }
+        seed(xml, schema, "AD_FIELDGROUP", Map.of("AD_FIELDGROUP_ID", "PP_REQUEST_DETAILS",
+                "NAME", "Request details", "ISCOLLAPSED", "N"));
         for (String table : List.of("PP_CATEGORY", "PP_REQUEST")) {
             String window = DictionaryFixture.columnId(table, "WINDOW");
             String tab = DictionaryFixture.columnId(table, "TAB");
@@ -60,10 +62,16 @@ final class UiDictionaryFixture {
                 String id = DictionaryFixture.columnId(table, column.getName());
                 boolean editable = !column.isPrimaryKey() && !column.getName().equals("AD_CLIENT_ID")
                         && !column.getName().equals("AD_ORG_ID");
-                seed(xml, schema, "AD_FIELD", Map.of("AD_FIELD_ID", DictionaryFixture.columnId(id, "FIELD"),
+                Map<String, String> field = new LinkedHashMap<>(Map.of("AD_FIELD_ID", DictionaryFixture.columnId(id, "FIELD"),
                         "AD_TAB_ID", tab, "AD_COLUMN_ID", id, "NAME", column.getName(),
                         "SEQNO", Integer.toString(++position * 10), "ISDISPLAYED", editable ? "Y" : "N",
                         "SHOWINRELATION", editable ? "Y" : "N", "ISREADONLY", editable ? "N" : "Y"));
+                if (table.equals("PP_REQUEST") && column.getName().equals("TITLE")) {
+                    field.putAll(Map.of("AD_FIELDGROUP_ID", "PP_REQUEST_DETAILS", "STARTNEWLINE", "Y",
+                            "STARTINODDCOLUMN", "Y", "DISPLAYLOGIC", "@IsActive@='Y'",
+                            "DISPLAYLOGICGRID", "@IsActive@='Y'", "DISPLAYLENGTH", "60"));
+                }
+                seed(xml, schema, "AD_FIELD", field);
             }
         }
     }
