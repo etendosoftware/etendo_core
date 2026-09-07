@@ -87,6 +87,33 @@ public final class UiDalValidation {
                     throw new AssertionError("Original ID reference/domain was not preserved");
                 }
                 System.out.println("PASS: Generated column reference API preserves original String and ID metadata");
+                var extensionColumn = OBDal.getInstance().get(org.openbravo.model.ad.datamodel.Column.class,
+                        "CD3A95C8A05D45A0A2B6D250E9C83170");
+                if (extensionColumn == null || !"org.openbravo.client.application"
+                        .equals(extensionColumn.getModule().getJavaPackage())) {
+                    throw new AssertionError("Original extension column module ownership was lost");
+                }
+                var process = OBProvider.getInstance().get(org.openbravo.client.application.Process.class);
+                process.setName("Validation action");
+                process.setSearchKey("PP_VALIDATION_ACTION");
+                process.setClient(OBDal.getInstance().get(org.openbravo.model.ad.system.Client.class, "0"));
+                process.setOrganization(OBDal.getInstance().get(org.openbravo.model.common.enterprise.Organization.class, "0"));
+                process.setModule(OBDal.getInstance().get(org.openbravo.model.ad.module.Module.class,
+                        "9BA0836A3CD74EE4AB48753A47211BCC"));
+                OBDal.getInstance().save(process);
+                title.getColumn().setOBUIAPPProcess(process);
+                OBDal.getInstance().flush();
+                String processId = process.getId();
+                String titleColumnId = title.getColumn().getId();
+                OBDal.getInstance().getSession().evict(title.getColumn());
+                var reloadedColumn = OBDal.getInstance().get(org.openbravo.model.ad.datamodel.Column.class, titleColumnId);
+                if (!processId.equals(reloadedColumn.getOBUIAPPProcess().getId())) {
+                    throw new AssertionError("Original module extension accessor did not persist its process reference");
+                }
+                reloadedColumn.setOBUIAPPProcess(null);
+                OBDal.getInstance().remove(process);
+                OBDal.getInstance().flush();
+                System.out.println("PASS: Original module extension API persists a process reference through generated OBDal");
                 if (ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
                         .findPropertyByColumnId(title.getColumn().getId(), true) != titleProperty) {
                     throw new AssertionError("Shared column-ID resolution did not match the real dictionary property");
@@ -138,6 +165,54 @@ public final class UiDalValidation {
                     throw new AssertionError("Original form template failed to render its read-only rule");
                 }
                 System.out.println("PASS: Shared original FreeMarker processor resolves and renders database form template");
+                if (Boolean.getBoolean("validation.uiCache") || Boolean.getBoolean("validation.uiFields")) {
+                    Class<?> cacheType = Class.forName(
+                            "org.openbravo.client.application.window.ApplicationDictionaryCachedStructures");
+                    cacheType.getDeclaredMethods();
+                    try (var container = jakarta.enterprise.inject.se.SeContainerInitializer.newInstance()
+                            .disableDiscovery().addBeanClasses(cacheType)
+                            .initialize()) {
+                        Object cache = Class.forName("org.openbravo.base.weld.WeldUtils")
+                                .getMethod("getInstanceFromStaticBeanManager", Class.class).invoke(null, cacheType);
+                        if (!Boolean.TRUE.equals(cacheType.getMethod("useCache").invoke(cache))) {
+                            throw new AssertionError("Original production dictionary cache is disabled");
+                        }
+                        String tabId = OBDal.getInstance().get(Field.class, fieldId).getTab().getId();
+                        Object cachedFields = cacheType.getMethod("getFieldsOfTab", String.class).invoke(cache, tabId);
+                        if (!(cachedFields instanceof java.util.List<?> cachedList) || cachedList.size() != 6) {
+                            throw new AssertionError("Original CDI cache did not resolve six request fields");
+                        }
+                        Object cachedTab = cacheType.getMethod("getTab", String.class).invoke(cache, tabId);
+                        OBDal.getInstance().getSession().clear();
+                        if (cacheType.getMethod("getTab", String.class).invoke(cache, tabId) != cachedTab) {
+                            throw new AssertionError("Original CDI cache did not reuse the initialized tab after session clear");
+                        }
+                        for (Object cachedField : cachedList) {
+                            if (((Field) cachedField).getColumn().getReference().getName() == null) {
+                                throw new AssertionError("Cached field reference metadata was not initialized");
+                            }
+                        }
+                        if (!java.util.List.of().equals(cacheType.getMethod("getAuxiliarInputList", String.class)
+                                .invoke(cache, tabId))) throw new AssertionError("Unexpected auxiliary inputs");
+                        System.out.println("PASS: Original CDI production cache initializes and reuses ERP-free window metadata");
+                        if (Boolean.getBoolean("validation.uiFields")) {
+                            Class<?> handlerClass = Class.forName("org.openbravo.client.application.window.OBViewFieldHandler");
+                            Object originalHandler = handlerClass.getConstructor().newInstance();
+                            handlerClass.getMethod("setTab", org.openbravo.model.ad.ui.Tab.class)
+                                    .invoke(originalHandler, OBDal.getInstance().get(Field.class, fieldId).getTab());
+                            Object originalFields = handlerClass.getMethod("getFields").invoke(originalHandler);
+                            if (!(originalFields instanceof java.util.List<?> list) || list.isEmpty()) {
+                                throw new AssertionError("Original field handler did not produce fields");
+                            }
+                            data.put("data", java.util.Map.of("fieldHandler", originalHandler));
+                            String originalForm = processor.process(template, data);
+                            if (!originalForm.contains("onFieldChanged")) {
+                                throw new AssertionError("Original field handler/form rendering failed");
+                            }
+                            System.out.println("PASS: Original field handler builds fields and renders the original form template");
+                        }
+                    }
+                }
             } finally { OBContext.restorePreviousMode(); }
         } finally {
             try {

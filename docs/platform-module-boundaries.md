@@ -387,6 +387,33 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+Execute the canonical OBViewFieldHandler in the isolated UI DAL next. Compile its
+working dependency slice separately while resolving missing generic classes and
+metadata; do not introduce replacement handlers or add Classic runtime support to
+the ERP-free test. The working slice is not a deliverable shared UI artifact until
+the handler runs and its canonical implementations are packaged once for both UI
+consumers. Keep this integration gate distinct from the already-passing template
+and metadata gates so unfinished field rendering cannot be mistaken for completion.
+
+The field integration uses a UI-only Weld SE container with explicit bean discovery.
+Generate its generic process, auxiliary-input, parameter and model-implementation
+metadata from the canonical XML; do not supply generated Classic entity classes.
+Keep CDI test-container dependencies out of the DAL and both headless artifacts.
+Compose selected `modifiedTables` columns from those same UI modules as well as
+their base tables. Preserve module ownership of extension columns and packages:
+projecting their owner to Core changes generated extension accessor names. Verify
+the original process-definition accessor through generated Java and real OBDal.
+The resulting optional slice generates 42 entities. `verifyUiCache` checks real
+Weld registration, production-cache window initialization and tab reuse after
+clearing the Hibernate session, including detached field reference reads; the module
+extension test writes, reloads and unlinks a process reference through unchanged
+generated accessor signatures, within a rolled-back transaction. UI DAL, headless
+XML/DBSM lifecycle, shared-artifact packaging and nested-WAR gates passed.
+`verifyUiFields` remains an explicitly unfinished integration gate: the next
+failure is the missing Reference.getOBCLKERUIDefinitionList() relationship required
+by the original visual reference controller. No original-platform browser UI or
+CRUD is claimed. The expanded working class slice is still outside sharedUiJar.
+
 The current form-metadata slice exposes Column.reference through the generated
 ADReference entity and uses the original String/ID/TableDir reference rows in the
 UI fixture. Preserve their names and domain implementations, because the original

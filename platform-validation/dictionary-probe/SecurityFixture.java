@@ -29,6 +29,11 @@ final class SecurityFixture {
             "AD_TREE_ID", "NODE_ID", "PARENT_ID", "ISREADY", "AD_ORGTYPE_ID", "ISLEGALENTITY",
             "ISBUSINESSUNIT", "ISTRANSACTIONSALLOWED", "ISPERIODCONTROLALLOWED");
     private static final Path CORE = Path.of("../src-db/database");
+    private static final List<Path> UI_SOURCES = List.of(
+            Path.of("../modules_core/org.openbravo.client.kernel/src-db/database"),
+            Path.of("../modules_core/org.openbravo.client.application/src-db/database"),
+            Path.of("../modules_core/org.openbravo.userinterface.selector/src-db/database"),
+            Path.of("../modules_core/org.openbravo.service.datasource/src-db/database"));
 
     private SecurityFixture() {}
 
@@ -37,7 +42,11 @@ final class SecurityFixture {
         if (Boolean.getBoolean("validation.originalUi")) {
             tables.addAll(List.of("AD_COLUMN", "AD_WINDOW", "AD_TAB", "AD_FIELD", "AD_WINDOW_ACCESS"));
             tables.addAll(List.of("AD_MODULE", "OBCLKER_TEMPLATE", "OBCLKER_TEMPLATE_DEPENDENCY",
-                    "AD_FIELDGROUP", "AD_REFERENCE"));
+                    "AD_FIELDGROUP", "AD_REFERENCE", "AD_PROCESS", "AD_AUXILIARINPUT",
+                    "OBUIAPP_PARAMETER", "AD_MODEL_OBJECT", "AD_VAL_RULE", "AD_CALLOUT",
+                    "AD_REF_TABLE", "AD_REF_LIST", "AD_REF_TREE", "AD_REF_TREE_FIELD",
+                    "AD_TABLE_TREE", "OBUIAPP_PROCESS", "OBUIAPP_REF_WINDOW",
+                    "OBUISEL_SELECTOR", "OBUISEL_SELECTOR_FIELD", "OBCLKER_REF_MASK", "OBSERDS_DATASOURCE"));
         }
         return tables;
     }
@@ -54,16 +63,38 @@ final class SecurityFixture {
                         "STARTNEWLINE", "STARTINODDCOLUMN", "ISSHOWNINSTATUSBAR", "CLIENTCLASS",
                         "DISPLAYLENGTH", "ONCHANGEFUNCTION", "COLUMNNAME", "READONLYLOGIC",
                         "AD_REFERENCE_ID", "AD_REFERENCE_VALUE_ID", "MODEL_IMPL", "UI_IMPL", "ISBASEREFERENCE", "PARENTREFERENCE_ID",
-                        "JAVAPACKAGE")
+                        "JAVAPACKAGE", "AD_VAL_RULE_ID", "CODE", "AD_CALLOUT_ID", "AD_PROCESS_ID",
+                        "OBUIAPP_PROCESS_ID", "EM_OBUIAPP_PROCESS_ID", "AD_REF_TREE_ID", "AD_TABLE_TREE_ID",
+                        "OBUISEL_SELECTOR_ID", "AD_KEY", "AD_DISPLAY", "DISPLAYFIELD_ID", "OBSERDS_DATASOURCE_ID")
                         .contains(name));
     }
 
     static void addSchema(Database model, DatabaseIO xml) throws Exception {
         for (String name : selectedTables()) {
             Path source = name.startsWith("OBCLKER_")
-                    ? Path.of("../modules_core/org.openbravo.client.kernel/src-db/database") : CORE;
+                    ? Path.of("../modules_core/org.openbravo.client.kernel/src-db/database")
+                    : name.startsWith("OBUIAPP_")
+                    ? Path.of("../modules_core/org.openbravo.client.application/src-db/database")
+                    : name.startsWith("OBUISEL_")
+                    ? Path.of("../modules_core/org.openbravo.userinterface.selector/src-db/database")
+                    : name.startsWith("OBSERDS_")
+                    ? Path.of("../modules_core/org.openbravo.service.datasource/src-db/database") : CORE;
             Table original = xml.readplain(source
                     .resolve("model/tables/" + name + ".xml").toFile()).getTable(0);
+            if (Boolean.getBoolean("validation.originalUi")) {
+                for (Path uiSource : UI_SOURCES) {
+                    Path extension = uiSource.resolve("model/modifiedTables/" + name + ".xml");
+                    if (!Files.exists(extension)) continue;
+                    for (var column : xml.readplain(extension.toFile()).getTable(0).getColumns()) {
+                        if (selectedColumn(column.getName())) {
+                            if (original.findColumn(column.getName()) != null) {
+                                throw new AssertionError("Duplicate UI extension column: " + name + "." + column.getName());
+                            }
+                            original.addColumn((org.apache.ddlutils.model.Column) column.clone());
+                        }
+                    }
+                }
+            }
             if (model.findTable(name) != null) {
                 if (Boolean.getBoolean("validation.originalUi")) {
                     for (var column : original.getColumns()) {
@@ -105,11 +136,13 @@ final class SecurityFixture {
     static void addData(StringBuilder data, Database model) throws Exception {
         Map<String, String> tableIds = new LinkedHashMap<>();
         Set<String> packages = new LinkedHashSet<>();
+        Set<String> referenceModules = new LinkedHashSet<>();
         for (var row : rows("AD_TABLE")) {
             String name = row.get("TABLENAME").toUpperCase(Locale.ROOT);
             if (!selectedTables().contains(name)) continue;
             tableIds.put(row.get("AD_TABLE_ID"), name);
             packages.add(row.get("AD_PACKAGE_ID"));
+            if (Boolean.getBoolean("validation.originalUi")) referenceModules.add(row.get("AD_MODULE_ID"));
             DictionaryFixture.row(data, model, "AD_TABLE", row);
         }
         if (tableIds.size() != selectedTables().size()) throw new AssertionError("Missing source security/UI tables");
@@ -117,7 +150,8 @@ final class SecurityFixture {
                 "JAVAPACKAGE", "org.openbravo", "SEQNO", "0"));
         for (var row : rows("AD_PACKAGE")) {
             if (packages.contains(row.get("AD_PACKAGE_ID"))) {
-                row.put("AD_MODULE_ID", "0");
+                if (Boolean.getBoolean("validation.originalUi")) referenceModules.add(row.get("AD_MODULE_ID"));
+                else row.put("AD_MODULE_ID", "0");
                 DictionaryFixture.row(data, model, "AD_PACKAGE", row);
             }
         }
@@ -127,7 +161,8 @@ final class SecurityFixture {
             if (table == null || model.findTable(table).findColumn(row.get("COLUMNNAME"), false) == null) continue;
             String column = row.get("COLUMNNAME").toUpperCase(Locale.ROOT);
             if (!selectedColumn(column) && !"Y".equals(row.get("ISKEY"))) continue;
-            row.put("AD_MODULE_ID", "0");
+            if (Boolean.getBoolean("validation.originalUi")) referenceModules.add(row.get("AD_MODULE_ID"));
+            else row.put("AD_MODULE_ID", "0");
             String target = column.equals("CREATEDBY") || column.equals("UPDATEDBY") ? "AD_USER"
                     : column.endsWith("_ID") ? column.substring(0, column.length() - 3) : "";
             if (!"Y".equals(row.get("ISKEY")) && selectedTables().contains(target)) {
@@ -139,7 +174,6 @@ final class SecurityFixture {
             if (row.containsKey("AD_REFERENCE_VALUE_ID")) references.add(row.get("AD_REFERENCE_VALUE_ID"));
             DictionaryFixture.row(data, model, "AD_COLUMN", row);
         }
-        Set<String> referenceModules = new LinkedHashSet<>();
         for (var row : rows("AD_REFERENCE")) {
             if (references.contains(row.get("AD_REFERENCE_ID")) && !Set.of("10", "13", "19").contains(row.get("AD_REFERENCE_ID"))) {
                 DictionaryFixture.row(data, model, "AD_REFERENCE", row);
@@ -148,6 +182,7 @@ final class SecurityFixture {
         }
         referenceModules.remove("0");
         referenceModules.remove("PLATFORM");
+        referenceModules.remove(null);
         if (!referenceModules.isEmpty()) {
             for (var row : rows("AD_MODULE")) {
                 if (referenceModules.remove(row.get("AD_MODULE_ID"))) DictionaryFixture.row(data, model, "AD_MODULE", row);
@@ -226,8 +261,7 @@ final class SecurityFixture {
     private static List<Map<String, String>> rows(String table) throws Exception {
         List<Map<String, String>> result = new ArrayList<>(rows(CORE, table));
         if (Boolean.getBoolean("validation.originalUi")) {
-            result.addAll(rows(Path.of("../modules_core/org.openbravo.client.kernel/src-db/database"), table));
-            result.addAll(rows(Path.of("../modules_core/org.openbravo.userinterface.selector/src-db/database"), table));
+            for (Path source : UI_SOURCES) result.addAll(rows(source, table));
         }
         return result;
     }

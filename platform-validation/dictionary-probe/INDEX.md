@@ -41,3 +41,19 @@ projection helper as the core dictionary; headless schemas do not include it.
 The generated ADReference API exposes column reference/search-key relationships,
 parent references and original module ownership. Base UI reference rows come from
 canonical XML; headless entity selection remains unchanged.
+
+verifyUiCache starts a UI-only Weld SE container with explicit bean discovery and
+executes the canonical production dictionary cache over 42 generated entities.
+It checks initialized tab reuse after clearing the Hibernate session, detached
+field-reference reads and application field/auxiliary-input relationships.
+The optional UI selection includes generic process, reference, selector and
+datasource metadata, not ERP process definitions or business entities. Selected
+module modifiedTables columns are composed from canonical XML while preserving
+column/package ownership. A generated process-extension accessor is exercised
+with an OBDal write/read/unlink inside a transaction that is rolled back.
+
+verifyUiFields is the unfinished integration gate for the original field handler.
+It is not included in successful baseline claims; UI reference definitions and
+rendering dependencies still need integration. Separate ui-cache-runtime.log,
+ui-field-runtime.log and ui-dal-runtime.log files keep diagnostics from overwriting
+one another. Neither gate implies browser UI delivery.

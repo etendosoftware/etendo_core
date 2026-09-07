@@ -110,7 +110,7 @@ public final class DictionaryValidation {
             }
             int expectedEntities = 2 + (security ? SecurityFixture.selectedTables().size() : 0);
             if (model.size() != expectedEntities) throw new AssertionError("Unexpected entity count: " + model.size());
-            if (security && model.stream().anyMatch(entity -> "OBUIAPP_Process".equals(entity.getName()))) {
+            if (security && !originalUi && model.stream().anyMatch(entity -> "OBUIAPP_Process".equals(entity.getName()))) {
                 throw new AssertionError("Minimal security must not require the UI Process entity");
             }
             if (security && (model.stream().anyMatch(entity -> "BusinessPartner".equals(entity.getName()))

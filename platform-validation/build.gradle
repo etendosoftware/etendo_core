@@ -13,7 +13,7 @@ java {
 }
 
 sourceSets.main.java.srcDirs = ['src']
-configurations { erpUiContainerRuntime }
+configurations { erpUiContainerRuntime; uiFieldContainerRuntime }
 
 // Compile the actual dictionary bootstrap separately from the ERP application.
 sourceSets {
@@ -166,6 +166,28 @@ tasks.register('sharedUiJar', Jar) {
     from('../modules_core/org.openbravo.userinterface.selector/src') {
         include '**/model/domaintype/*.hbm.xml'
     }
+}
+tasks.register('compileUiFieldComponents', JavaCompile) {
+    dependsOn 'compileClassicJsonJava'
+    source '../modules_core/org.openbravo.base.weld/src/org/openbravo/base/weld/WeldUtils.java'
+    source '../src/org/openbravo/dal/core/DalContextListener.java'
+    source '../src/org/openbravo/erpCommon/utility/ComboTableData.java'
+    source fileTree('../modules_core/org.openbravo.client.application/src') {
+        include 'org/openbravo/client/application/window/OBViewFieldHandler.java'
+        include 'org/openbravo/client/application/DynamicExpressionParser.java'
+        include 'org/openbravo/client/application/window/ApplicationDictionaryCachedStructures.java'
+    }
+    source fileTree('../modules_core/org.openbravo.client.kernel/src') {
+        include 'org/openbravo/client/kernel/KernelUtils.java'
+        include 'org/openbravo/client/kernel/BaseTemplateComponent.java'
+        include 'org/openbravo/client/kernel/BaseComponent.java'
+        include 'org/openbravo/client/kernel/Component.java'
+        include 'org/openbravo/client/kernel/reference/*.java'
+    }
+    classpath = classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('ui-fields')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
 }
 tasks.register('verifyUiArtifactPackaging') {
     group = 'verification'
@@ -620,6 +642,8 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    uiFieldContainerRuntime 'org.jboss.weld.se:weld-se-core:5.1.2.Final'
+    uiFieldContainerRuntime 'org.codehaus.jettison:jettison:1.5.4'
     webImplementation 'org.codehaus.jettison:jettison:1.5.4'
     bootstrapImplementation project(':platform-core')
     tomcatProbeImplementation 'org.postgresql:postgresql:42.7.8'
@@ -945,6 +969,30 @@ tasks.register('verifyUiDal', JavaExec) {
     }
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }
+}
+
+['verifyUiCache': false, 'verifyUiFields': true].each { taskName, renderFields ->
+    tasks.register(taskName, JavaExec) {
+        group = 'verification'
+        description = renderFields ? 'Execute the original field handler against the ERP-free visual dictionary.'
+                : 'Execute the original CDI dictionary cache against ERP-free generated UI entities.'
+        dependsOn dalClasses, dictionaryProbeClasses, prepareGeneratorTemplates, 'sharedUiJar', 'compileUiFieldComponents'
+        classpath = files(tasks.named('sharedUiJar')) + sourceSets.dictionaryProbe.runtimeClasspath
+        mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+        workingDir = projectDir
+        systemProperty 'validation.security', 'true'
+        systemProperty 'validation.originalUi', 'true'
+        systemProperty 'validation.obdal', 'true'
+        systemProperty 'validation.uiDal', 'true'
+        systemProperty 'validation.uiCache', 'true'
+        systemProperty 'validation.uiFields', renderFields.toString()
+        doFirst {
+            systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
+                    tasks.named('sharedUiJar')) + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
+        }
+        systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+        outputs.upToDateWhen { false }
+    }
 }
 
 tasks.register('verifyDalMappings', JavaExec) {

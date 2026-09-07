@@ -23,8 +23,11 @@ final class UiDictionaryFixture {
         arguments.add("dal-probe/UiDalValidation.java");
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
-        String log = "build/ui-dal-runtime.log";
+        String log = Boolean.getBoolean("validation.uiFields") ? "build/ui-field-runtime.log"
+                : Boolean.getBoolean("validation.uiCache") ? "build/ui-cache-runtime.log" : "build/ui-dal-runtime.log";
         Process child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin/java").toString(),
+                "-Dvalidation.uiFields=" + Boolean.getBoolean("validation.uiFields"),
+                "-Dvalidation.uiCache=" + Boolean.getBoolean("validation.uiCache"),
                 "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
                 "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
                 "com.etendoerp.platform.validation.UiDalValidation", properties.toAbsolutePath().toString())
@@ -34,6 +37,9 @@ final class UiDictionaryFixture {
             if (child.exitValue() != 0) throw new AssertionError("UI DAL failed: " + log);
         } finally {
             if (child.isAlive()) { child.destroyForcibly(); child.waitFor(5, java.util.concurrent.TimeUnit.SECONDS); }
+        }
+        try (var lines = java.nio.file.Files.lines(java.nio.file.Path.of(log))) {
+            lines.filter(line -> line.startsWith("PASS:")).forEach(System.out::println);
         }
         System.out.println("PASS: Compiled original UI entities executed through the minimal DAL in an isolated JVM");
     }
