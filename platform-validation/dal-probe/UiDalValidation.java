@@ -201,6 +201,10 @@ public final class UiDalValidation {
                 }
                 System.out.println("PASS: Shared original FreeMarker processor resolves and renders database form template");
                 if (Boolean.getBoolean("validation.uiMenu")) verifyLoginRoleProjection();
+                if (Boolean.getBoolean("validation.uiLogin")) {
+                    ((Runnable) Class.forName("com.etendoerp.platform.validation.FullLoginValidation")
+                            .getDeclaredConstructor().newInstance()).run();
+                }
                 if (Boolean.getBoolean("validation.uiCache") || Boolean.getBoolean("validation.uiFields")) {
                     Class<?> cacheType = Class.forName(
                             "org.openbravo.client.application.window.ApplicationDictionaryCachedStructures");

@@ -81,3 +81,9 @@ roles. It exercises original HQL and the shared Y/N mapping using boolean and
 legacy string literals, parameters, writes, extraction and legacy null comparisons.
 ui-menu-runtime.log and ui-menu-<role>.js preserve separate diagnostics. This is
 not a login, HTTP-session or web-container licensing-policy test.
+
+verifyUiLogin extends the menu fixture to 67 generic/own entities with AD_SYSTEM,
+AD_SESSION and password/lock metadata. It composes the canonical PostgreSQL DUAL
+view and invokes FullLoginValidation using generated original SQLC collaborators.
+It preserves separate ui-login-runtime.log diagnostics; no HTTP/browser session
+is exercised by this service integration gate.

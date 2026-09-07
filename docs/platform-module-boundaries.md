@@ -171,6 +171,24 @@ login page, web lifecycle/license policy, and the profile widget must be integra
 without their remaining Warehouse dependencies. This extraction does not make
 the platform UI navigable and must not be presented as completed browser CRUD.
 
+The full-login integration fixture composes the original generic login
+metadata (`AD_SYSTEM`, `AD_SESSION`, password/lock and backend-role settings),
+regenerates the original selected SQLC collaborators from their canonical XSQL,
+and invokes the original password/default/session path. SQLC generation may use
+the owned ERP copy for its metadata discovery; the resulting login runtime must
+execute on the independently generated ERP-free database, never fall back to that
+copy. Keep the existing smaller UI and headless fixtures unchanged. A service
+login pass is a prerequisite for, not a substitute for, the real servlet/browser
+flow. Do not disable user locking or permissions to make this fixture pass.
+
+`verifyUiLogin` adds AD_SYSTEM and AD_SESSION to the 65-entity menu fixture and
+retains the canonical PostgreSQL DUAL view for DateTimeData. It exercises original
+password hashing, enabled one-failure user locking, configured defaults, full
+session values and denial of invalid role/client/organization selections without
+context or CSRF mutation. Test credentials are randomly generated in memory and
+fixture changes are rolled back. LoginServlet/LoginHandler HTTP delivery, profile
+switching and browser navigation remain separate uncompleted integration work.
+
 | ID | Current code | Intended destination | Remaining coupling and separation gate |
 | --- | --- | --- | --- |
 | CTX-ERP-INIT | ErpContextSupport | platform-compat-etendo | Calls generated User/Warehouse and the existing SessionHandler; move behind the shared context extension contract, retaining initialization order. |

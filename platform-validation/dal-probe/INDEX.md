@@ -18,3 +18,9 @@ database and verifies missing associations, bound parameters and inactive scopes
 ERP-free session support, no ERP runtime types, a SQL-rejecting connection provider,
 stable application-scoped selection and fail-closed invalid configuration. This
 does not exercise the full login servlet or replace browser acceptance.
+
+`FullLoginValidation` runs original password hashing, failed-login locking,
+defaults and full session initialization against the disposable UI dictionary.
+It checks authorized session values and rejects invalid role/client/organization
+selections without changing the existing context or CSRF token. It uses generated
+original SQLC collaborators; browser login remains a separate acceptance gate.

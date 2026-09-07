@@ -43,6 +43,9 @@ final class SecurityFixture {
     private static final Set<String> MENU_METADATA = Set.of("AD_MENU", "AD_MENU_TRL", "AD_FORM", "AD_FORM_ACCESS",
             "AD_PROCESS_ACCESS", "AD_TAB_ACCESS", "AD_WINDOW_ACCESS", "OBUIAPP_PROCESS_ACCESS",
             "OBUIAPP_VIEW_ROLE_ACCESS", "OBUIAPP_VIEW_IMPL", "OBUIAPP_MENU_PARAMETERS");
+    private static final Set<String> LOGIN_METADATA = Set.of("AD_SYSTEM", "AD_SESSION");
+    private static final Set<String> LOGIN_COLUMNS = Set.of("PASSWORD", "ISLOCKED", "ISEXPIREDPASSWORD",
+            "LASTPASSWORDUPDATE", "ISRESTRICTBACKEND");
 
     static Set<String> selectedTables() {
         Set<String> tables = new LinkedHashSet<>(TABLES);
@@ -57,12 +60,14 @@ final class SecurityFixture {
                     "OBCLKER_UIDEFINITION", "AD_ELEMENT", "AD_ELEMENT_TRL", "AD_FIELD_TRL", "AD_FIELDGROUP_TRL"));
             if (Boolean.getBoolean("validation.uiWindow")) tables.addAll(WINDOW_METADATA.stream().sorted().toList());
             if (Boolean.getBoolean("validation.uiMenu")) tables.addAll(MENU_METADATA.stream().sorted().toList());
+            if (Boolean.getBoolean("validation.uiLogin")) tables.addAll(LOGIN_METADATA.stream().sorted().toList());
         }
         return tables;
     }
 
     private static boolean selectedColumn(String table, String name) {
         return (Boolean.getBoolean("validation.uiWindow") && WINDOW_METADATA.contains(table))
+                || (Boolean.getBoolean("validation.uiLogin") && (LOGIN_METADATA.contains(table) || LOGIN_COLUMNS.contains(name)))
                 || (Boolean.getBoolean("validation.uiMenu") && MENU_METADATA.contains(table))
                 || COLUMNS.contains(name) || (Boolean.getBoolean("validation.originalUi")
                 && Set.of("AD_COLUMN_ID", "AD_WINDOW_ID", "AD_TAB_ID", "HELP", "SEQNO",
@@ -98,6 +103,16 @@ final class SecurityFixture {
     }
 
     static void addSchema(Database model, DatabaseIO xml) throws Exception {
+        if (Boolean.getBoolean("validation.uiLogin")) {
+            String prescript = Files.readString(CORE.resolve("model/prescript-PostgreSql.sql"));
+            var match = java.util.regex.Pattern.compile("(?m)^CREATE OR REPLACE VIEW DUAL AS ([^\\r\\n]+)\\R/-- END")
+                    .matcher(prescript);
+            if (!match.find()) throw new AssertionError("Original PostgreSQL DUAL view definition missing");
+            var dual = new org.apache.ddlutils.model.View("DUAL");
+            dual.setStatement(match.group(1));
+            if (match.find()) throw new AssertionError("Ambiguous original PostgreSQL DUAL definition");
+            model.addView(dual);
+        }
         for (String name : selectedTables()) {
             Path source = name.startsWith("OBCLKER_")
                     ? Path.of("../modules_core/org.openbravo.client.kernel/src-db/database")
@@ -246,6 +261,11 @@ final class SecurityFixture {
     /** Creates only fixture-owned security rows; no credentials or existing database are read. */
     static Path securityData(Database model) throws Exception {
         StringBuilder data = new StringBuilder("<?xml version=\"1.0\"?><data>\n");
+        if (Boolean.getBoolean("validation.uiLogin")) {
+            seed(data, model, "AD_SYSTEM", Map.of("AD_SYSTEM_ID", "0", "NAME", "Platform validation",
+                    "TAD_RECORDRANGE", "500", "TAD_RECORDRANGE_INFO", "500", "TAD_TRANSACTIONALRANGE", "1",
+                    "TAD_THEME", "org.openbravo.userinterface.skin.250to300Comp/250to300Comp"));
+        }
         seed(data, model, "AD_LANGUAGE", Map.of("AD_LANGUAGE_ID", "LANG", "AD_LANGUAGE", "en_US", "NAME", "English", "ISBASELANGUAGE", "Y"));
         for (String client : List.of("0", "C1", "C2")) {
             seed(data, model, "AD_CLIENT", Map.of("AD_CLIENT_ID", client, "NAME", "Client " + client, "VALUE", client, "AD_LANGUAGE", "en_US"));
@@ -300,6 +320,9 @@ final class SecurityFixture {
         Map<String, String> values = new LinkedHashMap<>(Map.of("AD_CLIENT_ID", "0", "AD_ORG_ID", "0",
                 "CREATED", "2026-09-06 00:00:00", "UPDATED", "2026-09-06 00:00:00", "CREATEDBY", "0", "UPDATEDBY", "0"));
         values.putAll(supplied);
+        if (Boolean.getBoolean("validation.uiLogin") && table.equals("AD_USER")) {
+            values.put("LASTPASSWORDUPDATE", "2026-09-06 00:00:00");
+        }
         DictionaryFixture.row(xml, model, table, values);
     }
 

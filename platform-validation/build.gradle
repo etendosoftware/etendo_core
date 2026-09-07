@@ -262,6 +262,72 @@ tasks.register('compilePlatformLoginSession', JavaCompile) {
     options.sourcepath = files()
     options.compilerArgs += ['-implicit:none', '-proc:none']
 }
+tasks.register('prepareLoginSqlcSources', Sync) {
+    from('../src/org/openbravo/erpCommon/utility') { include 'DateTime_data.xsql' }
+    from('../src/org/openbravo/base/secureApp') {
+        include 'Seguridad_data.xsql', 'DefaultOptions_data.xsql', 'DefaultSessionValues_data.xsql', 'SystemPreferences_data.xsql'
+    }
+    into layout.buildDirectory.dir('login-sqlc-input')
+}
+tasks.register('generateLoginSqlc', JavaExec) {
+    group = 'build'
+    description = 'Generate the original login SQLC collaborators against the owned Classic metadata copy.'
+    dependsOn 'prepareLoginSqlcSources', 'compileUiFieldComponents'
+    classpath = files(tasks.named('compileUiFieldComponents').get().destinationDirectory) + classicServiceSupport
+    mainClass = 'org.openbravo.data.Sqlc'
+    workingDir = projectDir
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    inputs.dir(layout.buildDirectory.dir('login-sqlc-input'))
+    outputs.dir(layout.buildDirectory.dir('login-sqlc-output'))
+    doFirst {
+        def configuration = new Properties()
+        file(project.property('classicProperties')).withInputStream { configuration.load(it) }
+        if (!(configuration.getProperty('platform.validation.copyContainer', '') ==~ /etendo-platform-classic-copy-[a-f0-9-]{36}/)) {
+            throw new GradleException('Login SQLC generation requires the owned Classic copy configuration')
+        }
+        String container = configuration.getProperty('platform.validation.copyContainer')
+        def inspected = new ByteArrayOutputStream()
+        exec {
+            commandLine 'docker', 'inspect', '--format', '{{.State.Running}} {{index .Config.Labels "etendo.platform.classic-copy"}}', container
+            standardOutput = inspected
+        }
+        if (inspected.toString('UTF-8').trim() != 'true true') {
+            throw new GradleException('Login SQLC copy is not running or lacks its ownership label')
+        }
+        inspected.reset()
+        exec { commandLine 'docker', 'port', container, '5432/tcp'; standardOutput = inspected }
+        String binding = inspected.toString('UTF-8').trim()
+        if (!(binding ==~ /127\.0\.0\.1:[0-9]+/)
+                || configuration.getProperty('bbdd.url') != "jdbc:postgresql://${binding}"
+                || configuration.getProperty('bbdd.sid') != 'platform_switch') {
+            throw new GradleException('Login SQLC configuration does not target the verified owned copy')
+        }
+        args file(project.property('classicProperties')).absolutePath, '.xsql',
+                file('build/login-sqlc-input').absolutePath, file('build/login-sqlc-output').absolutePath, 'null', 'true'
+    }
+    doLast {
+        ['SeguridadData', 'DefaultOptionsData', 'DefaultSessionValuesData', 'SystemPreferencesData', 'DateTimeData'].each { name ->
+            if (fileTree('build/login-sqlc-output').matching { include "**/${name}.java" }.files.size() != 1) {
+                throw new GradleException("Original login SQLC generation is incomplete: ${name}")
+            }
+        }
+    }
+}
+tasks.register('compilePlatformFullLogin', JavaCompile) {
+    dependsOn 'compilePlatformLoginSession', 'generateLoginSqlc'
+    source fileTree('build/login-sqlc-output') { include '**/*.java' }
+    source '../src/org/openbravo/base/secureApp/DefaultValuesData.java'
+    source '../src/org/openbravo/base/secureApp/UserLock.java'
+    source '../src/org/openbravo/erpCommon/utility/SequenceIdData.java'
+    source '../src/org/openbravo/service/db/QueryTimeOutUtil.java'
+    source '../src-core/src/org/openbravo/data/UtilSql.java'
+    source fileTree('../src/org/openbravo/authentication/hashing') { include '*.java' }
+    source 'dal-probe/FullLoginValidation.java'
+    classpath = files(layout.buildDirectory.dir('platform-login-session')) + classicServiceClasses + classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('platform-full-login')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none', '-proc:none']
+}
 def loginCompositionChecks = []
 ['platform', 'blank', 'invalid', 'missing', 'default'].each { mode ->
     def name = 'verifyLoginComposition' + mode.capitalize()
@@ -1110,7 +1176,7 @@ tasks.register('verifyUiDal', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
-['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true, 'verifyUiMenu': true].each { taskName, renderFields ->
+['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true, 'verifyUiMenu': true, 'verifyUiLogin': true].each { taskName, renderFields ->
     tasks.register(taskName, JavaExec) {
         group = 'verification'
         description = renderFields ? 'Execute the original field handler against the ERP-free visual dictionary.'
@@ -1126,16 +1192,20 @@ tasks.register('verifyUiDal', JavaExec) {
         systemProperty 'validation.uiCache', 'true'
         systemProperty 'validation.uiFields', renderFields.toString()
         systemProperty 'validation.uiFieldDefinitions', (taskName == 'verifyUiFieldDefinitions').toString()
-        def renderWindow = taskName in ['verifyUiWindow', 'verifyUiMenu']
+        def renderWindow = taskName in ['verifyUiWindow', 'verifyUiMenu', 'verifyUiLogin']
+        def renderMenu = taskName in ['verifyUiMenu', 'verifyUiLogin']
         systemProperty 'validation.uiWindow', renderWindow.toString()
-        systemProperty 'validation.uiMenu', (taskName == 'verifyUiMenu').toString()
-        if (taskName == 'verifyUiMenu') dependsOn 'compilePlatformLoginSession'
+        systemProperty 'validation.uiMenu', renderMenu.toString()
+        systemProperty 'validation.uiLogin', (taskName == 'verifyUiLogin').toString()
+        if (renderMenu) dependsOn 'compilePlatformLoginSession'
+        if (taskName == 'verifyUiLogin') dependsOn 'compilePlatformFullLogin'
         if (renderWindow) dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
         doFirst {
             def windowRuntime = renderWindow ? files(layout.buildDirectory.dir('ui-window'),
                     layout.buildDirectory.dir('ui-window-templates')) : files()
-            def loginRuntime = taskName == 'verifyUiMenu' ? files(layout.buildDirectory.dir('platform-login-session')) +
+            def loginRuntime = renderMenu ? files(layout.buildDirectory.dir('platform-login-session')) +
                     configurations.loginSessionProbeRuntime : files()
+            if (taskName == 'verifyUiLogin') loginRuntime += files(layout.buildDirectory.dir('platform-full-login'))
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
                     tasks.named('sharedUiJar')) + windowRuntime + loginRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
         }

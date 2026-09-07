@@ -23,7 +23,8 @@ final class UiDictionaryFixture {
         arguments.add("dal-probe/UiDalValidation.java");
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
-        String log = Boolean.getBoolean("validation.uiMenu") ? "build/ui-menu-runtime.log"
+        String log = Boolean.getBoolean("validation.uiLogin") ? "build/ui-login-runtime.log"
+                : Boolean.getBoolean("validation.uiMenu") ? "build/ui-menu-runtime.log"
                 : Boolean.getBoolean("validation.uiWindow") ? "build/ui-window-runtime.log"
                 : Boolean.getBoolean("validation.uiFieldDefinitions") ? "build/ui-field-definitions-runtime.log"
                 : Boolean.getBoolean("validation.uiFields") ? "build/ui-field-runtime.log"
@@ -33,6 +34,7 @@ final class UiDictionaryFixture {
                 "-Dvalidation.uiFieldDefinitions=" + Boolean.getBoolean("validation.uiFieldDefinitions"),
                 "-Dvalidation.uiWindow=" + Boolean.getBoolean("validation.uiWindow"),
                 "-Dvalidation.uiMenu=" + Boolean.getBoolean("validation.uiMenu"),
+                "-Dvalidation.uiLogin=" + Boolean.getBoolean("validation.uiLogin"),
                 "-Dvalidation.uiCache=" + Boolean.getBoolean("validation.uiCache"),
                 "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
                 "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
