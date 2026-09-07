@@ -143,6 +143,24 @@ validation authentication adapter, not a production login/authorization service.
 Do not deploy it against production data. Schema provisioning remains a separate
 DBSM step; the WAR does not silently run DDL on application startup.
 
+## Existing Classic database and Product datasource milestone
+
+The next acceptance target is the existing Product datasource behavior on this
+WAR, backed by a database installed with Classic. This is not yet implemented.
+The endpoint must use existing module services, not proxy Classic or fabricate
+JSON. Acceptance includes selected fields, reference identifiers, pagination,
+sorting, authorization, and client/organization isolation. Unsupported parameters
+and installed-module fields must be reported explicitly.
+
+Before DAL bootstrap, `verifyClassicDatabase -PclassicProperties=/absolute/path/to/Openbravo.properties`
+performs a read-only JDBC preflight. It checks PostgreSQL, the Product dictionary
+entry, the JSON/datasource module registrations, and product availability. It does
+not execute sessionConfig, schema updates, module scripts, or application startup.
+Credentials are loaded from the external file and are not included in the report.
+The report is `build/classic-database-result.txt`; passing this preflight does not
+prove that the module or HTTP endpoint works. The runtime profile will remain
+separate from the disposable fixture profile and will not run automatic DDL.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.

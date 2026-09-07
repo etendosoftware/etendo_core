@@ -149,6 +149,21 @@ tasks.named('war', War) {
 
 tasks.register('platformWar') { dependsOn war }
 
+tasks.register('verifyClassicDatabase', JavaExec) {
+    group = 'verification'
+    description = 'Check an existing Classic PostgreSQL database without modifying it.'
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicDatabaseValidation'
+    workingDir = projectDir
+    doFirst {
+        if (!project.hasProperty('classicProperties')) {
+            throw new GradleException('Supply -PclassicProperties=/absolute/path/to/Openbravo.properties')
+        }
+        args file(project.property('classicProperties')).absolutePath
+    }
+}
+
 tasks.register('verifyTomcat', JavaExec) {
     group = 'verification'
     description = 'Deploy the WAR in isolated Tomcat and verify real OBDal over HTTP.'
