@@ -974,10 +974,18 @@ tasks.register('compileRetainedUiRuntime', JavaCompile) {
     options.sourcepath = files()
     options.compilerArgs += ['-implicit:none', '-proc:none']
 }
+tasks.register('prepareOriginalUiWebResources', Sync) {
+    into layout.buildDirectory.dir('original-ui-public')
+    ['org.openbravo.client.kernel', 'org.openbravo.client.application',
+     'org.openbravo.userinterface.smartclient', 'org.openbravo.userinterface.selector'].each { module ->
+        from("../modules_core/${module}/web") { into 'web' }
+    }
+    exclude '**/INDEX.md', '**/*.properties', '**/*.java', '**/*.class'
+}
 tasks.register('runOriginalUi', JavaExec) {
     group = 'application'
     description = 'Run original UI HTTP integration against the retained owned platform instance.'
-    dependsOn 'compileRetainedUiRuntime'
+    dependsOn 'compileRetainedUiRuntime', 'prepareOriginalUiWebResources'
     classpath = files(tasks.named('compileRetainedUiRuntime').map { it.destinationDirectory }) + files(retainedUiClasspath)
     mainClass = 'com.etendoerp.platform.ui.RetainedUiServer'
     workingDir = projectDir
@@ -1000,7 +1008,8 @@ tasks.register('runOriginalUi', JavaExec) {
                 || properties.getProperty('bbdd.sid') != 'platform_proof') {
             throw new GradleException('UI configuration does not target its owned container')
         }
-        args file(instance[0]).absolutePath, (project.findProperty('platformPort') ?: '8091')
+        args file(instance[0]).absolutePath, (project.findProperty('platformPort') ?: '8091'),
+                layout.buildDirectory.dir('original-ui-public').get().asFile.absolutePath
     }
 }
 

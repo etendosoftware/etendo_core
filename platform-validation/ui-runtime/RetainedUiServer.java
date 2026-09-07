@@ -30,7 +30,12 @@ public final class RetainedUiServer {
   private RetainedUiServer() { }
 
   public static void main(String[] args) throws Exception {
-    if (args.length != 2) throw new IllegalArgumentException("Expected private properties and loopback port");
+    if (args.length != 3) throw new IllegalArgumentException("Expected private properties, loopback port and public assets");
+    Path publicAssets = Path.of(args[2]).toRealPath();
+    if (!Files.isRegularFile(publicAssets.resolve(
+        "web/org.openbravo.userinterface.smartclient/isomorphic/ISC_Combined.js"))) {
+      throw new IllegalArgumentException("Canonical SmartClient public assets are missing");
+    }
     OBPropertiesProvider.getInstance().setProperties(args[0]);
     var properties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
     properties.setProperty("login.session.support.class", "org.openbravo.base.secureApp.PlatformLoginSessionSupport");
@@ -58,8 +63,16 @@ public final class RetainedUiServer {
       tomcat.getConnector().setProperty("address", "127.0.0.1");
       tomcat.getConnector().setProperty("maxThreads", "4");
       tomcat.getConnector().setProperty("minSpareThreads", "1");
-      var context = tomcat.addContext("/platform", base.toString());
+      var context = tomcat.addContext("/platform", publicAssets.toString());
       context.setParentClassLoader(RetainedUiServer.class.getClassLoader());
+      var staticFiles = Tomcat.addServlet(context, "default", "org.apache.catalina.servlets.DefaultServlet");
+      staticFiles.addInitParameter("listings", "false");
+      staticFiles.addInitParameter("readonly", "true");
+      context.addServletMappingDecoded("/", "default");
+      context.addMimeMapping("js", "application/javascript");
+      context.addMimeMapping("css", "text/css");
+      context.addMimeMapping("png", "image/png");
+      context.addMimeMapping("gif", "image/gif");
       context.addParameter("LoginServlet", "/login");
       context.setSessionTimeout(30);
       org.openbravo.client.kernel.RequestContext.setServletContext(context.getServletContext());

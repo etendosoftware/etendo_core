@@ -30,6 +30,13 @@ the stored credentials remain available. Database session deactivation, logout,
 expiry and shell/datasource routes are still pending; this is local integration, not a production
 deployment or a completed UI profile.
 
+`prepareOriginalUiWebResources` stages the original kernel/application/SmartClient/
+selector web assets in `build/original-ui-public`. The read-only default servlet
+serves that directory without directory listings. Source trees and private
+configuration are outside its document root. `runOriginalUi` prepares these assets
+automatically; neither headless build depends on this task. Static delivery alone
+does not establish browser widget execution.
+
 Authenticated GET routes `/platform/components/menu`, `/navigation`, `/layout`
 (each under `/platform/components`) return the original generated JavaScript.
 `/platform/components/window?windowId=ID` renders an original standard window

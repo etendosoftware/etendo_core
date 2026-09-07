@@ -82,6 +82,20 @@ actual R_EXCLUDE login was denied Request with 403, and anonymous access returne
 delivery and datasource CRUD remain the next integration work; generated scripts
 alone do not complete the milestone.
 
+Browser resource composition stages only the canonical `web` directories of the
+kernel, application, SmartClient and selector modules into a dedicated public
+document root. It never serves source roots, private properties, generated Java
+or the Classic WAR. The default servlet owns these static paths; authenticated
+component routes retain precedence. This optional host remains outside both
+headless artifacts. Static delivery is a prerequisite for browser bootstrap,
+not a substitute for executing the original window and testing CRUD.
+
+Live Chrome validation loaded and executed canonical ISC_Combined.js from the
+retained host and resolved `isc.Canvas.create`. Private configuration/source paths
+and directory listings returned 404; authenticated Request generation still
+returned 200 with OBViewGrid. The root application page remains absent: this
+checkpoint proves resource delivery, not shell initialization or browser CRUD.
+
 ## Status and rule
 
 This is the extraction map for ET-27, not a claim that the modules already exist.
