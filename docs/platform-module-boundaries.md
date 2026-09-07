@@ -177,6 +177,16 @@ operational data, rollback and idempotence checks in both ERP-free profiles.
 
 ## Immediate sequence
 
+ERP-free regression must explicitly reject Product, Warehouse and BusinessPartner
+runtime classes, generated mappings and physical tables. Do not infer their absence
+from successful application CRUD or a small entity count. Apply the check inside
+the real DAL validation so both v1 and XML-upgraded v2 runs enforce it.
+The strengthened `verifyPlatform` passed: ERP types absent from classpath and
+dictionary/mappings, ERP tables absent from user schemas, generated v1/v2 DAL
+execution, PostgreSQL FK/NOT NULL enforcement and repeat updates with zero deltas
+and preservation of every table snapshot. This validates the disposable minimal
+model; it does not imply arbitrary ERP schema migrations have been tested.
+
 ERP headless candidate assembly: reuse the existing Product adapter and original
 DAL/JSON services, but remove client/UI implementation packages except an explicit
 compatibility allowlist and generated dictionary entities. Generated metadata

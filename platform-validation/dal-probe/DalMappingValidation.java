@@ -26,6 +26,7 @@ public final class DalMappingValidation {
     public static void verify() throws Exception {
         verifyReadableScopeRules();
         for (String absentType : new String[] {
+                "org.openbravo.model.common.plm.Product",
                 "org.openbravo.model.common.enterprise.Warehouse",
                 "org.openbravo.client.application.Process",
                 "org.openbravo.model.common.businesspartner.BusinessPartner"}) {
@@ -37,12 +38,20 @@ public final class DalMappingValidation {
             }
         }
         for (var entity : ModelProvider.getInstance().getModel()) {
+            if (java.util.Set.of("M_PRODUCT", "M_WAREHOUSE", "C_BPARTNER")
+                    .contains(entity.getTableName().toUpperCase(java.util.Locale.ROOT))) {
+                throw new AssertionError("ERP table remains in runtime dictionary: " + entity.getTableName());
+            }
             Class<?> type = entity.getMappingClass();
             if (type == null) throw new AssertionError("Uncompiled entity " + entity.getClassName());
             OBProvider.getInstance().register(type, type, false);
             OBProvider.getInstance().register(entity.getName(), type, false);
         }
         String mapping = DalMappingGenerator.getInstance().generateMapping();
+        if (java.util.regex.Pattern.compile("(?i)\\btable\\s*=\\s*[\"'](?:m_product|m_warehouse|c_bpartner)[\"']")
+                .matcher(mapping).find()) {
+            throw new AssertionError("ERP table remains in generated mapping");
+        }
         Files.writeString(Path.of("build/dal-mapping.hbm.xml"), mapping);
         for (var entity : ModelProvider.getInstance().getModel()) {
             if (!mapping.contains(entity.getClassName())) throw new AssertionError("Unmapped entity " + entity.getName());
@@ -52,6 +61,14 @@ public final class DalMappingValidation {
         try {
             var factory = controller.getSessionFactory();
             try (var session = factory.openSession()) {
+                session.doWork(connection -> {
+                    try (var statement = connection.prepareStatement(
+                            "select table_name from information_schema.tables where table_schema not in ('pg_catalog','information_schema') "
+                            + "and lower(table_name) in ('m_product','m_warehouse','c_bpartner')");
+                            var rows = statement.executeQuery()) {
+                        if (rows.next()) throw new AssertionError("ERP table remains in platform database: " + rows.getString(1));
+                    }
+                });
                 Long count = session.createQuery("select count(r) from ProofRequest r where r.title = :title", Long.class)
                         .setParameter("title", "Not inserted yet").getSingleResult();
                 if (count != 0) throw new AssertionError("Unexpected application data");
