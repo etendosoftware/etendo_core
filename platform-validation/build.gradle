@@ -318,6 +318,7 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    webImplementation 'org.codehaus.jettison:jettison:1.5.4'
     bootstrapImplementation project(':platform-core')
     tomcatProbeImplementation 'org.postgresql:postgresql:42.7.8'
     tomcatProbeImplementation 'org.codehaus.jettison:jettison:1.5.4'
@@ -356,7 +357,7 @@ tasks.named('war', War) {
     dependsOn dalClasses, webClasses
     archiveFileName = 'platform-validation.war'
     webXml = file('webapp/WEB-INF/web.xml')
-    classpath = configurations.dalRuntimeClasspath.filter { !it.name.startsWith('jakarta.servlet-api-') }
+    classpath = configurations.webRuntimeClasspath.filter { !it.name.startsWith('jakarta.servlet-api-') }
     classpath += sourceSets.bootstrap.output + sourceSets.web.output
     from(sourceSets.dal.output) {
         into 'WEB-INF/classes'

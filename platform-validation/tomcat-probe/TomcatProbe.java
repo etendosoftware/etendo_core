@@ -61,6 +61,21 @@ public final class TomcatProbe {
                 var all = send(url, "GET", token);
                 expect(all, 200);
                 if (!expected.equals(all.body())) throw new AssertionError("HTTP tenant/organization filters leaked control rows");
+                String id = expected.substring(0, expected.indexOf('\t'));
+                expect(send(url + "?id=" + id + "&title=Denied%20update", "PUT", readOnly), 403);
+                var updated = sendJson(url + "?id=" + id + "&title=Updated%20through%20HTTP", "PUT", token);
+                expect(updated, 200);
+                var rows = new org.codehaus.jettison.json.JSONObject(updated.body()).getJSONObject("response").getJSONArray("data");
+                if (rows.length() != 1 || !id.equals(rows.getJSONObject(0).getString("id"))) throw new AssertionError("Update JSON identity changed");
+                var jsonRead = sendJson(url + "?title=Updated%20through%20HTTP", "GET", token);
+                expect(jsonRead, 200);
+                if (!jsonRead.headers().firstValue("Content-Type").orElse("").startsWith("application/json")
+                        || !new org.codehaus.jettison.json.JSONObject(jsonRead.body()).getJSONObject("response")
+                        .getJSONArray("data").getJSONObject(0).getString("title").equals("Updated through HTTP")) {
+                    throw new AssertionError("Committed update did not round-trip as JSON");
+                }
+                expect(send(url + "?id=ABSENT&title=Missing", "PUT", token), 404);
+                expect(send(url + "?id=" + id + "&title=Created%20through%20HTTP", "PUT", token), 200);
                 expect(send(url + "?title=Forbidden", "POST", readOnly), 403);
                 var readable = send(url, "GET", readOnly);
                 expect(readable, 200);
@@ -82,6 +97,12 @@ public final class TomcatProbe {
         var request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(20));
         if (token != null) request.header("Authorization", "Bearer " + token);
         return CLIENT.send(request.method(method, HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private static HttpResponse<String> sendJson(String url, String method, String token) throws Exception {
+        return CLIENT.send(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(20))
+                .header("Authorization", "Bearer " + token).header("Accept", "application/json")
+                .method(method, HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
     }
 
     private static void expect(HttpResponse<String> response, int status) {

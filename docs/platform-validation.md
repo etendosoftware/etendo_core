@@ -30,6 +30,13 @@ maintained. See platform-module-boundaries.md for variant isolation constraints.
 
 ## Run the complete proof
 
+The minimal Request HTTP adapter supports authenticated GET, POST and PUT.
+PUT requires an existing readable `id` and a validated `title`; table write
+permissions are enforced by OBDal. `Accept: application/json` selects a JSON
+response envelope, while the original text representation remains available for
+compatibility. This remains a fixture-specific adapter, not the final generic
+REST API or production authentication implementation.
+
 From the repository root, with JDK 17, Docker, and a local postgres:16 image:
 
 ```sh
