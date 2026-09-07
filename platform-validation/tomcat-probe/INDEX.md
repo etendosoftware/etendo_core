@@ -8,3 +8,7 @@ The process and disposable PostgreSQL are stopped at the end of verifyTomcat.
 
 CompatibilityServer runs the external-database WAR at the exact /etendo context
 on a configurable loopback port and remains available until explicitly stopped.
+
+ProductHttpValidation checks the running HTTP contract and context rejection.
+ProductDatabaseValidation independently compares its test-client rows with JDBC
+and confirms foreign-client control rows are excluded.

@@ -295,6 +295,25 @@ accepted as inert. The request parameter allowlist is explicit in ProductServlet
 Full selected-property parity, arbitrary criteria, explicit role selection and
 production authentication are not established by this check.
 
+The security adapter accepts explicit X-Platform-Role and X-Platform-Organization
+headers. Authentication and authorization are separate: a valid password does not
+authorize an arbitrary role or organization. Requested roles must be active user
+memberships and requested organizations must be active role grants. Absent headers
+prefer the user's configured defaults, then a deterministic permitted context.
+Product table access remains checked by the existing entity access checker.
+Response headers expose the selected role, client and organization IDs so callers
+can repeat the same context. The current gate verifies explicit-context replay
+and rejects unknown role/organization IDs with HTTP 403 after authentication.
+
+After preferring the user's configured default role, the test user receives 40
+products. `verifyProductDatabase -PclassicProperties=/absolute/path/to/Openbravo.properties`
+compares the running endpoint with independent read-only JDBC queries: all 40
+Product IDs, organization IDs, names and search keys match the complete test-client
+set, and 40 foreign-client control products are excluded. This gate deliberately
+requires the test administrator to see the complete client dataset (at most 101
+products); it is not a generic expected-result rule for restricted roles.
+Restricted-organization checks and Classic lifecycle comparison remain pending.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.

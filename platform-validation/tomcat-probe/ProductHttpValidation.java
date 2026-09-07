@@ -43,6 +43,12 @@ public final class ProductHttpValidation {
                 throw new AssertionError("Response did not come from platform runtime");
             }
             JSONArray all = data(full);
+            String role = full.headers().firstValue("X-Platform-Role").orElseThrow();
+            String organization = full.headers().firstValue("X-Platform-Organization").orElseThrow();
+            var explicit = send(uri, auth, PARAMETERS + "&_startRow=0&_endRow=100", role, organization);
+            if (data(explicit).length() != all.length()) throw new AssertionError("Explicit context differs from selected context");
+            expect(send(uri, auth, PARAMETERS, "UNAUTHORIZEDROLE", organization), 403);
+            expect(send(uri, auth, PARAMETERS, role, "UNAUTHORIZEDORG"), 403);
             if (all.length() == 0 || all.length() > 101) throw new AssertionError("Invalid result page size");
             var ids = new HashSet<String>();
             String client = all.getJSONObject(0).getString("client");
@@ -76,6 +82,7 @@ public final class ProductHttpValidation {
             if (after.length() != all.length()) throw new AssertionError("Rejected requests changed results");
             Files.writeString(report, "PASS\nExact Product URL on actual Tomcat\nHTTP authentication and invalid password rejection\n"
                     + "Original JSON fetch, selected fields, reference identifiers, ordering and two pages\n"
+                    + "Explicit context retained; unassigned role and organization rejected\n"
                     + "Unsupported parameters and mutations rejected\nReturned products: " + all.length()
                     + "\nCross-role/organization security and Classic mode comparison remain unverified\n");
             System.out.println("PASS: Product HTTP contract checks; returned products: " + all.length());
@@ -93,9 +100,15 @@ public final class ProductHttpValidation {
     }
 
     private static HttpResponse<String> send(URI uri, String auth, String body) throws Exception {
+        return send(uri, auth, body, null, null);
+    }
+
+    private static HttpResponse<String> send(URI uri, String auth, String body, String role, String organization) throws Exception {
         var request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(30))
                 .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         if (auth != null) request.header("Authorization", auth);
+        if (role != null) request.header("X-Platform-Role", role);
+        if (organization != null) request.header("X-Platform-Organization", organization);
         return CLIENT.send(request.POST(HttpRequest.BodyPublishers.ofString(body)).build(), HttpResponse.BodyHandlers.ofString());
     }
 

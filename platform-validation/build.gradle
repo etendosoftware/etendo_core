@@ -220,6 +220,7 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    tomcatProbeImplementation 'org.postgresql:postgresql:42.7.8'
     tomcatProbeImplementation 'org.codehaus.jettison:jettison:1.5.4'
     classicEntitiesImplementation 'io.smallrye:jandex:3.1.2'
     classicEntitiesImplementation 'org.codehaus.jettison:jettison:1.5.4'
@@ -266,6 +267,20 @@ tasks.named('war', War) {
 }
 
 tasks.register('platformWar') { dependsOn war }
+
+tasks.register('verifyProductDatabase', JavaExec) {
+    group = 'verification'
+    description = 'Compare Product HTTP values with independent read-only PostgreSQL queries.'
+    dependsOn tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ProductDatabaseValidation'
+    workingDir = projectDir
+    doFirst {
+        args file(project.property('classicProperties')).absolutePath,
+                'http://127.0.0.1:' + (project.findProperty('platformPort') ?: '8090') +
+                        '/etendo/org.openbravo.service.datasource/Product'
+    }
+}
 
 tasks.register('verifyProductHttp', JavaExec) {
     group = 'verification'
