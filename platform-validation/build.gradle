@@ -1129,12 +1129,15 @@ tasks.register('verifyUiDal', JavaExec) {
         def renderWindow = taskName in ['verifyUiWindow', 'verifyUiMenu']
         systemProperty 'validation.uiWindow', renderWindow.toString()
         systemProperty 'validation.uiMenu', (taskName == 'verifyUiMenu').toString()
+        if (taskName == 'verifyUiMenu') dependsOn 'compilePlatformLoginSession'
         if (renderWindow) dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
         doFirst {
             def windowRuntime = renderWindow ? files(layout.buildDirectory.dir('ui-window'),
                     layout.buildDirectory.dir('ui-window-templates')) : files()
+            def loginRuntime = taskName == 'verifyUiMenu' ? files(layout.buildDirectory.dir('platform-login-session')) +
+                    configurations.loginSessionProbeRuntime : files()
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
-                    tasks.named('sharedUiJar')) + windowRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
+                    tasks.named('sharedUiJar')) + windowRuntime + loginRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath
         }
         systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
         outputs.upToDateWhen { false }

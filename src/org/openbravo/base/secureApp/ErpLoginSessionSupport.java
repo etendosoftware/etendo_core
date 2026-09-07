@@ -78,6 +78,17 @@ public final class ErpLoginSessionSupport extends LoginSessionSupport {
   }
 
   @Override
+  public void initializeApproval(ConnectionProvider connection, VariablesSecureApp vars,
+      String role, String user) throws ServletException {
+    SeguridadData[] data = SeguridadData.select(connection, role, user);
+    if (data == null || data.length == 0) {
+      throw new ServletException("ERP login role disappeared during session initialization");
+    }
+    vars.setSessionValue("#Approval_C_Currency_ID", data[0].cCurrencyId);
+    vars.setSessionValue("#Approval_Amt", data[0].amtapproval);
+  }
+
+  @Override
   public void initializeAccounting(ConnectionProvider conn, VariablesSecureApp vars, Client client,
       boolean isAccountingDimensionConfigCentrally, String strOrg, String strCliente)
       throws ServletException {

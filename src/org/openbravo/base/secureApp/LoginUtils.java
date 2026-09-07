@@ -266,20 +266,19 @@ public class LoginUtils {
     }
 
     try {
-      SeguridadData[] data = SeguridadData.select(conn, strRol, strUserAuth);
-      if (data == null || data.length == 0) {
+      Object[] data = readRoleSession(strRol, strUserAuth);
+      if (data == null) {
         OBContext.setOBContext(currentContext);
         return false;
       }
 
       List<RoleOrganization> datarolelist = loadRoleOrganization(strRol);
 
-      vars.setSessionValue("#User_Level", data[0].userlevel);
+      vars.setSessionValue("#User_Level", (String) data[0]);
       vars.setSessionValue("#User_Client", buildClientList(datarolelist));
       vars.setSessionValue("#User_Org", buildOrgList(datarolelist));
-      vars.setSessionValue("#Approval_C_Currency_ID", data[0].cCurrencyId);
-      vars.setSessionValue("#Approval_Amt", data[0].amtapproval);
-      vars.setSessionValue("#Client_Value", data[0].value);
+      sessionSupport.initializeApproval(conn, vars, strRol, strUserAuth);
+      vars.setSessionValue("#Client_Value", (String) data[1]);
       data = null;
 
       // Optional business-domain session values, before generic UI preferences.
@@ -345,6 +344,23 @@ public class LoginUtils {
     // See the HttpSecureAppServlet
     vars.setSessionValue("#loggingIn", "N");
     return true;
+  }
+
+  /** Shared projection of the original role-session query, without ERP approval or partner columns. */
+  private static Object[] readRoleSession(String role, String user) throws ServletException {
+    // Preserve the original projection predicates. This is not a replacement for the
+    // preceding validUserRole/validRoleClient/validRoleOrg authorization checks.
+    try {
+      return OBDal.getInstance().getSession().createQuery(
+          "select r.userLevel, c.searchKey from ADUserRoles ur join ur.role r "
+              + "join r.client c join ur.userContact u "
+              + "where r.id=:role and u.id=:user and r.active=true and c.active=true",
+          Object[].class).setParameter("role", role).setParameter("user", user)
+          .setMaxResults(1).uniqueResult();
+    } catch (org.hibernate.HibernateException | IllegalArgumentException failure) {
+      // Retain the caller's SQLC failure path, including restoration of the prior context.
+      throw new ServletException("Unable to read login role session values", failure);
+    }
   }
 
   /**

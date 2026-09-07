@@ -58,9 +58,12 @@ public final class PlatformLoginSessionValidation {
         var vars = new VariablesSecureApp("U1", "C1", "O1");
         vars.setSessionValue("#AD_User_ID", "U1");
         vars.setSessionValue("#AD_Role_ID", "R1");
+        support.initializeApproval(noDatabase, vars, "R1", "U1");
         support.initializeAccounting(noDatabase, vars, null, false, "O1", "C1");
         if (!"U1".equals(vars.getSessionValue("#AD_User_ID")) || !"R1".equals(vars.getSessionValue("#AD_Role_ID"))
-                || !vars.getSessionValue("$C_AcctSchema_ID").isEmpty()) {
+                || !vars.getSessionValue("$C_AcctSchema_ID").isEmpty()
+                || !vars.getSessionValue("#Approval_Amt").isEmpty()
+                || !vars.getSessionValue("#Approval_C_Currency_ID").isEmpty()) {
             throw new AssertionError("Platform contribution changed security state or added accounting state");
         }
         properties.setProperty(LoginSessionSupport.IMPLEMENTATION_PROPERTY, "java.lang.String");

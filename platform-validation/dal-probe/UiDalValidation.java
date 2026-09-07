@@ -14,6 +14,41 @@ import org.openbravo.model.ad.ui.Window;
 
 /** Executes generated visual metadata with the canonical ERP-free DAL. */
 public final class UiDalValidation {
+    private static void verifyLoginRoleProjection() throws Exception {
+        Class<?> login = Class.forName("org.openbravo.base.secureApp.LoginUtils");
+        if (!login.getProtectionDomain().getCodeSource().getLocation().toString().contains("/platform-login-session/")) {
+            throw new AssertionError("Login projection did not load from the canonical platform compilation");
+        }
+        var read = login.getDeclaredMethod("readRoleSession", String.class, String.class);
+        read.setAccessible(true);
+        var dal = OBDal.getInstance();
+        var role = dal.get(org.openbravo.model.ad.access.Role.class, "R1");
+        var client = role.getClient();
+        Object[] values = (Object[]) read.invoke(null, "R1", "U1");
+        if (values == null || !"O".equals(values[0]) || !client.getSearchKey().equals(values[1])) {
+            throw new AssertionError("Generic login role/client values are incorrect");
+        }
+        for (String[] denied : new String[][] {{"R1", "0"}, {"missing", "U1"}, {"R1", "' OR 1=1 --"}}) {
+            if (read.invoke(null, denied[0], denied[1]) != null) {
+                throw new AssertionError("Login projection accepted an absent association or unbound input");
+            }
+        }
+        try {
+            // Fixture setup only: these legacy dictionary seeds have organization O1,
+            // while ADRole's DAL write access level requires organization *. Do not
+            // weaken production access-level checks to stage read-query controls.
+            dal.getSession().createNativeMutationQuery("update ad_role set isactive='N' where ad_role_id='R1'").executeUpdate();
+            if (read.invoke(null, "R1", "U1") != null) throw new AssertionError("Inactive role returned");
+            dal.getSession().createNativeMutationQuery("update ad_role set isactive='Y' where ad_role_id='R1'").executeUpdate();
+            dal.getSession().createNativeMutationQuery("update ad_client set isactive='N' where ad_client_id='C1'").executeUpdate();
+            if (read.invoke(null, "R1", "U1") != null) throw new AssertionError("Inactive client returned");
+        } finally {
+            dal.getSession().createNativeMutationQuery("update ad_role set isactive='Y' where ad_role_id='R1'").executeUpdate();
+            dal.getSession().createNativeMutationQuery("update ad_client set isactive='Y' where ad_client_id='C1'").executeUpdate();
+        }
+        System.out.println("PASS: Shared login role projection reads the ERP-free database and rejects missing/inactive scopes");
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length != 1) throw new IllegalArgumentException("Expected disposable properties path");
         OBPropertiesProvider.getInstance().setProperties(args[0]);
@@ -165,6 +200,7 @@ public final class UiDalValidation {
                     throw new AssertionError("Original form template failed to render its read-only rule");
                 }
                 System.out.println("PASS: Shared original FreeMarker processor resolves and renders database form template");
+                if (Boolean.getBoolean("validation.uiMenu")) verifyLoginRoleProjection();
                 if (Boolean.getBoolean("validation.uiCache") || Boolean.getBoolean("validation.uiFields")) {
                     Class<?> cacheType = Class.forName(
                             "org.openbravo.client.application.window.ApplicationDictionaryCachedStructures");

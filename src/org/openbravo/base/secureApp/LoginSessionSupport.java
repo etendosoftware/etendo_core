@@ -62,6 +62,12 @@ public abstract class LoginSessionSupport {
   /** Reads domain configuration while LoginUtils holds its original metadata admin scope. */
   public abstract boolean isAccountingDimensionConfigCentrally(Client client);
 
+  /** Adds optional business approval values after the shared login scope has been validated. */
+  public void initializeApproval(ConnectionProvider connection, VariablesSecureApp vars,
+      String role, String user) throws ServletException {
+    // No business approval contribution unless the selected domain provides one.
+  }
+
   /** Adds accounting session values at the original full-login initialization point. */
   public abstract void initializeAccounting(ConnectionProvider connection, VariablesSecureApp vars,
       Client client, boolean centrallyMaintained, String organization, String clientId)

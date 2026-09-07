@@ -149,8 +149,23 @@ Product projection/references/filtering/paging/order, anonymous denial, six
 restricted role scopes and fresh-session restoration on temporary port 8095.
 The pre-existing 8093 process was not restarted by this regression.
 
-Remaining login dependencies are explicit: `SeguridadData.select` still queries
-ERP approval/currency and User business-partner columns; generic session-default
+The role-session payload is now split: canonical `LoginUtils.readRoleSession`
+reads only role level and client search key through a parameterized Hibernate
+projection, preserving the original role/user association and active role/client
+predicates. ERP approval values are supplied by `ErpLoginSessionSupport`.
+The existing SQLC `SeguridadData.select` API remains unchanged for legacy callers.
+ERP session initialization currently performs one extra indexed role projection;
+this is not a per-record datasource query. `verifyClassicLogin` still matches all
+580 deterministic values against the original WAR.
+
+`verifyUiMenu` also invokes this exact shared projection against the ERP-free
+database and checks missing user associations, parameter binding, inactive roles
+and inactive clients. Negative fixtures use transaction-local SQL setup rather
+than disabling DAL access-level enforcement. The original `validUserRole`,
+`validRoleClient` and `validRoleOrg` checks remain mandatory and unchanged; this
+projection is not itself a complete authentication or authorization policy.
+
+Remaining login dependencies are explicit: generic session-default
 SQLC queries and preferences must run on the minimal schema; `LoginHandler`, the
 login page, web lifecycle/license policy, and the profile widget must be integrated
 without their remaining Warehouse dependencies. This extraction does not make

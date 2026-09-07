@@ -11,6 +11,8 @@ separate JVMs, verifies the new accessor through OBDal and HQL, and repeats v2.
 UiDalValidation is compiled only by verifyUiDal alongside the newly generated
 UI dictionary entities. It checks class origins, ERP class absence and real OBDal
 queries across windows, tabs, fields and columns in a separate JVM.
+The menu gate also invokes the canonical login role-session projection on that
+database and verifies missing associations, bound parameters and inactive scopes.
 
 `PlatformLoginSessionValidation` checks the original warehouse facade with explicit
 ERP-free session support, no ERP runtime types, a SQL-rejecting connection provider,
