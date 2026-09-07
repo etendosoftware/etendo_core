@@ -74,6 +74,11 @@ only after removing their outward ERP/UI dependencies. The legacy build continue
 to compile the same source until distribution assembly can consume the shared JAR
 without duplicate classes. Never package both copies in one distribution.
 
+The validation build consumes platform-core as a Gradle project dependency.
+Its boundary check rejects local duplicate shared classes in the bootstrap and
+DAL outputs. Both minimal and Classic-compatible runtimes must resolve the same
+shared artifact before further core extraction is considered integrated.
+
 ```bash
 JAVA_HOME=/path/to/jdk-17 ./gradlew -p platform-core clean build --console=plain
 ```

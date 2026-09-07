@@ -1,1 +1,3 @@
 rootProject.name = 'etendo-persistence-validation'
+include ':platform-core'
+project(':platform-core').projectDir = file('../platform-core')

@@ -203,6 +203,23 @@ tasks.named('processDalResources') {
     dependsOn 'verifySecurityGeneration'
 }
 
+tasks.register('verifySharedCoreIntegration') {
+    group = 'verification'
+    description = 'Reject duplicate shared-core classes in validation runtime outputs.'
+    dependsOn 'compileDalJava', 'compileClassicEntitiesJava', ':platform-core:check'
+    doLast {
+        def relativeClass = 'org/openbravo/dal/security/ReadableScopeResolver.class'
+        ['bootstrap', 'dal', 'classicEntities'].each { name ->
+            sourceSets[name].output.classesDirs.files.each { directory ->
+                if (new File(directory, relativeClass).exists()) {
+                    throw new GradleException("Shared core was compiled twice: ${directory}/${relativeClass}")
+                }
+            }
+        }
+        logger.lifecycle('PASS: Minimal and Classic compilation use the shared-core artifact without local duplicates')
+    }
+}
+
 tasks.register('verifyContextApi') {
     group = 'verification'
     description = 'Preserve OBContext public/protected declarations and JVM descriptors against Classic.'
@@ -269,6 +286,7 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    bootstrapImplementation project(':platform-core')
     tomcatProbeImplementation 'org.postgresql:postgresql:42.7.8'
     tomcatProbeImplementation 'org.codehaus.jettison:jettison:1.5.4'
     classicEntitiesImplementation 'io.smallrye:jandex:3.1.2'
