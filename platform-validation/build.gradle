@@ -151,6 +151,23 @@ tasks.register('compatibilityWar', War) {
     }
 }
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
+tasks.register('erpUiWar', Zip) {
+    group = 'build'
+    description = 'Assemble the existing ERP UI with refactored shared motor classes, without properties.'
+    dependsOn 'compileClassicJsonJava', 'compileClassicGeneratedJava', ':platform-core:jar'
+    archiveFileName = 'platform-erp-ui.war'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(sourceSets.classicJson.output) { into 'WEB-INF/classes' }
+    from(sourceSets.classicGenerated.output) { into 'WEB-INF/classes' }
+    from(sourceSets.classicEntities.output) { into 'WEB-INF/classes' }
+    from(sourceSets.bootstrap.output) { into 'WEB-INF/classes' }
+    from(project(':platform-core').tasks.named('jar')) { into 'WEB-INF/lib' }
+    from(provider { zipTree(file(project.property('classicWar'))) }) {
+        exclude '**/*.properties'
+        exclude 'WEB-INF/classes/org/openbravo/dal/security/ReadableScopeResolver.class'
+    }
+}
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
 configurations.dictionaryProbeRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)

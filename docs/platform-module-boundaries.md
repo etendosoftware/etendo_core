@@ -177,6 +177,14 @@ operational data, rollback and idempotence checks in both ERP-free profiles.
 
 ## Immediate sequence
 
+`erpUiWar` assembles the existing ERP UI resources and deployment descriptor from
+the supplied Classic WAR, overlaying the refactored motor/generated classes and
+shared-core JAR. It excludes properties files so credentials must be supplied at
+deployment. This is an assembly step, not proof of successful ERP startup. Runtime
+verification must use the owned Classic copy with `background.policy=no-execute`,
+`import.disable.process=true`, `cluster=false` and Redis integration disabled.
+Do not run the full legacy lifecycle against the original Classic database.
+
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI
 type dependencies next. Promote the extracted implementation into independently
