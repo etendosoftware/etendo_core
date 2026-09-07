@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'war'
 }
 
 repositories {
@@ -15,6 +16,12 @@ sourceSets.main.java.srcDirs = ['src']
 
 // Compile the actual dictionary bootstrap separately from the ERP application.
 sourceSets {
+    web {
+        java.srcDirs = ['web']
+    }
+    tomcatProbe {
+        java.srcDirs = ['tomcat-probe']
+    }
     bootstrap {
         java {
             srcDir '../src'
@@ -63,12 +70,14 @@ sourceSets {
     }
 }
 
+sourceSets.web.compileClasspath += sourceSets.bootstrap.output + sourceSets.dal.output
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
 configurations.dictionaryProbeRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
 configurations.dalImplementation.extendsFrom(configurations.bootstrapImplementation)
 configurations.dalRuntimeOnly.extendsFrom(configurations.bootstrapRuntimeOnly)
+configurations.webImplementation.extendsFrom(configurations.dalImplementation)
 
 tasks.named('compileDalJava', JavaCompile) {
     dependsOn 'verifySecurityGeneration'
@@ -97,6 +106,8 @@ def dbsmJar = providers.gradleProperty('dbsmJar').map { file(it) }.orElse(provid
 })
 
 dependencies {
+    tomcatProbeImplementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.59'
+    tomcatProbeImplementation 'org.apache.tomcat.embed:tomcat-embed-jasper:10.1.59'
     dalImplementation 'io.smallrye:jandex:3.1.2'
     implementation files(dbsmJar)
     implementation 'org.hibernate.orm:hibernate-core:6.5.2.Final'
@@ -119,6 +130,38 @@ dependencies {
     bootstrapImplementation 'org.apache.commons:commons-text:1.10.0'
     bootstrapImplementation 'org.freemarker:freemarker:2.3.34'
     bootstrapImplementation 'org.redisson:redisson:3.52.0'
+}
+
+tasks.named('war', War) {
+    group = 'build'
+    description = 'Package the real generated DAL and validation HTTP application as a WAR.'
+    dependsOn dalClasses, webClasses
+    archiveFileName = 'platform-validation.war'
+    webXml = file('webapp/WEB-INF/web.xml')
+    classpath = configurations.dalRuntimeClasspath.filter { !it.name.startsWith('jakarta.servlet-api-') }
+    classpath += sourceSets.bootstrap.output + sourceSets.web.output
+    from(sourceSets.dal.output) {
+        into 'WEB-INF/classes'
+        exclude 'com/etendoerp/platform/validation/**'
+    }
+    from('fixtures/log4j2.xml') { into 'WEB-INF/classes' }
+}
+
+tasks.register('platformWar') { dependsOn war }
+
+tasks.register('verifyTomcat', JavaExec) {
+    group = 'verification'
+    description = 'Deploy the WAR in isolated Tomcat and verify real OBDal over HTTP.'
+    dependsOn platformWar, tomcatProbeClasses
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+    workingDir = projectDir
+    systemProperty 'validation.security', 'true'
+    systemProperty 'validation.obdal', 'true'
+    systemProperty 'validation.tomcat', 'true'
+    systemProperty 'validation.tomcatClasspath', sourceSets.tomcatProbe.runtimeClasspath.asPath
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
 }
 
 tasks.register('verifyPersistenceFoundation', JavaExec) {

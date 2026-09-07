@@ -5,6 +5,8 @@ table definitions, then use the real ModelProvider and Java entity generator.
 verifyPlatform includes generated compilation, real DAL/security checks, XML
 schema/data upgrades, operational preservation, and repeat-safe reconciliation.
 UpgradeValidation orchestrates the v1/v2 JVMs and compares complete table snapshots.
+TomcatValidation keeps the disposable database alive during actual WAR HTTP and
+redeployment checks, then checks persistence and rejects server lifecycle leaks.
 
 ## Security profile
 

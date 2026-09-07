@@ -108,7 +108,42 @@ Validated artifact: `com.etendoerp:dbsm:1.2.0`, SHA-256:
 The proof does not claim source/artifact parity or that branch's SSL behavior.
 The source build still depends on directories from etendo_core.
 
-## Limits and follow-up
+## WAR and Tomcat validation
+
+Build: `./gradlew -p platform-validation war`.
+Artifact: `platform-validation/build/libs/platform-validation.war`.
+End-to-end check: `./gradlew -p platform-validation verifyTomcat` with JDK 17 and
+the same disposable PostgreSQL prerequisites. Tomcat dependencies use Maven Central.
+
+The test deploys this actual WAR into [Apache Tomcat 10.1](https://tomcat.apache.org/migration-10.1.html),
+pinned to 10.1.59, using Catalina's embedded launcher in an isolated child JVM.
+It is a real WAR/classloader deployment, not a servlet invoked directly or a
+replacement HTTP server. The application classes exist only inside the WAR.
+The connector binds a random loopback port. Existing Tomcat deployments are untouched.
+
+The listener initializes the real DAL on deployment. GET and POST /platform/requests
+use OBDal, named-parameter HQL, normal client/organization filters, and request-bound
+transactions. Tests verify 201 creation, 200 lookup, 401 missing/invalid tokens,
+403 restricted writes, 400 invalid input, and context isolation on a reused worker.
+The WAR is stopped and redeployed; the committed row remains queryable. A separate
+JDBC assertion confirms the HTTP request actually persisted in PostgreSQL.
+
+Output: build/tomcat-result.txt and build/tomcat-http.log. Tomcat and PostgreSQL
+are stopped afterward; no persistent demo URL is left running. The listener closes
+the SessionFactory and deregisters only JDBC drivers owned by its WAR.
+
+The WAR excludes the test runner and container-provided Servlet API. It includes
+its logging configuration but no database properties or access tokens. Startup
+requires the external JVM property `platform.validation.properties` to name a
+compatible database configuration with `dal.security.tableAccessOnly=true` and
+distinct `platform.validation.token` / `platform.validation.readOnlyToken` secrets.
+The test generates these secrets and deletes the private configuration afterward.
+The tokens map to fixture identities U1/R1 and U1/R_READ; this is deliberately a
+validation authentication adapter, not a production login/authorization service.
+Do not deploy it against production data. Schema provisioning remains a separate
+DBSM step; the WAR does not silently run DDL on application startup.
+
+## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.
 It uses real DBSM schema/data primitives, not the root `update.database` task or

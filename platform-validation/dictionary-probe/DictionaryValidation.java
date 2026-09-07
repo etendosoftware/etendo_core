@@ -27,7 +27,8 @@ public final class DictionaryValidation {
         boolean dal = Boolean.getBoolean("validation.dal");
         boolean obdal = Boolean.getBoolean("validation.obdal");
         boolean upgrade = Boolean.getBoolean("validation.upgrade");
-        Path report = Path.of(upgrade ? "build/platform-result.txt" : obdal ? "build/obdal-result.txt" : dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
+        boolean tomcat = Boolean.getBoolean("validation.tomcat");
+        Path report = Path.of(tomcat ? "build/tomcat-result.txt" : upgrade ? "build/platform-result.txt" : obdal ? "build/obdal-result.txt" : dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
         Path generated = Path.of(security ? "build/security-generated-entities" : "build/generated-entities");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "RUNNING\n");
@@ -76,6 +77,10 @@ public final class DictionaryValidation {
             // Existing dictionary mappings read NUMERIC metadata into Integer properties.
             // DBSM validates physical types above; Hibernate must never change this schema.
             properties.setProperty("hibernate.hbm2ddl.auto", "none");
+            if (tomcat) {
+                properties.setProperty("platform.validation.token", UUID.randomUUID().toString());
+                properties.setProperty("platform.validation.readOnlyToken", UUID.randomUUID().toString());
+            }
             if (Boolean.getBoolean("validation.obdal")) {
                 properties.setProperty("dal.security.tableAccessOnly", "true");
                 data.writeDataToDatabase(platform, schema, new String[] {SecurityFixture.securityData(schema).toUri().toString()});
@@ -130,6 +135,7 @@ public final class DictionaryValidation {
                 Class.forName("com.etendoerp.platform.validation.DalMappingValidation").getMethod("verify").invoke(null);
             }
             if (upgrade) UpgradeValidation.verify(platform, source, schema, propertiesFile);
+            if (tomcat) TomcatValidation.verify(propertiesFile, source);
         } catch (Throwable failure) {
             Files.writeString(report, "FAIL\n" + failure.getClass().getName() + "\n");
             throw failure;
@@ -147,7 +153,8 @@ public final class DictionaryValidation {
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
                 + (security ? "Selected security entities, Warehouse and BusinessPartner generated from core metadata\n" : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
-                + (upgrade ? "Complete generated DAL v1/v2 lifecycle: persistence, security, constraints, XML schema and managed data, preservation and idempotence\n"
+                + (tomcat ? "Actual WAR deployment in isolated Tomcat: HTTP persistence, HQL, security and redeployment passed\n"
+                        : upgrade ? "Complete generated DAL v1/v2 lifecycle: persistence, security, constraints, XML schema and managed data, preservation and idempotence\n"
                         : obdal ? "Real non-admin context; OBDal persistence, filters, rollback and restricted table grants passed\n"
                         + "NOT YET VERIFIED: runtime metadata upgrades, full update.database and module installation\n"
                         : dal ? "NOT YET VERIFIED: OBDal persistence, populated security context, security filters, metadata upgrades\n"

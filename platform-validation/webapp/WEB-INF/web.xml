@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" version="6.0" metadata-complete="true">
+  <display-name>Platform Validation</display-name>
+  <listener><listener-class>com.etendoerp.platform.web.PlatformLifecycle</listener-class></listener>
+  <servlet>
+    <servlet-name>requests</servlet-name>
+    <servlet-class>com.etendoerp.platform.web.RequestServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping><servlet-name>requests</servlet-name><url-pattern>/requests</url-pattern></servlet-mapping>
+</web-app>
