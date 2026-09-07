@@ -23,7 +23,8 @@ final class UiDictionaryFixture {
         arguments.add("dal-probe/UiDalValidation.java");
         if (javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 arguments.toArray(String[]::new)) != 0) throw new AssertionError("Generated UI entities failed compilation");
-        String log = Boolean.getBoolean("validation.uiWindow") ? "build/ui-window-runtime.log"
+        String log = Boolean.getBoolean("validation.uiMenu") ? "build/ui-menu-runtime.log"
+                : Boolean.getBoolean("validation.uiWindow") ? "build/ui-window-runtime.log"
                 : Boolean.getBoolean("validation.uiFieldDefinitions") ? "build/ui-field-definitions-runtime.log"
                 : Boolean.getBoolean("validation.uiFields") ? "build/ui-field-runtime.log"
                 : Boolean.getBoolean("validation.uiCache") ? "build/ui-cache-runtime.log" : "build/ui-dal-runtime.log";
@@ -31,6 +32,7 @@ final class UiDictionaryFixture {
                 "-Dvalidation.uiFields=" + Boolean.getBoolean("validation.uiFields"),
                 "-Dvalidation.uiFieldDefinitions=" + Boolean.getBoolean("validation.uiFieldDefinitions"),
                 "-Dvalidation.uiWindow=" + Boolean.getBoolean("validation.uiWindow"),
+                "-Dvalidation.uiMenu=" + Boolean.getBoolean("validation.uiMenu"),
                 "-Dvalidation.uiCache=" + Boolean.getBoolean("validation.uiCache"),
                 "-Dlog4j2.configurationFile=" + new java.io.File("fixtures/log4j2.xml").getAbsolutePath(),
                 "-cp", classes.toAbsolutePath() + java.io.File.pathSeparator + runtime,
@@ -60,9 +62,10 @@ final class UiDictionaryFixture {
             form.put("AD_MODULE_ID", "0");
             seed(xml, schema, "OBCLKER_TEMPLATE", form);
             if (Boolean.getBoolean("validation.uiWindow")) {
-                var ids = java.util.Set.of("B5124C0A450D4D3A867AEAC7DF64D6F0", "33E04D0799794C6F95F05149D2E04E78",
+                var ids = new java.util.HashSet<>(java.util.Set.of("B5124C0A450D4D3A867AEAC7DF64D6F0", "33E04D0799794C6F95F05149D2E04E78",
                         "91DD63545B674BE8801E1FA4F48FF4C6", "2BAD445C2A0343C58E455F9BD379C690",
-                        "ADD5EF45333C458098286D0E639B3290");
+                        "ADD5EF45333C458098286D0E639B3290"));
+                if (Boolean.getBoolean("validation.uiMenu")) ids.add("4C6825EEBF2C440CA6F97C8A042CCB5F");
                 var sources = java.util.List.of(java.nio.file.Path.of("../modules_core/org.openbravo.client.application/src-db/database"),
                         java.nio.file.Path.of("../modules_core/org.openbravo.service.datasource/src-db/database"));
                 var found = new java.util.HashSet<String>();
@@ -90,9 +93,24 @@ final class UiDictionaryFixture {
         } catch (Exception failure) { throw new IllegalStateException("Original form template metadata unavailable", failure); }
         seed(xml, schema, "AD_FIELDGROUP", Map.of("AD_FIELDGROUP_ID", "PP_REQUEST_DETAILS",
                 "NAME", "Request details", "ISCOLLAPSED", "N"));
+        if (Boolean.getBoolean("validation.uiMenu")) {
+            seed(xml, schema, "AD_TREE", Map.of("AD_TREE_ID", "10", "NAME", "Application menu"));
+        }
         for (String table : List.of("PP_CATEGORY", "PP_REQUEST")) {
             String window = DictionaryFixture.columnId(table, "WINDOW");
             String tab = DictionaryFixture.columnId(table, "TAB");
+            if (Boolean.getBoolean("validation.uiMenu")) {
+                String menu = DictionaryFixture.columnId(table, "MENU");
+                seed(xml, schema, "AD_MENU", Map.of("AD_MENU_ID", menu, "NAME", table.equals("PP_REQUEST") ? "Requests" : "Categories",
+                        "AD_WINDOW_ID", window, "ACTION", "W", "ISSUMMARY", "N"));
+                seed(xml, schema, "AD_TREENODE", Map.of("AD_TREENODE_ID", menu, "AD_TREE_ID", "10", "NODE_ID", menu,
+                        "PARENT_ID", "0", "SEQNO", table.equals("PP_REQUEST") ? "20" : "10"));
+                seed(xml, schema, "AD_WINDOW_ACCESS", Map.of("AD_WINDOW_ACCESS_ID", window, "AD_WINDOW_ID", window,
+                        "AD_ROLE_ID", "R1", "ISREADWRITE", "Y"));
+                if (table.equals("PP_REQUEST")) seed(xml, schema, "AD_WINDOW_ACCESS", Map.of(
+                        "AD_WINDOW_ACCESS_ID", DictionaryFixture.columnId(window, "READ"), "AD_WINDOW_ID", window,
+                        "AD_ROLE_ID", "R_READ", "ISREADWRITE", "N"));
+            }
             seed(xml, schema, "AD_WINDOW", Map.of("AD_WINDOW_ID", window,
                     "NAME", table.equals("PP_REQUEST") ? "Requests" : "Categories", "WINDOWTYPE", "M"));
             seed(xml, schema, "AD_TAB", Map.of("AD_TAB_ID", tab, "AD_WINDOW_ID", window,

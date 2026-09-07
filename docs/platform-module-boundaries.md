@@ -389,6 +389,38 @@ Keep the existing Product validation as a compatibility control throughout.
 
 ## Integration-sized work packages
 
+`verifyUiMenu` extends the window composition with the original GlobalMenu,
+MenuManager and ApplicationMenuComponent. Seed application-owned menu/tree and
+window-access rows and verify editable, read-only and denied role menus. Keep the
+original non-web test semantics explicit: this does not exercise ActivationKey's
+web-container policy or replace the real login/session deployment requirement.
+
+The menu gate exposed an existing Hibernate 6 `yes_no` integration defect: HQL
+`module.enabled=true` renders a PostgreSQL CHAR/boolean comparison. Preserve the
+OBYesNoType class hierarchy, constructors and legacy methods, but expose Hibernate's
+converted-basic-type contract and relational JDBC descriptors. Retain its legacy
+Java-descriptor null/false equality and the existing BasicType null comparisons.
+Validate literal and parameter queries together
+with actual writes/rollback; do not rewrite module queries to conceal the defect.
+
+The 65-entity `verifyUiMenu` composition now renders the original application menu
+for three roles: both own windows editable, Requests read-only, and no window
+access. These are real MenuManager/GlobalMenu authorization queries over seeded
+menu, tree, module-enabled and access metadata, not fabricated menu objects. Each
+request-scoped menu uses a real OBContext and writes its generated JavaScript to
+ignored `build/ui-menu-<role>.js`; all three outputs passed syntax parsing.
+
+OBYesNoType now declares the converted-basic-type contract while retaining its
+previous superclass and public/protected API. The relational type is String to
+support both existing `'Y'/'N'` HQL and `true/false` literals. Tests cover both
+values, parameter binding, physical CHAR storage, extraction after session eviction
+and the prior distinct descriptor/type null-comparison behavior. The original
+menu HQL remains unchanged. Menu/window, XML/DBSM lifecycle and API gates passed;
+the original ERP Product datasource then passed against the owned Classic copy
+(80-row DAL count, nonempty projected datasource page). Shared artifact packaging
+and nested-WAR boundary checks also passed. The existing live ERP process was not
+restarted, so this service regression does not claim a redeployed browser session.
+
 The next integration gate, `verifyUiWindow`, must use CDI-managed original tab,
 form, grid and datasource components, original database template dependencies and
 real dictionary entities. Its isolated working output is not a production shared

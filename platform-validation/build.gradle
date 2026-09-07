@@ -72,6 +72,7 @@ sourceSets {
             include 'org/openbravo/base/model/domaintype/UniqueIdDomainType.java'
             include 'org/openbravo/base/model/domaintype/TableDomainType.java'
             include 'org/openbravo/base/session/DalUUIDGenerator.java'
+            include 'org/openbravo/base/session/OBYesNoType.java'
             include 'org/openbravo/base/gen/GenerateEntitiesTask.java'
         }
         resources {
@@ -211,9 +212,11 @@ tasks.register('compileUiWindowComponents', JavaCompile) {
         include '**/window/OBViewGridComponent.java', '**/window/OBTreeGridComponent.java'
         include '**/window/OBViewParameterHandler.java', '**/window/StandardWindowComponent.java'
         include '**/CachedPreference.java'
+        include '**/MenuManager.java', '**/GlobalMenu.java', '**/navigationbarcomponents/ApplicationMenuComponent.java'
     }
     source fileTree('../modules_core/org.openbravo.client.kernel/src') {
         include '**/ComponentProvider.java', '**/BaseComponentProvider.java'
+        include '**/SessionDynamicTemplateComponent.java'
     }
     source fileTree('../modules_core/org.openbravo.service.datasource/src') {
         include '**/DataSourceComponent.java', '**/DataSourceComponentProvider.java'
@@ -596,7 +599,7 @@ tasks.register('verifySharedCoreIntegration') {
 }
 
 // Reuse the same descriptor inspection for each incremental compatibility boundary.
-def apiDeclarations = { File classFile ->
+def apiDeclarations = { File classFile, int minimumEntries = 10 ->
     if (!classFile.isFile()) throw new GradleException("Missing API class: ${classFile}")
     def output = new ByteArrayOutputStream()
     exec {
@@ -616,22 +619,28 @@ def apiDeclarations = { File classFile ->
             declaration = null
         }
     }
-    if (entries.size() < 10) throw new GradleException("Incomplete API inspection: ${classFile}")
+    if (entries.size() < minimumEntries) throw new GradleException("Incomplete API inspection: ${classFile}")
     entries
 }
 
 tasks.register('verifyModelUiApi') {
     group = 'verification'
-    description = 'Preserve Entity and KernelUtils public/protected APIs against Classic.'
+    description = 'Preserve Entity, KernelUtils and OBYesNoType public/protected APIs against Classic.'
     dependsOn 'compileClassicJsonJava'
     doLast {
         def report = layout.buildDirectory.file('model-ui-api-result.txt').get().asFile
         def results = []
         boolean incompatible = false
         ['org/openbravo/base/model/Entity': 'bootstrap',
+         'org/openbravo/base/session/OBYesNoType': 'bootstrap',
          'org/openbravo/client/kernel/KernelUtils': 'classicJson'].each { type, sourceSet ->
-            def before = apiDeclarations(file("build/classic-compatibility/WEB-INF/classes/${type}.class"))
-            def after = apiDeclarations(file("build/classes/java/${sourceSet}/${type}.class"))
+            int minimumEntries = type.endsWith('/OBYesNoType') ? 8 : 10
+            def before = apiDeclarations(file("build/classic-compatibility/WEB-INF/classes/${type}.class"), minimumEntries)
+            def after = apiDeclarations(file("build/classes/java/${sourceSet}/${type}.class"), minimumEntries)
+            if (type.endsWith('/OBYesNoType')) {
+                // This explicit additive interface is the conversion fix; retain the old superclass.
+                after = after.collect { it.replace(' implements org.hibernate.type.ConvertedBasicType<java.lang.Boolean> {', ' {') }.toSet()
+            }
             def missing = before - after
             incompatible |= !missing.isEmpty()
             results.add("${type}: baseline=${before.size()}, missing=${missing.size()}\n" + missing.join('\n'))
@@ -640,7 +649,7 @@ tasks.register('verifyModelUiApi') {
         if (incompatible) {
             throw new GradleException("Model/UI API changed; inspect ${report}")
         }
-        logger.lifecycle('PASS: Baseline Entity and KernelUtils declarations and JVM descriptors preserved')
+        logger.lifecycle('PASS: Baseline Entity, KernelUtils and OBYesNoType declarations and JVM descriptors preserved')
     }
 }
 
@@ -1016,7 +1025,7 @@ tasks.register('verifyUiDal', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
-['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true].each { taskName, renderFields ->
+['verifyUiCache': false, 'verifyUiFields': true, 'verifyUiFieldDefinitions': true, 'verifyUiWindow': true, 'verifyUiMenu': true].each { taskName, renderFields ->
     tasks.register(taskName, JavaExec) {
         group = 'verification'
         description = renderFields ? 'Execute the original field handler against the ERP-free visual dictionary.'
@@ -1032,10 +1041,12 @@ tasks.register('verifyUiDal', JavaExec) {
         systemProperty 'validation.uiCache', 'true'
         systemProperty 'validation.uiFields', renderFields.toString()
         systemProperty 'validation.uiFieldDefinitions', (taskName == 'verifyUiFieldDefinitions').toString()
-        systemProperty 'validation.uiWindow', (taskName == 'verifyUiWindow').toString()
-        if (taskName == 'verifyUiWindow') dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
+        def renderWindow = taskName in ['verifyUiWindow', 'verifyUiMenu']
+        systemProperty 'validation.uiWindow', renderWindow.toString()
+        systemProperty 'validation.uiMenu', (taskName == 'verifyUiMenu').toString()
+        if (renderWindow) dependsOn 'compileUiWindowComponents', 'prepareUiWindowTemplates'
         doFirst {
-            def windowRuntime = taskName == 'verifyUiWindow' ? files(layout.buildDirectory.dir('ui-window'),
+            def windowRuntime = renderWindow ? files(layout.buildDirectory.dir('ui-window'),
                     layout.buildDirectory.dir('ui-window-templates')) : files()
             systemProperty 'validation.dalClasspath', (files(tasks.named('compileUiFieldComponents').get().destinationDirectory,
                     tasks.named('sharedUiJar')) + windowRuntime + sourceSets.dal.runtimeClasspath + configurations.uiFieldContainerRuntime).asPath

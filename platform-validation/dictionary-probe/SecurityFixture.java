@@ -40,6 +40,9 @@ final class SecurityFixture {
     // Generic window services retain complete metadata tables, not getter-level projections.
     private static final Set<String> WINDOW_METADATA = Set.of("OBUIAPP_NOTE", "OBSERDS_DATASOURCE_FIELD",
             "OBUIAPP_GC_SYSTEM", "OBUIAPP_GC_TAB", "OBUIAPP_GC_FIELD", "AD_PREFERENCE", "AD_MODEL_OBJECT_MAPPING");
+    private static final Set<String> MENU_METADATA = Set.of("AD_MENU", "AD_MENU_TRL", "AD_FORM", "AD_FORM_ACCESS",
+            "AD_PROCESS_ACCESS", "AD_TAB_ACCESS", "AD_WINDOW_ACCESS", "OBUIAPP_PROCESS_ACCESS",
+            "OBUIAPP_VIEW_ROLE_ACCESS", "OBUIAPP_VIEW_IMPL", "OBUIAPP_MENU_PARAMETERS");
 
     static Set<String> selectedTables() {
         Set<String> tables = new LinkedHashSet<>(TABLES);
@@ -53,12 +56,14 @@ final class SecurityFixture {
                     "OBUISEL_SELECTOR", "OBUISEL_SELECTOR_FIELD", "OBCLKER_REF_MASK", "OBSERDS_DATASOURCE",
                     "OBCLKER_UIDEFINITION", "AD_ELEMENT", "AD_ELEMENT_TRL", "AD_FIELD_TRL", "AD_FIELDGROUP_TRL"));
             if (Boolean.getBoolean("validation.uiWindow")) tables.addAll(WINDOW_METADATA.stream().sorted().toList());
+            if (Boolean.getBoolean("validation.uiMenu")) tables.addAll(MENU_METADATA.stream().sorted().toList());
         }
         return tables;
     }
 
     private static boolean selectedColumn(String table, String name) {
         return (Boolean.getBoolean("validation.uiWindow") && WINDOW_METADATA.contains(table))
+                || (Boolean.getBoolean("validation.uiMenu") && MENU_METADATA.contains(table))
                 || COLUMNS.contains(name) || (Boolean.getBoolean("validation.originalUi")
                 && Set.of("AD_COLUMN_ID", "AD_WINDOW_ID", "AD_TAB_ID", "HELP", "SEQNO",
                         "TABLEVEL", "WINDOWTYPE", "ISDISPLAYED", "SHOWINRELATION", "ISUPDATEABLE",
@@ -75,6 +80,7 @@ final class SecurityFixture {
                         "ISSECONDARYKEY", "ISPARENT", "ISKEY", "VALIDATEONNEW", "ISAUTOSAVE",
                         "ALLOWSORTING", "ALLOWFILTERING", "IMAGESIZEVALUESACTION", "IMAGEWIDTH", "IMAGEHEIGHT",
                         "ISUSEDSEQUENCE", "ENTITY_ALIAS",
+                        "AD_TREE_MENU_ID", "ENABLED",
                         "DATAORIGINTYPE", "TABLENAME", "ISFULLYAUDITED", "ISDELETEABLE", "ISVIEW", "HQLQUERY", "IDFKFILTERING",
                         "UIPATTERN", "ISINFOTAB", "ISREADONLYTREE", "ISSHOWTREENODEICONS", "WHERECLAUSE", "ORDERBYCLAUSE",
                         "HQLWHERECLAUSE", "HQLORDERBYCLAUSE", "HQLFILTERCLAUSE", "FILTERCLAUSE", "FILTERNAME",

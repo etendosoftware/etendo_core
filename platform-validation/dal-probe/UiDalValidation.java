@@ -194,6 +194,13 @@ public final class UiDalValidation {
                             initializer.addBeanClasses(beanType);
                         }
                     }
+                    if (Boolean.getBoolean("validation.uiMenu")) {
+                        for (String bean : java.util.List.of("org.openbravo.client.application.GlobalMenu",
+                                "org.openbravo.client.application.MenuManager",
+                                "org.openbravo.client.application.navigationbarcomponents.ApplicationMenuComponent")) {
+                            initializer.addBeanClasses(Class.forName(bean));
+                        }
+                    }
                     try (var container = initializer.initialize()) {
                         Object cache = Class.forName("org.openbravo.base.weld.WeldUtils")
                                 .getMethod("getInstanceFromStaticBeanManager", Class.class).invoke(null, cacheType);
@@ -307,6 +314,32 @@ public final class UiDalValidation {
                                 }
                                 System.out.println("PASS: Both original standard windows render through database-selected grid configuration");
                                 verifySubtabHierarchy(tabId);
+                                if (Boolean.getBoolean("validation.uiMenu")) {
+                                    verifyBooleanMapping();
+                                    var requestContext = container.select(jakarta.enterprise.context.control.RequestContextController.class).get();
+                                    var originalContext = OBContext.getOBContext();
+                                    try {
+                                        for (String role : java.util.List.of("R1", "R_READ", "R_EXCLUDE")) {
+                                            OBContext.setOBContext("U1", role, "C1", "O1", "en_US");
+                                            requestContext.activate();
+                                            try {
+                                                Class<?> menuType = Class.forName("org.openbravo.client.application.navigationbarcomponents.ApplicationMenuComponent");
+                                                Object menu = container.select(menuType).get();
+                                                String menuOutput = (String) menuType.getMethod("generate").invoke(menu);
+                                                boolean requests = menuOutput.contains("Requests");
+                                                boolean categories = menuOutput.contains("Categories");
+                                                if (requests != !role.equals("R_EXCLUDE") || categories != role.equals("R1")) {
+                                                    throw new AssertionError("Original menu violates window access for " + role);
+                                                }
+                                                if (role.equals("R_READ") && !menuOutput.contains("readOnly: true")) {
+                                                    throw new AssertionError("Original menu lost read-only window access");
+                                                }
+                                                java.nio.file.Files.writeString(java.nio.file.Path.of("build", "ui-menu-" + role + ".js"), menuOutput);
+                                            } finally { requestContext.deactivate(); }
+                                        }
+                                    } finally { OBContext.setOBContext(originalContext); }
+                                    System.out.println("PASS: Original menu renders own windows for editable/read-only roles and hides denied windows");
+                                }
                             }
                             if (Boolean.getBoolean("validation.uiFieldDefinitions")) {
                                 var settings = handlerClass.getDeclaredMethod("setGCSettings",
@@ -354,6 +387,46 @@ public final class UiDalValidation {
         var windows = OBDal.getInstance().createQuery(org.openbravo.model.ad.ui.Window.class, "").list();
         if (windows.size() != 2) throw new AssertionError("Expected both application windows");
         return windows;
+    }
+
+    /** Tests the shared Y/N mapping without rewriting HQL boolean literals as string predicates. */
+    private static void verifyBooleanMapping() {
+        var dal = OBDal.getInstance();
+        var module = dal.get(org.openbravo.model.ad.module.Module.class, "PLATFORM");
+        Boolean original = module.isEnabled();
+        try {
+            for (boolean value : new boolean[] {false, true}) {
+                module.setEnabled(value);
+                dal.flush();
+                Long literal = dal.getSession().createQuery("select count(m) from ADModule m"
+                        + " where m.id = :id and m.enabled = " + value, Long.class)
+                        .setParameter("id", module.getId()).uniqueResult();
+                Long parameter = dal.getSession().createQuery("select count(m) from ADModule m"
+                        + " where m.id = :id and m.enabled = :enabled", Long.class)
+                        .setParameter("id", module.getId()).setParameter("enabled", value).uniqueResult();
+                if (literal != 1L || parameter != 1L) throw new AssertionError("Boolean literal/parameter mapping differs");
+                Long legacy = dal.getSession().createQuery("select count(m) from ADModule m"
+                        + " where m.id = :id and m.enabled = '" + (value ? "Y" : "N") + "'", Long.class)
+                        .setParameter("id", module.getId()).uniqueResult();
+                if (legacy != 1L) throw new AssertionError("Legacy Y/N HQL literals changed");
+                Object stored = dal.getSession().createNativeQuery("select enabled from ad_module where ad_module_id = :id")
+                        .setParameter("id", module.getId()).uniqueResult();
+                if (!String.valueOf(stored).equals(value ? "Y" : "N")) throw new AssertionError("Noncanonical boolean storage");
+                dal.getSession().evict(module);
+                module = dal.get(org.openbravo.model.ad.module.Module.class, "PLATFORM");
+                if (!Boolean.valueOf(value).equals(module.isEnabled())) throw new AssertionError("Boolean extraction differs");
+            }
+            var yesNo = org.openbravo.base.session.OBYesNoType.INSTANCE;
+            if (!yesNo.getJavaTypeDescriptor().areEqual(null, Boolean.FALSE)
+                    || yesNo.getJavaTypeDescriptor().areEqual(null, Boolean.TRUE)
+                    || yesNo.isEqual(null, Boolean.FALSE)) {
+                throw new AssertionError("Legacy descriptor/type null-comparison semantics changed");
+            }
+            System.out.println("PASS: Y/N mapping preserves boolean/string literals, parameters, storage, extraction and legacy null comparisons");
+        } finally {
+            module.setEnabled(original);
+            dal.flush();
+        }
     }
 
     /** Exercises SQLC-compatible hierarchy boundaries through the canonical Hibernate API. */

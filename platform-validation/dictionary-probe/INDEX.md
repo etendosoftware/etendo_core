@@ -74,3 +74,10 @@ their dependencies from XML, writes rendered JavaScript under build/, and checks
 seven Hibernate subtab hierarchy cases. ui-window-runtime.log is separate from
 the narrower field gates. Original login/navigation and browser CRUD are pending;
 the working window classpath is not a deliverable shared UI artifact.
+
+verifyUiMenu adds complete generic menu/access metadata (65 generated entities)
+and tests the original request-scoped menu for editable, read-only and denied
+roles. It exercises original HQL and the shared Y/N mapping using boolean and
+legacy string literals, parameters, writes, extraction and legacy null comparisons.
+ui-menu-runtime.log and ui-menu-<role>.js preserve separate diagnostics. This is
+not a login, HTTP-session or web-container licensing-policy test.

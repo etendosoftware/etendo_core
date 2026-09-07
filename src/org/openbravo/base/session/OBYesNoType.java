@@ -4,6 +4,14 @@ import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.ConvertedBasicType;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 
@@ -12,9 +20,35 @@ import org.hibernate.type.descriptor.jdbc.CharJdbcType;
  * methods can not be extended the solution is to catch the isDirty check by reimplementing the
  * areEqual method.
  */
-public class OBYesNoType extends AbstractSingleColumnStandardBasicType<Boolean> {
+public class OBYesNoType extends AbstractSingleColumnStandardBasicType<Boolean>
+    implements ConvertedBasicType<Boolean> {
 
   private static final long serialVersionUID = 1L;
+
+  private static final BasicValueConverter<Boolean, String> CONVERTER = new BasicValueConverter<>() {
+    @Override
+    public Boolean toDomainValue(String value) {
+      return value == null ? null : "Y".equalsIgnoreCase(value);
+    }
+
+    @Override
+    public String toRelationalValue(Boolean value) {
+      return value == null ? null : value ? "Y" : "N";
+    }
+
+    @Override
+    public JavaType<Boolean> getDomainJavaType() {
+      return new LocalBooleanJavaType();
+    }
+
+    @Override
+    public JavaType<String> getRelationalJavaType() {
+      // Legacy HQL also compares these flags to string literals 'Y' and 'N'.
+      return StringJavaType.INSTANCE;
+    }
+  };
+  private static final ConvertedBasicTypeImpl<Boolean> JDBC_MAPPING = new ConvertedBasicTypeImpl<>(
+      "yes_no", CharJdbcType.INSTANCE, CONVERTER);
 
   public static final OBYesNoType INSTANCE = new OBYesNoType();
 
@@ -25,6 +59,33 @@ public class OBYesNoType extends AbstractSingleColumnStandardBasicType<Boolean> 
   @Override
   public String getName() {
     return "yes_no";
+  }
+
+  /** Exposes the relational Y/N representation to Hibernate 6 HQL literal inference. */
+  @Override
+  public BasicValueConverter<Boolean, ?> getValueConverter() {
+    return CONVERTER;
+  }
+
+  @Override
+  public JavaType<?> getJdbcJavaType() {
+    return JDBC_MAPPING.getJdbcJavaType();
+  }
+
+  @Override
+  public ValueBinder<Boolean> getJdbcValueBinder() {
+    return JDBC_MAPPING.getJdbcValueBinder();
+  }
+
+  @Override
+  public ValueExtractor<Boolean> getJdbcValueExtractor() {
+    return JDBC_MAPPING.getJdbcValueExtractor();
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public JdbcLiteralFormatter<Boolean> getJdbcLiteralFormatter() {
+    return JDBC_MAPPING.getJdbcLiteralFormatter();
   }
 
   /**
