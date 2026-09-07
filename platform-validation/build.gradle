@@ -160,9 +160,12 @@ tasks.register('erpUiWar', Zip) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(sourceSets.classicJson.output) { into 'WEB-INF/classes' }
     from(sourceSets.classicGenerated.output) { into 'WEB-INF/classes' }
-    from(sourceSets.classicEntities.output) { into 'WEB-INF/classes' }
-    from(sourceSets.bootstrap.output) { into 'WEB-INF/classes' }
+    from(sourceSets.classicEntities.output) { into 'WEB-INF/classes'; exclude '**/Log4j2Plugins.dat' }
+    from(sourceSets.bootstrap.output) { into 'WEB-INF/classes'; exclude '**/Log4j2Plugins.dat' }
     from(project(':platform-core').tasks.named('jar')) { into 'WEB-INF/lib' }
+    from(provider { zipTree(file(project.property('classicWar'))) }) {
+        include 'WEB-INF/quartz.properties', 'WEB-INF/classes/quartz.properties'
+    }
     from(provider { zipTree(file(project.property('classicWar'))) }) {
         exclude '**/*.properties'
         exclude 'WEB-INF/classes/org/openbravo/dal/security/ReadableScopeResolver.class'
@@ -385,6 +388,22 @@ tasks.named('war', War) {
 }
 
 tasks.register('platformWar') { dependsOn war }
+
+tasks.register('runErpUi', JavaExec) {
+    group = 'application'
+    description = 'Start existing ERP UI against a verified owned Classic database copy.'
+    dependsOn 'erpUiWar', tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ErpUiServer'
+    workingDir = projectDir
+    jvmArgs '--add-opens=java.base/java.io=ALL-UNNAMED', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+            '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
+    doFirst {
+        args file('build/libs/platform-erp-ui.war').absolutePath,
+                file(project.property('copyProperties')).absolutePath,
+                (project.findProperty('platformPort') ?: '8093')
+    }
+}
 
 tasks.register('runPlatform', JavaExec) {
     group = 'application'

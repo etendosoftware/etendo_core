@@ -179,11 +179,23 @@ operational data, rollback and idempotence checks in both ERP-free profiles.
 
 `erpUiWar` assembles the existing ERP UI resources and deployment descriptor from
 the supplied Classic WAR, overlaying the refactored motor/generated classes and
-shared-core JAR. It excludes properties files so credentials must be supplied at
+shared-core JAR. It excludes properties files except the inspected, non-secret
+Quartz configuration, so database credentials must be supplied at
 deployment. This is an assembly step, not proof of successful ERP startup. Runtime
 verification must use the owned Classic copy with `background.policy=no-execute`,
 `import.disable.process=true`, `cluster=false` and Redis integration disabled.
 Do not run the full legacy lifecycle against the original Classic database.
+
+`runErpUi` requires the private properties produced by prepareClassicCopy. Before
+deployment its launcher verifies the running Docker container's copy label and
+published loopback database port against those properties. It expands the WAR in
+a private directory, writes deployment-only configuration there, disables
+scheduler/import/cluster/Redis startup and uses a separate HTTP port (8093).
+Original database configuration and the packaged WAR are not rewritten.
+The first guarded deployment reached the existing `/etendo/security/Login` HTML
+on 8093, with Quartz initialized but not started. An OBRebuildAppender logging
+configuration error remains; authenticated ERP UI/Product acceptance is still
+pending and this startup must not be reported as a clean completed ERP profile.
 
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI
