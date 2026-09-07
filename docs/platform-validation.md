@@ -204,6 +204,40 @@ It compiles both service implementations from repository sources; supporting
 classes come from the supplied artifact. Runtime CDI, security and fetch behavior
 remain to be verified before this support is packaged for HTTP use.
 
+Standalone wiring will use explicit constructors for the same JSON/datasource
+implementations, supplying a real CachedPreference and an explicit collection of
+JSON action hooks. The existing no-argument CDI path remains unchanged. This is
+dependency wiring, not a replacement fetch implementation; installed custom hooks
+must be explicitly supplied or reported as unsupported in the standalone profile.
+
+The user-approved next acceptance is a startup switch, `platform.runtime=classic`
+or `platform.runtime=platform-core`, within the same WAR and with the same database
+and datasource URL. WAR size is not an acceptance constraint. The selected mode
+must control actual lifecycle/service initialization, not proxy requests or simply
+rename endpoints. Platform mode must not activate Classic startup listeners or
+schedulers. The switch is not yet implemented; both modes still require HTTP
+comparison with equivalent credentials and request parameters.
+
+Independent platform startup is a mandatory architectural requirement, even
+though removing all ERP compatibility entities is deferred beyond this HTTP
+milestone. Classic support must remain opt-in: `verifyPlatform` and `verifyTomcat`
+must run without classicWar or classicProperties. Those existing minimal profiles
+still contain Warehouse and BusinessPartner compatibility entities; they do not
+yet prove a completely ERP-free core. Final independence requires a standalone
+build and startup using only an application-owned model, with no Classic artifact
+or ERP entities. The runtime switch is not evidence of that independence.
+
+The internal `verifyClassicJson` gate now exercises the original services with an
+authenticated test user, explicit real preferences and dictionary cache, Product
+window 140/tab 180, fetch flags, selected properties and reference identifiers.
+The password checker does not invoke automatic hash upgrades. Credentials are
+read from PLATFORM_TEST_USERNAME and PLATFORM_TEST_PASSWORD and are never written
+to reports. The gate checks the selected client and rejects an incorrect password,
+but does not yet prove full HTTP security, organization isolation, pagination
+equivalence or custom module hooks. Its explicit hook list is currently empty.
+The cache's module-development query uses a named boolean parameter to preserve
+the existing Y/N database mapping under Hibernate 6.
+
 ## Production scope limits
 
 This is functional platform-validation, not a production platform distribution.

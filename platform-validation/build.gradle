@@ -28,12 +28,16 @@ sourceSets {
     }
     classicJson {
         java {
+            srcDir '../modules_core/org.openbravo.client.application/src'
             srcDir '../modules_core/org.openbravo.service.datasource/src'
             srcDir '../modules_core/org.openbravo.service.json/src'
             include 'org/openbravo/service/datasource/DefaultDataSourceService.java'
+            include 'org/openbravo/service/datasource/BaseDataSourceService.java'
             include 'org/openbravo/service/json/DefaultJsonDataService.java'
+            include 'org/openbravo/client/application/window/ApplicationDictionaryCachedStructures.java'
         }
     }
+    classicServiceProbe { java.srcDirs = ['classic-service-probe'] }
     classicGenerated {
         java.srcDirs = ['build/classic-generated-entities']
         resources {
@@ -107,6 +111,13 @@ configurations.classicGeneratedImplementation.extendsFrom(configurations.classic
 sourceSets.classicGenerated.compileClasspath += sourceSets.bootstrap.output + sourceSets.classicEntities.output
 sourceSets.classicJson.compileClasspath += sourceSets.classicGenerated.output + sourceSets.classicEntities.output + sourceSets.bootstrap.output
 configurations.classicJsonImplementation.extendsFrom(configurations.classicEntitiesImplementation)
+configurations.classicServiceProbeImplementation.extendsFrom(configurations.classicEntitiesImplementation)
+def classicServiceSupport = files('build/classic-compatibility/WEB-INF/classes') +
+        fileTree('build/classic-compatibility/WEB-INF/lib') { include '*.jar' }
+def classicServiceClasses = sourceSets.classicJson.output + sourceSets.classicGenerated.output +
+        sourceSets.classicEntities.output + sourceSets.bootstrap.output + sourceSets.classicProbe.output
+sourceSets.classicServiceProbe.compileClasspath += classicServiceClasses + classicServiceSupport
+sourceSets.classicServiceProbe.runtimeClasspath += classicServiceClasses + classicServiceSupport
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
 configurations.bootstrapRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 configurations.dictionaryProbeImplementation.extendsFrom(configurations.bootstrapImplementation)
@@ -258,6 +269,20 @@ tasks.register('verifyClassicDal', JavaExec) {
 
 tasks.named('compileClassicGeneratedJava') { dependsOn 'generateClassicEntities' }
 tasks.named('processClassicGeneratedResources') { dependsOn 'generateClassicEntities' }
+
+tasks.named('compileClassicServiceProbeJava') { dependsOn 'compileClassicJsonJava' }
+tasks.register('verifyClassicJson', JavaExec) {
+    group = 'verification'
+    description = 'Authenticate the supplied test user and fetch Product through original services.'
+    dependsOn classicServiceProbeClasses
+    classpath = sourceSets.classicServiceProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.ClassicModelValidation'
+    workingDir = projectDir
+    systemProperty 'validation.classicDal', 'true'
+    systemProperty 'validation.classicCallback', 'com.etendoerp.platform.validation.ClassicJsonValidation'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    doFirst { args file(project.property('classicProperties')).absolutePath }
+}
 
 tasks.register('verifyClassicDatabase', JavaExec) {
     group = 'verification'

@@ -68,6 +68,17 @@ public abstract class BaseDataSourceService implements DataSourceService {
   @Inject
   private ApplicationDictionaryCachedStructures cachedStructures;
 
+  /** Default constructor for existing CDI-managed datasources. */
+  protected BaseDataSourceService() {
+  }
+
+  /** Initializes the real shared dependencies for a standalone datasource. */
+  protected BaseDataSourceService(CachedPreference preferences,
+      ApplicationDictionaryCachedStructures structures) {
+    cachedPreference = java.util.Objects.requireNonNull(preferences, "preferences");
+    cachedStructures = java.util.Objects.requireNonNull(structures, "structures");
+  }
+
   /*
    * (non-Javadoc)
    * 

@@ -91,6 +91,8 @@ public final class ClassicModelValidation {
                         System.out.println("PASS: Actual Classic DAL Product HQL count: " + products);
                     } finally { transaction.rollback(); }
                 }
+                String callback = System.getProperty("validation.classicCallback");
+                if (callback != null) ((Runnable) Class.forName(callback).getConstructor().newInstance()).run();
             }
             Files.writeString(report, "PASS\nReal Classic dictionary entities: " + model.size()
                     + "\nPersistent generated mappings resolved: " + persistent

@@ -72,6 +72,22 @@ public class DefaultDataSourceService extends BaseDataSourceService {
   @Inject
   private CachedPreference cachedPreference;
 
+  /** Default constructor for the existing CDI-managed lifecycle. */
+  public DefaultDataSourceService() {
+  }
+
+  /**
+   * Creates a standalone datasource with its real preference provider.
+   *
+   * @param preferences preference provider for this service lifecycle
+   * @param structures initialized application dictionary cache
+   */
+  public DefaultDataSourceService(CachedPreference preferences,
+      org.openbravo.client.application.window.ApplicationDictionaryCachedStructures structures) {
+    super(preferences, structures);
+    cachedPreference = java.util.Objects.requireNonNull(preferences, "preferences");
+  }
+
   /*
    * (non-Javadoc)
    * 

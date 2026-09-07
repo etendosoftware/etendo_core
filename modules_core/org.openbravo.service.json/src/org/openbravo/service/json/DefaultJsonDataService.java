@@ -93,6 +93,29 @@ public class DefaultJsonDataService implements JsonDataService {
 
   private static DefaultJsonDataService instance = null;
 
+  private List<JsonDataServiceExtraActions> configuredExtraActions;
+
+  /** Default constructor for the existing CDI-managed lifecycle. */
+  public DefaultJsonDataService() {
+  }
+
+  /**
+   * Creates a standalone service with explicit dependencies and action hooks.
+   *
+   * @param preferences real preference provider for this service lifecycle
+   * @param actions explicitly installed action hooks, in execution order
+   */
+  public DefaultJsonDataService(CachedPreference preferences,
+      List<JsonDataServiceExtraActions> actions) {
+    cachedPreference = java.util.Objects.requireNonNull(preferences, "preferences");
+    configuredExtraActions = List.copyOf(actions);
+  }
+
+  private Iterable<JsonDataServiceExtraActions> getExtraActions() {
+    return configuredExtraActions != null ? configuredExtraActions
+        : java.util.Objects.requireNonNull(extraActions, "CDI action hooks were not injected");
+  }
+
   public static DefaultJsonDataService getInstance() {
     if (instance == null) {
       // Delay the lookup until first use
@@ -1217,7 +1240,7 @@ public class DefaultJsonDataService implements JsonDataService {
       if (action == DataSourceAction.FETCH) {
         // In fetch operations there is no data. Just call doPreFetch and extraActions.
         doPreFetch(parameters);
-        for (JsonDataServiceExtraActions extraAction : extraActions) {
+        for (JsonDataServiceExtraActions extraAction : getExtraActions()) {
           extraAction.doPreAction(parameters, new JSONArray(), action);
         }
         return "";
@@ -1254,7 +1277,7 @@ public class DefaultJsonDataService implements JsonDataService {
         // and set it in the new array
         newData.put(dataElement);
       }
-      for (JsonDataServiceExtraActions extraAction : extraActions) {
+      for (JsonDataServiceExtraActions extraAction : getExtraActions()) {
         extraAction.doPreAction(parameters, newData, action);
       }
 
@@ -1309,7 +1332,7 @@ public class DefaultJsonDataService implements JsonDataService {
       response.put(JsonConstants.RESPONSE_DATA, newData);
       json.put(JsonConstants.RESPONSE_RESPONSE, response);
 
-      for (JsonDataServiceExtraActions extraAction : extraActions) {
+      for (JsonDataServiceExtraActions extraAction : getExtraActions()) {
         extraAction.doPostAction(parameters, json, action, originalObject);
       }
 

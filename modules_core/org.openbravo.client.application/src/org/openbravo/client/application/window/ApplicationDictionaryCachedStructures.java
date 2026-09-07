@@ -115,11 +115,12 @@ public class ApplicationDictionaryCachedStructures {
     final String query = 
             "select m.id " +
             "  from ADModule m " +
-            " where m.inDevelopment=true";
+            " where m.inDevelopment=:inDevelopment";
     //@formatter:on
     final Query<String> indevelMods = OBDal.getInstance()
         .getSession()
-        .createQuery(query, String.class);
+        .createQuery(query, String.class)
+        .setParameter("inDevelopment", true);
     return new HashSet<>(indevelMods.list());
   }
 
