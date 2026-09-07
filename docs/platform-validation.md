@@ -179,9 +179,10 @@ part of this profile. Generation is an
 intermediate check, not proof of a complete security context or DAL execution.
 
 `./gradlew -p platform-validation verifySecurityGeneration` passes on disposable
-PostgreSQL and now generates fifteen sources: Category, Request, User, Role, UserRoles,
+PostgreSQL and now generates eighteen sources: Category, Request, User, Role, UserRoles,
 RoleOrganization, Client, Language, Organization, Warehouse, BusinessPartner,
-TableAccess, Table, ClientInformation, and the technical Process descriptor.
+TableAccess, Table, ClientInformation, Tree, TreeNode, OrganizationType, and the
+technical Process descriptor.
 Warehouse and BusinessPartner retain only selected identity/audit fields for now,
 not ERP workflows.
 Outputs are in build/security-generated-entities and build/security-generation-result.txt.
@@ -200,7 +201,7 @@ registers every compiled entity with OBProvider, generates the real mappings,
 and opens the real DAL SessionFactory. A parameterized HQL count query against
 ProofRequest returns zero as expected in the empty application table.
 
-No production Java files are modified. No manual ORM mappings or replacement DAL
+The mapping-bootstrap milestone modified no production Java files. No manual ORM mappings or replacement DAL
 classes are used. The actual controller supplies OBInterceptor, the Etendo
 PostgreSQL dialect, and the sequence service contributors emitted by the generator.
 Jandex is an explicit compile dependency for the existing metadata contributor.
@@ -218,3 +219,45 @@ Outputs: build/dal-mapping.hbm.xml and build/dal-mapping-result.txt. The Session
 and disposable PostgreSQL are closed after the run. This milestone does not yet
 prove OBDal persistence, a populated security context, access filters, or runtime
 dictionary upgrades. Those remain the next acceptance checks, not optional work.
+
+## Headless access policy
+
+The next runtime check introduces an explicit opt-in table-permission mode,
+`dal.security.tableAccessOnly=true`. The default ERP window/process-derived policy
+remains unchanged. In this mode, active AD_TABLE_ACCESS rows grant read or write
+access subject to the existing entity access-level check; missing grants deny
+access, exclusions win, and UI-derived permissions are not inferred. Client and
+organization enforcement remains in the existing DAL. This is production policy
+code, not a permissive test replacement, and requires positive and negative tests.
+
+`./gradlew -p platform-validation verifyOBDal` exercises the opt-in mode against
+disposable PostgreSQL. The fixture imports security rows via DBSM XML, initializes
+the actual OBContext for a non-admin user/role, and uses generated entities with
+client, organization, and active properties. The real organization-tree provider
+reads fixture tree/type rows. Control records belong to another organization,
+another client, and an inactive record in the current organization.
+
+The command checks OBDal persistence and parameterized relationship queries,
+default client/organization/active filtering, deliberately unfiltered control
+counts, rollback after flush, missing grants, read-only grants, excluded grants,
+and inactive grants. No administrator-mode override is used by the test to
+persist the application records. Existing internal initialization uses the core's
+normal temporary admin scope. Output: build/obdal-result.txt.
+
+Two production files now have narrowly scoped changes: EntityAccessChecker adds
+the explicit table-only policy; OBContext binds its system-language Boolean
+parameter instead of emitting a SQL Boolean literal against the existing CHAR
+Y/N type. The latter fixes a PostgreSQL failure reproduced during actual context
+initialization. The default ERP permission path remains the default, but a full
+ERP regression run has not been performed. Configure the access policy before
+DAL bootstrap; switching modes in a running process is not supported here.
+
+The projected physical schema is serialized and reread before use so DBSM foreign
+table objects refer to the final merged model. The importer's identity tracking
+otherwise retained an earlier category table shape and deferred dependent rows.
+Filter-control tests use a fresh OBQuery per configuration because changing
+filters on an already executed query retained stale parameters in this checkout.
+
+Remaining acceptance: schema and managed-data upgrades through the real generated
+DAL mapping, operational-row preservation across that upgrade, and an idempotent
+repeat. Foundation-only upgrade results do not satisfy that remaining DAL gate.

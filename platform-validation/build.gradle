@@ -172,3 +172,17 @@ tasks.register('verifyDalMappings', JavaExec) {
     systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
     outputs.upToDateWhen { false }
 }
+
+tasks.register('verifyOBDal', JavaExec) {
+    group = 'verification'
+    description = 'Verify OBDal persistence with a real security context and explicit table grants.'
+    dependsOn dalClasses
+    classpath = sourceSets.dictionaryProbe.runtimeClasspath + sourceSets.dal.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
+    workingDir = projectDir
+    systemProperty 'validation.security', 'true'
+    systemProperty 'validation.dal', 'true'
+    systemProperty 'validation.obdal', 'true'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+    outputs.upToDateWhen { false }
+}

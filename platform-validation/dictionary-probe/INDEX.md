@@ -12,6 +12,8 @@ seven security entities plus Warehouse and BusinessPartner compatibility entitie
 It also selects TableAccess, Table, ClientInformation, and a Process descriptor
 as required by the existing access checker and context. Original user-default
 references are retained through their reference-table metadata.
+Tree, TreeNode, and OrganizationType support the real organization access tree.
+Security data and cross-tenant control rows are generated as XML only for verifyOBDal.
 Run verifySecurityGeneration to exercise the real generator with this selection.
 UI selector references for conventional foreign keys become equivalent TableDir
 references; no replacement Java entity or ORM mapping is handwritten.

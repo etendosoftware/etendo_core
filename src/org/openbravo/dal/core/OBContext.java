@@ -1018,9 +1018,10 @@ public class OBContext implements OBNotSingleton, Serializable {
       // @formatter:off
       final String trlQryStr = "select count(*)"
           + " from ADLanguage l"
-          + " where l.systemLanguage= true ";
+          + " where l.systemLanguage= :systemLanguage ";
       // @formatter:on
-      final Query<Long> trl = SessionHandler.getInstance().createQuery(trlQryStr, Long.class);
+      final Query<Long> trl = SessionHandler.getInstance().createQuery(trlQryStr, Long.class)
+          .setParameter("systemLanguage", true);
 
       // There are translations installed in the system when there are more than one system
       // language. There's always at last one which is the base language.

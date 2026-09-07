@@ -64,7 +64,8 @@ final class DictionaryFixture {
         if (Boolean.getBoolean("validation.security")) SecurityFixture.addSchema(result, xml);
         result.initialize();
         xml.write(result, new File("build/dictionary-schema.xml"));
-        return result;
+        // Resolve foreign-table objects from the final XML, after merging and projecting columns.
+        return xml.read(new File("build/dictionary-schema.xml"));
     }
 
     static Path data(Database schema) throws Exception {
@@ -91,9 +92,13 @@ final class DictionaryFixture {
                 values.put("AD_TABLE_ID", name);
                 values.put("AD_MODULE_ID", "PLATFORM");
                 values.put("COLUMNNAME", column.getName());
-                values.put("NAME", column.getName().equals("PP_CATEGORY_ID") ? "Category"
+                values.put("NAME", column.getName().equals("AD_CLIENT_ID") ? "Client"
+                        : column.getName().equals("AD_ORG_ID") ? "Organization"
+                        : column.getName().equals("ISACTIVE") ? "Active"
+                        : column.getName().equals("PP_CATEGORY_ID") ? "Category"
                         : column.getName().substring(0, 1) + column.getName().substring(1).toLowerCase(Locale.ROOT));
-                values.put("AD_REFERENCE_ID", column.isPrimaryKey() ? "13" : column.getName().equals("PP_CATEGORY_ID") ? "19" : "10");
+                values.put("AD_REFERENCE_ID", column.isPrimaryKey() ? "13" : column.getName().equals("ISACTIVE") ? "20"
+                        : column.getName().endsWith("_ID") ? "19" : "10");
                 values.put("FIELDLENGTH", column.getSize());
                 values.put("POSITION", Integer.toString(++position));
                 values.put("SEQNO", Integer.toString(position));

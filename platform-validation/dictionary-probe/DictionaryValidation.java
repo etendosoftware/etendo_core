@@ -25,7 +25,8 @@ public final class DictionaryValidation {
         String password = UUID.randomUUID().toString();
         boolean security = Boolean.getBoolean("validation.security");
         boolean dal = Boolean.getBoolean("validation.dal");
-        Path report = Path.of(dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
+        boolean obdal = Boolean.getBoolean("validation.obdal");
+        Path report = Path.of(obdal ? "build/obdal-result.txt" : dal ? "build/dal-mapping-result.txt" : security ? "build/security-generation-result.txt" : "build/dictionary-result.txt");
         Path generated = Path.of(security ? "build/security-generated-entities" : "build/generated-entities");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "RUNNING\n");
@@ -74,6 +75,10 @@ public final class DictionaryValidation {
             // Existing dictionary mappings read NUMERIC metadata into Integer properties.
             // DBSM validates physical types above; Hibernate must never change this schema.
             properties.setProperty("hibernate.hbm2ddl.auto", "none");
+            if (Boolean.getBoolean("validation.obdal")) {
+                properties.setProperty("dal.security.tableAccessOnly", "true");
+                data.writeDataToDatabase(platform, schema, new String[] {SecurityFixture.securityData(schema).toUri().toString()});
+            }
             properties.setProperty("source.path", new File("build/generator-input").getAbsolutePath());
             OBPropertiesProvider.getInstance().setProperties(properties);
             var model = ModelProvider.getInstance().getModel();
@@ -134,7 +139,9 @@ public final class DictionaryValidation {
         Files.writeString(report, "PASS\nReal ModelProvider: two related application entities\nReal Java entity source generation\n"
                 + (security ? "Selected security entities, Warehouse and BusinessPartner generated from core metadata\n" : "")
                 + (dal ? "Real DAL SessionFactory and generated mappings loaded; HQL entity query passed\n" : "")
-                + (dal ? "NOT YET VERIFIED: OBDal persistence, populated security context, security filters, metadata upgrades\n"
+                + (obdal ? "Real non-admin context; OBDal persistence, filters, rollback and restricted table grants passed\n"
+                        + "NOT YET VERIFIED: runtime metadata upgrades, full update.database and module installation\n"
+                        : dal ? "NOT YET VERIFIED: OBDal persistence, populated security context, security filters, metadata upgrades\n"
                         : "NOT YET VERIFIED BY THIS TASK: generated entity compilation, DAL mappings, OBDal runtime, security filters, metadata upgrades\n"));
     }
 }

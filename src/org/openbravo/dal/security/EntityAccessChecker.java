@@ -35,6 +35,7 @@ import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.model.Table;
 import org.openbravo.base.provider.OBNotSingleton;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.Process;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
@@ -165,6 +166,10 @@ public class EntityAccessChecker implements OBNotSingleton {
     parameterOfSelectorProcessReference = new CachedList<>("EntityAccessChecker:parameterOfSelectorProcessReference");
     selectorsFromWindowReferences = new CachedList<>("EntityAccessChecker:selectorsFromWindowReferences");
 
+    if (isTableAccessOnly()) {
+      return;
+    }
+
     // @formatter:off
     String hqlQry = "select distinct(s.table.id), c.table.id"
         + " from OBUISEL_Selector s"
@@ -234,6 +239,11 @@ public class EntityAccessChecker implements OBNotSingleton {
     try {
       final ModelProvider mp = ModelProvider.getInstance();
       final String userLevel = obContext.getUserLevel();
+
+      if (isTableAccessOnly()) {
+        initializeTableAccessOnly(mp, userLevel);
+        return;
+      }
 
       // Don't use dal because otherwise we can end up in infinite loops
       // there is always only one windowaccess per role due to unique constraints
@@ -369,6 +379,53 @@ public class EntityAccessChecker implements OBNotSingleton {
     } finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  /** Returns whether the application explicitly uses table grants without UI-derived access. */
+  private static boolean isTableAccessOnly() {
+    return Boolean.parseBoolean(OBPropertiesProvider.getInstance().getOpenbravoProperties()
+        .getProperty("dal.security.tableAccessOnly", "false"));
+  }
+
+  /** Initializes a deny-by-default policy for applications without windows or selectors. */
+  private void initializeTableAccessOnly(ModelProvider model, String userLevel) {
+    readableEntities.clear();
+    writableEntities.clear();
+    nonReadableEntities.clear();
+    derivedReadableEntities.clear();
+    derivedEntitiesFromProcess.clear();
+    processes.clear();
+    // Once cleared, failed loading must remain deny-by-default on subsequent checks.
+    isInitialized = true;
+    Set<Entity> grantedRead = new HashSet<>();
+    Set<Entity> grantedWrite = new HashSet<>();
+    Set<Entity> excluded = new HashSet<>();
+    Set<Entity> readOnly = new HashSet<>();
+    List<TableAccess> grants = SessionHandler.getInstance()
+        .createQuery("from ADTableAccess ta where ta.role.id=:roleId and ta.active=:active", TableAccess.class)
+        .setParameter("roleId", getRoleId()).setParameter("active", true).list();
+    for (TableAccess grant : grants) {
+      Entity entity = model.getEntityByTableId(grant.getTable().getId());
+      if (entity == null || !hasCorrectAccessLevel(userLevel, entity.getAccessLevel().getDbValue())) {
+        continue;
+      }
+      if (Boolean.TRUE.equals(grant.isExclude())) {
+        excluded.add(entity);
+      } else {
+        grantedRead.add(entity);
+        if (Boolean.TRUE.equals(grant.isReadOnly())) {
+          readOnly.add(entity);
+        } else {
+          grantedWrite.add(entity);
+        }
+      }
+    }
+    grantedRead.removeAll(excluded);
+    grantedWrite.removeAll(excluded);
+    grantedWrite.removeAll(readOnly);
+    readableEntities.addAll(grantedRead);
+    writableEntities.addAll(grantedWrite);
+    nonReadableEntities.addAll(excluded);
   }
 
   private Set<String> getProcessAccessSelectors(Set<String> processTables) {
