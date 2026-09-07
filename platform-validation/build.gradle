@@ -26,6 +26,7 @@ sourceSets {
     }
     classicProbe {
         java.srcDirs = ['classic-probe']
+        java.exclude 'LegacyContextCaller.java'
     }
     classicJson {
         java {
@@ -132,6 +133,22 @@ def classicServiceSupport = files('build/classic-compatibility/WEB-INF/classes')
         fileTree('build/classic-compatibility/WEB-INF/lib') { include '*.jar' }
 def classicServiceClasses = sourceSets.classicJson.output + sourceSets.classicGenerated.output +
         sourceSets.classicEntities.output + sourceSets.bootstrap.output + sourceSets.classicProbe.output
+tasks.register('compileLegacyContextCaller', JavaCompile) {
+    dependsOn 'prepareClassicCompatibility'
+    source file('classic-probe/LegacyContextCaller.java')
+    classpath = classicServiceSupport
+    destinationDirectory = layout.buildDirectory.dir('legacy-caller')
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none']
+}
+tasks.register('verifyLegacyContextLinkage', JavaExec) {
+    group = 'verification'
+    dependsOn 'compileLegacyContextCaller', 'compileClassicJsonJava'
+    classpath = files(layout.buildDirectory.dir('legacy-caller')) + classicServiceClasses +
+            configurations.classicServiceProbeRuntimeClasspath + classicServiceSupport
+    mainClass = 'com.etendoerp.platform.validation.LegacyContextCaller'
+    systemProperty 'log4j2.configurationFile', file('fixtures/log4j2.xml').absolutePath
+}
 sourceSets.classicServiceProbe.compileClasspath += classicServiceClasses + classicServiceSupport
 sourceSets.classicServiceProbe.runtimeClasspath += classicServiceClasses + classicServiceSupport
 configurations.compatWebImplementation.extendsFrom(configurations.classicEntitiesImplementation)

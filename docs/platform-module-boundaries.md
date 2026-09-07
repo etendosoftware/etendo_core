@@ -59,6 +59,18 @@ while allowing additions. The report identifies the baseline WAR by SHA-256.
 This initial gate does not cover the whole repository, behavior, serialization,
 reflection-only contracts or binary execution of third-party modules.
 
+The representative binary linkage probe is compiled only against the supplied
+Classic WAR classes/libraries, then execute that unchanged caller against the
+refactored ERP context. Exercise construction, thread context and the Warehouse-
+typed getters/setters. Verify the loaded context originates from the refactored
+output rather than accidentally testing the baseline again. This supplements
+descriptor comparison; it cannot establish compatibility of arbitrary modules.
+`verifyLegacyContextLinkage` passed against the supplied baseline WAR and current
+refactored context. It is excluded from the ordinary source set, so the test does
+not silently recompile the consumer against the new API. The consolidated context
+descriptor, shared-core integration, profile byte-equality and nested-WAR gates
+also passed after the current extraction changes.
+
 ## Target ownership
 
 | Destination | Owns | Must not require |
