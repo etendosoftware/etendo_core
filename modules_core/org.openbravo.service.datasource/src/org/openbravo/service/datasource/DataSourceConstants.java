@@ -25,6 +25,9 @@ package org.openbravo.service.datasource;
  */
 public class DataSourceConstants {
 
+  /** Shared endpoint path; reading it must not initialize the UI servlet hierarchy. */
+  public static final String SERVLET_PATH = "org.openbravo.service.datasource";
+
   /**
    * If passed as a parameter then only date properties are generated as part of the datasource,
    * because these properties need transformation from string to date and back.

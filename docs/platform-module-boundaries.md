@@ -177,6 +177,51 @@ operational data, rollback and idempotence checks in both ERP-free profiles.
 
 ## Immediate sequence
 
+ERP headless candidate assembly: reuse the existing Product adapter and original
+DAL/JSON services, but remove client/UI implementation packages except an explicit
+compatibility allowlist and generated dictionary entities. Generated metadata
+whose historical package contains `client` or `userinterface` is not a renderer
+and remains required by the existing ERP dictionary. Preserve those types rather
+than deleting database metadata. The allowlist initially contains request context,
+kernel utilities, system preferences, dictionary cache and selector constants.
+Remove form/report/rendering implementation packages and use the JSP-free server.
+Run the candidate on a separate port with read-only copy configuration. This is
+not accepted as ERP headless until runtime, security and package audits pass;
+custom datasource hooks and arbitrary ERP workflows remain outside the adapter's
+tested contract. Any missing class must be classified before adding it back.
+The first request exposed a real service-to-UI linkage: BaseDataSourceService
+initialized its URL by loading DataSourceServlet, which extends BaseKernelServlet.
+Move the shared route text into DataSourceConstants; preserve the servlet's
+existing accessor and private backing field. The candidate excludes DataSourceServlet
+itself, so a successful Product request cannot silently rely on that UI hierarchy.
+
+The rebuilt candidate is running on 8094. `verifyProductHttp` and
+`verifyProductDatabase` passed there: 40 client products, 40 excluded foreign-client
+products and six restricted organization contexts (19 or 21 visible products).
+Root, login, UI kernel and index routes returned 404. The packaging gate passed
+for absent known UI entry points/public assets and present original DAL/services.
+This is a verified read-only Product slice, not complete ERP workflow or module
+compatibility. Nested dependency auditing and remaining compatibility-class
+separation are still required; the allowlist is an explicit transitional boundary,
+not a claim that all retained code is already a clean platform module.
+
+Build and start with Java 17 (external paths are examples, never credentials):
+
+```bash
+./gradlew -p platform-validation runErpHeadless \
+  -PclassicProperties=/absolute/owned-copy/Openbravo.properties \
+  -PclassicWar=/absolute/classic.war -PplatformPort=8094
+```
+
+Use `erpHeadlessWar` to build without starting, or `verifyErpHeadlessPackaging`
+for its packaging gate. With test credentials supplied through the process
+environment, run `verifyProductHttp verifyProductDatabase` with
+`-PclassicProperties=/absolute/owned-copy/Openbravo.properties -PplatformPort=8094`.
+Stop the foreground launch with Ctrl-C; do not stop its database container when
+other validation profiles still use the copy. The compatibility lifecycle forces
+read-only PostgreSQL transactions even for the copy. Writes and UI actions are
+not exposed by this candidate.
+
 Container composition must also separate UI dependencies. Jasper/JSP belongs only
 to the original ERP UI launch classpath, not the shared Tomcat probe or platform
 REST launcher. Disable the default JSP servlet for non-JSP validation deployments

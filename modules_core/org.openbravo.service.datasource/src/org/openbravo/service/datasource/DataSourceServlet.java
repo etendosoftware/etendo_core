@@ -120,7 +120,7 @@ public class DataSourceServlet extends BaseKernelServlet {
 
   private static final long serialVersionUID = 1L;
 
-  private static String servletPathPart = "org.openbravo.service.datasource";
+  private static String servletPathPart = DataSourceConstants.SERVLET_PATH;
   private static final String[] CSV_FORMULA_PREFIXES = new String[] { "=", "+", "-", "@" };
 
   public static String getServletPathPart() {

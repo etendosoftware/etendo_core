@@ -55,7 +55,7 @@ public abstract class BaseDataSourceService implements DataSourceService {
   private Template template;
 
   // TODO: move this to a config parameter
-  private String dataUrl = DataSourceServlet.getServletPathPart() + "/";
+  private String dataUrl = DataSourceConstants.SERVLET_PATH + "/";
 
   private String whereClause = null;
   private Entity entity;

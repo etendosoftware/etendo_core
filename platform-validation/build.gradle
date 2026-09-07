@@ -35,6 +35,8 @@ sourceSets {
             srcDir '../modules_core/org.openbravo.client.kernel/src'
             include 'org/openbravo/service/datasource/DefaultDataSourceService.java'
             include 'org/openbravo/service/datasource/BaseDataSourceService.java'
+            include 'org/openbravo/service/datasource/DataSourceConstants.java'
+            include 'org/openbravo/service/datasource/DataSourceServlet.java'
             include 'org/openbravo/service/json/DefaultJsonDataService.java'
             include 'org/openbravo/service/json/AdvancedQueryBuilder.java'
             include 'org/openbravo/client/kernel/KernelUtils.java'
@@ -163,6 +165,89 @@ tasks.register('compatibilityWar', War) {
     }
 }
 configurations.bootstrapImplementation.extendsFrom(configurations.implementation)
+tasks.register('erpHeadlessWar', Zip) {
+    group = 'build'
+    description = 'Assemble an experimental ERP REST distribution with explicit UI compatibility types.'
+    dependsOn 'compatibilityWar'
+    archiveFileName = 'platform-erp-headless.war'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+    def compatibilityTypes = [
+        'org/openbravo/client/application/CachedPreference',
+        'org/openbravo/client/application/window/ApplicationDictionaryCachedStructures',
+        'org/openbravo/client/kernel/KernelUtils',
+        'org/openbravo/client/kernel/KernelUtilsData',
+        'org/openbravo/client/kernel/RequestContext',
+        'org/openbravo/userinterface/selector/SelectorConstants'
+    ]
+    from(provider { zipTree(tasks.compatibilityWar.archiveFile.get().asFile) }) {
+        exclude { details ->
+            def path = details.path
+            if (!path.startsWith('WEB-INF/classes/')) return false
+            def type = path.substring('WEB-INF/classes/'.length())
+            if (type.startsWith('org/openbravo/service/datasource/DataSourceServlet')) return true
+            if (type.startsWith('org/openbravo/erpCommon/ad_forms/') ||
+                    type.startsWith('org/openbravo/erpCommon/ad_reports/')) return true
+            if (!(type.startsWith('org/openbravo/client/') ||
+                    type.startsWith('org/openbravo/userinterface/'))) return false
+            if (file("build/classes/java/classicGenerated/${type}").isFile()) return false
+            if (type.startsWith('org/openbravo/userinterface/selector/model/domaintype/')) return false
+            return !compatibilityTypes.any { allowed ->
+                type == allowed + '.class' || type.startsWith(allowed + '$')
+            }
+        }
+    }
+}
+
+tasks.register('runErpHeadless', JavaExec) {
+    group = 'application'
+    description = 'Run the experimental ERP REST assembly with read-only database access.'
+    dependsOn 'verifyErpHeadlessPackaging', tomcatProbeClasses
+    classpath = sourceSets.tomcatProbe.runtimeClasspath
+    mainClass = 'com.etendoerp.platform.validation.CompatibilityServer'
+    workingDir = projectDir
+    jvmArgs '--add-opens=java.base/java.lang=ALL-UNNAMED', '--add-opens=java.base/java.io=ALL-UNNAMED',
+            '--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED'
+    doFirst {
+        args file('build/libs/platform-erp-headless.war').absolutePath,
+                file(project.property('classicProperties')).absolutePath,
+                project.findProperty('platformPort') ?: '8094'
+    }
+}
+
+tasks.register('verifyErpHeadlessPackaging') {
+    group = 'verification'
+    description = 'Reject known UI entry points and web assets in the ERP REST candidate.'
+    dependsOn 'erpHeadlessWar'
+    doLast {
+        def warFile = tasks.erpHeadlessWar.archiveFile.get().asFile
+        def zip = new java.util.zip.ZipFile(warFile)
+        try {
+            ['org/openbravo/client/kernel/KernelServlet',
+             'org/openbravo/client/kernel/BaseKernelServlet',
+             'org/openbravo/client/kernel/BaseTemplateComponent',
+             'org/openbravo/service/datasource/DataSourceServlet'].each { type ->
+                if (zip.getEntry("WEB-INF/classes/${type}.class") != null) {
+                    throw new GradleException("UI entry point packaged in ERP REST: ${type}")
+                }
+            }
+            zip.entries().each { entry ->
+                if (!entry.directory && !entry.name.startsWith('WEB-INF/') &&
+                        !entry.name.startsWith('META-INF/')) {
+                    throw new GradleException("Public web asset packaged in ERP REST: ${entry.name}")
+                }
+            }
+            ['org/openbravo/dal/service/OBDal',
+             'org/openbravo/service/datasource/DefaultDataSourceService',
+             'com/etendoerp/platform/compat/ProductServlet'].each { type ->
+                if (zip.getEntry("WEB-INF/classes/${type}.class") == null) {
+                    throw new GradleException("Required ERP REST implementation missing: ${type}")
+                }
+            }
+            logger.lifecycle('PASS: ERP REST candidate has original services without UI entry points or public assets')
+        } finally { zip.close() }
+    }
+}
+
 tasks.register('erpUiWar', Zip) {
     group = 'build'
     description = 'Assemble the existing ERP UI with refactored shared motor classes, without properties.'
