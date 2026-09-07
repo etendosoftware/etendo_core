@@ -1,0 +1,45 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'com.etendoerp.platform'
+version = '0.1.0-validation'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+}
+
+// MODULE-BOUNDARY: compile canonical extracted implementations, never a copied motor.
+// Keep this explicit until source ownership moves without breaking the legacy build.
+sourceSets.main.java {
+    srcDirs = ['../src']
+    include 'org/openbravo/dal/security/ReadableScopeResolver.java'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.sourcepath = files()
+    options.compilerArgs += ['-implicit:none']
+}
+
+tasks.register('verifyCoreBoundary') {
+    group = 'verification'
+    description = 'Reject non-JDK dependencies in the initial shared-core artifact.'
+    dependsOn jar
+    doLast {
+        def output = new ByteArrayOutputStream()
+        exec {
+            commandLine new File(System.getProperty('java.home'), 'bin/jdeps').absolutePath,
+                    '--print-module-deps', tasks.jar.archiveFile.get().asFile.absolutePath
+            standardOutput = output
+        }
+        def modules = output.toString('UTF-8').trim()
+        if (modules != 'java.base') {
+            throw new GradleException("Unexpected shared-core dependencies: ${modules}")
+        }
+        logger.lifecycle('PASS: Extracted shared core depends only on java.base')
+    }
+}
+
+tasks.named('check') { dependsOn 'verifyCoreBoundary' }

@@ -65,6 +65,19 @@ reflection-only contracts or binary execution of third-party modules.
 These names are intended Gradle module boundaries; they are not current artifact
 coordinates. Existing packages may remain stable in the compatibility facade.
 
+The initial `platform-core` Gradle project now compiles ReadableScopeResolver from
+its canonical existing source location. It has no dependencies and disables
+implicit source compilation; `check` verifies the resulting JAR depends only on
+java.base using jdeps. This establishes a real build boundary for extracted code,
+not an independently bootable platform yet. Add further shared implementations
+only after removing their outward ERP/UI dependencies. The legacy build continues
+to compile the same source until distribution assembly can consume the shared JAR
+without duplicate classes. Never package both copies in one distribution.
+
+```bash
+JAVA_HOME=/path/to/jdk-17 ./gradlew -p platform-core clean build --console=plain
+```
+
 ## Concrete extraction seams
 
 | ID | Current code | Intended destination | Remaining coupling and separation gate |
