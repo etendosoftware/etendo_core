@@ -192,10 +192,26 @@ published loopback database port against those properties. It expands the WAR in
 a private directory, writes deployment-only configuration there, disables
 scheduler/import/cluster/Redis startup and uses a separate HTTP port (8093).
 Original database configuration and the packaged WAR are not rewritten.
-The first guarded deployment reached the existing `/etendo/security/Login` HTML
-on 8093, with Quartz initialized but not started. An OBRebuildAppender logging
-configuration error remains; authenticated ERP UI/Product acceptance is still
-pending and this startup must not be reported as a clean completed ERP profile.
+The guarded deployment reaches the existing `/etendo/security/Login` HTML on
+8093, with Quartz initialized but not started. The launcher selects the validation
+console logging configuration, avoiding the build-time OBRebuildAppender. The
+restarted instance logged no ERROR/SEVERE or OBRebuildAppender errors during this
+smoke test. Existing Hibernate and CDI fallback warnings remain.
+
+`browser-probe/verify-erp-ui.mjs` uses the original login page in Chrome and its
+session cookie to fetch the original Product datasource. It passed against the
+owned copy with 40 persisted products, without the Basic compatibility adapter.
+Supply `PLATFORM_TEST_USERNAME` and `PLATFORM_TEST_PASSWORD` through the process
+environment, then run:
+
+```bash
+node platform-validation/browser-probe/verify-erp-ui.mjs
+```
+
+This smoke test asserts successful authentication, response status, nonempty
+records and Product identity. It does not yet establish full selected-property,
+pagination, reference or role-isolation parity on this ERP UI deployment, nor
+general ERP workflow compatibility. ERP headless acceptance remains pending.
 
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI

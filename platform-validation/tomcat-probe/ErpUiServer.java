@@ -56,6 +56,8 @@ public final class ErpUiServer {
         Files.writeString(descriptor, Files.readString(descriptor).replaceAll(
                 "(<param-name>start-scheduler-on-load</param-name>\\s*<param-value>)true", "$1false"));
         System.out.println("ERP UI deployment prepared against verified owned Classic copy");
+        // Use the validation console configuration, not a build-time rebuild appender.
+        System.setProperty("log4j2.configurationFile", Path.of("fixtures/log4j2.xml").toAbsolutePath().toString());
         CompatibilityServer.main(new String[] {deployment.toString(), privateProperties.toString(), args[2], "/etendo"});
     }
 
