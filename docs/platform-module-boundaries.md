@@ -387,6 +387,21 @@ buildable Gradle modules only with enforced dependency direction and profile tes
 Keep the existing Product validation as a compatibility control throughout.
 # Shared original UI extraction checkpoint
 
+The selector increment retains the actual parent/child reference metadata for
+Field.Property and compiles canonical selector domain implementations/mappings into
+the optional shared artifact. The child uses ModelElementDomainType, a primitive
+model-property reference; its parent remains SelectorDomainType. Derive the small
+selector/datasource bootstrap tables from their original Hibernate mappings and
+module XML. No reference rewriting and no handwritten substitute domain are
+allowed. Verify generated Field.getProperty() and persistence with the isolated
+DAL before attempting the selector widget or original field handler.
+The isolated runtime now verifies the original parent/child IDs, shared-class
+origin and generated getter/setter, including flush/clear/reload in a transaction
+that is rolled back. It does not yet test selector suggestions or browser writes.
+The shared artifact includes the original domain mappings; the packaging gate
+rejects their loose duplicates in ERP UI. UI DAL, XML/DBSM lifecycle, nested WAR
+boundaries and original ERP browser shell/Product/six-role regressions passed.
+
 The current dictionary increment retains the original field layout/display metadata,
 field groups and column read-only expressions. These are generic UI metadata,
 not ERP entities. Select their schema and generated API from canonical XML;
@@ -394,11 +409,11 @@ validate persisted values and field/column/group relationships with the isolated
 DAL. Do not implement replacement getters or a second field renderer to work
 around a deliberately truncated dictionary. This increment alone is not execution
 of OBViewFieldHandler or proof of browser form behavior.
-The field `Property` is deliberately not included in this increment: its original
+The field `Property` was initially deferred: its original
 reference is a selector from the selector module, not a plain string reference.
 Adding it exposed missing reference `95E2A8B50A254B2AAE6774B8C2F28120` during
-ModelProvider startup. Preserve that selector's semantics in the next increment;
-do not silently convert the reference to text just to generate its getter.
+ModelProvider startup. The selector increment above resolves this missing domain
+without converting its reference to text just to generate its getter.
 `verifyUiDal` now generates 24 entities and passes checks for persisted field
 visibility rules, column read-only logic, layout flags, group membership and
 column-to-property resolution. The original template processor still passes in

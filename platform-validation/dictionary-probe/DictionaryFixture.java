@@ -27,34 +27,15 @@ final class DictionaryFixture {
                 "RefList", "Module", "Package", "SequenceConfiguration"}) {
             String relative = type.equals("SequenceConfiguration")
                     ? "com/etendoerp/sequences/model/" : "org/openbravo/base/model/";
-            var factory = DocumentBuilderFactory.newInstance();
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-            var document = factory.newDocumentBuilder().parse(new File("../src/" + relative + type + ".hbm.xml"));
-            Element mapped = (Element) document.getElementsByTagName("class").item(0);
-            String name = mapped.getAttribute("table").toUpperCase(Locale.ROOT);
-            Set<String> columns = new LinkedHashSet<>();
-            for (var node = mapped.getFirstChild(); node != null; node = node.getNextSibling()) {
-                if (!(node instanceof Element element)) continue;
-                if (!Set.of("id", "property", "many-to-one").contains(element.getTagName())) continue;
-                String column = element.hasAttribute("column") ? element.getAttribute("column") : element.getAttribute("name");
-                columns.add(column.toUpperCase(Locale.ROOT));
-            }
-            if (name.equals("AD_TABLE") || name.equals("AD_COLUMN")) {
-                columns.add("HELP");
-                columns.add("DEVELOPMENTSTATUS");
-            }
-            Table original = xml.readplain(new File("../src-db/database/model/tables/" + name + ".xml")).getTable(0);
-            Table table = new Table();
-            table.setName(name);
-            table.setPrimaryKey(original.getPrimaryKey());
-            for (String column : columns) {
-                var found = original.findColumn(column, false);
-                if (found == null) throw new IllegalStateException("Missing physical dictionary column " + name + "." + column);
-                table.addColumn((org.apache.ddlutils.model.Column) found.clone());
-            }
-            result.addTable(table);
+            addMappedTable(result, xml, Path.of("../src/" + relative + type + ".hbm.xml"),
+                    Path.of("../src-db/database"));
+        }
+        if (Boolean.getBoolean("validation.originalUi")) {
+            Path selector = Path.of("../modules_core/org.openbravo.userinterface.selector");
+            Path mappings = selector.resolve("src/org/openbravo/userinterface/selector/model/domaintype");
+            addMappedTable(result, xml, mappings.resolve("SelectorDefinition.hbm.xml"), selector.resolve("src-db/database"));
+            addMappedTable(result, xml, mappings.resolve("DatasourceDefinition.hbm.xml"),
+                    Path.of("../modules_core/org.openbravo.service.datasource/src-db/database"));
         }
         result.mergeWith(xml.read(new File("fixtures/v1.xml")));
         // TableDir resolves the target table from the physical foreign-key column name.
@@ -66,6 +47,38 @@ final class DictionaryFixture {
         xml.write(result, new File("build/dictionary-schema.xml"));
         // Resolve foreign-table objects from the final XML, after merging and projecting columns.
         return xml.read(new File("build/dictionary-schema.xml"));
+    }
+
+    /** Derives a bootstrap table projection from canonical ORM and database definitions. */
+    private static void addMappedTable(Database result, DatabaseIO xml, Path mapping, Path database) throws Exception {
+        var factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        var document = factory.newDocumentBuilder().parse(mapping.toFile());
+        Element mapped = (Element) document.getElementsByTagName("class").item(0);
+        String name = mapped.getAttribute("table").toUpperCase(Locale.ROOT);
+        Set<String> columns = new LinkedHashSet<>();
+        for (var node = mapped.getFirstChild(); node != null; node = node.getNextSibling()) {
+            if (!(node instanceof Element element)) continue;
+            if (!Set.of("id", "property", "many-to-one").contains(element.getTagName())) continue;
+            String column = element.hasAttribute("column") ? element.getAttribute("column") : element.getAttribute("name");
+            columns.add(column.toUpperCase(Locale.ROOT));
+        }
+        if (name.equals("AD_TABLE") || name.equals("AD_COLUMN")) {
+            columns.add("HELP");
+            columns.add("DEVELOPMENTSTATUS");
+        }
+        Table original = xml.readplain(database.resolve("model/tables/" + name + ".xml").toFile()).getTable(0);
+        Table table = new Table();
+        table.setName(name);
+        table.setPrimaryKey(original.getPrimaryKey());
+        for (String column : columns) {
+            var found = original.findColumn(column, false);
+            if (found == null) throw new IllegalStateException("Missing physical dictionary column " + name + "." + column);
+            table.addColumn((org.apache.ddlutils.model.Column) found.clone());
+        }
+        result.addTable(table);
     }
 
     static Path data(Database schema) throws Exception {

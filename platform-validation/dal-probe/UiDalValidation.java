@@ -74,6 +74,25 @@ public final class UiDalValidation {
                 var titleProperty = ModelProvider.getInstance().getEntityByTableId("PP_REQUEST")
                         .getPropertyByColumnName(title.getColumn().getDBColumnName());
                 if (!"title".equals(titleProperty.getName())) throw new AssertionError("Field property resolution failed");
+                var fieldProperty = ModelProvider.getInstance().getEntity("ADField").getProperty("property");
+                if (!fieldProperty.getDomainType().getClass().getName().equals(
+                        "org.openbravo.userinterface.selector.model.domaintype.ModelElementDomainType")
+                        || title.getProperty() != null) throw new AssertionError("Original selector property domain was replaced");
+                var reference = fieldProperty.getDomainType().getReference();
+                if (!"45B39681AFBC4808A64C9B776A290BA4".equals(reference.getId())
+                        || !"95E2A8B50A254B2AAE6774B8C2F28120".equals(reference.getParentReference().getId())
+                        || !fieldProperty.getDomainType().getClass().getProtectionDomain().getCodeSource()
+                                .getLocation().toString().endsWith("/platform-ui-components.jar")) {
+                    throw new AssertionError("Selector reference hierarchy or shared implementation was lost");
+                }
+                title.setProperty("title");
+                OBDal.getInstance().flush();
+                String fieldId = title.getId();
+                OBDal.getInstance().getSession().clear();
+                if (!"title".equals(OBDal.getInstance().get(Field.class, fieldId).getProperty())) {
+                    throw new AssertionError("Original Field.Property API did not persist through its selector domain");
+                }
+                System.out.println("PASS: Original selector model-element domain preserves Field.Property API and persistence");
                 System.out.println("PASS: Original field API resolves persisted display/layout rules and field group through OBDal");
                 var template = OBDal.getInstance().get(org.openbravo.client.kernel.Template.class,
                         "C1D176407A354A40815DC46D24D70EB8");

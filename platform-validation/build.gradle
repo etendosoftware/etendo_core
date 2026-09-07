@@ -145,6 +145,9 @@ tasks.register('compileUiComponents', JavaCompile) {
         include 'org/openbravo/client/kernel/TemplateResolver.java'
         include 'org/openbravo/client/kernel/freemarker/FreemarkerTemplateProcessor.java'
     }
+    source fileTree('../modules_core/org.openbravo.userinterface.selector/src') {
+        include '**/model/domaintype/*.java'
+    }
     classpath = classicServiceClasses + classicServiceSupport
     destinationDirectory = layout.buildDirectory.dir('ui-components')
     options.sourcepath = files()
@@ -159,6 +162,9 @@ tasks.register('sharedUiJar', Jar) {
     from('../modules_core/org.openbravo.client.application/src') {
         include 'org/openbravo/client/application/templates/ob-view-form.js.ftl'
     }
+    from('../modules_core/org.openbravo.userinterface.selector/src') {
+        include '**/model/domaintype/*.hbm.xml'
+    }
 }
 tasks.register('verifyUiArtifactPackaging') {
     group = 'verification'
@@ -171,7 +177,8 @@ tasks.register('verifyUiArtifactPackaging') {
                 throw new GradleException('Shared UI provider requires an explicit CDI bean archive')
             }
             zip.entries().each { item ->
-                if (item.name.endsWith('.class') || item.name.endsWith('.ftl')) ownedUiPaths.add(item.name)
+                if (item.name.endsWith('.class') || item.name.endsWith('.ftl')
+                        || item.name.endsWith('.hbm.xml')) ownedUiPaths.add(item.name)
             }
         }
         def entry = 'WEB-INF/lib/platform-ui-components.jar'
@@ -395,7 +402,11 @@ tasks.register('erpUiWar', Zip) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(sourceSets.classicJson.output) { into 'WEB-INF/classes' }
     from(sourceSets.classicGenerated.output) { into 'WEB-INF/classes' }
-    from(sourceSets.classicEntities.output) { into 'WEB-INF/classes'; exclude '**/Log4j2Plugins.dat' }
+    from(sourceSets.classicEntities.output) {
+        into 'WEB-INF/classes'
+        exclude '**/Log4j2Plugins.dat'
+        exclude 'org/openbravo/userinterface/selector/model/domaintype/**'
+    }
     from(sourceSets.bootstrap.output) { into 'WEB-INF/classes'; exclude '**/Log4j2Plugins.dat' }
     from(project(':platform-core').tasks.named('jar')) { into 'WEB-INF/lib' }
     from(tasks.named('sharedUiJar')) { into 'WEB-INF/lib' }
@@ -410,6 +421,7 @@ tasks.register('erpUiWar', Zip) {
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateProcessor*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/TemplateResolver*.class'
         exclude 'WEB-INF/classes/org/openbravo/client/kernel/freemarker/FreemarkerTemplateProcessor*.class'
+        exclude 'WEB-INF/classes/org/openbravo/userinterface/selector/model/domaintype/**'
         exclude 'WEB-INF/classes/org/openbravo/client/application/templates/ob-view-form.js.ftl'
     }
 }
@@ -880,8 +892,8 @@ tasks.register('verifySecurityGeneration', JavaExec) {
 tasks.register('verifyUiDictionary', JavaExec) {
     group = 'verification'
     description = 'Generate original UI dictionary entities and validate application window metadata without ERP.'
-    dependsOn dictionaryProbeClasses, bootstrapClasses, prepareGeneratorTemplates
-    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    dependsOn dictionaryProbeClasses, bootstrapClasses, prepareGeneratorTemplates, 'sharedUiJar'
+    classpath = files(tasks.named('sharedUiJar')) + sourceSets.dictionaryProbe.runtimeClasspath
     mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
     workingDir = projectDir
     systemProperty 'validation.security', 'true'
@@ -894,7 +906,7 @@ tasks.register('verifyUiDal', JavaExec) {
     group = 'verification'
     description = 'Compile visual dictionary entities and query them through original DAL without ERP.'
     dependsOn dalClasses, dictionaryProbeClasses, prepareGeneratorTemplates, 'sharedUiJar'
-    classpath = sourceSets.dictionaryProbe.runtimeClasspath
+    classpath = files(tasks.named('sharedUiJar')) + sourceSets.dictionaryProbe.runtimeClasspath
     mainClass = 'com.etendoerp.platform.validation.DictionaryValidation'
     workingDir = projectDir
     systemProperty 'validation.security', 'true'

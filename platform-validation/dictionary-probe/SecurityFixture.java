@@ -50,7 +50,7 @@ final class SecurityFixture {
                         "AD_MODULE_ID", "ISINDEVELOPMENT", "TEMPLATE", "TEMPLATECLASSPATHLOCATION",
                         "TEMPLATE_LANGUAGE", "COMPONENT_TYPE", "OVERRIDES_TEMPLATE_ID",
                         "OBCLKER_TEMPLATE_ID", "DEPENDSON_TEMPLATE_ID", "AD_FIELDGROUP_ID",
-                        "ISCOLLAPSED", "DISPLAYLOGIC", "DISPLAYLOGICGRID",
+                        "ISCOLLAPSED", "PROPERTY", "DISPLAYLOGIC", "DISPLAYLOGICGRID",
                         "STARTNEWLINE", "STARTINODDCOLUMN", "ISSHOWNINSTATUSBAR", "CLIENTCLASS",
                         "DISPLAYLENGTH", "ONCHANGEFUNCTION", "COLUMNNAME", "READONLYLOGIC")
                         .contains(name));
@@ -215,6 +215,7 @@ final class SecurityFixture {
         List<Map<String, String>> result = new ArrayList<>(rows(CORE, table));
         if (Boolean.getBoolean("validation.originalUi")) {
             result.addAll(rows(Path.of("../modules_core/org.openbravo.client.kernel/src-db/database"), table));
+            result.addAll(rows(Path.of("../modules_core/org.openbravo.userinterface.selector/src-db/database"), table));
         }
         return result;
     }

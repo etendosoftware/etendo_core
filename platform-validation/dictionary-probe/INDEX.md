@@ -35,3 +35,6 @@ database and separate ui-generated-entities output; headless generation is uncha
 The optional slice also retains field groups, display/layout flags and column
 read-only expressions. verifyUiDal validates their generated APIs and persisted
 values through OBDal; it does not yet execute the original field handler.
+Field.Property retains its original selector parent and model-element domain.
+The selector/datasource bootstrap schema reuses the same canonical mapping-to-XML
+projection helper as the core dictionary; headless schemas do not include it.
