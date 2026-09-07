@@ -208,10 +208,25 @@ environment, then run:
 node platform-validation/browser-probe/verify-erp-ui.mjs
 ```
 
-This smoke test asserts successful authentication, response status, nonempty
-records and Product identity. It does not yet establish full selected-property,
-pagination, reference or role-isolation parity on this ERP UI deployment, nor
-general ERP workflow compatibility. ERP headless acceptance remains pending.
+The expanded probe passed with 40 products: six selected scalar/reference fields,
+reference identifiers, Product identity, absence of an unselected business field,
+ascending/descending search-key order and two contiguous five-record pages.
+It preserves the original inclusive `_endRow` semantics. An anonymous request
+must return exactly the existing login redirect script (HTTP 200, JavaScript),
+never Product data. This is legacy UI behavior, not a recommended headless API
+authentication response. Full selected-property coverage, role/client/organization
+scope comparison against independent database reads and general ERP workflow
+compatibility remain unproven on this deployment. ERP headless acceptance remains
+pending.
+
+The current headless extraction blockers are concrete service dependencies:
+`BaseDataSourceService` uses `CachedPreference` and
+`ApplicationDictionaryCachedStructures` from `client.application`, while
+`DefaultDataSourceService` and `AdvancedQueryBuilder` use `client.kernel.KernelUtils`.
+The latter also uses `RequestContext`. Dictionary metadata and authorization
+must survive extraction; deleting their current UI-module locations is not a
+valid headless implementation. Keep the original ERP UI HTTP regression as the
+behavioral control while separating these dependencies.
 
 Finish the ERP initialization boundary regression, then separate the legacy typed
 context facade from shared context ownership. Address accounting and process/UI
