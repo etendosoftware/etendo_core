@@ -1,4 +1,6 @@
 documents:
+  - path: platform-resume.md
+    status: revisado
   - path: platform-impact-analysis.md
     status: modificar
   - path: INDEX.md

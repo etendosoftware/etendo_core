@@ -232,7 +232,14 @@ OB.Layout.initialize = function() {
 
   OB.NavBar.createMembers(OB.Application.navigationBarComponents);
 
-  // show the heartbeat or registration popups (if it applies)
-  OB.Application.showHeartBeatOrRegistration();
+  // MODULE-BOUNDARY ui-startup: compositions explicitly supply optional startup work.
+  // Preserve the ERP startup contract when no alternative composition is configured.
+  if (OB.Application.startupContributions === undefined) {
+    OB.Application.showHeartBeatOrRegistration();
+  } else {
+    OB.Application.startupContributions.forEach(function(contribution) {
+      contribution();
+    });
+  }
 
 };

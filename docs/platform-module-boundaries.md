@@ -96,6 +96,21 @@ and directory listings returned 404; authenticated Request generation still
 returned 200 with OBViewGrid. The root application page remains absent: this
 checkpoint proves resource delivery, not shell initialization or browser CRUD.
 
+The platform browser host may supply a small bootstrap document because the
+original index.jsp directly embeds ERP licensing policy. This is a composition
+alternative, not a replacement frontend: use canonical application templates,
+ApplicationComponent format/context behavior, ordered ApplicationComponentProvider
+resources and original OB.Layout/ViewManager/widgets. Platform branding values
+must not pretend to represent an ERP license. Keep the ERP JSP and its APIs intact.
+
+`MODULE-BOUNDARY ui-startup` makes optional startup contributions explicit in the
+canonical layout. Without a supplied contribution list, ERP still invokes its
+existing heartbeat/registration function. Platform supplies an empty list because
+those ERP capabilities are not installed; it does not install a fake heartbeat
+function. Both UI compositions consume the canonical layout source. The ERP WAR
+overlay selects it ahead of the baseline asset. This seam requires ERP regression
+before being treated as verified shared behavior.
+
 ## Status and rule
 
 This is the extraction map for ET-27, not a claim that the modules already exist.

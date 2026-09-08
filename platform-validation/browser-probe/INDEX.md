@@ -1,5 +1,9 @@
 # Browser acceptance
 
+`inspect-platform-shell.mjs` is a pending original-shell diagnostic, not a CRUD
+acceptance gate. It uses environment credentials and a fixed loopback port/window;
+verify the target before running. See `../../docs/platform-resume.md`.
+
 verify-platform.mjs exercises the optional UI in Chrome through Playwright against
 the running fixture server. It reads owner-only fixture properties without logging
 tokens, creates and updates a test-owned request, then checks read-only rejection.

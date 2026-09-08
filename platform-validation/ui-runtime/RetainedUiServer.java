@@ -41,6 +41,7 @@ public final class RetainedUiServer {
     properties.setProperty("login.session.support.class", "org.openbravo.base.secureApp.PlatformLoginSessionSupport");
     properties.setProperty("ui.userInfo.accessPolicy.class",
         "org.openbravo.client.application.navigationbarcomponents.PlatformUserInfoAccessPolicy");
+    PlatformShell.initializeFormats();
     for (String name : new String[] {"common.plm.Product", "common.enterprise.Warehouse", "common.businesspartner.BusinessPartner"}) {
       if (RetainedUiServer.class.getClassLoader().getResource("org/openbravo/model/"
           + name.replace('.', '/') + ".class") != null) throw new IllegalStateException("ERP runtime class present");
@@ -80,6 +81,9 @@ public final class RetainedUiServer {
       context.addServletMappingDecoded("/login", "platform-session");
       context.addServletMappingDecoded("/session", "platform-session");
       context.addServletMappingDecoded("/components/*", "platform-session");
+      context.addServletMappingDecoded("/shell", "platform-session");
+      context.addServletMappingDecoded("/bootstrap.js", "platform-session");
+      context.addServletMappingDecoded("/types.js", "platform-session");
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         try { tomcat.stop(); }
         catch (Exception failure) { System.err.println("UI shutdown failed: " + failure.getClass().getSimpleName()); }
@@ -134,7 +138,7 @@ public final class RetainedUiServer {
       response.setHeader("Cache-Control", "no-store");
       boolean systemScope = false;
       try {
-        if (("/session".equals(request.getServletPath()) || "/components".equals(request.getServletPath()))
+        if (java.util.Set.of("/session", "/components", "/shell", "/bootstrap.js", "/types.js").contains(request.getServletPath())
             && "GET".equals(request.getMethod())) {
           var session = request.getSession(false);
           if (session == null || session.getAttribute("#Authenticated_user") == null) {
@@ -144,10 +148,28 @@ public final class RetainedUiServer {
           OBContext.setOBContext(request);
           if (OBContext.getOBContext().isInAdministratorMode()) throw new IllegalStateException("Elevated user session");
           new DefaultAuthenticationManager(this).authenticate(request, response);
+          var requestContext = org.openbravo.client.kernel.RequestContext.get();
+          requestContext.setRequest(request);
+          requestContext.setResponse(response);
+          if ("/shell".equals(request.getServletPath())) {
+            String html = new PlatformShell().document(request.getParameter("windowId"));
+            response.setContentType("text/html;charset=UTF-8");
+            response.getWriter().write(html);
+            return;
+          }
+          if ("/bootstrap.js".equals(request.getServletPath())) {
+            String javascript = new PlatformShell().bootstrap(new VariablesSecureApp(request));
+            response.setContentType("application/javascript;charset=UTF-8");
+            response.getWriter().write(javascript);
+            return;
+          }
+          if ("/types.js".equals(request.getServletPath())) {
+            String javascript = new PlatformShell().types();
+            response.setContentType("application/javascript;charset=UTF-8");
+            response.getWriter().write(javascript);
+            return;
+          }
           if ("/components".equals(request.getServletPath())) {
-            var requestContext = org.openbravo.client.kernel.RequestContext.get();
-            requestContext.setRequest(request);
-            requestContext.setResponse(response);
             String output = components.render(request.getPathInfo().substring(1), request.getParameter("windowId"));
             response.setContentType("application/javascript;charset=UTF-8");
             response.getWriter().write(output);

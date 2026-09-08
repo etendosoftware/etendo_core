@@ -8,8 +8,11 @@ on the isolated UI classpath, never the complete Classic runtime.
 `UiComponents` composes canonical CDI beans and delegates rendering to the original
 menu, navigation, layout and standard-window components. It contains no widgets.
 The HTTP routes are integration plumbing, not a replacement frontend. Original
-shell/window delivery remains pending. The launcher requires an explicit private
-instance configuration and does not create or modify an external ERP database.
+shell/window acceptance remains pending. The checkpoint includes experimental `PlatformShell`
+and authenticated `/shell`, `/bootstrap.js` and `/types.js` routes; end-to-end
+shell/window acceptance remains pending. See `../../docs/platform-resume.md`.
+The launcher requires an explicit private instance configuration and does not
+create or modify an external ERP database.
 
 Start with JDK 17 using `./gradlew -p platform-validation runOriginalUi` from the
 repository root. Port defaults to 8091; override with `-PplatformPort=PORT`.
@@ -20,8 +23,8 @@ On the first start only, supply `PLATFORM_INITIAL_PASSWORD` through the local
 environment to initialize the fixture's `admin` login. Never commit that value.
 Later starts omit it; an already configured user cannot be overwritten this way.
 POST form parameters `user` and `password` to `/platform/login`, then send the
-returned cookie to GET `/platform/session`. There is no login page or original
-shell route yet. The session response contains only the current scope identifiers.
+returned cookie to GET `/platform/session`. There is no login page. The experimental
+shell route is not a completed UI profile. The session response contains only the current scope identifiers.
 
 Stop the foreground task, or identify the exact RetainedUiServer PID and send
 SIGTERM to that process only. Keep the owned database container alive for Tomcat

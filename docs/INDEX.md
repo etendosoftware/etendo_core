@@ -1,5 +1,7 @@
 # Documentation
 
+- [platform-resume.md](platform-resume.md): parked ET-27 checkpoint, pending validation and safe continuation steps.
+
 - [platform-impact-analysis.md](platform-impact-analysis.md): bounded Java impact
   analysis of the original UI login validation composition.
 

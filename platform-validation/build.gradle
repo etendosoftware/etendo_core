@@ -662,6 +662,10 @@ tasks.register('erpUiWar', Zip) {
     from(project(':platform-core').tasks.named('jar')) { into 'WEB-INF/lib' }
     from(tasks.named('sharedUiJar')) { into 'WEB-INF/lib' }
     from(tasks.named('erpUiContributionJar')) { into 'WEB-INF/lib' }
+    from('../modules_core/org.openbravo.client.application/web') {
+        include '**/js/main/ob-layout.js'
+        into 'web'
+    }
     from(provider { zipTree(file(project.property('classicWar'))) }) {
         include 'WEB-INF/quartz.properties', 'WEB-INF/classes/quartz.properties'
     }
@@ -969,6 +973,11 @@ def retainedUiClasspath = providers.provider {
 }
 tasks.register('compileRetainedUiRuntime', JavaCompile) {
     source fileTree('ui-runtime') { include '*.java' }
+    source '../modules_core/org.openbravo.client.kernel/src/org/openbravo/client/kernel/ApplicationComponent.java'
+    source '../modules_core/org.openbravo.client.kernel/src/org/openbravo/client/kernel/KernelConstants.java'
+    source '../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/PropertiesComponent.java'
+    source '../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/ApplicationConstants.java'
+    source '../modules_core/org.openbravo.userinterface.smartclient/src/org/openbravo/userinterface/smartclient/TypesComponent.java'
     classpath = files(retainedUiClasspath)
     destinationDirectory = layout.buildDirectory.dir('retained-ui-runtime')
     options.sourcepath = files()
@@ -977,15 +986,30 @@ tasks.register('compileRetainedUiRuntime', JavaCompile) {
 tasks.register('prepareOriginalUiWebResources', Sync) {
     into layout.buildDirectory.dir('original-ui-public')
     ['org.openbravo.client.kernel', 'org.openbravo.client.application',
-     'org.openbravo.userinterface.smartclient', 'org.openbravo.userinterface.selector'].each { module ->
+     'org.openbravo.userinterface.smartclient', 'org.openbravo.userinterface.selector',
+     'org.openbravo.service.datasource'].each { module ->
         from("../modules_core/${module}/web") { into 'web' }
     }
+    from('../web/js/recalculatePermissionsProcess.js') { into 'web/js' }
     exclude '**/INDEX.md', '**/*.properties', '**/*.java', '**/*.class'
+}
+tasks.register('prepareOriginalUiBootstrap', Sync) {
+    into layout.buildDirectory.dir('original-ui-bootstrap')
+    from('../modules_core/org.openbravo.client.kernel/src/org/openbravo/client/kernel/templates') {
+        include 'application-js.ftl', 'application-dynamic-js.ftl'
+    }
+    from('../config/Format.xml.template') { rename { 'Format.xml' } }
+    from('../modules_core/org.openbravo.userinterface.smartclient/src/org/openbravo/userinterface/smartclient/templates') {
+        include 'smartclient_types_js.ftl'
+    }
+    from('../modules_core/org.openbravo.client.application/src/org/openbravo/client/application/templates') {
+        include 'properties.js.ftl'
+    }
 }
 tasks.register('runOriginalUi', JavaExec) {
     group = 'application'
     description = 'Run original UI HTTP integration against the retained owned platform instance.'
-    dependsOn 'compileRetainedUiRuntime', 'prepareOriginalUiWebResources'
+    dependsOn 'compileRetainedUiRuntime', 'prepareOriginalUiWebResources', 'prepareOriginalUiBootstrap'
     classpath = files(tasks.named('compileRetainedUiRuntime').map { it.destinationDirectory }) + files(retainedUiClasspath)
     mainClass = 'com.etendoerp.platform.ui.RetainedUiServer'
     workingDir = projectDir

@@ -52,6 +52,7 @@ public final class UiHttpAuthenticationValidation {
     SessionFactoryController.setInstance(controller);
     var factory = controller.getSessionFactory();
     Tomcat tomcat = new Tomcat();
+    org.openbravo.database.ConnectionProviderImpl pool = null;
     try {
       // Test fixture setup is committed only in the disposable database owned by this gate.
       fixtureContext();
@@ -73,6 +74,9 @@ public final class UiHttpAuthenticationValidation {
       tomcat.getConnector().setProperty("minSpareThreads", "1");
       var context = tomcat.addContext("/platform", base.toString());
       context.setParentClassLoader(UiHttpAuthenticationValidation.class.getClassLoader());
+      pool = new org.openbravo.database.ConnectionProviderImpl(properties);
+      context.getServletContext().setAttribute("openbravoPool", pool);
+      context.addApplicationLifecycleListener(new org.openbravo.erpCommon.security.SessionListener());
       context.addParameter("LoginServlet", "/login");
       Tomcat.addServlet(context, "authentication", new ProbeServlet()).setLoadOnStartup(1);
       context.addServletMappingDecoded("/*", "authentication");
@@ -106,11 +110,29 @@ public final class UiHttpAuthenticationValidation {
           "Original failed AD_Session missing");
       require(sessions.stream().anyMatch(value -> "S".equals(value.getLoginStatus()) && value.isSessionActive()
           && authenticated.equals(value.getWebSession())), "Original successful AD_Session missing");
+      String dbSession = sessions.stream().filter(value -> authenticated.equals(value.getWebSession()))
+          .findFirst().orElseThrow().getId();
+      clearThread();
+      require(send(client, url + "/logout", "").statusCode() == 204, "Logout failed");
+      require(send(client, url + "/session", null).statusCode() == 401, "Logout retained authentication");
+      fixtureContext();
+      require(!OBDal.getInstance().get(org.openbravo.model.ad.access.Session.class, dbSession).isSessionActive(),
+          "Original listener did not persist logout");
+      clearThread();
+      require(send(client, url + "/login", "user=platform-http-validation&password=" + password).statusCode() == 204,
+          "Second login failed");
+      String finalCookie = cookies.getCookieStore().getCookies().get(0).getValue();
+      tomcat.stop();
+      fixtureContext();
+      var closed = OBDal.getInstance().createQuery(org.openbravo.model.ad.access.Session.class,
+          "webSession = :cookie").setNamedParameter("cookie", finalCookie).list();
+      require(closed.size() == 1 && !closed.get(0).isSessionActive(), "Shutdown left an active database session");
       System.out.println("PASS: Canonical HTTP authenticator persists success/failure sessions without ERP entities");
       System.out.println("PASS: Real Tomcat cookie rotation/stale-cookie denial, full login scope, CSRF and single-worker anonymous isolation");
+      System.out.println("PASS: Original system pre-authentication context and session listener logout/shutdown persistence");
     } finally {
       try { tomcat.stop(); tomcat.destroy(); }
-      finally { clearThread(); factory.close(); }
+      finally { clearThread(); factory.close(); if (pool != null) pool.destroy(); }
     }
   }
 
@@ -138,6 +160,14 @@ public final class UiHttpAuthenticationValidation {
     metadataScope.remove();
   }
 
+  private static void systemContext() {
+    OBContext.setOBContext((OBContext) null);
+    OBContext.setAdminMode();
+    metadataScope.set(true);
+    require("0".equals(OBContext.getOBContext().getUser().getId())
+        && "0".equals(OBContext.getOBContext().getRole().getId()), "Pre-authentication did not use system context");
+  }
+
   private static void clearThread() {
     try {
       if (SessionHandler.isSessionHandlerPresent()) SessionHandler.getInstance().rollback();
@@ -159,6 +189,12 @@ public final class UiHttpAuthenticationValidation {
           response.setStatus(204);
           return;
         }
+        if (request.getPathInfo().equals("/logout")) {
+          require("POST".equals(request.getMethod()), "Only POST logout is tested");
+          if (request.getSession(false) != null) request.getSession().invalidate();
+          response.setStatus(204);
+          return;
+        }
         if (request.getPathInfo().equals("/session")) {
           var session = request.getSession(false);
           if (session == null || session.getAttribute("#Authenticated_user") == null) {
@@ -174,7 +210,7 @@ public final class UiHttpAuthenticationValidation {
           return;
         }
         require("POST".equals(request.getMethod()), "Only POST login is tested");
-        fixtureContext();
+        systemContext();
         request.getSession(true);
         request.changeSessionId();
         request.getSession().removeAttribute("#Authenticated_user");
