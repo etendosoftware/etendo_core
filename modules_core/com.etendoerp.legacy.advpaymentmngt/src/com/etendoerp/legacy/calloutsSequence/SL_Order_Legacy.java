@@ -1,27 +1,22 @@
 package com.etendoerp.legacy.calloutsSequence;
 
-import org.apache.commons.lang3.StringUtils;
+import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.erpCommon.calloutsSequence.SL_Order_SequenceActionInterface;
-import java.math.BigDecimal;
+import org.openbravo.erpCommon.utility.Utility;
 import java.util.HashMap;
 
 public class SL_Order_Legacy implements SL_Order_SequenceActionInterface {
     @Override
     public String get_SL_Order_inpdocumentnoValue(SimpleCallout.CalloutInfo info, HashMap<String, Object> values) {
 
-        String currentNextSys = (String) values.get("currentNextSys");
-        String currentNext    = (String) values.get("currentNext");
+        ConnectionProvider conProv = (ConnectionProvider) values.get("conProv");
+        String strDocTypeTarget = (String) values.get("strDocTypeTarget");
 
-        String documentNo = "";
-        if (StringUtils.equalsIgnoreCase(info.vars.getRole(), "System")
-                && new BigDecimal(info.vars.getClient())
-                .compareTo(new BigDecimal("1000000.0")) < 0) {
-            documentNo = "<" + currentNextSys + ">";
-        } else {
-            documentNo = "<" + currentNext + ">";
-        }
-
+        // Preview delegates on the same path used by persistence, so prefix/suffix match.
+        String strDocumentNo = Utility.getDocumentNo(conProv, info.vars, info.getWindowId(),
+            "C_Order", strDocTypeTarget, strDocTypeTarget, false, false);
+        String documentNo = "<" + strDocumentNo + ">";
         info.addResult("inpdocumentno", documentNo);
         return documentNo;
     }

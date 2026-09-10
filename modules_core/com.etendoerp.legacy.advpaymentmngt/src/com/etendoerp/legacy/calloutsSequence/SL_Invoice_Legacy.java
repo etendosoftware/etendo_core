@@ -17,8 +17,6 @@ public class SL_Invoice_Legacy implements SL_Invoice_SequenceActionInterface {
         ConnectionProvider conProv     = (ConnectionProvider) values.get("conProv");
         String strDocTypeTarget        = (String) values.get("strDocTypeTarget");
         String strCInvoiceId           = (String) values.get("strCInvoiceId");
-        String isdocnocontrolled       = (String) values.get("isdocnocontrolled");
-        String currentnext             = (String) values.get("currentnext");
 
         String strDoctypetargetinvoice = SEInOutDocTypeData.selectDoctypetargetinvoice(conProv, strCInvoiceId);
         String documentNo = "";
@@ -27,9 +25,9 @@ public class SL_Invoice_Legacy implements SL_Invoice_SequenceActionInterface {
         // check if doc type target is different, in this case assign new
         // documentno otherwise maintain the previous one
         if (StringUtils.isEmpty(strDoctypetargetinvoice) || !StringUtils.equals(strDoctypetargetinvoice, strDocTypeTarget)) {
-            String strDocumentNo = StringUtils.equals(isdocnocontrolled, "Y")
-                                ? currentnext
-                                : Utility.getDocumentNo(conProv, info.vars.getClient(), "C_Invoice", false);
+            // Preview delegates on the same path used by persistence, so prefix/suffix match.
+            String strDocumentNo = Utility.getDocumentNo(conProv, info.vars, info.getWindowId(),
+                "C_Invoice", strDocTypeTarget, strDocTypeTarget, false, false);
             documentNo = "<" + strDocumentNo + ">";
         } else if (StringUtils.isNotEmpty(strDoctypetargetinvoice)
             && StringUtils.equals(strDoctypetargetinvoice, strDocTypeTarget)) {
