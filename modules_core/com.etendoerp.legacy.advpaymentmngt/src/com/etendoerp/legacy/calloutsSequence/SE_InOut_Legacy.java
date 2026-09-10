@@ -1,5 +1,6 @@
 package com.etendoerp.legacy.calloutsSequence;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.erpCommon.calloutsSequence.SE_InOut_SequenceActionInterface;
@@ -13,10 +14,20 @@ public class SE_InOut_Legacy implements SE_InOut_SequenceActionInterface {
 
         ConnectionProvider conProv = (ConnectionProvider) values.get("conProv");
         String strDocType = (String) values.get("strDocType");
+        String currentNext = (String) values.get("currentNext");
 
-        // Preview delegates on the same path used by persistence, so prefix/suffix match.
-        String strDocumentNo = Utility.getDocumentNo(conProv, info.vars, info.getWindowId(),
-            "M_InOut", strDocType, strDocType, false, false);
+        String strDocumentNo = null;
+        try {
+            // Preview delegates on the same path used by persistence, so prefix/suffix match.
+            strDocumentNo = Utility.getDocumentNo(conProv, info.vars, info.getWindowId(),
+                "M_InOut", strDocType, strDocType, false, false);
+        } catch (Exception e) {
+            strDocumentNo = null;
+        }
+        if (StringUtils.isBlank(strDocumentNo)) {
+            // Fallback to the previous behavior if the prefixed lookup fails or returns nothing.
+            strDocumentNo = currentNext;
+        }
         String documentNo = "<" + strDocumentNo + ">";
         info.addResult("inpdocumentno", documentNo);
         return documentNo;
