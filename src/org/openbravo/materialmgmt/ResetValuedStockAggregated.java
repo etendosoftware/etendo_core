@@ -22,6 +22,7 @@ package org.openbravo.materialmgmt;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,38 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
 
   private static final Logger log4j = LogManager.getLogger();
 
+  /** Message shown when the Legal Entity has no closed Period pending to be aggregated */
+  public static final String NO_CLOSED_PERIODS_MSG = "ValuedStockNoClosedPeriods";
+
+  private static final String SEVERITY = "severity";
+  private static final String MESSAGE = "message";
+  private static final String ORG_ID = "orgId";
+
+  /*
+   * Periods are not necessarily owned by the Legal Entity: when the Calendar is created by the
+   * Initial Client Setup wizard its Periods belong to the '0' Organization. The Period Control
+   * table is the one scoped per Organization, so it is the one used to tell which Periods belong
+   * to the Organization the data is being aggregated for.
+   */
+  //@formatter:off
+  private static final String PERIOD_BELONGS_TO_ORGANIZATION =
+                "exists (select 1" +
+                "          from FinancialMgmtPeriodControl pc" +
+                "         where pc.period.id = p.id" +
+                "           and pc.organization.id = :orgId)";
+
+  private static final String PERIOD_STATUS_FOR_ORGANIZATION =
+                "(select case" +
+                "   when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'O') then 'O'" +
+                "   when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'C') then 'C'" +
+                "   when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'P') then 'P'" +
+                "   when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'N') then 'N'" +
+                "     else 'M' end" +
+                "   from FinancialMgmtPeriodControl pc" +
+                "  where pc.period = p" +
+                "    and pc.organization.id = :orgId)";
+  //@formatter:on
+
   /*
    * Resets the values of the Aggregated Table for the selected Legal Entity
    */
@@ -81,6 +114,14 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
       final List<Period> periodList = getClosedPeriodsToAggregate(new Date(),
           legalEntity.getClient().getId(), legalEntity.getId());
 
+      if (periodList.isEmpty()) {
+        // Reporting an unconditional success here hides a configuration problem from the user
+        msg.put(SEVERITY, "warning");
+        msg.put("text", OBMessageUtils.messageBD(NO_CLOSED_PERIODS_MSG));
+        result.put(MESSAGE, msg);
+        return result;
+      }
+
       final DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
       Date startingDate = formatter.parse("01-01-0000");
       final int totalNumberOfPeriods = periodList.size();
@@ -106,9 +147,9 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
       final long elapsedTime = (System.currentTimeMillis() - start);
       log4j.debug("[ResetValuedStockAggregated] Time to process all periods: " + elapsedTime);
 
-      msg.put("severity", "success");
+      msg.put(SEVERITY, "success");
       msg.put("text", OBMessageUtils.messageBD("Success"));
-      result.put("message", msg);
+      result.put(MESSAGE, msg);
       return result;
 
     } catch (final Exception e) {
@@ -116,9 +157,9 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
       log4j.error("Error in doExecute() method of ResetValuedStockAggregated class", e);
       try {
         final JSONObject msg = new JSONObject();
-        msg.put("severity", "error");
+        msg.put(SEVERITY, "error");
         msg.put("text", OBMessageUtils.messageBD("ErrorAggregatingData"));
-        result.put("message", msg);
+        result.put(MESSAGE, msg);
       } catch (final JSONException e1) {
         log4j.error("Error in doExecute() method of ResetValuedStockAggregated class", e1);
       }
@@ -246,7 +287,7 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
 
     final OBQuery<CostingRule> query = OBDal.getInstance()
         .createQuery(CostingRule.class, hqlWhere)
-        .setNamedParameter("orgId", legalEntity.getId())
+        .setNamedParameter(ORG_ID, legalEntity.getId())
         .setNamedParameter("startingDate", startingDate)
         .setNamedParameter("endingDate", endingDate);
 
@@ -273,7 +314,7 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
 
     final OBQuery<CostingRule> query = OBDal.getInstance()
         .createQuery(CostingRule.class, hqlWhere)
-        .setNamedParameter("orgId", legalEntity.getId())
+        .setNamedParameter(ORG_ID, legalEntity.getId())
         .setNamedParameter("endingDate", period.getEndingDate())
         .setNamedParameter("startingDate", period.getStartingDate());
 
@@ -286,18 +327,28 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
   public static List<Period> getClosedPeriodsToAggregate(final Date endDate, final String clientId,
       final String organizationID) {
 
+    final OrganizationStructureProvider osp = OBContext.getOBContext()
+        .getOrganizationStructureProvider(clientId);
     final Organization org = OBDal.getInstance().get(Organization.class, organizationID);
-    final Organization legalEntity = OBContext.getOBContext()
-        .getOrganizationStructureProvider(clientId)
-        .getLegalEntity(org);
+    final Organization legalEntity = osp.getLegalEntity(org);
 
-    final Date firstNotClosedPeriodStartingDate = getStartingDateFirstNotClosedPeriod(legalEntity);
+    final Organization periodControlOrg = osp.getPeriodControlAllowedOrganization(legalEntity);
+    if (periodControlOrg == null) {
+      // No Organization controls the Periods of this Legal Entity, so none of them can be closed
+      log4j.debug(
+          "[ResetValuedStockAggregated] No period control allowed organization found for Legal Entity: "
+              + legalEntity.getId());
+      return Collections.emptyList();
+    }
+
+    final Date firstNotClosedPeriodStartingDate = getStartingDateFirstNotClosedPeriod(
+        periodControlOrg);
     final Date lastAggregatedPeriodDateTo = getLastDateToFromAggregatedTable(legalEntity);
 
     //@formatter:off
     final String hqlWhere =
                   "as p" +
-                  " where p.organization.id in (:orgId)" +
+                  " where " + PERIOD_BELONGS_TO_ORGANIZATION +
                   "   and p.periodType = 'S'" +
                   "   and p.endingDate <= :endDate" +
                   "   and p.endingDate <= :firstNotClosedPeriodStartingDate" +
@@ -307,7 +358,7 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
 
     final OBQuery<Period> query = OBDal.getInstance()
         .createQuery(Period.class, hqlWhere)
-        .setNamedParameter("orgId", legalEntity.getId())
+        .setNamedParameter(ORG_ID, periodControlOrg.getId())
         .setNamedParameter("endDate", endDate)
         .setNamedParameter("firstNotClosedPeriodStartingDate", firstNotClosedPeriodStartingDate)
         .setNamedParameter("lastAggregatedPeriodDateTo", lastAggregatedPeriodDateTo);
@@ -339,9 +390,10 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
   }
 
   /*
-   * Get the starting date of the first Period that is not closed for this Legal Entity
+   * Get the starting date of the first Period that is not closed for the Organization that
+   * controls the Periods of this Legal Entity
    */
-  private static Date getStartingDateFirstNotClosedPeriod(final Organization legalEntity) {
+  private static Date getStartingDateFirstNotClosedPeriod(final Organization periodControlOrg) {
     Date startingDate = null;
 
     //@formatter:off
@@ -351,41 +403,22 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
             " where p.periodType = 'S'" +
             "   and" +
             "     (" +
-            "       'C' <> " +
-            "         (" +
-            "           select case" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'O') then 'O'" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'C') then 'C'" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'P') then 'P'" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'N') then 'N'" +
-            "               else 'M' end" +
-            "             from FinancialMgmtPeriodControl pc" +
-            "            where pc.period = p" +
-            "         )" +
-            "       and 'P' <> " +
-            "         (" +
-            "           select case" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'O') then 'O'" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'C') then 'C'" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'P') then 'P'" +
-            "             when (max(pc.periodStatus) = min(pc.periodStatus) and min(pc.periodStatus) = 'N') then 'N'" +
-            "               else 'M' end" +
-            "             from FinancialMgmtPeriodControl pc" +
-            "            where pc.period = p" +
-            "         )" +
+            "       'C' <> " + PERIOD_STATUS_FOR_ORGANIZATION +
+            "       and 'P' <> " + PERIOD_STATUS_FOR_ORGANIZATION +
             "     )" +
-            "   and p.organization.id in (:orgId)";
+            "   and " + PERIOD_BELONGS_TO_ORGANIZATION;
     //@formatter:on
 
     final Query<Date> trxQry = OBDal.getInstance()
         .getSession()
         .createQuery(hqlSelect, Date.class)
-        .setParameter("orgId", legalEntity.getId())
+        .setParameter(ORG_ID, periodControlOrg.getId())
         .setMaxResults(1);
 
     try {
       final List<Date> objetctList = trxQry.list();
-      if (!objetctList.isEmpty()) {
+      // An aggregate select always returns one row, holding null when no Period matches
+      if (!objetctList.isEmpty() && objetctList.get(0) != null) {
         startingDate = objetctList.get(0);
       } else {
         final DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
