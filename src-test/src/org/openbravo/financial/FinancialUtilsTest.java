@@ -30,8 +30,16 @@ import org.openbravo.test.base.TestConstants.Orgs;
  * <p>
  * The {@code getConversionRate} tests exercise the behaviour where the method considers BOTH the
  * client's own conversion rates AND the shared system ({@code '0'}) rates, with a client-specific
- * rate winning over the system rate for the same organization, currencies and date. The recursive
- * parent-organization fallback is preserved.
+ * rate winning over the system rate for the same organization, currencies and date.
+ * <p>
+ * {@link ConversionRate} (entity {@code CurrencyConversionRate}, table {@code C_Conversion_Rate})
+ * has {@code AccessLevel = 6} (System/Client): every row's organization MUST be the System
+ * organization ({@code '0'}) regardless of which client owns it — the classic UI enforces the same
+ * rule and never lets the organization field be edited. Rates are queried by a real, per-document
+ * organization though, so {@link FinancialUtils#getConversionRate} climbs the organization tree
+ * (parent by parent) until it reaches {@code '0'}, where the System-level rows actually live. That
+ * climb is exercised indirectly by every test below, since the rate rows are always created at the
+ * System organization while the query is always performed from a real business organization.
  * <p>
  * The conversion rate rows are created inside the current transaction (save + flush, NO commit) and
  * a rollback is forced at teardown via {@link SessionHandler#setDoRollback(boolean)}. This keeps the
@@ -47,6 +55,13 @@ public class FinancialUtilsTest extends WeldBaseTest {
 
   /** System / shared client id. */
   private static final String STAR_CLIENT_ID = "0";
+
+  /**
+   * System organization id ({@code '*'}). {@link ConversionRate} has {@code AccessLevel = 6}
+   * (System/Client), so every row's organization must be this one — the classic UI never lets it
+   * be changed either.
+   */
+  private static final String SYSTEM_ORG_ID = "0";
 
   /** Euro currency id (see {@code OBBaseTest.EURO_ID}). */
   private static final String EURO_CURRENCY_ID = "102";
@@ -65,8 +80,8 @@ public class FinancialUtilsTest extends WeldBaseTest {
   private Currency euro;
   private Currency dollar;
   private Currency pound;
-  private Organization espOrg;
   private Organization espNorteOrg;
+  private Organization systemOrg;
 
   @Test
   public void testGetProductPriceWithNullProduct() {
@@ -101,9 +116,11 @@ public class FinancialUtilsTest extends WeldBaseTest {
     euro = OBDal.getInstance().get(Currency.class, EURO_CURRENCY_ID);
     dollar = OBDal.getInstance().get(Currency.class, DOLLAR_CURRENCY_ID);
     pound = OBDal.getInstance().get(Currency.class, POUND_CURRENCY_ID);
-    // F&B España, S.A. (parent) and F&B España - Región Norte (child of ESP).
-    espOrg = OBDal.getInstance().get(Organization.class, Orgs.ESP);
+    // F&B España - Región Norte: a real business org, several levels below the System org.
+    // Rates are always created at the System org (see SYSTEM_ORG_ID); querying from here forces
+    // FinancialUtils.getConversionRate to climb the organization tree to find them.
     espNorteOrg = OBDal.getInstance().get(Organization.class, Orgs.ESP_NORTE);
+    systemOrg = OBDal.getInstance().get(Organization.class, SYSTEM_ORG_ID);
   }
 
   /**
@@ -112,17 +129,20 @@ public class FinancialUtilsTest extends WeldBaseTest {
    */
   @Test
   public void clientSpecificRateWinsOverSystemRate() {
-    // Unique far-future validity window to avoid collisions with seed data.
+    // Unique far-future validity window to avoid collisions with seed data. Uses dollar/pound
+    // (not euro/dollar): seed data has a perpetual (validTo 9999-12-31) EUR<->USD rate for every
+    // real client at the System org, which would otherwise collide here now that rows are
+    // created at the System org (see class javadoc). Pound has no seed conversion rate at all.
     Date validFrom = date(2099, 1, 1);
     Date validTo = date(2099, 1, 31);
     Date queryDate = date(2099, 1, 15);
 
     BigDecimal clientRate = new BigDecimal("2.0000000");
     BigDecimal systemRate = new BigDecimal("3.0000000");
-    createRate(testClient, espNorteOrg, euro, dollar, clientRate, validFrom, validTo);
-    createRate(starClient, espNorteOrg, euro, dollar, systemRate, validFrom, validTo);
+    createRate(testClient, systemOrg, dollar, pound, clientRate, validFrom, validTo);
+    createRate(starClient, systemOrg, dollar, pound, systemRate, validFrom, validTo);
 
-    ConversionRate result = FinancialUtils.getConversionRate(queryDate, euro, dollar, espNorteOrg,
+    ConversionRate result = FinancialUtils.getConversionRate(queryDate, dollar, pound, espNorteOrg,
         testClient);
 
     assertNotNull("A conversion rate should be found", result);
@@ -141,10 +161,13 @@ public class FinancialUtilsTest extends WeldBaseTest {
     Date validTo = date(2099, 2, 28);
     Date queryDate = date(2099, 2, 15);
 
+    // pound/dollar, not dollar/euro: testClient already has a perpetual seeded EUR<->USD rate at
+    // the System org (see clientSpecificRateWinsOverSystemRate), which would be found instead of
+    // the fallback row created here.
     BigDecimal systemRate = new BigDecimal("5.0000000");
-    createRate(starClient, espNorteOrg, dollar, euro, systemRate, validFrom, validTo);
+    createRate(starClient, systemOrg, pound, dollar, systemRate, validFrom, validTo);
 
-    ConversionRate result = FinancialUtils.getConversionRate(queryDate, dollar, euro, espNorteOrg,
+    ConversionRate result = FinancialUtils.getConversionRate(queryDate, pound, dollar, espNorteOrg,
         testClient);
 
     assertNotNull("The system ('0') conversion rate should be found as fallback", result);
@@ -165,7 +188,7 @@ public class FinancialUtilsTest extends WeldBaseTest {
     Date queryDate = date(2099, 3, 15);
 
     BigDecimal clientRate = new BigDecimal("7.0000000");
-    createRate(testClient, espNorteOrg, euro, pound, clientRate, validFrom, validTo);
+    createRate(testClient, systemOrg, euro, pound, clientRate, validFrom, validTo);
 
     ConversionRate result = FinancialUtils.getConversionRate(queryDate, euro, pound, espNorteOrg,
         testClient);
@@ -175,30 +198,6 @@ public class FinancialUtilsTest extends WeldBaseTest {
         result.getClient().getId());
     assertEquals(WRONG_MULTIPLY_RATE, 0,
         result.getMultipleRateBy().compareTo(clientRate));
-  }
-
-  /**
-   * Parent-organization recursion: when the rate is defined on a parent organization and the query
-   * is performed with a child organization, the rate must still be found.
-   */
-  @Test
-  public void findsRateOnParentOrganization() {
-    Date validFrom = date(2099, 4, 1);
-    Date validTo = date(2099, 4, 30);
-    Date queryDate = date(2099, 4, 15);
-
-    BigDecimal parentRate = new BigDecimal("11.0000000");
-    // Rate defined on the parent org (ESP); query performed with the child org (ESP_NORTE).
-    createRate(testClient, espOrg, pound, euro, parentRate, validFrom, validTo);
-
-    ConversionRate result = FinancialUtils.getConversionRate(queryDate, pound, euro, espNorteOrg,
-        testClient);
-
-    assertNotNull("The rate defined on the parent organization should be found", result);
-    assertEquals("The returned rate must be the parent-organization one", Orgs.ESP,
-        result.getOrganization().getId());
-    assertEquals(WRONG_MULTIPLY_RATE, 0,
-        result.getMultipleRateBy().compareTo(parentRate));
   }
 
   /**
