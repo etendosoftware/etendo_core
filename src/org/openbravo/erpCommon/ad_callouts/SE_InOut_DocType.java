@@ -63,6 +63,8 @@ public class SE_InOut_DocType extends SimpleCallout {
       if (StringUtils.equals(data[0].isdocnocontrolled, "Y")) {
         HashMap<String, Object> values = new HashMap<>();
         values.put("currentNext", data[0].currentnext);
+        values.put("conProv", this);
+        values.put("strDocType", strDocType);
         if (field != null) {
           if (!field.getColumn().getReference().getId().equalsIgnoreCase(TRXID)) {
             var inOutSequenceAction = CalloutSequence.getInstance().getSE_InOut_SequenceAction().get();

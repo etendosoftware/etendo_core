@@ -114,6 +114,8 @@ public class SL_Order_DocType extends SimpleCallout {
                         HashMap<String, Object> values = new HashMap<>();
                         values.put("currentNextSys", dataNew[0].currentnextsys);
                         values.put("currentNext", dataNew[0].currentnext);
+                        values.put("conProv", this);
+                        values.put("strDocTypeTarget", strDocTypeTarget);
 
                         if (field != null && !field.getColumn().getReference().getId().equalsIgnoreCase(TRXID)) {
                             var orderSequenceAction = CalloutSequence.getInstance()
