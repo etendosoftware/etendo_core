@@ -209,9 +209,9 @@
       <foreign-key foreignTable="C_CURRENCY" name="AD_CLIENT_C_CURRENCY">
         <reference local="C_CURRENCY_ID" foreign="C_CURRENCY_ID"/>
       </foreign-key>
-      <unique name="AD_CLIENT_NAME">
-        <unique-column name="NAME"/>
-      </unique>
+      <index name="AD_CLIENT_NAME" unique="true">
+        <index-column name="NAME"/>
+      </index>
       <check name="AD_CLIENT_BP_BD_CHCK"><![CDATA[BPARTNER_ACCTDIM_BREAKDOWN IN ('Y', 'N')]]></check>
       <check name="AD_CLIENT_BP_DIM_CHCK"><![CDATA[BPARTNER_ACCTDIM_ISENABLE IN ('Y', 'N')]]></check>
       <check name="AD_CLIENT_BP_H_CHCK"><![CDATA[BPARTNER_ACCTDIM_HEADER IN ('Y', 'N')]]></check>
