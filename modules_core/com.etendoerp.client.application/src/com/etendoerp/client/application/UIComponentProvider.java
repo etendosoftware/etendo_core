@@ -22,7 +22,8 @@ public class UIComponentProvider extends BaseComponentProvider {
   /** JavaScript files required for UI navigation. */
   protected static final String[] JS_FILES = new String[]{
       "direct-tab-link.js",
-      "sales-order-tab-link.js"
+      "sales-order-tab-link.js",
+      "webmcp-navigation.js"
   };
 
   /**
