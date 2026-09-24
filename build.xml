@@ -227,6 +227,9 @@ export.database: exports database structure and data to xml files.
       <equals arg1="${os.arch}" arg2="amd64" />
       <equals arg1="${os.arch}" arg2="x86_64" />
       <equals arg1="${os.arch}" arg2="ia64" />
+      <!-- 64-bit ARM (Apple Silicon, ARM Linux): without these, javac gets 512M and a full compile runs out of heap -->
+      <equals arg1="${os.arch}" arg2="aarch64" />
+      <equals arg1="${os.arch}" arg2="arm64" />
     </or>
   </condition>
 
