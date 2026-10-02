@@ -177,6 +177,8 @@ public class ResetValuedStockAggregatedTest {
     orgIds.add(TEST_ORG_ID);
     when(mockOSP.getNaturalTree(anyString())).thenReturn(orgIds);
     when(mockOSP.getLegalEntity(any(Organization.class))).thenReturn(mockLegalEntity);
+    when(mockOSP.getPeriodControlAllowedOrganization(any(Organization.class))).thenReturn(
+        mockLegalEntity);
 
     // Configure mock utility
     mockedUtility.when(() -> Utility.getInStrSet(any())).thenReturn("('testOrgId')");
