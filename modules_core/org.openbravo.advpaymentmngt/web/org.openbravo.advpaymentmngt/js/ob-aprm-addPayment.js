@@ -442,7 +442,6 @@ OB.APRM.AddPayment.transactionTypeOnChangeFunction = function(
 };
 
 OB.APRM.AddPayment.actualPaymentOnChange = function(item, view, form, grid) {
-  form._mcActualTouched = true;
   var issotrx = form.getItem('issotrx').getValue();
   if (issotrx) {
     OB.APRM.AddPayment.distributeAmount(view, form, true);
@@ -1065,7 +1064,9 @@ OB.APRM.AddPayment.updateActualExpected = function(form) {
   } else if (form._mcPendingSyncMC && OB.APRM.AddPayment.isMultiCurrency(form)) {
     var expNow = Number(form.getItem('expected_payment').getValue() || 0);
     var actNow = Number(form.getItem('actual_payment').getValue() || 0);
-    if (expNow > 0 && (actNow === 0 || !form._mcActualTouched)) {
+    // only inherit the expected payment when no amount was entered at all: an
+    // amount already set in the document header must not be overwritten
+    if (expNow > 0 && actNow === 0) {
       form._mcPendingSyncMC = false;
       form._mcSyncInProgress = true;
       OB.APRM.AddPayment.syncActualWithExpectedIfMC(form);
@@ -1145,7 +1146,6 @@ OB.APRM.AddPayment.syncActualWithExpectedIfMC = function(form) {
   form._mcAutoSync = true;
   form.getItem('actual_payment').setValue(expected);
   form._mcAutoSync = false;
-  form._mcActualTouched = false;
   if (form.getItem('issotrx').getValue()) {
     OB.APRM.AddPayment.distributeAmount(null, form, true);
   }

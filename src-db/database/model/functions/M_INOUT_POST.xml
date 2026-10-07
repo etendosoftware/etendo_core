@@ -950,7 +950,9 @@
              IF (v_IsReversedDoc = 'N') THEN
                -- Normal Scenario
                UPDATE C_Order o
-               SET IsDelivered = 'Y'
+               SET IsDelivered = 'Y',
+                   Updated = now(),
+                   UpdatedBy = v_User
                WHERE o.c_order_id = Cur_Order.c_order_id 
                AND o.IsDelivered = 'N'
                AND o.processed = 'Y'                
@@ -963,7 +965,9 @@
              ELSIF (v_IsReversedDoc = 'Y') THEN
                -- Void Scenario
                UPDATE C_Order o
-               SET IsDelivered = 'N'
+               SET IsDelivered = 'N',
+                   Updated = now(),
+                   UpdatedBy = v_User
                WHERE o.c_order_id = Cur_Order.c_order_id
                AND o.IsDelivered = 'Y'
                AND EXISTS (SELECT 1
@@ -1051,9 +1055,9 @@
                 Ad_Sequence_Next('M_MatchInv', Cur_ILines.AD_Org_ID, v_MatchInv_ID) ;
                 -- The min qty. Modified by Ismael Ciordia
                 v_Qty:=Cur_ILines.MovementQty;
-                --IF (ABS(Cur_ILines.MovementQty) > ABS(Cur_ILines.QtyInvoiced)) THEN
-                -- v_Qty := Cur_ILines.QtyInvoiced;
-                --END IF;
+                IF (ABS(Cur_ILines.MovementQty) > ABS(Cur_ILines.QTYINVOICED)) THEN
+                  v_Qty := Cur_ILines.QTYINVOICED;
+                END IF;
                 v_ResultStr:='InsertMatchPO ' || v_MatchPO_ID;
                 INSERT
                 INTO M_MATCHINV

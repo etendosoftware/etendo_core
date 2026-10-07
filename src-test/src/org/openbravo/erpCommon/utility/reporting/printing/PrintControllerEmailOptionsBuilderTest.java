@@ -74,6 +74,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
   private static final String METHOD_RESOLVE_CONTACT = "resolvePreselectedContact";
   private static final String PARAM_CLOSED = "closed";
   private static final String FIELD_CONTEXT = "context";
+  private static final String FIELD_REQUEST = "request";
+  private static final String FIELD_VARS = "vars";
 
   // -------------------------------------------------------------------------
   // instantiation smoke test
@@ -497,7 +499,7 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
     PrintControllerEmailOptionsBuilder b =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
     setBuilderField(b, "controller", ctrl);
-    setBuilderField(b, "vars", vars);
+    setBuilderField(b, FIELD_VARS, vars);
     setBuilderField(b, FIELD_CONTEXT, buildContext(reports));
     return b;
   }
@@ -535,8 +537,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
     PrintControllerEmailOptionsBuilder builder =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
-    setBuilderField(builder, "vars", vars);
-    setBuilderField(builder, "request", request);
+    setBuilderField(builder, FIELD_VARS, vars);
+    setBuilderField(builder, FIELD_REQUEST, request);
     setBuilderField(builder, FIELD_CONTEXT, buildContext(Collections.emptyMap()));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
@@ -562,8 +564,8 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
     PrintControllerEmailOptionsBuilder builder =
         new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
-    setBuilderField(builder, "vars", vars);
-    setBuilderField(builder, "request", request);
+    setBuilderField(builder, FIELD_VARS, vars);
+    setBuilderField(builder, FIELD_REQUEST, request);
     setBuilderField(builder, FIELD_CONTEXT, buildContext(Collections.emptyMap()));
 
     Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
@@ -573,6 +575,70 @@ public class PrintControllerEmailOptionsBuilderTest { //NOSONAR
 
     verify(xmlDoc).setParameter(PARAM_CLOSED, "yes");
     verify(session).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  // -------------------------------------------------------------------------
+  // discardAttachmentsOnFreshOpen (private) via reflection
+  // -------------------------------------------------------------------------
+
+  /**
+   * A fresh open of the popup drops any attachment list left in the session. Closing the popup
+   * sends no request to the server, so attachments uploaded for one record would otherwise still
+   * be listed when the popup is reopened, for that record or for any other one.
+   * @throws Exception if reflection fails
+   */
+  @Test
+  public void testDiscardAttachmentsOnFreshOpen_defaultCommand_removesSessionAttachments()
+      throws Exception {
+    HttpSession session = invokeDiscardAttachmentsOnFreshOpen(false);
+
+    verify(session).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  /**
+   * The ADD postback is not a fresh open: the attachment just uploaded, and every attachment
+   * uploaded before it in the same popup, must survive the re-render.
+   * @throws Exception if reflection fails
+   */
+  @Test
+  public void testDiscardAttachmentsOnFreshOpen_addCommand_keepsSessionAttachments()
+      throws Exception {
+    HttpSession session = invokeDiscardAttachmentsOnFreshOpen(true);
+
+    verify(session, never()).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  /**
+   * The DEL postback is not a fresh open either: removing one attachment must leave the rest of
+   * the list in place.
+   * @throws Exception if reflection fails
+   */
+  @Test
+  public void testDiscardAttachmentsOnFreshOpen_delCommand_keepsSessionAttachments()
+      throws Exception {
+    HttpSession session = invokeDiscardAttachmentsOnFreshOpen(true);
+
+    verify(session, never()).removeAttribute(PrintController.SESSION_FILES);
+  }
+
+  private static HttpSession invokeDiscardAttachmentsOnFreshOpen(boolean isAddOrDelPostback)
+      throws Exception {
+    VariablesSecureApp vars = mock(VariablesSecureApp.class);
+    when(vars.commandIn("ADD", "DEL")).thenReturn(isAddOrDelPostback);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    HttpSession session = mock(HttpSession.class);
+    when(request.getSession()).thenReturn(session);
+
+    PrintControllerEmailOptionsBuilder builder =
+        new ObjenesisStd().newInstance(PrintControllerEmailOptionsBuilder.class);
+    setBuilderField(builder, FIELD_VARS, vars);
+    setBuilderField(builder, FIELD_REQUEST, request);
+
+    Method m = PrintControllerEmailOptionsBuilder.class.getDeclaredMethod(
+        "discardAttachmentsOnFreshOpen");
+    m.setAccessible(true);
+    m.invoke(builder);
+    return session;
   }
 
   // -------------------------------------------------------------------------

@@ -228,7 +228,7 @@ class CreateLinesFromUtil {
       //@formatter:off
       hql +=
             " group by il.id, il.salesOrderLine.id, il.movementQuantity, il.orderQuantity," +
-            "   il.operativeQuantity, il.operativeUOM.id, il.uOM.id, mi.id, mi.quantity" +
+            "   il.operativeQuantity, il.operativeUOM.id, il.uOM.id" +
             "     having (il.movementQuantity - sum(coalesce(mi.quantity,0)) <> 0)";
       //@formatter:on
     }

@@ -203,6 +203,9 @@
       enableShortcuts('popup');
       setBrowserAutoComplete(false);
 
+      reparentComboOptions(document.frmMain.inpPurchaseOrder);
+      reparentComboOptions(document.frmMain.inpInvoice);
+
       enableLocalShortcuts();
       try {
         onloadFunctions();

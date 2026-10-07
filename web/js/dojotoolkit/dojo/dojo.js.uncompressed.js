@@ -24898,6 +24898,9 @@ dojo.declare("openbravo.widget.DataGrid.Scroller", null, {
         if (window.opera){
           delta = -delta;
         }
+      } else if (event.deltaY) {
+        // modern 'wheel' event (Chrome, Firefox, Safari, Edge)
+        delta = -event.deltaY/Math.abs(event.deltaY);
       } else if (event.detail) {
         delta = -event.detail/3;
       }
@@ -24915,7 +24918,8 @@ dojo.declare("openbravo.widget.DataGrid.Scroller", null, {
       event.returnValue = false;
     });
     if (window.addEventListener){
-      this.liveGrid.domNode.addEventListener('DOMMouseScroll', handler, false);
+      this.liveGrid.domNode.addEventListener('wheel', handler, false);
+      this.liveGrid.domNode.addEventListener('DOMMouseScroll', handler, false); // kept for legacy Firefox fallback
     }else{
       dojo.connect(this.liveGrid.domNode, eventName, handler);
     }

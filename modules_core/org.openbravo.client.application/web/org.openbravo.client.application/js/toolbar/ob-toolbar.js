@@ -2119,6 +2119,9 @@ OB.ToolbarUtils.showAuditTrail = function(view) {
   var popupParams = 'Command=POPUP_HISTORY';
   popupParams += '&inpTabId=' + view.tabId;
   popupParams += '&inpTableId=' + view.standardProperties.inpTableId;
+  // send the browser timezone offset so the server formats the audit times
+  // in the user local time, the same way the grid does
+  popupParams += '&inpClientTZOffset=' + new Date().getTimezoneOffset();
 
   if (view.viewGrid.getSelectedRecord()) {
     popupParams += '&inpRecordId=' + view.viewGrid.getSelectedRecord().id;
