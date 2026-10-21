@@ -1,11 +1,15 @@
 package org.openbravo.advpaymentmngt.hqlinjections;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +23,9 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext.Usage;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.test.base.OBBaseTest;
@@ -27,6 +34,9 @@ import org.openbravo.test.base.OBBaseTest;
  * Test class for MatchStatementTransformer.
  */
 public class MatchStatementTransformerTest extends OBBaseTest {
+
+  private static final String FIN_ACCOUNT_ID = "TEST_FIN_ACCOUNT_ID";
+  private static final String FIN_ACCOUNT_REQUEST_PARAMETER = "@FIN_Financial_Account.id@";
 
   /**
    * Rule for handling expected exceptions in tests.
@@ -45,6 +55,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
 
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<TransactionsDao> mockedTransactionsDao;
+  private MockedStatic<WeldUtils> mockedWeldUtils;
   private AutoCloseable mocks;
 
   /**
@@ -64,9 +75,14 @@ public class MatchStatementTransformerTest extends OBBaseTest {
 
     mockedTransactionsDao = mockStatic(TransactionsDao.class);
 
+    // No bank statement line filter hooks by default
+    mockedWeldUtils = mockStatic(WeldUtils.class);
+    mockedWeldUtils.when(() -> WeldUtils.getInstances(BankStatementLineFilterHook.class))
+        .thenReturn(Collections.emptyList());
+
     // Mock basic behaviors
     when(obDal.get(eq(FIN_FinancialAccount.class), anyString())).thenReturn(mockFinAccount);
-    when(mockFinAccount.getId()).thenReturn("TEST_FIN_ACCOUNT_ID");
+    when(mockFinAccount.getId()).thenReturn(FIN_ACCOUNT_ID);
   }
 
   /**
@@ -83,6 +99,9 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     if (mockedTransactionsDao != null) {
       mockedTransactionsDao.close();
     }
+    if (mockedWeldUtils != null) {
+      mockedWeldUtils.close();
+    }
     if (mocks != null) {
       mocks.close();
     }
@@ -96,7 +115,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     // Given
     String hqlQuery = "SELECT e FROM Entity e WHERE @whereClause@ ORDER BY e.id";
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@FIN_Financial_Account.id@", "TEST_FIN_ACCOUNT_ID");
+    requestParameters.put(FIN_ACCOUNT_REQUEST_PARAMETER, FIN_ACCOUNT_ID);
 
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
@@ -123,5 +142,73 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     // Then
     assertTrue("Should contain empty where clause", result.contains("WHERE  order by banklineDate, lineNo"));
     assertTrue("Should not contain any parameters", queryNamedParameters.isEmpty());
+  }
+
+  /**
+   * Tests the transformHqlQuery method with a financial account and without bank statement line
+   * filter hooks.
+   */
+  @Test
+  public void testTransformHqlQueryWithFinancialAccountWithoutHooks() {
+    // Given
+    String hqlQuery = "SELECT bsl FROM FIN_BankStatementLine bsl WHERE @whereClause@ @orderby@";
+    Map<String, String> requestParameters = new HashMap<>();
+    requestParameters.put(FIN_ACCOUNT_REQUEST_PARAMETER, FIN_ACCOUNT_ID);
+    Map<String, Object> queryNamedParameters = new HashMap<>();
+
+    // When
+    String result = transformer.transformHqlQuery(hqlQuery, requestParameters, queryNamedParameters);
+
+    // Then
+    assertTrue("Should filter by financial account", result.contains("bs.account.id = :account"));
+    assertFalse("Should not add any hook condition", result.contains("discarded"));
+    assertEquals(Collections.singletonMap("account", FIN_ACCOUNT_ID), queryNamedParameters);
+  }
+
+  /**
+   * Tests the transformHqlQuery method with a financial account and a bank statement line filter
+   * hook. Verifies that the hook condition and its parameters are added to the grid query.
+   */
+  @Test
+  public void testTransformHqlQueryWithFinancialAccountAndHook() {
+    // Given
+    BankStatementLineFilterHook hook = (alias, context, namedParameters) -> {
+      if (context.getUsage() != Usage.MATCH_STATEMENT_GRID || context.getAccount() != mockFinAccount) {
+        return null;
+      }
+      namedParameters.put("test_discarded", Boolean.FALSE);
+      return alias + ".discarded = :test_discarded";
+    };
+    mockedWeldUtils.when(() -> WeldUtils.getInstances(BankStatementLineFilterHook.class))
+        .thenReturn(Collections.singletonList(hook));
+    String hqlQuery = "SELECT bsl FROM FIN_BankStatementLine bsl WHERE @whereClause@ @orderby@";
+    Map<String, String> requestParameters = new HashMap<>();
+    requestParameters.put(FIN_ACCOUNT_REQUEST_PARAMETER, FIN_ACCOUNT_ID);
+    Map<String, Object> queryNamedParameters = new HashMap<>();
+
+    // When
+    String result = transformer.transformHqlQuery(hqlQuery, requestParameters, queryNamedParameters);
+
+    // Then
+    assertTrue("Should add the hook condition",
+        result.contains(" and (bsl.discarded = :test_discarded) order by banklineDate, lineNo"));
+    assertEquals(FIN_ACCOUNT_ID, queryNamedParameters.get("account"));
+    assertEquals(Boolean.FALSE, queryNamedParameters.get("test_discarded"));
+  }
+
+  /**
+   * Tests that the bank statement line filter hooks are not evaluated when no financial account is
+   * received.
+   */
+  @Test
+  public void testTransformHqlQueryWithoutFinancialAccountDoesNotCallHooks() {
+    // Given
+    String hqlQuery = "SELECT e FROM Entity e WHERE @whereClause@ @orderby@";
+
+    // When
+    transformer.transformHqlQuery(hqlQuery, new HashMap<>(), new HashMap<>());
+
+    // Then
+    mockedWeldUtils.verify(() -> WeldUtils.getInstances(BankStatementLineFilterHook.class), never());
   }
 }

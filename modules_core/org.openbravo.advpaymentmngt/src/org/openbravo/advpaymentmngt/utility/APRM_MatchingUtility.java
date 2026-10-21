@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 
@@ -40,6 +41,8 @@ import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext.Usage;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.process.FIN_ReconciliationProcess;
 import org.openbravo.advpaymentmngt.process.FIN_TransactionProcess;
@@ -613,7 +616,16 @@ public class APRM_MatchingUtility {
   /**
    * Get the bank statement lines that are not yet matched to a transaction for the given financial
    * account. If the reconciliation passed as parameter is the last one, the method filters by the
-   * bank statement lines with transaction date less or equal than the reconciliation's ending date
+   * bank statement lines with transaction date less or equal than the reconciliation's ending date.
+   * Lines excluded by a {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook} are
+   * not returned.
+   *
+   * @param strFinancialAccountId
+   *          the id of the financial account
+   * @param strReconciliationId
+   *          the id of the reconciliation being matched
+   * @return the pending bank statement lines, sorted by transaction date, line number and business
+   *         partner name
    */
   public static ScrollableResults getPendingToBeMatchedBankStatementLines(
       String strFinancialAccountId, String strReconciliationId) {
@@ -622,6 +634,8 @@ public class APRM_MatchingUtility {
       FIN_Reconciliation reconciliation = OBDal.getInstance()
           .get(FIN_Reconciliation.class, strReconciliationId);
       boolean isLastReconciliation = MatchTransactionDao.islastreconciliation(reconciliation);
+      final Map<String, Object> parameters = new HashMap<>();
+      parameters.put("account", strFinancialAccountId);
 
       //@formatter:off
       String hql =
@@ -634,10 +648,16 @@ public class APRM_MatchingUtility {
              hql +=
               "   and  bsl.transactionDate <= :endingdate";
         //@formatter:on
+        parameters.put("endingdate", reconciliation.getEndingDate());
       }
+      hql += "   and bsl.financialAccountTransaction is null";
+      hql += BankStatementLineFilterHelper.buildHqlCondition("bsl",
+          new BankStatementLineFilterContext(
+              OBDal.getInstance().get(FIN_FinancialAccount.class, strFinancialAccountId),
+              reconciliation, Usage.AUTO_MATCH_CANDIDATES),
+          parameters);
       //@formatter:off
              hql +=
-              "   and bsl.financialAccountTransaction is null" +
               " order by bsl.transactionDate," +
               "   bsl.lineNo," +
               "   bsl.bpartnername";
@@ -645,10 +665,7 @@ public class APRM_MatchingUtility {
 
       final OBQuery<FIN_BankStatementLine> obData = OBDal.getInstance()
           .createQuery(FIN_BankStatementLine.class, hql)
-          .setNamedParameter("account", strFinancialAccountId);
-      if (!isLastReconciliation) {
-        obData.setNamedParameter("endingdate", reconciliation.getEndingDate());
-      }
+          .setNamedParameters(parameters);
       return obData.scroll(ScrollMode.FORWARD_ONLY);
     } finally {
       OBContext.restorePreviousMode();
