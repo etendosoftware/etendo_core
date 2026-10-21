@@ -50,6 +50,8 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 
 public class MatchTransactionDao {
 
+  private static final String ACCOUNT_PARAMETER = "account";
+
   public MatchTransactionDao() {
   }
 
@@ -305,7 +307,7 @@ public class MatchTransactionDao {
     Date maxDate = new Date();
     try {
       final Map<String, Object> parameters = new HashMap<>();
-      parameters.put("account", financialAccount.getId());
+      parameters.put(ACCOUNT_PARAMETER, financialAccount.getId());
       //@formatter:off
       final String hql = "as bsl"
           + " where bsl.bankStatement.account.id = :account"
@@ -459,7 +461,7 @@ public class MatchTransactionDao {
       //@formatter:on
       final Session session = OBDal.getInstance().getSession();
       final Query<BigDecimal> query = session.createQuery(hqlString, BigDecimal.class);
-      query.setParameter("account", reconciliation.getAccount().getId());
+      query.setParameter(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
       query.setParameter("date", reconciliation.getEndingDate());
       total = query.uniqueResult();
     } finally {
@@ -483,7 +485,7 @@ public class MatchTransactionDao {
     OBContext.setAdminMode(false);
     try {
       final Map<String, Object> parameters = new HashMap<>();
-      parameters.put("account", reconciliation.getAccount().getId());
+      parameters.put(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
       parameters.put("endingDate", reconciliation.getEndingDate());
       //@formatter:off
       final String hql = "as bsl"
@@ -538,7 +540,7 @@ public class MatchTransactionDao {
     OBContext.setAdminMode(true);
     try {
       final Map<String, Object> parameters = new HashMap<>();
-      parameters.put("account", reconciliation.getAccount().getId());
+      parameters.put(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
       parameters.put("endingDate", reconciliation.getEndingDate());
 
       final List<String> afterReconciliationIds = new ArrayList<>();

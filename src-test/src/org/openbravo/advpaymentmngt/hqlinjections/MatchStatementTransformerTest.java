@@ -35,6 +35,9 @@ import org.openbravo.test.base.OBBaseTest;
  */
 public class MatchStatementTransformerTest extends OBBaseTest {
 
+  private static final String FIN_ACCOUNT_ID = "TEST_FIN_ACCOUNT_ID";
+  private static final String FIN_ACCOUNT_REQUEST_PARAMETER = "@FIN_Financial_Account.id@";
+
   /**
    * Rule for handling expected exceptions in tests.
    */
@@ -79,7 +82,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
 
     // Mock basic behaviors
     when(obDal.get(eq(FIN_FinancialAccount.class), anyString())).thenReturn(mockFinAccount);
-    when(mockFinAccount.getId()).thenReturn("TEST_FIN_ACCOUNT_ID");
+    when(mockFinAccount.getId()).thenReturn(FIN_ACCOUNT_ID);
   }
 
   /**
@@ -112,7 +115,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     // Given
     String hqlQuery = "SELECT e FROM Entity e WHERE @whereClause@ ORDER BY e.id";
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@FIN_Financial_Account.id@", "TEST_FIN_ACCOUNT_ID");
+    requestParameters.put(FIN_ACCOUNT_REQUEST_PARAMETER, FIN_ACCOUNT_ID);
 
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
@@ -150,7 +153,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     // Given
     String hqlQuery = "SELECT bsl FROM FIN_BankStatementLine bsl WHERE @whereClause@ @orderby@";
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@FIN_Financial_Account.id@", "TEST_FIN_ACCOUNT_ID");
+    requestParameters.put(FIN_ACCOUNT_REQUEST_PARAMETER, FIN_ACCOUNT_ID);
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     // When
@@ -159,7 +162,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     // Then
     assertTrue("Should filter by financial account", result.contains("bs.account.id = :account"));
     assertFalse("Should not add any hook condition", result.contains("discarded"));
-    assertEquals(Collections.singletonMap("account", "TEST_FIN_ACCOUNT_ID"), queryNamedParameters);
+    assertEquals(Collections.singletonMap("account", FIN_ACCOUNT_ID), queryNamedParameters);
   }
 
   /**
@@ -180,7 +183,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
         .thenReturn(Collections.singletonList(hook));
     String hqlQuery = "SELECT bsl FROM FIN_BankStatementLine bsl WHERE @whereClause@ @orderby@";
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@FIN_Financial_Account.id@", "TEST_FIN_ACCOUNT_ID");
+    requestParameters.put(FIN_ACCOUNT_REQUEST_PARAMETER, FIN_ACCOUNT_ID);
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     // When
@@ -189,7 +192,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     // Then
     assertTrue("Should add the hook condition",
         result.contains(" and (bsl.discarded = :test_discarded) order by banklineDate, lineNo"));
-    assertEquals("TEST_FIN_ACCOUNT_ID", queryNamedParameters.get("account"));
+    assertEquals(FIN_ACCOUNT_ID, queryNamedParameters.get("account"));
     assertEquals(Boolean.FALSE, queryNamedParameters.get("test_discarded"));
   }
 

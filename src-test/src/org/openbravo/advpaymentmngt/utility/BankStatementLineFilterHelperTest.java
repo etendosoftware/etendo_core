@@ -52,6 +52,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 public class BankStatementLineFilterHelperTest {
 
   private static final String ALIAS = "bsl";
+  private static final String ACCOUNT_PARAMETER = "account";
 
   private MockedStatic<WeldUtils> mockedWeldUtils;
   private BankStatementLineFilterContext context;
@@ -120,12 +121,12 @@ public class BankStatementLineFilterHelperTest {
   public void testNoHooksReturnsEmptyCondition() {
     givenHooks();
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("account", "A");
+    parameters.put(ACCOUNT_PARAMETER, "A");
 
     String result = BankStatementLineFilterHelper.buildHqlCondition(ALIAS, context, parameters);
 
     assertEquals("", result);
-    assertEquals(Collections.singletonMap("account", "A"), parameters);
+    assertEquals(Collections.singletonMap(ACCOUNT_PARAMETER, "A"), parameters);
   }
 
   /**
@@ -175,9 +176,9 @@ public class BankStatementLineFilterHelperTest {
    */
   @Test
   public void testDuplicatedKeyWithQueryParameterIsRejected() {
-    givenHooks(hook(1, "bsl.account.id = :account", Collections.singletonMap("account", "B")));
+    givenHooks(hook(1, "bsl.account.id = :account", Collections.singletonMap(ACCOUNT_PARAMETER, "B")));
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("account", "A");
+    parameters.put(ACCOUNT_PARAMETER, "A");
 
     try {
       BankStatementLineFilterHelper.buildHqlCondition(ALIAS, context, parameters);
@@ -185,7 +186,7 @@ public class BankStatementLineFilterHelperTest {
     } catch (OBException e) {
       assertTrue(e.getMessage().contains("'account'"));
     }
-    assertEquals("A", parameters.get("account"));
+    assertEquals("A", parameters.get(ACCOUNT_PARAMETER));
   }
 
   /**
@@ -223,7 +224,7 @@ public class BankStatementLineFilterHelperTest {
     when(hook.getHqlCondition(anyString(), any(), anyMap())).thenReturn("x.flag = false");
     givenHooks(hook);
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("account", "A");
+    parameters.put(ACCOUNT_PARAMETER, "A");
 
     String result = BankStatementLineFilterHelper.buildHqlCondition("x", context, parameters);
 

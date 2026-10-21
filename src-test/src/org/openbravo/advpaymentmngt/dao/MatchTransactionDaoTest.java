@@ -59,6 +59,9 @@ public class MatchTransactionDaoTest {
 
   private static final String HOOK_CONDITION = "bsl.discarded = :test_discarded";
   private static final String HOOK_PARAMETER = "test_discarded";
+  private static final String NO_HOOK_CONDITION_MESSAGE = "Should not add any hook condition";
+  private static final String AND_OPEN = " and (";
+  private static final String ACCOUNT_PARAMETER = "account";
 
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
@@ -321,7 +324,7 @@ public class MatchTransactionDaoTest {
     assertEquals("Should return the list of unmatched bank statement lines", unmatchedLines, result);
     ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
     verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertFalse("Should not add any hook condition", hql.getValue().contains(HOOK_CONDITION));
+    assertFalse(NO_HOOK_CONDITION_MESSAGE, hql.getValue().contains(HOOK_CONDITION));
     verify(mockBankStatementLineQuery).setNamedParameters(
         Collections.singletonMap("accountId", TestConstants.FINANCIAL_ACCOUNT_ID));
     verify(mockBankStatementLineQuery).list();
@@ -343,7 +346,7 @@ public class MatchTransactionDaoTest {
     // Then
     ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
     verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue("Should add the hook condition", hql.getValue().endsWith(" and (" + HOOK_CONDITION + ")"));
+    assertTrue("Should add the hook condition", hql.getValue().endsWith(AND_OPEN + HOOK_CONDITION + ")"));
     Map<String, Object> expectedParameters = new HashMap<>();
     expectedParameters.put("accountId", TestConstants.FINANCIAL_ACCOUNT_ID);
     expectedParameters.put(HOOK_PARAMETER, Boolean.FALSE);
@@ -426,9 +429,9 @@ public class MatchTransactionDaoTest {
     verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
     assertTrue("Should sort by transaction date descending",
         hql.getValue().endsWith(" order by bsl.transactionDate desc"));
-    assertFalse("Should not add any hook condition", hql.getValue().contains(HOOK_CONDITION));
+    assertFalse(NO_HOOK_CONDITION_MESSAGE, hql.getValue().contains(HOOK_CONDITION));
     verify(mockBankStatementLineQuery).setNamedParameters(
-        Collections.singletonMap("account", TestConstants.FINANCIAL_ACCOUNT_ID));
+        Collections.singletonMap(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID));
     verify(mockBankStatementLineQuery).setMaxResult(1);
     verify(mockBankStatementLineQuery).list();
   }
@@ -468,9 +471,9 @@ public class MatchTransactionDaoTest {
     ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
     verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
     assertTrue("Should add the hook condition before the order by", hql.getValue()
-        .endsWith(" and (" + HOOK_CONDITION + ") order by bsl.transactionDate desc"));
+        .endsWith(AND_OPEN + HOOK_CONDITION + ") order by bsl.transactionDate desc"));
     Map<String, Object> expectedParameters = new HashMap<>();
-    expectedParameters.put("account", TestConstants.FINANCIAL_ACCOUNT_ID);
+    expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
     expectedParameters.put(HOOK_PARAMETER, Boolean.FALSE);
     verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
   }
@@ -497,9 +500,9 @@ public class MatchTransactionDaoTest {
     ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
     verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
     assertTrue("Should filter by ending date", hql.getValue().contains("bsl.transactionDate <= :endingDate"));
-    assertFalse("Should not add any hook condition", hql.getValue().contains(HOOK_CONDITION));
+    assertFalse(NO_HOOK_CONDITION_MESSAGE, hql.getValue().contains(HOOK_CONDITION));
     Map<String, Object> expectedParameters = new HashMap<>();
-    expectedParameters.put("account", TestConstants.FINANCIAL_ACCOUNT_ID);
+    expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
     expectedParameters.put("endingDate", endingDate);
     verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
     verify(mockBankStatementLineQuery)
@@ -526,7 +529,7 @@ public class MatchTransactionDaoTest {
     assertEquals("Should add initial balance and bank statement lines", new BigDecimal("1200.00"), result);
     ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
     verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue("Should add the hook condition", hql.getValue().endsWith(" and (" + HOOK_CONDITION + ")"));
+    assertTrue("Should add the hook condition", hql.getValue().endsWith(AND_OPEN + HOOK_CONDITION + ")"));
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Map<String, Object>> parameters = ArgumentCaptor.forClass(Map.class);
     verify(mockBankStatementLineQuery).setNamedParameters(parameters.capture());
@@ -580,7 +583,7 @@ public class MatchTransactionDaoTest {
     assertTrue("Should sort by date, description and amount", query.endsWith(
         " order by bsl.transactionDate, coalesce(bp.name, bsl.bpartnername, ''), (bsl.cramount - bsl.dramount)"));
     Map<String, Object> expectedParameters = new HashMap<>();
-    expectedParameters.put("account", TestConstants.FINANCIAL_ACCOUNT_ID);
+    expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
     expectedParameters.put("endingDate", endingDate);
     verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
     verify(mockBankStatementLineQuery).setSelectClause(

@@ -67,11 +67,11 @@ public class ReportReconciliationTest {
    * The rows returned by the DAO are converted, in the same order, to the fields of the
    * UnreconciledBankStatement subreport, and the total is the sum of their amounts.
    *
-   * @throws Exception
+   * @throws ReflectiveOperationException
    *           if the private methods can not be invoked
    */
   @Test
-  public void testLinesAreMappedAndTotalMatchesDetail() throws Exception {
+  public void testLinesAreMappedAndTotalMatchesDetail() throws ReflectiveOperationException {
     Date firstDate = new Date(1000L);
     Date secondDate = new Date(2000L);
     List<Object[]> rows = Arrays.asList(
@@ -96,11 +96,11 @@ public class ReportReconciliationTest {
   /**
    * Without un-reconciled lines the detail is empty and the total is zero.
    *
-   * @throws Exception
+   * @throws ReflectiveOperationException
    *           if the private methods can not be invoked
    */
   @Test
-  public void testNoLines() throws Exception {
+  public void testNoLines() throws ReflectiveOperationException {
     mockedDao.when(() -> MatchTransactionDao.getUnreconciledBankStatementLines(reconciliation))
         .thenReturn(Collections.emptyList());
 
@@ -114,11 +114,11 @@ public class ReportReconciliationTest {
    * Invokes the private method that returns the un-reconciled bank statement lines.
    *
    * @return the lines, as maps with the fields of the subreport
-   * @throws Exception
+   * @throws ReflectiveOperationException
    *           if the method can not be invoked
    */
   @SuppressWarnings("unchecked")
-  private List<Map<String, Object>> invokeGetLines() throws Exception {
+  private List<Map<String, Object>> invokeGetLines() throws ReflectiveOperationException {
     Method method = ReportReconciliation.class
         .getDeclaredMethod("getUnreconciledBankStatementLines", FIN_Reconciliation.class);
     method.setAccessible(true);
@@ -131,10 +131,10 @@ public class ReportReconciliationTest {
    * @param lines
    *          the lines to sum
    * @return the total amount
-   * @throws Exception
+   * @throws ReflectiveOperationException
    *           if the method can not be invoked
    */
-  private BigDecimal invokeGetTotal(List<Map<String, Object>> lines) throws Exception {
+  private BigDecimal invokeGetTotal(List<Map<String, Object>> lines) throws ReflectiveOperationException {
     Method method = ReportReconciliation.class
         .getDeclaredMethod("getUnreconciledBankStatementLinesTotal", List.class);
     method.setAccessible(true);
