@@ -81,12 +81,14 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
             BigDecimal converted = amount.multiply(conversionRate.getMultipleRateBy());
             finAccTxnAmount = converted;
             info.addResult("inpfinaccTxnAmount", finAccTxnAmount);
-          } else {
-            info.addResult("inpfinaccTxnAmount", strAmount);
+          } else if (!strAmount.isEmpty()) {
+            info.addResult("inpfinaccTxnAmount", new BigDecimal(strAmount));
           }
         } else {
           info.addResult("inpfinaccTxnConvertRate", finAccConvertRate);
-          info.addResult("inpfinaccTxnAmount", strAmount);
+          if (!strAmount.isEmpty()) {
+            info.addResult("inpfinaccTxnAmount", new BigDecimal(strAmount));
+          }
         }
       }
 
