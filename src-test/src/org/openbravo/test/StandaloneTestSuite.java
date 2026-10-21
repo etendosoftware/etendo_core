@@ -39,6 +39,7 @@ import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.ad_actionButton.CreateFromTest;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
+import org.openbravo.erpCommon.ad_callouts.SE_Payment_MultiCurrencyTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.erpReports.ReportTaxPaymentJRTest;
@@ -422,6 +423,9 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Landed Cost Type Test
     LandedCostTypeTest.class,
+
+    // Payment financial account transaction amount callout Test
+    SE_Payment_MultiCurrencyTest.class,
 
     // Audit Trail popup timezone conversion Test
     AuditTrailTimeFormatterTest.class,

@@ -42,6 +42,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 public class SE_Payment_MultiCurrency extends SimpleCallout {
 
   private static final Logger sePaymentMultiCurrencyLog4j = LogManager.getLogger();
+  private static final String FINACC_TXN_AMOUNT = "inpfinaccTxnAmount";
 
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
@@ -49,7 +50,7 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
     String lastFieldChanged = info.getLastFieldChanged();
 
     // Read input fields
-    String strFinaccTxnAmount = vars.getNumericParameter("inpfinaccTxnAmount");
+    String strFinaccTxnAmount = vars.getNumericParameter(FINACC_TXN_AMOUNT);
     String strConvertRate = vars.getNumericParameter("inpfinaccTxnConvertRate");
     String paymentDate = vars.getStringParameter("inppaymentdate");
     String strAmount = vars.getNumericParameter("inpgeneratedCredit").isEmpty() || (BigDecimal.ZERO)
@@ -80,13 +81,13 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
             BigDecimal amount = new BigDecimal(strAmount);
             BigDecimal converted = amount.multiply(conversionRate.getMultipleRateBy());
             finAccTxnAmount = converted;
-            info.addResult("inpfinaccTxnAmount", finAccTxnAmount);
+            info.addResult(FINACC_TXN_AMOUNT, finAccTxnAmount);
           } else {
-            info.addResult("inpfinaccTxnAmount", strAmount);
+            addFinaccTxnAmount(info, strAmount);
           }
         } else {
           info.addResult("inpfinaccTxnConvertRate", finAccConvertRate);
-          info.addResult("inpfinaccTxnAmount", strAmount);
+          addFinaccTxnAmount(info, strAmount);
         }
       }
 
@@ -96,9 +97,9 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
         BigDecimal convertRate = new BigDecimal(strConvertRate);
         BigDecimal amount = new BigDecimal(strAmount);
         BigDecimal converted = amount.multiply(convertRate);
-        info.addResult("inpfinaccTxnAmount", converted);
+        info.addResult(FINACC_TXN_AMOUNT, converted);
       }
-    } else if ("inpfinaccTxnAmount".equals(lastFieldChanged)) {
+    } else if (FINACC_TXN_AMOUNT.equals(lastFieldChanged)) {
       if (!strFinaccTxnAmount.isEmpty() && !strAmount.isEmpty()) {
         BigDecimal amount = new BigDecimal(strAmount);
         if (amount.compareTo(BigDecimal.ZERO) != 0) {
@@ -112,6 +113,21 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
           "SE_Payment_MultiCurrency. The following field executed the callout" + lastFieldChanged);
     }
 
+  }
+
+  /**
+   * Sets the financial account transaction amount as a BigDecimal, so the client does not parse it
+   * again with the user's number format.
+   *
+   * @param info
+   *          Callout info where the result is added
+   * @param strAmount
+   *          Amount in internal numeric format, or empty if there is no amount
+   */
+  private void addFinaccTxnAmount(CalloutInfo info, String strAmount) {
+    if (!strAmount.isEmpty()) {
+      info.addResult(FINACC_TXN_AMOUNT, new BigDecimal(strAmount));
+    }
   }
 
   /**
