@@ -15,12 +15,15 @@ import org.openbravo.advpaymentmngt.actionHandler.AddPaymentActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.AddTransactionActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.FundsTransferHookCallerTest;
+import org.openbravo.advpaymentmngt.ad_reports.ReportReconciliationTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddOrderOrInvoiceFilterExpressionHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentDefaultValuesHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentReadOnlyLogicsHandlerTest;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContextTest;
 import org.openbravo.advpaymentmngt.process.FIN_DoubtfulDebtProcessTest;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcessTest;
 import org.openbravo.advpaymentmngt.utility.APRMSQLFunctionRegisterTest;
+import org.openbravo.advpaymentmngt.utility.BankStatementLineFilterHelperTest;
 import org.openbravo.advpaymentmngt.utility.FIN_UtilityTest;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtilityTest;
 import org.openbravo.authentication.AuthenticationExceptionTest;
@@ -252,10 +255,16 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     FundsTransferActionHandlerTest.class,
     FundsTransferHookCallerTest.class,
 
+    // advpaymentmngt.ad_reports
+    ReportReconciliationTest.class,
+
     // advpaymentmngt.filterexpression
     AddOrderOrInvoiceFilterExpressionHandlerTest.class,
     AddPaymentDefaultValuesHandlerTest.class,
     AddPaymentReadOnlyLogicsHandlerTest.class,
+
+    // advpaymentmngt.hook
+    BankStatementLineFilterContextTest.class,
 
     // advpaymentmngt.process
     FIN_DoubtfulDebtProcessTest.class,
@@ -264,6 +273,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // advpaymentmngt.utility
     APRMSQLFunctionRegisterTest.class,
     APRM_MatchingUtilityTest.class,
+    BankStatementLineFilterHelperTest.class,
     FINUtilityTest.class,
     FIN_UtilityTest.class,
 
