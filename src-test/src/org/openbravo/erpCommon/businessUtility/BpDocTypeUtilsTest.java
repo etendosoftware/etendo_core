@@ -47,6 +47,8 @@ public class BpDocTypeUtilsTest {
   private static final String IDF_INVOICE = "Invoice Doc";
   private static final String IDF_SHIP = "Ship Doc";
   private static final String IDF_RECEIPT = "Receipt Doc";
+  private static final String DOC_CURRENT = "DT_CURRENT";
+  private static final String IDF_CURRENT = "Current Doc";
 
   @Mock private Session session;
   @Mock private OBDal obDal;
@@ -130,6 +132,8 @@ public class BpDocTypeUtilsTest {
 
   /**
    * Falls back to the first matching DocType (by hierarchy/name/default/id ordering) when no default exists.
+   * This is the behavior expected by automatic processes (no form value to preserve); window callouts
+   * keep the current form value instead (see testApplyOrderDocTypeKeepsCurrentWhenNoBpNorDefault).
    */
   @Test
   public void testFindDefaultDocTypeUsesFirstMatchWhenNoDefault() {
@@ -242,5 +246,87 @@ public class BpDocTypeUtilsTest {
     when(q2.uniqueResult()).thenReturn(null);
     String a = BpDocTypeUtils.applyOrderDocType(info, ORG, BP, true, "f1", "f1_R");
     assertNull(a);
+  }
+
+  /**
+   * Keeps the DocType already selected in the form when neither the BP nor the organization
+   * defines one, instead of applying the first-match fallback.
+   */
+  @Test
+  public void testApplyOrderDocTypeKeepsCurrentWhenNoBpNorDefault() {
+    when(q1.uniqueResult()).thenReturn(null);
+    when(q2.uniqueResult()).thenReturn(null);
+    when(q3.uniqueResult()).thenReturn(null);
+    when(q4.uniqueResult()).thenReturn(DOC_CURRENT);
+    when(obDal.get(DocumentType.class, DOC_CURRENT)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_CURRENT);
+    when(docType.getIdentifier()).thenReturn(IDF_CURRENT);
+    String result = BpDocTypeUtils.applyOrderDocType(info, ORG, BP, true, DOCTYPE_ID, DOCTYPE_ID_R,
+        DOC_CURRENT);
+    assertEquals(DOC_CURRENT, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_CURRENT);
+    verify(info).addResult(DOCTYPE_ID_R, IDF_CURRENT);
+    // BP (org + org 0), org default and current value check; first-match query is never run
+    verify(session, times(4)).createNativeQuery(anyString());
+  }
+
+  /**
+   * Applies the first-match fallback when the form has no DocType selected.
+   */
+  @Test
+  public void testApplyInvoiceDocTypeUsesFirstMatchWhenCurrentIsBlank() {
+    when(q1.uniqueResult()).thenReturn(null);
+    when(q2.uniqueResult()).thenReturn(DOC_FIRST);
+    when(obDal.get(DocumentType.class, DOC_FIRST)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_FIRST);
+    String result = BpDocTypeUtils.applyInvoiceDocType(info, ORG, "", false, DOCTYPE_ID,
+        DOCTYPE_ID_R, "");
+    assertEquals(DOC_FIRST, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_FIRST);
+  }
+
+  /**
+   * Applies the first-match fallback when the current DocType is not valid for the
+   * organization or flow (e.g. after changing the organization).
+   */
+  @Test
+  public void testApplyInvoiceDocTypeUsesFirstMatchWhenCurrentIsNotValidForOrg() {
+    when(q1.uniqueResult()).thenReturn(null);
+    when(q2.uniqueResult()).thenReturn(null);
+    when(q3.uniqueResult()).thenReturn(DOC_FIRST);
+    when(obDal.get(DocumentType.class, DOC_FIRST)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_FIRST);
+    String result = BpDocTypeUtils.applyInvoiceDocType(info, ORG, "", false, DOCTYPE_ID,
+        DOCTYPE_ID_R, DOC_CURRENT);
+    assertEquals(DOC_FIRST, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_FIRST);
+  }
+
+  /**
+   * The organization default still takes precedence over the current form value.
+   */
+  @Test
+  public void testApplyShipmentDocTypePrefersOrgDefaultOverCurrent() {
+    when(q1.uniqueResult()).thenReturn(DOC_DEF);
+    when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_DEF);
+    String result = BpDocTypeUtils.applyShipmentDocType(info, ORG, "", true, DOCTYPE_ID,
+        DOCTYPE_ID_R, DOC_CURRENT);
+    assertEquals(DOC_DEF, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_DEF);
+  }
+
+  /**
+   * The BP configuration still takes precedence over the current form value.
+   */
+  @Test
+  public void testApplyOrderDocTypePrefersBpOverCurrent() {
+    when(q1.uniqueResult()).thenReturn(DOC_BP);
+    when(obDal.get(DocumentType.class, DOC_BP)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_BP);
+    String result = BpDocTypeUtils.applyOrderDocType(info, ORG, BP, true, DOCTYPE_ID, DOCTYPE_ID_R,
+        DOC_CURRENT);
+    assertEquals(DOC_BP, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_BP);
   }
 }

@@ -51,6 +51,7 @@ public class SL_InOut_BPartner extends SimpleCallout {
     String strLocation = info.getStringParameter("inpcBpartnerId_LOC", IsIDFilter.instance);
     String strContact = info.getStringParameter("inpcBpartnerId_CON", IsIDFilter.instance);
     String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
+    String strDocType = info.getStringParameter("inpcDoctypeId", IsIDFilter.instance);
     String strDeliveryTerms = info.getStringParameter("inpdeliveryrule");
     String strDeliveryMethod = info.getStringParameter("inpdeliveryviarule");
     String strIsSOTrx = Utility.getContext(this, info.vars, "isSOTrx", info.getWindowId());
@@ -65,7 +66,7 @@ public class SL_InOut_BPartner extends SimpleCallout {
     }
 
     boolean isSales = StringUtils.equals("Y", strIsSOTrx);
-    BpDocTypeUtils.applyShipmentDocType(info, strOrgId, strBPartner, isSales, "inpcDoctypeId", "inpcDoctypeId_R");
+    BpDocTypeUtils.applyShipmentDocType(info, strOrgId, strBPartner, isSales, "inpcDoctypeId", "inpcDoctypeId_R", strDocType);
     
     // Business Partner Location
     FieldProvider[] tdv = null;

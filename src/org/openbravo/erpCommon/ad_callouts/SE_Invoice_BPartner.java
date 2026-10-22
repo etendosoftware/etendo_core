@@ -76,7 +76,7 @@ public class SE_Invoice_BPartner extends SimpleCallout {
     else {
       // Apply document type only when Business Partner changes, not when Payment Method changes
       String applied = BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartner, isSales,
-          "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+          "inpcDoctypetargetId", "inpcDoctypetargetId_R", strDocType);
       if (StringUtils.isNotBlank(applied)) {
         strDocType = applied;
       }

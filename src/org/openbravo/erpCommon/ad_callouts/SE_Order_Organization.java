@@ -60,10 +60,12 @@ public class SE_Order_Organization extends SimpleCallout {
                 IsIDFilter.instance);
         final String strBPartnerLocationId = info.getStringParameter(
                 "inpcBpartnerLocationId", IsIDFilter.instance);
-        
+        final String strDocTypeTarget = info.getStringParameter("inpcDoctypetargetId",
+                IsIDFilter.instance);
+
         boolean isSales = StringUtils.equals("Y", strinpissotrx);
         if (StringUtils.isNotBlank(strBPartnerId)) {
-          BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+          BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R", strDocTypeTarget);
         }
         
         info.addResult("inpiscashvat",
