@@ -329,4 +329,65 @@ public class BpDocTypeUtilsTest {
     assertEquals(DOC_BP, result);
     verify(info).addResult(DOCTYPE_ID, DOC_BP);
   }
+
+  /**
+   * The category-specific BP finders delegate to the BP resolution for their category.
+   */
+  @Test
+  public void testCategoryFindersResolveBpDocType() {
+    when(q1.uniqueResult()).thenReturn(DOC_ORG);
+    when(q2.uniqueResult()).thenReturn(DOC_INV);
+    when(q3.uniqueResult()).thenReturn(DOC_SHIP);
+    assertEquals(DOC_ORG, BpDocTypeUtils.findOrderDocTypeForBp(BP, ORG, true));
+    assertEquals(DOC_INV, BpDocTypeUtils.findInvoiceDocTypeForBp(BP, ORG, false));
+    assertEquals(DOC_SHIP, BpDocTypeUtils.findShipmentDocTypeForBp(BP, ORG, true));
+  }
+
+  /**
+   * Resolution methods return null without querying when the organization or category is missing.
+   */
+  @Test
+  public void testResolutionReturnsNullOnBlankOrgOrCategory() {
+    assertNull(BpDocTypeUtils.findDefaultDocType("", true, BpDocTypeUtils.Category.ORDER));
+    assertNull(BpDocTypeUtils.findDefaultDocType(ORG, true, null));
+    assertNull(BpDocTypeUtils.resolveDocTypeId(BP, "", true, BpDocTypeUtils.Category.ORDER));
+    assertNull(BpDocTypeUtils.resolveDocTypeId(BP, ORG, true, null));
+    assertNull(BpDocTypeUtils.resolveDocTypeIdForCallout(BP, "", true,
+        BpDocTypeUtils.Category.ORDER, DOC_CURRENT));
+    assertNull(BpDocTypeUtils.resolveDocTypeIdForCallout(BP, ORG, true, null, DOC_CURRENT));
+    verify(session, never()).createNativeQuery(anyString());
+  }
+
+  /**
+   * apply* methods return null and push nothing when the resolved DocType cannot be loaded.
+   */
+  @Test
+  public void testApplyMethodsReturnNullWhenDocTypeCannotBeLoaded() {
+    when(q1.uniqueResult()).thenReturn(DOC_DEF);
+    when(q2.uniqueResult()).thenReturn(DOC_DEF);
+    when(q3.uniqueResult()).thenReturn(DOC_DEF);
+    when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(null);
+    assertNull(BpDocTypeUtils.applyOrderDocType(info, ORG, "", true, DOCTYPE_ID, DOCTYPE_ID_R));
+    assertNull(BpDocTypeUtils.applyInvoiceDocType(info, ORG, "", true, DOCTYPE_ID, DOCTYPE_ID_R));
+    assertNull(BpDocTypeUtils.applyShipmentDocType(info, ORG, "", true, DOCTYPE_ID, DOCTYPE_ID_R));
+    verify(info, never()).addResult(anyString(), any());
+  }
+
+  /**
+   * apply* methods skip the identifier field when no "_R" field name is given.
+   */
+  @Test
+  public void testApplyMethodsSkipIdentifierWhenRefFieldIsBlank() {
+    when(q1.uniqueResult()).thenReturn(DOC_DEF);
+    when(q2.uniqueResult()).thenReturn(DOC_DEF);
+    when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_DEF);
+    assertEquals(DOC_DEF,
+        BpDocTypeUtils.applyInvoiceDocType(info, ORG, "", true, DOCTYPE_ID, null, null));
+    assertEquals(DOC_DEF,
+        BpDocTypeUtils.applyShipmentDocType(info, ORG, "", false, DOCTYPE_ID, "", null));
+    verify(info, times(2)).addResult(DOCTYPE_ID, DOC_DEF);
+    verify(info, never()).addResult(eq(DOCTYPE_ID_R), any());
+    verify(docType, never()).getIdentifier();
+  }
 }
