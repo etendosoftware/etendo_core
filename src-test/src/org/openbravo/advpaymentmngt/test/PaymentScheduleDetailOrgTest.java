@@ -76,7 +76,28 @@ public class PaymentScheduleDetailOrgTest extends WeldBaseTest {
   private VariablesSecureApp vars;
 
   /** Documents of the reported scenario. */
-  private record ReportedScenario(Order order, Invoice firstInvoice, Invoice secondInvoice) {
+  private static final class ReportedScenario {
+    private final Order order;
+    private final Invoice firstInvoice;
+    private final Invoice secondInvoice;
+
+    ReportedScenario(Order order, Invoice firstInvoice, Invoice secondInvoice) {
+      this.order = order;
+      this.firstInvoice = firstInvoice;
+      this.secondInvoice = secondInvoice;
+    }
+
+    Order order() {
+      return order;
+    }
+
+    Invoice firstInvoice() {
+      return firstInvoice;
+    }
+
+    Invoice secondInvoice() {
+      return secondInvoice;
+    }
   }
 
   @Before

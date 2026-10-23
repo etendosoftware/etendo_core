@@ -100,16 +100,104 @@ final class PaymentScheduleDetailOrgTestUtils {
   private static final AdvPaymentMngtDao DAO = new AdvPaymentMngtDao();
 
   /** Business partner and documents used for one side (sales or purchase). */
-  record DocData(boolean sales, String bpId, String bpLocationId, String priceListId,
-      String taxId, String orderDocTypeId, String invoiceDocTypeId) {
+  static final class DocData {
+    private final boolean sales;
+    private final String bpId;
+    private final String bpLocationId;
+    private final String priceListId;
+    private final String taxId;
+    private final String orderDocTypeId;
+    private final String invoiceDocTypeId;
+
+    @SuppressWarnings("java:S107")
+    DocData(boolean sales, String bpId, String bpLocationId, String priceListId, String taxId,
+        String orderDocTypeId, String invoiceDocTypeId) {
+      this.sales = sales;
+      this.bpId = bpId;
+      this.bpLocationId = bpLocationId;
+      this.priceListId = priceListId;
+      this.taxId = taxId;
+      this.orderDocTypeId = orderDocTypeId;
+      this.invoiceDocTypeId = invoiceDocTypeId;
+    }
+
+    boolean sales() {
+      return sales;
+    }
+
+    String bpId() {
+      return bpId;
+    }
+
+    String bpLocationId() {
+      return bpLocationId;
+    }
+
+    String priceListId() {
+      return priceListId;
+    }
+
+    String taxId() {
+      return taxId;
+    }
+
+    String orderDocTypeId() {
+      return orderDocTypeId;
+    }
+
+    String invoiceDocTypeId() {
+      return invoiceDocTypeId;
+    }
   }
 
   /** Order line to invoice in full, optionally at a different net unit price. */
-  record InvoiceLineData(long orderLineNo, String price) {
+  static final class InvoiceLineData {
+    private final long orderLineNo;
+    private final String price;
+
+    InvoiceLineData(long orderLineNo, String price) {
+      this.orderLineNo = orderLineNo;
+      this.price = price;
+    }
+
+    long orderLineNo() {
+      return orderLineNo;
+    }
+
+    String price() {
+      return price;
+    }
   }
 
   /** Order line to create: line number, product, ordered quantity and net unit price. */
-  private record OrderLineData(long lineNo, String productId, String qty, String price) {
+  private static final class OrderLineData {
+    private final long lineNo;
+    private final String productId;
+    private final String qty;
+    private final String price;
+
+    OrderLineData(long lineNo, String productId, String qty, String price) {
+      this.lineNo = lineNo;
+      this.productId = productId;
+      this.qty = qty;
+      this.price = price;
+    }
+
+    long lineNo() {
+      return lineNo;
+    }
+
+    String productId() {
+      return productId;
+    }
+
+    String qty() {
+      return qty;
+    }
+
+    String price() {
+      return price;
+    }
   }
 
   private PaymentScheduleDetailOrgTestUtils() {
