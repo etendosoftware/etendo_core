@@ -67,7 +67,7 @@ public class SE_Order_BPartner extends SimpleCallout {
     String docSubTypeSO = "";
 
     boolean isSales = StringUtils.equals("Y", strIsSOTrx);
-    String applied = BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartner, isSales, INPDOCTYPETARGET, "inpcDoctypetargetId_R");
+    String applied = BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartner, isSales, INPDOCTYPETARGET, "inpcDoctypetargetId_R", strDocTypeTarget);
     if (StringUtils.isNotBlank(applied)) {
       strDocTypeTarget = applied;
     }
