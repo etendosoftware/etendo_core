@@ -25,6 +25,7 @@ import org.openbravo.advpaymentmngt.actionHandler.ReceivedFromPaymentMethodActio
 import org.openbravo.advpaymentmngt.actionHandler.SalesOrderAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.actionHandler.UnMatchSelectedTransactionsActionHandlerTest;
 import org.openbravo.advpaymentmngt.ad_actionbutton.GLItemSelectorFilterExpressionTest;
+import org.openbravo.advpaymentmngt.dao.MatchTransactionDaoParityTest;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDaoTest;
 import org.openbravo.advpaymentmngt.dao.TransactionsDaoTest;
 import org.openbravo.advpaymentmngt.executionprocess.LeaveAsCreditTest;
@@ -167,6 +168,7 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     // dao
     TransactionsDaoTest.class,
     MatchTransactionDaoTest.class,
+    MatchTransactionDaoParityTest.class,
 
     // process
     RecordID2FillingTest.class,

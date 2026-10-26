@@ -53,10 +53,15 @@ import java.util.Map;
  * balance is calculated, leading to inconsistent balances.</li>
  * </ul>
  * <p>
- * <b>Known limitation:</b> the Match Statement grid applies the condition from
- * {@code MatchStatementTransformer}. The HQL datasource only uses one transformer per table, so if
- * a module replaces that transformer with a higher priority one, the condition will not be applied
- * to the grid unless the replacement also calls {@code BankStatementLineFilterHelper}.
+ * <b>Known limitations:</b>
+ * <ul>
+ * <li>The Match Statement grid applies the condition from {@code MatchStatementTransformer}. The
+ * HQL datasource only uses one transformer per table, so if a module replaces that transformer with
+ * a higher priority one, the condition will not be applied to the grid unless the replacement also
+ * calls {@code BankStatementLineFilterHelper}.</li>
+ * <li>The {@code APRM_RECONCILIATION_V} database view, used by the legacy "Reconciliations old"
+ * tab, calculates its un-reconciled lines count and amount in SQL and does not apply the hooks.</li>
+ * </ul>
  *
  * @see org.openbravo.advpaymentmngt.utility.BankStatementLineFilterHelper
  */

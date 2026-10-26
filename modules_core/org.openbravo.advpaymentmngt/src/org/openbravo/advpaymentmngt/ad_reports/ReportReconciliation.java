@@ -137,7 +137,8 @@ public class ReportReconciliation extends HttpSecureAppServlet {
     BigDecimal totalOutDeposit = amtPayDep.get(1);
     List<Map<String, Object>> unreconciledBsLines = getUnreconciledBankStatementLines(
         reconciliation);
-    BigDecimal totalUnreconciledBs = getUnreconciledBankStatementLinesTotal(unreconciledBsLines);
+    BigDecimal totalUnreconciledBs = MatchTransactionDao
+        .getUnreconciledBankStatementLinesAmount(reconciliation);
 
     // Parameters
     parameters.put("REPORT_TYPE", reportType);
@@ -255,26 +256,6 @@ public class ReportReconciliation extends HttpSecureAppServlet {
       lines.add(line);
     }
     return lines;
-  }
-
-  /**
-   * Calculates the sum of the amounts of the given un-reconciled bank statement lines, so the total
-   * always matches the detail shown in the report.
-   *
-   * @param lines
-   *          the un-reconciled bank statement lines, as returned by
-   *          {@link #getUnreconciledBankStatementLines(FIN_Reconciliation)}
-   * @return Sum of the un-reconciled bank statement lines.
-   */
-  private BigDecimal getUnreconciledBankStatementLinesTotal(List<Map<String, Object>> lines) {
-    BigDecimal total = BigDecimal.ZERO;
-    for (Map<String, Object> line : lines) {
-      BigDecimal amount = (BigDecimal) line.get("AMOUNT");
-      if (amount != null) {
-        total = total.add(amount);
-      }
-    }
-    return total;
   }
 
   /**

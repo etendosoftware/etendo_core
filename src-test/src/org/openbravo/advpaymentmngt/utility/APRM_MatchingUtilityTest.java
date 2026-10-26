@@ -285,11 +285,14 @@ public class APRM_MatchingUtilityTest {
     }
 
     // Assert
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue(hql.getValue().contains("bsl.transactionDate <= :endingdate"));
-    assertTrue(hql.getValue()
-        .contains("bsl.financialAccountTransaction is null order by bsl.transactionDate,"));
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, "as bsl "
+        + " where bsl.bankStatement.account.id = :account"
+        + "   and bsl.bankStatement.processed = 'Y'"
+        + "   and  bsl.transactionDate <= :endingdate"
+        + "   and bsl.financialAccountTransaction is null"
+        + " order by bsl.transactionDate,"
+        + "   bsl.lineNo,"
+        + "   bsl.bpartnername");
     Map<String, Object> expectedParameters = new HashMap<>();
     expectedParameters.put("account", ACCOUNT_ID);
     expectedParameters.put("endingdate", endingDate);

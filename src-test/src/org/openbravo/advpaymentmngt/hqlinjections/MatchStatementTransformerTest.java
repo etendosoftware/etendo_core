@@ -1,7 +1,6 @@
 package org.openbravo.advpaymentmngt.hqlinjections;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -160,8 +159,8 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     String result = transformer.transformHqlQuery(hqlQuery, requestParameters, queryNamedParameters);
 
     // Then
-    assertTrue("Should filter by financial account", result.contains("bs.account.id = :account"));
-    assertFalse("Should not add any hook condition", result.contains("discarded"));
+    assertEquals("SELECT bsl FROM FIN_BankStatementLine bsl WHERE  (fat is null  )"
+        + "  and bs.account.id = :account  order by banklineDate, lineNo", result);
     assertEquals(Collections.singletonMap("account", FIN_ACCOUNT_ID), queryNamedParameters);
   }
 

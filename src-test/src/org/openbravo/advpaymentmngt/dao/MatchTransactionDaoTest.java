@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,9 +60,31 @@ public class MatchTransactionDaoTest {
 
   private static final String HOOK_CONDITION = "bsl.discarded = :test_discarded";
   private static final String HOOK_PARAMETER = "test_discarded";
-  private static final String NO_HOOK_CONDITION_MESSAGE = "Should not add any hook condition";
   private static final String AND_OPEN = " and (";
   private static final String ACCOUNT_PARAMETER = "account";
+  private static final String ENDING_DATE_PARAMETER = "endingDate";
+  private static final String SUM_SELECT_CLAUSE = "sum(bsl.cramount), sum(bsl.dramount)";
+  private static final String UNRECONCILED_LINES_ORDER_BY = " order by bsl.transactionDate,"
+      + " coalesce(bp.name, bsl.bpartnername, ''), (bsl.cramount - bsl.dramount)";
+  private static final String UNRECONCILED_LINES_WHERE = "as bsl"
+      + " left join bsl.businessPartner as bp"
+      + " where bsl.bankStatement.account.id = :account"
+      + "   and bsl.bankStatement.processed = true"
+      + "   and bsl.transactionDate <= :endingDate"
+      + "   and (bsl.financialAccountTransaction is null"
+      + "     or bsl.financialAccountTransaction.id in ("
+      + "       select t.id"
+      + "       from FIN_Finacc_Transaction as t"
+      + "       where t.reconciliation.creationDate > ("
+      + "         select r.creationDate"
+      + "         from FIN_Reconciliation as r"
+      + "         where r.id = :reconciliationId)))";
+  private static final String UNRECONCILED_AMOUNT_WHERE = "as bsl"
+      + " left join bsl.financialAccountTransaction as tr"
+      + " where bsl.bankStatement.account.id = :account"
+      + "   and bsl.bankStatement.processed = true"
+      + "   and bsl.transactionDate <= :endingDate"
+      + "   and ";
 
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
@@ -322,9 +345,10 @@ public class MatchTransactionDaoTest {
 
     // Then
     assertEquals("Should return the list of unmatched bank statement lines", unmatchedLines, result);
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertFalse(NO_HOOK_CONDITION_MESSAGE, hql.getValue().contains(HOOK_CONDITION));
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, " as bsl "
+        + " where bsl.bankStatement.account.id = :accountId"
+        + "   and bsl.financialAccountTransaction is null"
+        + "   and bsl.bankStatement.processed = 'Y'");
     verify(mockBankStatementLineQuery).setNamedParameters(
         Collections.singletonMap("accountId", TestConstants.FINANCIAL_ACCOUNT_ID));
     verify(mockBankStatementLineQuery).list();
@@ -425,11 +449,10 @@ public class MatchTransactionDaoTest {
 
     // Then
     assertEquals("Should return the max transaction date", maxDate, result);
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue("Should sort by transaction date descending",
-        hql.getValue().endsWith(" order by bsl.transactionDate desc"));
-    assertFalse(NO_HOOK_CONDITION_MESSAGE, hql.getValue().contains(HOOK_CONDITION));
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, "as bsl"
+        + " where bsl.bankStatement.account.id = :account"
+        + "   and bsl.bankStatement.processed = true"
+        + " order by bsl.transactionDate desc");
     verify(mockBankStatementLineQuery).setNamedParameters(
         Collections.singletonMap(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID));
     verify(mockBankStatementLineQuery).setMaxResult(1);
@@ -497,16 +520,15 @@ public class MatchTransactionDaoTest {
     // Then
     assertEquals("Should add initial balance, bank statement lines and manual amount",
         new BigDecimal("1250.00"), result);
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue("Should filter by ending date", hql.getValue().contains("bsl.transactionDate <= :endingDate"));
-    assertFalse(NO_HOOK_CONDITION_MESSAGE, hql.getValue().contains(HOOK_CONDITION));
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, "as bsl"
+        + " where bsl.bankStatement.account.id = :account"
+        + "   and bsl.bankStatement.processed = true"
+        + "   and bsl.transactionDate <= :endingDate");
     Map<String, Object> expectedParameters = new HashMap<>();
     expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
-    expectedParameters.put("endingDate", endingDate);
+    expectedParameters.put(ENDING_DATE_PARAMETER, endingDate);
     verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
-    verify(mockBankStatementLineQuery)
-        .setSelectClause("coalesce(sum(bsl.cramount), 0), coalesce(sum(bsl.dramount), 0)");
+    verify(mockBankStatementLineQuery).setSelectClause(SUM_SELECT_CLAUSE);
   }
 
   /**
@@ -555,16 +577,36 @@ public class MatchTransactionDaoTest {
   }
 
   /**
-   * Tests the getUnreconciledBankStatementLines method when there are no later reconciliations.
-   * Verifies that only unmatched lines are returned, sorted by date, description and amount.
+   * Tests the getEndingBalance method when there are no bank statement lines and no manual
+   * transactions. Verifies that the value, including its scale, is the same as the initial
+   * balance.
    */
   @Test
-  public void testGetUnreconciledBankStatementLinesWithoutLaterReconciliations() {
+  public void testGetEndingBalanceWithoutLinesKeepsInitialBalanceScale() {
+    // Given
+    when(mockReconciliation.getEndingDate()).thenReturn(new Date());
+    givenBankStatementLinesAmount(null, null);
+    givenManualReconciliationAmount(BigDecimal.ZERO);
+
+    // When
+    BigDecimal result = MatchTransactionDao.getEndingBalance(mockReconciliation);
+
+    // Then
+    assertEquals("Should keep the scale of the initial balance", TestConstants.INITIAL_BALANCE.scale(),
+        result.scale());
+  }
+
+  /**
+   * Tests the getUnreconciledBankStatementLines method without bank statement line filter hooks.
+   * Verifies that it runs the same query as the original report: no active, client nor
+   * organization filters, later reconciliations of any account and the original sort.
+   */
+  @Test
+  public void testGetUnreconciledBankStatementLinesWithoutHooks() {
     // Given
     Date endingDate = new Date();
     when(mockReconciliation.getEndingDate()).thenReturn(endingDate);
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());
+    when(mockReconciliation.getId()).thenReturn(TestConstants.RECONCILIATION_ID);
     List<Object[]> rows = Collections.singletonList(
         new Object[] { endingDate, "Partner", TestConstants.REFERENCE, new BigDecimal(TestConstants.AMOUNT) });
     givenUnreconciledLinesQuery(rows);
@@ -574,49 +616,19 @@ public class MatchTransactionDaoTest {
 
     // Then
     assertEquals("Should return the rows of the query", rows, result);
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    String query = hql.getValue();
-    assertTrue("Should only take unmatched lines", query.contains(" and tr is null"));
-    assertFalse("Should not filter by later reconciliations", query.contains(":afterReconciliations"));
-    assertTrue("Should filter by ending date", query.contains("bsl.transactionDate <= :endingDate"));
-    assertTrue("Should sort by date, description and amount", query.endsWith(
-        " order by bsl.transactionDate, coalesce(bp.name, bsl.bpartnername, ''), (bsl.cramount - bsl.dramount)"));
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class,
+        UNRECONCILED_LINES_WHERE + UNRECONCILED_LINES_ORDER_BY);
+    verify(mockBankStatementLineQuery).setFilterOnActive(false);
+    verify(mockBankStatementLineQuery).setFilterOnReadableClients(false);
+    verify(mockBankStatementLineQuery).setFilterOnReadableOrganization(false);
     Map<String, Object> expectedParameters = new HashMap<>();
     expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
-    expectedParameters.put("endingDate", endingDate);
+    expectedParameters.put(ENDING_DATE_PARAMETER, endingDate);
+    expectedParameters.put("reconciliationId", TestConstants.RECONCILIATION_ID);
     verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
     verify(mockBankStatementLineQuery).setSelectClause(
         "bsl.transactionDate, coalesce(bp.name, bsl.bpartnername, ''), bsl.referenceNo, (bsl.cramount - bsl.dramount)");
-  }
-
-  /**
-   * Tests the getUnreconciledBankStatementLines method when there are later reconciliations.
-   * Verifies that lines matched to a later reconciliation are also returned.
-   */
-  @Test
-  public void testGetUnreconciledBankStatementLinesWithLaterReconciliations() {
-    // Given
-    when(mockReconciliation.getEndingDate()).thenReturn(new Date());
-    FIN_Reconciliation laterReconciliation = mock(FIN_Reconciliation.class);
-    when(laterReconciliation.getId()).thenReturn("LATER_RECONCILIATION_ID");
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.list()).thenReturn(Collections.singletonList(laterReconciliation));
-    givenUnreconciledLinesQuery(Collections.emptyList());
-
-    // When
-    MatchTransactionDao.getUnreconciledBankStatementLines(mockReconciliation);
-
-    // Then
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue("Should take unmatched lines and lines of later reconciliations", hql.getValue()
-        .contains(" and (tr is null or tr.reconciliation.id in (:afterReconciliations))"));
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<Map<String, Object>> parameters = ArgumentCaptor.forClass(Map.class);
-    verify(mockBankStatementLineQuery).setNamedParameters(parameters.capture());
-    assertEquals(Collections.singletonList("LATER_RECONCILIATION_ID"),
-        parameters.getValue().get("afterReconciliations"));
+    verify(mockOBDal, never()).createCriteria(FIN_Reconciliation.class);
   }
 
   /**
@@ -628,18 +640,117 @@ public class MatchTransactionDaoTest {
     // Given
     givenFilterHook(Usage.RECONCILIATION_REPORT);
     when(mockReconciliation.getEndingDate()).thenReturn(new Date());
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());
+    when(mockReconciliation.getId()).thenReturn(TestConstants.RECONCILIATION_ID);
     givenUnreconciledLinesQuery(Collections.emptyList());
 
     // When
     MatchTransactionDao.getUnreconciledBankStatementLines(mockReconciliation);
 
     // Then
-    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
-    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
-    assertTrue("Should add the hook condition before the order by",
-        hql.getValue().contains(" and tr is null and (" + HOOK_CONDITION + ") order by "));
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, UNRECONCILED_LINES_WHERE + AND_OPEN
+        + HOOK_CONDITION + ")" + UNRECONCILED_LINES_ORDER_BY);
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Map<String, Object>> parameters = ArgumentCaptor.forClass(Map.class);
+    verify(mockBankStatementLineQuery).setNamedParameters(parameters.capture());
+    assertEquals(Boolean.FALSE, parameters.getValue().get(HOOK_PARAMETER));
+  }
+
+  /**
+   * Tests the getUnreconciledBankStatementLinesAmount method when there are no later
+   * reconciliations. Verifies that it keeps the original criteria of the report total, including
+   * the default active, client and organization filters.
+   */
+  @Test
+  public void testGetUnreconciledBankStatementLinesAmountWithoutLaterReconciliations() {
+    // Given
+    Date endingDate = new Date();
+    when(mockReconciliation.getEndingDate()).thenReturn(endingDate);
+    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());
+    givenBankStatementLinesAmount(new BigDecimal("500.00"), new BigDecimal("0.09"));
+
+    // When
+    BigDecimal result = MatchTransactionDao.getUnreconciledBankStatementLinesAmount(mockReconciliation);
+
+    // Then
+    assertEquals(new BigDecimal("499.91"), result);
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, UNRECONCILED_AMOUNT_WHERE + "tr is null");
+    Map<String, Object> expectedParameters = new HashMap<>();
+    expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
+    expectedParameters.put(ENDING_DATE_PARAMETER, endingDate);
+    verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
+    verify(mockBankStatementLineQuery).setSelectClause(SUM_SELECT_CLAUSE);
+    verify(mockBankStatementLineQuery, never()).setFilterOnActive(anyBoolean());
+    verify(mockBankStatementLineQuery, never()).setFilterOnReadableClients(anyBoolean());
+    verify(mockBankStatementLineQuery, never()).setFilterOnReadableOrganization(anyBoolean());
+  }
+
+  /**
+   * Tests the getUnreconciledBankStatementLinesAmount method when there are later reconciliations.
+   * Verifies that lines matched to one of them are also taken into account.
+   */
+  @Test
+  public void testGetUnreconciledBankStatementLinesAmountWithLaterReconciliations() {
+    // Given
+    Date endingDate = new Date();
+    when(mockReconciliation.getEndingDate()).thenReturn(endingDate);
+    FIN_Reconciliation laterReconciliation = mock(FIN_Reconciliation.class);
+    when(laterReconciliation.getId()).thenReturn("LATER_RECONCILIATION_ID");
+    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.list()).thenReturn(Collections.singletonList(laterReconciliation));
+    givenBankStatementLinesAmount(BigDecimal.ONE, BigDecimal.ZERO);
+
+    // When
+    MatchTransactionDao.getUnreconciledBankStatementLinesAmount(mockReconciliation);
+
+    // Then
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, UNRECONCILED_AMOUNT_WHERE
+        + "(tr is null or tr.reconciliation.id in (:afterReconciliations))");
+    Map<String, Object> expectedParameters = new HashMap<>();
+    expectedParameters.put(ACCOUNT_PARAMETER, TestConstants.FINANCIAL_ACCOUNT_ID);
+    expectedParameters.put(ENDING_DATE_PARAMETER, endingDate);
+    expectedParameters.put("afterReconciliations", Collections.singletonList("LATER_RECONCILIATION_ID"));
+    verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
+  }
+
+  /**
+   * Tests the getUnreconciledBankStatementLinesAmount method without lines. Verifies that it
+   * returns {@link BigDecimal#ZERO}, as the original report total did.
+   */
+  @Test
+  public void testGetUnreconciledBankStatementLinesAmountWithoutLines() {
+    // Given
+    when(mockReconciliation.getEndingDate()).thenReturn(new Date());
+    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());
+    givenBankStatementLinesAmount(null, null);
+
+    // When
+    BigDecimal result = MatchTransactionDao.getUnreconciledBankStatementLinesAmount(mockReconciliation);
+
+    // Then
+    assertEquals(BigDecimal.ZERO, result);
+  }
+
+  /**
+   * Tests the getUnreconciledBankStatementLinesAmount method with a bank statement line filter
+   * hook. Verifies that the hook condition and its parameters are added to the query.
+   */
+  @Test
+  public void testGetUnreconciledBankStatementLinesAmountWithHook() {
+    // Given
+    givenFilterHook(Usage.RECONCILIATION_REPORT);
+    when(mockReconciliation.getEndingDate()).thenReturn(new Date());
+    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());
+    givenBankStatementLinesAmount(BigDecimal.ONE, BigDecimal.ZERO);
+
+    // When
+    MatchTransactionDao.getUnreconciledBankStatementLinesAmount(mockReconciliation);
+
+    // Then
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class,
+        UNRECONCILED_AMOUNT_WHERE + "tr is null" + AND_OPEN + HOOK_CONDITION + ")");
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Map<String, Object>> parameters = ArgumentCaptor.forClass(Map.class);
     verify(mockBankStatementLineQuery).setNamedParameters(parameters.capture());
