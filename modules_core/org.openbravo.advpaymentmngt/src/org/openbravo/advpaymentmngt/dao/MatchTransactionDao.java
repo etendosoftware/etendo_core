@@ -50,9 +50,6 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 
 public class MatchTransactionDao {
 
-  private static final String ACCOUNT_PARAMETER = "account";
-  private static final String ENDING_DATE_PARAMETER = "endingDate";
-
   public MatchTransactionDao() {
   }
 
@@ -293,36 +290,18 @@ public class MatchTransactionDao {
     return getMatchingFinancialTransaction(strFinancialAccountId, null, amount, null);
   }
 
-  /**
-   * Returns the latest transaction date of the processed bank statement lines of the given
-   * financial account. Lines excluded by a
-   * {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook} are not taken into
-   * account.
-   *
-   * @param financialAccount
-   *          the financial account
-   * @return the latest transaction date, or the current date if there are no lines
-   */
   public static Date getBankStatementLineMaxDate(FIN_FinancialAccount financialAccount) {
     OBContext.setAdminMode();
     Date maxDate = new Date();
     try {
-      final Map<String, Object> parameters = new HashMap<>();
-      parameters.put(ACCOUNT_PARAMETER, financialAccount.getId());
-      //@formatter:off
-      final String hql = "as bsl"
-          + " where bsl.bankStatement.account.id = :account"
-          + "   and bsl.bankStatement.processed = true"
-          + BankStatementLineFilterHelper.buildHqlCondition("bsl",
-              new BankStatementLineFilterContext(financialAccount, null, Usage.MAX_DATE),
-              parameters)
-          + " order by bsl.transactionDate desc";
-      //@formatter:on
-      final OBQuery<FIN_BankStatementLine> obq = OBDal.getInstance()
-          .createQuery(FIN_BankStatementLine.class, hql);
-      obq.setNamedParameters(parameters);
-      obq.setMaxResult(1);
-      final List<FIN_BankStatementLine> bst = obq.list();
+      final OBCriteria<FIN_BankStatementLine> obc = OBDal.getInstance()
+          .createCriteria(FIN_BankStatementLine.class);
+      obc.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
+      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, financialAccount));
+      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      obc.addOrderBy(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, false);
+      obc.setMaxResults(1);
+      final List<FIN_BankStatementLine> bst = obc.list();
       if (bst.size() == 0) {
         return maxDate;
       }
@@ -462,7 +441,7 @@ public class MatchTransactionDao {
       //@formatter:on
       final Session session = OBDal.getInstance().getSession();
       final Query<BigDecimal> query = session.createQuery(hqlString, BigDecimal.class);
-      query.setParameter(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
+      query.setParameter("account", reconciliation.getAccount().getId());
       query.setParameter("date", reconciliation.getEndingDate());
       total = query.uniqueResult();
     } finally {
@@ -471,190 +450,35 @@ public class MatchTransactionDao {
     return total;
   }
 
-  /**
-   * Returns the net amount (credit minus debit) of the processed bank statement lines of the
-   * reconciliation's financial account up to the reconciliation's ending date. Lines excluded by a
-   * {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook} are not taken into
-   * account.
-   *
-   * @param reconciliation
-   *          the reconciliation
-   * @return the net amount of the bank statement lines, zero if there are no lines
-   */
   private static BigDecimal getBSLAmount(FIN_Reconciliation reconciliation) {
     BigDecimal total = BigDecimal.ZERO;
     OBContext.setAdminMode(false);
     try {
-      final Map<String, Object> parameters = new HashMap<>();
-      parameters.put(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
-      parameters.put(ENDING_DATE_PARAMETER, reconciliation.getEndingDate());
-      //@formatter:off
-      final String hql = "as bsl"
-          + " where bsl.bankStatement.account.id = :account"
-          + "   and bsl.bankStatement.processed = true"
-          + "   and bsl.transactionDate <= :endingDate"
-          + BankStatementLineFilterHelper.buildHqlCondition("bsl",
-              new BankStatementLineFilterContext(reconciliation.getAccount(), reconciliation,
-                  Usage.ENDING_BALANCE),
-              parameters);
-      //@formatter:on
-      final OBQuery<FIN_BankStatementLine> obq = OBDal.getInstance()
-          .createQuery(FIN_BankStatementLine.class, hql);
-      obq.setNamedParameters(parameters);
-      obq.setSelectClause("sum(bsl.cramount), sum(bsl.dramount)");
+      OBCriteria<FIN_BankStatementLine> obcBsl = OBDal.getInstance()
+          .createCriteria(FIN_BankStatementLine.class);
+      obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
+      obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
+          JoinType.LEFT_OUTER_JOIN);
+      obcBsl.add(
+          Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, reconciliation.getAccount()));
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      obcBsl.add(Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
+          reconciliation.getEndingDate()));
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
+      obcBsl.setProjection(projections);
 
-      final Object[] resultSet = obq.createQuery(Object[].class).uniqueResult();
-      if (resultSet != null) {
+      @SuppressWarnings("rawtypes")
+      List o = obcBsl.list();
+      if (o != null && o.size() > 0) {
+        Object[] resultSet = (Object[]) o.get(0);
         BigDecimal credit = (resultSet[0] != null) ? (BigDecimal) resultSet[0] : BigDecimal.ZERO;
         BigDecimal debit = (resultSet[1] != null) ? (BigDecimal) resultSet[1] : BigDecimal.ZERO;
         total = credit.subtract(debit);
       }
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-    return total;
-  }
+      o.clear();
 
-  /**
-   * Returns the bank statement lines that are pending to be reconciled at the ending date of the
-   * given reconciliation, as shown in the detail of the "Un-reconciled Bank Statement Lines"
-   * section of the reconciliation report.
-   * <p>
-   * It reproduces exactly the query that the UnreconciledBankStatement subreport used to run, so
-   * that installations without hooks get the same rows as before. A line is pending when:
-   * <ul>
-   * <li>it belongs to a processed bank statement of the reconciliation's financial account;</li>
-   * <li>its transaction date is lower or equal than the reconciliation's ending date;</li>
-   * <li>it is not matched to any transaction, or it is matched to a transaction that belongs to
-   * any reconciliation created after the given one;</li>
-   * <li>it is not excluded by a
-   * {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook}.</li>
-   * </ul>
-   * Like the original query, it does not filter by active records nor by the clients and
-   * organizations readable by the current role. For that reason the detail may differ from
-   * {@link #getUnreconciledBankStatementLinesAmount(FIN_Reconciliation)} in the same cases where
-   * it differed before.
-   *
-   * @param reconciliation
-   *          the reconciliation
-   * @return one row per line, sorted by date, description and amount. Each row contains, in this
-   *         order: the transaction date ({@link Date}), the description, which is the business
-   *         partner name or the business partner name informed in the line ({@link String}, never
-   *         {@code null}), the reference number ({@link String}) and the amount, credit minus debit
-   *         ({@link BigDecimal})
-   */
-  public static List<Object[]> getUnreconciledBankStatementLines(
-      FIN_Reconciliation reconciliation) {
-    OBContext.setAdminMode(true);
-    try {
-      final Map<String, Object> parameters = new HashMap<>();
-      parameters.put(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
-      parameters.put(ENDING_DATE_PARAMETER, reconciliation.getEndingDate());
-      parameters.put("reconciliationId", reconciliation.getId());
-
-      final String description = "coalesce(bp.name, bsl.bpartnername, '')";
-      final String amount = "(bsl.cramount - bsl.dramount)";
-      //@formatter:off
-      final String hql = "as bsl"
-          + " left join bsl.businessPartner as bp"
-          + " where bsl.bankStatement.account.id = :account"
-          + "   and bsl.bankStatement.processed = true"
-          + "   and bsl.transactionDate <= :endingDate"
-          + "   and (bsl.financialAccountTransaction is null"
-          + "     or bsl.financialAccountTransaction.id in ("
-          + "       select t.id"
-          + "       from " + FIN_FinaccTransaction.ENTITY_NAME + " as t"
-          + "       where t.reconciliation.creationDate > ("
-          + "         select r.creationDate"
-          + "         from " + FIN_Reconciliation.ENTITY_NAME + " as r"
-          + "         where r.id = :reconciliationId)))"
-          + BankStatementLineFilterHelper.buildHqlCondition("bsl",
-              new BankStatementLineFilterContext(reconciliation.getAccount(), reconciliation,
-                  Usage.RECONCILIATION_REPORT),
-              parameters)
-          + " order by bsl.transactionDate, " + description + ", " + amount;
-      //@formatter:on
-      final OBQuery<FIN_BankStatementLine> obq = OBDal.getInstance()
-          .createQuery(FIN_BankStatementLine.class, hql);
-      obq.setFilterOnActive(false);
-      obq.setFilterOnReadableClients(false);
-      obq.setFilterOnReadableOrganization(false);
-      obq.setNamedParameters(parameters);
-      obq.setSelectClause(
-          "bsl.transactionDate, " + description + ", bsl.referenceNo, " + amount);
-      return obq.createQuery(Object[].class).list();
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-  }
-
-  /**
-   * Returns the net amount (credit minus debit) of the bank statement lines that are pending to be
-   * reconciled at the ending date of the given reconciliation, as shown in the total of the
-   * "Un-reconciled Bank Statement Lines" section of the reconciliation report and in its adjusted
-   * account balance.
-   * <p>
-   * It keeps the criteria that the report used to calculate this total, so that installations
-   * without hooks get the same value as before:
-   * <ul>
-   * <li>only active lines, of the clients and organizations readable by the current role;</li>
-   * <li>lines of processed bank statements of the reconciliation's financial account;</li>
-   * <li>with a transaction date lower or equal than the reconciliation's ending date;</li>
-   * <li>not matched to any transaction, or matched to a transaction that belongs to one of the
-   * reconciliations returned by {@link #getReconciliationListAfterDate(FIN_Reconciliation)};</li>
-   * <li>not excluded by a {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook}.
-   * </li>
-   * </ul>
-   *
-   * @param reconciliation
-   *          the reconciliation
-   * @return the net amount of the pending bank statement lines, zero if there are no lines
-   */
-  public static BigDecimal getUnreconciledBankStatementLinesAmount(
-      FIN_Reconciliation reconciliation) {
-    BigDecimal total = BigDecimal.ZERO;
-    OBContext.setAdminMode(true);
-    try {
-      final Map<String, Object> parameters = new HashMap<>();
-      parameters.put(ACCOUNT_PARAMETER, reconciliation.getAccount().getId());
-      parameters.put(ENDING_DATE_PARAMETER, reconciliation.getEndingDate());
-
-      final List<String> afterReconciliationIds = new ArrayList<>();
-      for (FIN_Reconciliation afterReconciliation : getReconciliationListAfterDate(
-          reconciliation)) {
-        afterReconciliationIds.add(afterReconciliation.getId());
-      }
-      final String transactionCondition;
-      if (afterReconciliationIds.isEmpty()) {
-        transactionCondition = "tr is null";
-      } else {
-        transactionCondition = "(tr is null or tr.reconciliation.id in (:afterReconciliations))";
-        parameters.put("afterReconciliations", afterReconciliationIds);
-      }
-
-      //@formatter:off
-      final String hql = "as bsl"
-          + " left join bsl.financialAccountTransaction as tr"
-          + " where bsl.bankStatement.account.id = :account"
-          + "   and bsl.bankStatement.processed = true"
-          + "   and bsl.transactionDate <= :endingDate"
-          + "   and " + transactionCondition
-          + BankStatementLineFilterHelper.buildHqlCondition("bsl",
-              new BankStatementLineFilterContext(reconciliation.getAccount(), reconciliation,
-                  Usage.RECONCILIATION_REPORT),
-              parameters);
-      //@formatter:on
-      final OBQuery<FIN_BankStatementLine> obq = OBDal.getInstance()
-          .createQuery(FIN_BankStatementLine.class, hql);
-      obq.setNamedParameters(parameters);
-      obq.setSelectClause("sum(bsl.cramount), sum(bsl.dramount)");
-
-      final Object[] resultSet = obq.createQuery(Object[].class).uniqueResult();
-      if (resultSet != null) {
-        BigDecimal credit = (resultSet[0] != null) ? (BigDecimal) resultSet[0] : BigDecimal.ZERO;
-        BigDecimal debit = (resultSet[1] != null) ? (BigDecimal) resultSet[1] : BigDecimal.ZERO;
-        total = credit.subtract(debit);
-      }
     } finally {
       OBContext.restorePreviousMode();
     }

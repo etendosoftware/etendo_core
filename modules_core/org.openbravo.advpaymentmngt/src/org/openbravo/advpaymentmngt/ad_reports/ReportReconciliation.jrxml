@@ -19,7 +19,6 @@
 	<parameter name="SUBREPORT_OUTPAYMENT" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
 	<parameter name="SUBREPORT_OUTDEPOSIT" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
 	<parameter name="SUBREPORT_UNRECBS" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
-	<parameter name="UNREC_BSLINES" class="java.util.Collection" isForPrompting="false"/>
 	<parameter name="DATE" class="java.util.Date" isForPrompting="false"/>
 	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
 	<parameter name="ACC_BAL_OB" class="java.math.BigDecimal" isForPrompting="false"/>
@@ -300,7 +299,7 @@
 					<subreportParameter name="NUMBERFORMAT">
 						<subreportParameterExpression><![CDATA[$P{NUMBERFORMAT}]]></subreportParameterExpression>
 					</subreportParameter>
-					<dataSourceExpression><![CDATA[new JRMapCollectionDataSource($P{UNREC_BSLINES})]]></dataSourceExpression>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 					<subreportExpression><![CDATA[$P{SUBREPORT_UNRECBS}]]></subreportExpression>
 				</subreport>
 				<line>

@@ -19,22 +19,22 @@ package org.openbravo.advpaymentmngt.hook;
 import java.util.Map;
 
 /**
- * Extension point that allows any module to exclude bank statement lines from the matching and
- * reconciliation logic of the Advanced Payables and Receivables Management module.
+ * Extension point that allows any module to exclude bank statement lines from the matching logic of
+ * the Advanced Payables and Receivables Management module.
  * <p>
  * Each implementation returns an HQL boolean condition that a {@code FIN_BankStatementLine} must
  * <b>satisfy</b> to take part in the process. The conditions of all the implementations are
  * combined with {@code AND}, so a line is excluded as soon as one hook rejects it. The condition is
- * applied to:
+ * only applied to:
  * <ul>
  * <li>the candidate lines of the automatic matching algorithm;</li>
  * <li>the "nothing left to match" check of Match Statement;</li>
- * <li>the Match Statement grid;</li>
- * <li>the ending balance and the ending date of the reconciliation;</li>
- * <li>the un-reconciled bank statement lines of the reconciliation report.</li>
+ * <li>the Match Statement grid.</li>
  * </ul>
  * The {@link BankStatementLineFilterContext.Usage} received in the context identifies each of these
- * cases.
+ * cases. The rest of the reconciliation logic is not affected: an excluded line is still taken into
+ * account in the ending balance and the ending date of the reconciliation, in the reconciliation
+ * report and in the un-reconciled items count and amount of the reconciliation.
  * <p>
  * <b>Rules for the implementations:</b>
  * <ul>
@@ -48,9 +48,8 @@ import java.util.Map;
  * <li>Any parameter used by the condition must be added to the {@code namedParameters} map with a
  * module-prefixed key (for example {@code psd2_status}). A key that is already in use makes the
  * query building fail.</li>
- * <li>An excluded line must never be matched to a financial account transaction. A matched line
- * that is excluded would still be counted as a manually reconciled transaction when the ending
- * balance is calculated, leading to inconsistent balances.</li>
+ * <li>An excluded line should not be matched to a financial account transaction. As it is not
+ * shown in the Match Statement grid, the user would not be able to unmatch it from there.</li>
  * </ul>
  * <p>
  * <b>Known limitations:</b>
@@ -59,8 +58,6 @@ import java.util.Map;
  * HQL datasource only uses one transformer per table, so if a module replaces that transformer with
  * a higher priority one, the condition will not be applied to the grid unless the replacement also
  * calls {@code BankStatementLineFilterHelper}.</li>
- * <li>The {@code APRM_RECONCILIATION_V} database view, used by the legacy "Reconciliations old"
- * tab, calculates its un-reconciled lines count and amount in SQL and does not apply the hooks.</li>
  * </ul>
  *
  * @see org.openbravo.advpaymentmngt.utility.BankStatementLineFilterHelper

@@ -15,7 +15,6 @@ import org.openbravo.advpaymentmngt.actionHandler.AddPaymentActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.AddTransactionActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.FundsTransferHookCallerTest;
-import org.openbravo.advpaymentmngt.ad_reports.ReportReconciliationTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddOrderOrInvoiceFilterExpressionHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentDefaultValuesHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentReadOnlyLogicsHandlerTest;
@@ -254,9 +253,6 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     AddTransactionActionHandlerTest.class,
     FundsTransferActionHandlerTest.class,
     FundsTransferHookCallerTest.class,
-
-    // advpaymentmngt.ad_reports
-    ReportReconciliationTest.class,
 
     // advpaymentmngt.filterexpression
     AddOrderOrInvoiceFilterExpressionHandlerTest.class,

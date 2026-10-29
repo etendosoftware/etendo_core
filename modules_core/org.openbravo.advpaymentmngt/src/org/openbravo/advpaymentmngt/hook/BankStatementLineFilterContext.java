@@ -37,13 +37,7 @@ public class BankStatementLineFilterContext {
     /** Check performed before the automatic matching to verify there are lines left to match. */
     UNMATCHED_CHECK,
     /** Lines shown in the Match Statement grid. */
-    MATCH_STATEMENT_GRID,
-    /** Sum of the bank statement lines used to calculate the reconciliation ending balance. */
-    ENDING_BALANCE,
-    /** Latest bank statement line date, used as the reconciliation ending date. */
-    MAX_DATE,
-    /** Un-reconciled bank statement lines shown in the reconciliation report. */
-    RECONCILIATION_REPORT
+    MATCH_STATEMENT_GRID
   }
 
   private final FIN_FinancialAccount account;

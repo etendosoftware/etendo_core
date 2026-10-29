@@ -40,11 +40,11 @@ public class BankStatementLineFilterContextTest {
     FIN_Reconciliation reconciliation = mock(FIN_Reconciliation.class);
 
     BankStatementLineFilterContext context = new BankStatementLineFilterContext(account,
-        reconciliation, Usage.ENDING_BALANCE);
+        reconciliation, Usage.AUTO_MATCH_CANDIDATES);
 
     assertSame(account, context.getAccount());
     assertSame(reconciliation, context.getReconciliation());
-    assertEquals(Usage.ENDING_BALANCE, context.getUsage());
+    assertEquals(Usage.AUTO_MATCH_CANDIDATES, context.getUsage());
   }
 
   /**
@@ -53,7 +53,7 @@ public class BankStatementLineFilterContextTest {
   @Test
   public void testReconciliationIsOptional() {
     BankStatementLineFilterContext context = new BankStatementLineFilterContext(
-        mock(FIN_FinancialAccount.class), null, Usage.MAX_DATE);
+        mock(FIN_FinancialAccount.class), null, Usage.UNMATCHED_CHECK);
 
     assertNull(context.getReconciliation());
   }
@@ -63,7 +63,7 @@ public class BankStatementLineFilterContextTest {
    */
   @Test(expected = NullPointerException.class)
   public void testAccountIsMandatory() {
-    new BankStatementLineFilterContext(null, null, Usage.MAX_DATE);
+    new BankStatementLineFilterContext(null, null, Usage.UNMATCHED_CHECK);
   }
 
   /**

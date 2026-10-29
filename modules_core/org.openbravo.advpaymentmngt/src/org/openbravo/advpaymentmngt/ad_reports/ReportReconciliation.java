@@ -24,7 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -43,6 +43,8 @@ import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.model.financialmgmt.payment.FIN_BankStatement;
+import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
@@ -135,10 +137,7 @@ public class ReportReconciliation extends HttpSecureAppServlet {
     BigDecimal accountBalanceOB = getBalanceOfAccount(reconciliation);
     BigDecimal totalOutPayment = amtPayDep.get(0);
     BigDecimal totalOutDeposit = amtPayDep.get(1);
-    List<Map<String, Object>> unreconciledBsLines = getUnreconciledBankStatementLines(
-        reconciliation);
-    BigDecimal totalUnreconciledBs = MatchTransactionDao
-        .getUnreconciledBankStatementLinesAmount(reconciliation);
+    BigDecimal totalUnreconciledBs = getUnreconciledBankStatmentLinesTotal(reconciliation);
 
     // Parameters
     parameters.put("REPORT_TYPE", reportType);
@@ -171,7 +170,6 @@ public class ReportReconciliation extends HttpSecureAppServlet {
     parameters.put("SUBREPORT_OUTPAYMENT", subReportOutstandingPayment);
     parameters.put("SUBREPORT_OUTDEPOSIT", subReportOutstandingDeposit);
     parameters.put("SUBREPORT_UNRECBS", subReportUnreconciledBankStatementLines);
-    parameters.put("UNREC_BSLINES", unreconciledBsLines);
 
     response.setContentType("text/html; charset=UTF-8");
     renderJR(vars, response, strMainReportName, "pdf", parameters, null, null);
@@ -235,27 +233,60 @@ public class ReportReconciliation extends HttpSecureAppServlet {
   }
 
   /**
-   * Returns the un-reconciled bank statement lines of the reconciliation, as rows for the
-   * UnreconciledBankStatement subreport. The lines are obtained with
-   * {@link MatchTransactionDao#getUnreconciledBankStatementLines(FIN_Reconciliation)}, so the
-   * bank statement line filter hooks are applied.
-   *
+   * Calculates the sum of un-reconciled bank statement lines applying the following filters:
+   * 
+   * - They belong to the financial account of the reconciliation.
+   * 
+   * - The transaction date must be lower than the ending date of the reconciliation.
+   * 
+   * - They are not matched with any transaction.
+   * 
    * @param recon
    *          Reconciliation
-   * @return one map per line, with the BSLINE_DATE, DESCRIPTION, REF and AMOUNT fields of the
-   *         subreport
+   * @return Sum of the un-reconciled bank statement lines.
    */
-  private List<Map<String, Object>> getUnreconciledBankStatementLines(FIN_Reconciliation recon) {
-    List<Map<String, Object>> lines = new ArrayList<>();
-    for (Object[] row : MatchTransactionDao.getUnreconciledBankStatementLines(recon)) {
-      Map<String, Object> line = new HashMap<>();
-      line.put("BSLINE_DATE", row[0]);
-      line.put("DESCRIPTION", row[1]);
-      line.put("REF", row[2]);
-      line.put("AMOUNT", row[3]);
-      lines.add(line);
+  private BigDecimal getUnreconciledBankStatmentLinesTotal(FIN_Reconciliation recon) {
+    BigDecimal total = BigDecimal.ZERO;
+    OBContext.setAdminMode(true);
+    try {
+      OBCriteria<FIN_BankStatementLine> obcBsl = OBDal.getInstance()
+          .createCriteria(FIN_BankStatementLine.class);
+      obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
+      obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
+          JoinType.LEFT_OUTER_JOIN);
+      obcBsl.add(
+          Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
+      List<FIN_Reconciliation> afterReconciliations = MatchTransactionDao
+          .getReconciliationListAfterDate(recon);
+      if (!afterReconciliations.isEmpty()) {
+        obcBsl.add(Restrictions.or(
+            Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION),
+            Restrictions.in("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
+                afterReconciliations)));
+      } else {
+        obcBsl.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
+      }
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, recon.getAccount()));
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
+      obcBsl.setProjection(projections);
+
+      @SuppressWarnings("rawtypes")
+      List o = obcBsl.list();
+      if (o != null && !o.isEmpty()) {
+        Object[] resultSet = (Object[]) o.get(0);
+        BigDecimal credit = (resultSet[0] != null) ? (BigDecimal) resultSet[0] : BigDecimal.ZERO;
+        BigDecimal debit = (resultSet[1] != null) ? (BigDecimal) resultSet[1] : BigDecimal.ZERO;
+        total = credit.subtract(debit);
+      }
+
+    } finally {
+      OBContext.restorePreviousMode();
     }
-    return lines;
+
+    return total;
   }
 
   /**

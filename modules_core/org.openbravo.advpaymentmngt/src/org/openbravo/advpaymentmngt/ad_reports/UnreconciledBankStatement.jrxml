@@ -7,6 +7,27 @@
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="RECONCILIATION_ID" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT bsl.datetrx as BSLINE_DATE, coalesce(TO_CHAR(bp.name), TO_CHAR(bsl.bpartnername), '') as DESCRIPTION,
+       bsl.referenceno as REF, (bsl.cramount - bsl.dramount) as AMOUNT
+FROM fin_bankstatementline bsl join fin_bankstatement bs on (bsl.fin_bankstatement_id=bs.fin_bankstatement_id)
+     left join c_bpartner bp on (bp.c_bpartner_id = bsl.c_bpartner_id)
+WHERE bs.processed = 'Y'
+      and bs.fin_financial_account_id = (SELECT rec.fin_financial_account_id
+                                         FROM fin_reconciliation rec
+                                         WHERE fin_reconciliation_id=$P{RECONCILIATION_ID})
+      and bsl.datetrx <= (SELECT rec.dateto
+                          FROM fin_reconciliation rec
+                          WHERE fin_reconciliation_id=$P{RECONCILIATION_ID})
+      and (bsl.fin_finacc_transaction_id is null 
+          or bsl.fin_finacc_transaction_id in (select fin_finacc_transaction_id
+						from fin_finacc_transaction, fin_reconciliation
+						where fin_finacc_transaction.fin_reconciliation_id = fin_reconciliation.fin_reconciliation_id
+						and fin_reconciliation.created > (SELECT rec.created
+							     FROM fin_reconciliation rec
+							     WHERE fin_reconciliation_id=$P{RECONCILIATION_ID})))
+ORDER BY BSLINE_DATE, DESCRIPTION, AMOUNT]]>
+	</queryString>
 	<field name="BSLINE_DATE" class="java.util.Date"/>
 	<field name="DESCRIPTION" class="java.lang.String"/>
 	<field name="REF" class="java.lang.String"/>
