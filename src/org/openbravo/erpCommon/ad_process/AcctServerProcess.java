@@ -274,8 +274,11 @@ public class AcctServerProcess extends DalBaseProcess {
   }
 
   /**
-   * 
-   * @throws ServletException
+   * Posts the pending documents of one client, table by table. A failing table is logged and the
+   * remaining tables are still posted; only a lost database connection aborts the run.
+   *
+   * @param onlyTables
+   *          tables to walk, or null to walk every accounting table
    */
   private void processClient(VariablesSecureApp vars, ProcessBundle bundle,
       Set<String> onlyTables, String clientLabel) throws ServletException, IOException {
