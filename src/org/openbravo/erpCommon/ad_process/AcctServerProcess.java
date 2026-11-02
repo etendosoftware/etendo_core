@@ -20,9 +20,6 @@
 package org.openbravo.erpCommon.ad_process;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -170,72 +167,58 @@ public class AcctServerProcess extends DalBaseProcess {
    * a document.
    *
    * A table whose query fails is kept for every client, as it was before this pre-filter existed.
+   * A lost connection is not told apart here (SqlC drops the SQL state): the table falls back too
+   * and the run aborts on the first table it posts.
    */
   static Map<String, Set<String>> clientsWithPendingDocs(ConnectionProvider cp,
-      String[] tableIds, Set<String> clientIds) throws NoConnectionAvailableException,
-      SQLException {
+      String[] tableIds, Set<String> clientIds) {
     final Map<String, Set<String>> result = new HashMap<>();
-    final Connection conn = cp.getTransactionConnection();
-    try {
-      for (String tableId : tableIds) {
-        Set<String> pendingClients;
-        try {
-          pendingClients = selectClientsWithPendingDocs(conn, tableId);
-        } catch (SQLException ex) {
-          if (isConnectionFailure(ex)) {
-            throw ex;
-          }
-          log4j.warn(
-              "Pending documents pre-filter failed for table {}, walking it for every client",
-              tableId, ex);
-          conn.rollback();
-          pendingClients = clientIds;
-        }
-        for (String clientId : pendingClients) {
-          if (clientIds.contains(clientId)) {
-            result.computeIfAbsent(clientId, k -> new LinkedHashSet<>()).add(tableId);
-          }
-        }
-      }
-    } finally {
+    for (String tableId : tableIds) {
+      Set<String> pendingClients;
       try {
-        cp.releaseRollbackConnection(conn);
-      } catch (SQLException ex) {
-        // Do not hide the exception that ended the loop, if any
-        log4j.warn("Could not release the pre-filter connection", ex);
+        pendingClients = selectClientsWithPendingDocs(cp, tableId);
+      } catch (ServletException ex) {
+        log4j.warn(
+            "Pending documents pre-filter failed for table {}, walking it for every client",
+            tableId, ex);
+        discardFailedQuery();
+        pendingClients = clientIds;
+      }
+      for (String clientId : pendingClients) {
+        if (clientIds.contains(clientId)) {
+          result.computeIfAbsent(clientId, k -> new LinkedHashSet<>()).add(tableId);
+        }
       }
     }
     return result;
   }
 
-  private static Set<String> selectClientsWithPendingDocs(Connection conn, String tableId)
-      throws SQLException {
-    String tableName = null;
-    try (PreparedStatement ps = conn
-        .prepareStatement("SELECT tablename FROM ad_table WHERE ad_table_id = ?")) {
-      ps.setString(1, tableId);
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          tableName = rs.getString(1);
-        }
-      }
-    }
-    if (tableName == null || !TABLE_NAME.matcher(tableName).matches()) {
+  private static Set<String> selectClientsWithPendingDocs(ConnectionProvider cp, String tableId)
+      throws ServletException {
+    final String tableName = AcctServerProcessData.selectTableName(cp, tableId);
+    // SqlC pastes the table name into the query: only a plain identifier may get there
+    if (!TABLE_NAME.matcher(tableName).matches()) {
       // Handled by the caller's fallback: the table is walked for every client
-      throw new SQLException("No valid table name for AD_Table_ID " + tableId);
+      throw new ServletException("No valid table name for AD_Table_ID " + tableId);
     }
     final Set<String> clients = new HashSet<>();
-    // Same pending condition as AcctServerData.select. Concatenating is safe: the table name comes
-    // from AD_Table and was checked against TABLE_NAME above
-    try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT ad_client_id FROM "
-        + tableName
-        + " WHERE posted = 'N' AND processed = 'Y' AND (processing = 'N' OR processing IS NULL)");
-        ResultSet rs = ps.executeQuery()) {
-      while (rs.next()) {
-        clients.add(rs.getString(1));
-      }
+    for (AcctServerProcessData row : AcctServerProcessData.selectClientsWithPendingDocs(cp,
+        tableName)) {
+      clients.add(row.adClientId);
     }
     return clients;
+  }
+
+  /**
+   * A failed query aborts the PostgreSQL transaction of the process connection, so every later
+   * query would fail too. Nothing has been written yet when the pre-filter runs.
+   */
+  private static void discardFailedQuery() {
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } catch (Exception ex) {
+      log4j.error("Could not discard the DAL session after a failed pre-filter query", ex);
+    }
   }
 
   /**

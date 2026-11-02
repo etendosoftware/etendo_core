@@ -19,26 +19,27 @@ package org.openbravo.erpCommon.ad_process;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +49,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -59,6 +61,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
+import org.openbravo.service.db.QueryTimeOutUtil;
 import org.openbravo.scheduling.ProcessLogger;
 
 /**
@@ -90,7 +93,6 @@ public class AcctServerProcessHelpersTest {
   @Mock
   private OBDal mockOBDal;
 
-  private final List<String> pendingSql = new ArrayList<>();
   private MockedStatic<OBDal> obDalStatic;
 
   /**
@@ -113,78 +115,86 @@ public class AcctServerProcessHelpersTest {
     obDalStatic.close();
   }
 
-
   /**
    * Tests the pending documents pre-filter: clients outside the active set are dropped, and a
-   * table whose query fails is kept for every active client.
+   * table whose query fails, or whose name is not valid, is kept for every active client. A
+   * failed query also discards the DAL session, whose transaction it aborted.
     * @throws Exception if an error occurs
    */
   @Test
   public void testClientsWithPendingDocsFallsBackOnFailingTable() throws Exception {
-    Map<String, Object> pending = new HashMap<>();
-    pending.put(INVOICE_TABLE, Arrays.asList(NON_SYSTEM_CLIENT_ID, "INACTIVE"));
-    pending.put(PAYMENT_TABLE, new SQLException("column \"posted\" does not exist", "42703"));
-    Connection conn = mockJdbc(pending);
-    when(mockConnection.getTransactionConnection()).thenReturn(conn);
     Set<String> activeClients = new HashSet<>(Arrays.asList(NON_SYSTEM_CLIENT_ID,
         OTHER_CLIENT_ID));
+    Map<String, Set<String>> result;
+    try (MockedStatic<AcctServerProcessData> data = mockStatic(AcctServerProcessData.class)) {
+      stubTableNames(data);
+      data.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(mockConnection,
+          INVOICE_TABLE)).thenReturn(pendingRows(NON_SYSTEM_CLIENT_ID, "INACTIVE"));
+      data.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(mockConnection,
+          PAYMENT_TABLE)).thenThrow(new ServletException("@CODE=0@column posted does not exist"));
 
-    Map<String, Set<String>> result = AcctServerProcess.clientsWithPendingDocs(mockConnection,
-        new String[] { TEST_TABLE_ID, OTHER_TABLE_ID, UNKNOWN_TABLE_ID }, activeClients);
+      result = AcctServerProcess.clientsWithPendingDocs(mockConnection,
+          new String[] { TEST_TABLE_ID, OTHER_TABLE_ID, UNKNOWN_TABLE_ID }, activeClients);
 
-    // A failing query and a table without a valid name both fall back to every active client
+      // The query is never built with a name that is not a plain identifier
+      data.verify(() -> AcctServerProcessData.selectClientsWithPendingDocs(any(), eq("")),
+          never());
+    }
+
     assertEquals(new HashSet<>(Arrays.asList(TEST_TABLE_ID, OTHER_TABLE_ID, UNKNOWN_TABLE_ID)),
         result.get(NON_SYSTEM_CLIENT_ID));
     assertEquals(new HashSet<>(Arrays.asList(OTHER_TABLE_ID, UNKNOWN_TABLE_ID)),
         result.get(OTHER_CLIENT_ID));
     assertFalse(result.containsKey("INACTIVE"));
-    verify(conn, times(2)).rollback();
-    verify(mockConnection).releaseRollbackConnection(conn);
+    verify(mockOBDal, times(2)).rollbackAndClose();
   }
 
   /**
-   * Tests that the pre-filter selects exactly the documents AcctServerData.select would post,
-   * minus its organization, period and date conditions: that is what makes it a superset.
+   * Tests that the pre-filter query selects exactly the documents AcctServerData.select would
+   * post, minus its organization, period and date conditions: that is what makes it a superset.
+   * Runs the generated SqlC method and checks the SQL it sends.
     * @throws Exception if an error occurs
    */
   @Test
   public void testClientsWithPendingDocsUsesThePostingSelectionCondition() throws Exception {
-    Map<String, Object> pending = new HashMap<>();
-    pending.put(INVOICE_TABLE, Collections.emptyList());
-    Connection conn = mockJdbc(pending);
-    when(mockConnection.getTransactionConnection()).thenReturn(conn);
+    PreparedStatement ps = mock(PreparedStatement.class);
+    ResultSet rs = mock(ResultSet.class);
+    when(ps.executeQuery()).thenReturn(rs);
+    when(mockConnection.getPreparedStatement(anyString())).thenReturn(ps);
 
-    AcctServerProcess.clientsWithPendingDocs(mockConnection, new String[] { TEST_TABLE_ID },
-        Collections.singleton(NON_SYSTEM_CLIENT_ID));
+    try (MockedStatic<QueryTimeOutUtil> timeout = mockStatic(QueryTimeOutUtil.class)) {
+      timeout.when(QueryTimeOutUtil::getInstance).thenReturn(mock(QueryTimeOutUtil.class));
+      AcctServerProcessData.selectClientsWithPendingDocs(mockConnection, INVOICE_TABLE);
+    }
 
-    assertEquals(1, pendingSql.size());
-    String sql = pendingSql.get(0);
-    assertTrue(sql, sql.startsWith("SELECT DISTINCT ad_client_id FROM " + INVOICE_TABLE + " "));
-    assertTrue(sql, sql.contains("posted = 'N'"));
-    assertTrue(sql, sql.contains("processed = 'Y'"));
-    assertTrue(sql, sql.contains("(processing = 'N' OR processing IS NULL)"));
+    ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockConnection).getPreparedStatement(sqlCaptor.capture());
+    String sql = sqlCaptor.getValue().replaceAll("\\s+", " ").trim();
+    assertTrue(sql, sql.startsWith("SELECT DISTINCT AD_CLIENT_ID FROM " + INVOICE_TABLE + " "));
+    assertTrue(sql, sql.contains("POSTED = 'N'"));
+    assertTrue(sql, sql.contains("PROCESSED = 'Y'"));
+    assertTrue(sql, sql.contains("(PROCESSING = 'N' OR PROCESSING IS NULL)"));
   }
 
   /**
-   * Tests that a connection failure in the pre-filter is not hidden by the per-table fallback.
+   * Tests that a broken session that cannot be discarded after a failed query does not stop the
+   * pre-filter: the table still falls back to every active client.
     * @throws Exception if an error occurs
    */
   @Test
-  public void testClientsWithPendingDocsRethrowsConnectionFailure() throws Exception {
-    Map<String, Object> pending = new HashMap<>();
-    SQLException connectionClosed = new SQLException("connection closed", "08006");
-    pending.put(INVOICE_TABLE, connectionClosed);
-    Connection conn = mockJdbc(pending);
-    when(mockConnection.getTransactionConnection()).thenReturn(conn);
-    // Releasing the broken connection fails too: the original failure must still surface
-    doThrow(new SQLException("already closed")).when(mockConnection)
-        .releaseRollbackConnection(conn);
+  public void testClientsWithPendingDocsSurvivesAFailingSessionDiscard() throws Exception {
+    doThrow(new IllegalStateException("session closed")).when(mockOBDal).rollbackAndClose();
+    Map<String, Set<String>> result;
+    try (MockedStatic<AcctServerProcessData> data = mockStatic(AcctServerProcessData.class)) {
+      stubTableNames(data);
+      data.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(mockConnection,
+          INVOICE_TABLE)).thenThrow(new ServletException("@CODE=0@connection closed"));
 
-    SQLException thrown = expectThrows(SQLException.class,
-        () -> AcctServerProcess.clientsWithPendingDocs(mockConnection,
-            new String[] { TEST_TABLE_ID }, Collections.singleton(NON_SYSTEM_CLIENT_ID)));
-    assertSame(connectionClosed, thrown);
-    verify(mockConnection).releaseRollbackConnection(conn);
+      result = AcctServerProcess.clientsWithPendingDocs(mockConnection,
+          new String[] { TEST_TABLE_ID }, Collections.singleton(NON_SYSTEM_CLIENT_ID));
+    }
+
+    assertEquals(Collections.singleton(TEST_TABLE_ID), result.get(NON_SYSTEM_CLIENT_ID));
   }
 
   /**
@@ -297,29 +307,23 @@ public class AcctServerProcessHelpersTest {
     assertNotNull(logContent);
   }
 
-
-  private Connection mockJdbc(Map<String, Object> pendingByTable) throws SQLException {
-    Map<String, String> tableNames = new HashMap<>();
-    tableNames.put(TEST_TABLE_ID, INVOICE_TABLE);
-    tableNames.put(OTHER_TABLE_ID, PAYMENT_TABLE);
-    return PendingDocsJdbcMock.mockJdbc(tableNames, pendingByTable, pendingSql);
+  private void stubTableNames(MockedStatic<AcctServerProcessData> data) {
+    data.when(() -> AcctServerProcessData.selectTableName(mockConnection, TEST_TABLE_ID))
+        .thenReturn(INVOICE_TABLE);
+    data.when(() -> AcctServerProcessData.selectTableName(mockConnection, OTHER_TABLE_ID))
+        .thenReturn(PAYMENT_TABLE);
+    // An unknown AD_Table_ID: SqlC returns the method default
+    data.when(() -> AcctServerProcessData.selectTableName(mockConnection, UNKNOWN_TABLE_ID))
+        .thenReturn("");
   }
 
-  private interface ThrowingRunnable {
-    void run() throws Exception;
-  }
-
-  private <T extends Exception> T expectThrows(Class<T> expected, ThrowingRunnable action) {
-    try {
-      action.run();
-    } catch (Exception ex) {
-      if (expected.isInstance(ex)) {
-        return expected.cast(ex);
-      }
-      throw new AssertionError("Expected " + expected.getName() + " but got " + ex, ex);
+  private AcctServerProcessData[] pendingRows(String... clientIds) {
+    AcctServerProcessData[] rows = new AcctServerProcessData[clientIds.length];
+    for (int i = 0; i < clientIds.length; i++) {
+      rows[i] = new ObjenesisStd().newInstance(AcctServerProcessData.class);
+      rows[i].adClientId = clientIds[i];
     }
-    fail("Expected " + expected.getName());
-    return null;
+    return rows;
   }
 
   private void setPrivateField(Object target, String fieldName, Object value)

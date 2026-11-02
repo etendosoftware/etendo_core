@@ -23,7 +23,7 @@
    <SqlMethod name="selectUserOrg" type="preparedStatement" return="multiple">
       <SqlMethodComment></SqlMethodComment>
       <Sql><![CDATA[
-      SELECT CREATEDBY AS AD_USER_ID, AD_ORG_ID, '' AS AD_TABLE_ID FROM AD_PROCESS
+      SELECT CREATEDBY AS AD_USER_ID, AD_ORG_ID, '' AS AD_TABLE_ID, '' AS AD_CLIENT_ID FROM AD_PROCESS
       WHERE AD_PROCESS_ID = ?
     ]]></Sql>
     <Parameter name="adProcessId"/>
@@ -123,6 +123,25 @@
        AND PARAMETERNAME = 'DateTo'
      ]]></Sql>
      <Parameter name="adPinstanceId"/>
+   </SqlMethod>
+   <SqlMethod name="selectTableName" type="preparedStatement" return="String" default="">
+     <SqlMethodComment></SqlMethodComment>
+     <Sql><![CDATA[
+       SELECT TABLENAME FROM AD_TABLE
+       WHERE AD_TABLE_ID = ?
+     ]]></Sql>
+     <Parameter name="adTableId"/>
+   </SqlMethod>
+   <SqlMethod name="selectClientsWithPendingDocs" type="preparedStatement" return="multiple">
+     <SqlMethodComment>Clients with documents pending to be posted: same condition as AcctServerData.select, without its organization, period and date filters</SqlMethodComment>
+     <Sql><![CDATA[
+       SELECT DISTINCT AD_CLIENT_ID
+       FROM C_INVOICE
+       WHERE POSTED = 'N'
+       AND PROCESSED = 'Y'
+       AND (PROCESSING = 'N' OR PROCESSING IS NULL)
+     ]]></Sql>
+     <Parameter name="tableName" type="replace" optional="true" after="FROM " text="C_INVOICE"/>
    </SqlMethod>
    <SqlMethod name="useRequestProcessOrg" type="preparedStatement" return="boolean">
     <SqlMethodComment></SqlMethodComment>

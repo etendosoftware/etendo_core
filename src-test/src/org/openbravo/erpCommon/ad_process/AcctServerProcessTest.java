@@ -35,7 +35,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -239,14 +238,17 @@ public class AcctServerProcessTest {
             createAcctServerProcessData(OTHER_TABLE_ID) });
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
         .thenReturn(false);
-    Map<String, Object> pending = new HashMap<>();
-    pending.put(INVOICE_TABLE, Collections.singletonList(NON_SYSTEM_CLIENT_ID));
-    pending.put(PAYMENT_TABLE, Collections.emptyList());
-    Map<String, String> tableNames = new HashMap<>();
-    tableNames.put(TEST_TABLE_ID, INVOICE_TABLE);
-    tableNames.put(OTHER_TABLE_ID, PAYMENT_TABLE);
-    Connection conn = PendingDocsJdbcMock.mockJdbc(tableNames, pending, new ArrayList<>());
-    when(mockConnection.getTransactionConnection()).thenReturn(conn);
+    // Pending documents: only the first client, only in the first table
+    AcctServerProcessData pendingRow = createAcctServerProcessData(null);
+    pendingRow.adClientId = NON_SYSTEM_CLIENT_ID;
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTableName(mockConnection,
+        TEST_TABLE_ID)).thenReturn(INVOICE_TABLE);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTableName(mockConnection,
+        OTHER_TABLE_ID)).thenReturn(PAYMENT_TABLE);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(
+        mockConnection, INVOICE_TABLE)).thenReturn(new AcctServerProcessData[] { pendingRow });
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(
+        mockConnection, PAYMENT_TABLE)).thenReturn(new AcctServerProcessData[0]);
 
     acctServerStatic.when(() -> AcctServer.get(anyString(), anyString(), anyString(), any()))
         .thenReturn(mockAcctServer);
@@ -264,7 +266,8 @@ public class AcctServerProcessTest {
         any()), never());
     acctServerStatic.verify(() -> AcctServer.get(anyString(), eq(OTHER_CLIENT_ID), anyString(),
         any()), never());
-    verify(mockConnection).releaseRollbackConnection(conn);
+    // No query failed, so the DAL session is kept
+    verify(mockOBDal, never()).rollbackAndClose();
     verify(mockLogger).log(argThat(msg -> msg.contains("active clients: 2 / with pending: 1")));
     // Its pending documents could not be selected (checkDocuments false): no header, listed once
     verify(mockLogger, never()).log(argThat(msg -> msg.startsWith(CLIENT_PREFIX)));
@@ -537,7 +540,8 @@ public class AcctServerProcessTest {
 
     acctServerProcess.doExecute(mockBundle);
 
-    verify(mockConnection, never()).getTransactionConnection();
+    acctServerProcessDataStatic.verify(() -> AcctServerProcessData.selectClientsWithPendingDocs(
+        any(), anyString()), never());
     acctServerStatic.verify(() -> AcctServer.get(eq(TEST_TABLE_ID), eq(NON_SYSTEM_CLIENT_ID),
         anyString(), any()));
     verify(mockLogger, never()).log(argThat(msg -> msg.startsWith(CLIENT_PREFIX)
