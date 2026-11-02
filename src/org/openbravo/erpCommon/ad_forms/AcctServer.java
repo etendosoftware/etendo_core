@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -469,6 +470,8 @@ public abstract class AcctServer {
   public int errors = 0;
   public static boolean throwErrors = false;
   int success = 0;
+  // Record id -> {document no, posted status} of the documents that failed to post in run()
+  private final Map<String, String[]> failedDocs = new LinkedHashMap<>();
   // Distinguish background process
   boolean isBackground = false;
 
@@ -550,6 +553,11 @@ public abstract class AcctServer {
         postSuccess = tempServer.post(data[i].getField("ID"), false, vars, connectionProvider, con);
         errors = errors + tempServer.errors;
         success = success + tempServer.success;
+        // post() returns true when the document fails to post, so the error counter is the signal
+        if (tempServer.errors > 0) {
+          failedDocs.put(data[i].getField("ID"),
+              new String[] { tempServer.DocumentNo, tempServer.getStatus() });
+        }
         if (!postSuccess) {
           connectionProvider.releaseRollbackConnection(con);
           return;
@@ -2486,6 +2494,21 @@ public abstract class AcctServer {
    */
   public String getInfo(String language) {
     return (Utility.messageBD(connectionProvider, "Created", language) + "=" + success);
+  }
+
+  /**
+   * @return the number of documents posted by {@link #run} on this instance
+   */
+  public int getSuccess() {
+    return success;
+  }
+
+  /**
+   * @return record id to {document no, posted status} of the documents that failed to post in
+   *         {@link #run}
+   */
+  public Map<String, String[]> getFailedDocs() {
+    return failedDocs;
   }
 
   public boolean checkDocuments() throws ServletException {
