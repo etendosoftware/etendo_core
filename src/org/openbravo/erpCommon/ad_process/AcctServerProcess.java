@@ -326,15 +326,7 @@ public class AcctServerProcess extends DalBaseProcess {
       strOrg = localVars.getOrg();
     }
     for (String table : tablesToWalk(strTable, onlyTables)) {
-      currentTable = table;
-      try {
-        processTable(table, localVars, strOrg, strDateFrom, strDateTo, ctx);
-      } catch (Exception ex) {
-        if (isConnectionFailure(ex)) {
-          throw ex;
-        }
-        logFailedTable(ex);
-      }
+      processTableOrLogFailure(table, localVars, strOrg, strDateFrom, strDateTo, ctx);
     }
     // The pre-filter found pending documents, but none could be selected for posting
     if (onlyTables != null && !isDirect && !clientHeaderLogged) {
@@ -390,6 +382,21 @@ public class AcctServerProcess extends DalBaseProcess {
       return new String[] { strTable };
     }
     return onlyTables != null ? onlyTables.toArray(new String[0]) : TableIds;
+  }
+
+  /** Posts one table; a failure other than a lost connection is logged and the run goes on. */
+  private void processTableOrLogFailure(String table, VariablesSecureApp localVars, String strOrg,
+      String strDateFrom, String strDateTo, ProcessContext ctx)
+      throws ServletException, IOException {
+    currentTable = table;
+    try {
+      processTable(table, localVars, strOrg, strDateFrom, strDateTo, ctx);
+    } catch (Exception ex) {
+      if (isConnectionFailure(ex)) {
+        throw ex;
+      }
+      logFailedTable(ex);
+    }
   }
 
   /** Logs a table that threw; the remaining tables are still posted and the run ends as ERROR. */
