@@ -554,7 +554,7 @@ public abstract class AcctServer {
         postSuccess = tempServer.post(data[i].getField("ID"), false, vars, connectionProvider, con);
         errors = errors + tempServer.errors;
         success = success + tempServer.success;
-        // post() returns true when the document fails to post, so the error counter is the signal
+        // post() also returns true when the document fails to post: the error counter is the signal
         if (tempServer.errors > 0) {
           failedDocs.put(data[i].getField("ID"),
               new String[] { tempServer.DocumentNo, tempServer.getStatus() });
