@@ -471,32 +471,81 @@ public class AcctServerTest {
    */
   @Test
   public void testRunRecordsDocumentsThatFailToPost() throws Exception {
+    AcctServer failing = mock(AcctServer.class);
+    failing.errors = 1;
+    failing.DocumentNo = "GL-1";
+    when(failing.getStatus()).thenReturn("E");
+    when(failing.post(eq("DOC1"), eq(false), any(), any(), any())).thenReturn(true);
+    AcctServer posting = mock(AcctServer.class);
+    posting.success = 1;
+    when(posting.post(eq("DOC2"), eq(false), any(), any(), any())).thenReturn(true);
+
+    ConnectionProvider cp = runBatch(failing, posting);
+
+    assertEquals(1, instance.getSuccess());
+    assertEquals(1, instance.errors);
+    Map<String, String[]> failed = instance.getFailedDocs();
+    assertEquals(Collections.singleton("DOC1"), failed.keySet());
+    assertArrayEquals(new String[] { "GL-1", "E" }, failed.get("DOC1"));
+    assertNull(instance.getBlockedDoc());
+    verify(cp, times(2)).releaseCommitConnection(any());
+  }
+
+  /**
+   * Tests that a document post() could not handle (e.g. locked by a concurrent posting) ends the
+   * batch and is reported as the blocking document.
+   * @throws Exception if an error occurs
+   */
+  @Test
+  public void testRunReportsTheDocumentThatEndedTheBatch() throws Exception {
+    AcctServer locked = mock(AcctServer.class);
+    locked.DocumentNo = "GL-1";
+    when(locked.getStatus()).thenReturn(AcctServer.STATUS_DocumentLocked);
+    when(locked.post(eq("DOC1"), eq(false), any(), any(), any())).thenReturn(false);
+
+    ConnectionProvider cp = runBatch(locked, mock(AcctServer.class));
+
+    assertArrayEquals(new String[] { "DOC1", "GL-1", "L", null }, instance.getBlockedDoc());
+    assertEquals(0, instance.getSuccess());
+    verify(cp).releaseRollbackConnection(any());
+  }
+
+  /**
+   * Tests that an unexpected error while posting a document, which run() only logs, is reported
+   * with that document as the blocking one.
+   * @throws Exception if an error occurs
+   */
+  @Test
+  public void testRunReportsTheDocumentThatFailedWithAnError() throws Exception {
+    AcctServer broken = mock(AcctServer.class);
+    when(broken.post(eq("DOC1"), eq(false), any(), any(), any()))
+        .thenThrow(new IllegalStateException("boom"));
+
+    runBatch(broken, mock(AcctServer.class));
+
+    assertArrayEquals(new String[] { "DOC1", "", null, "boom" }, instance.getBlockedDoc());
+  }
+
+  /**
+   * Runs one batch of documents DOC1 and DOC2, posted by the given servers in that order.
+   */
+  private ConnectionProvider runBatch(AcctServer first, AcctServer second) throws Exception {
     Field failedDocsField = AcctServer.class.getDeclaredField("failedDocs");
     failedDocsField.setAccessible(true);
     failedDocsField.set(instance, new LinkedHashMap<String, String[]>());
     ConnectionProvider cp = mock(ConnectionProvider.class);
-    Connection con = mock(Connection.class);
     when(cp.getRDBMS()).thenReturn("POSTGRE");
-    when(cp.getTransactionConnection()).thenReturn(con);
+    when(cp.getTransactionConnection()).thenReturn(mock(Connection.class));
     instance.connectionProvider = cp;
     instance.AD_Client_ID = "1000000";
     instance.AD_Org_ID = "0";
     instance.AD_Table_ID = "224";
     instance.tableName = "GL_Journal";
     instance.strDateColumn = "DateAcct";
-
-    AcctServerData failedRow = new ObjenesisStd().newInstance(AcctServerData.class);
-    failedRow.id = "DOC1";
-    AcctServerData postedRow = new ObjenesisStd().newInstance(AcctServerData.class);
-    postedRow.id = "DOC2";
-    AcctServer failing = mock(AcctServer.class);
-    failing.errors = 1;
-    failing.DocumentNo = "GL-1";
-    when(failing.getStatus()).thenReturn("E");
-    when(failing.post(eq("DOC1"), eq(false), any(), eq(cp), eq(con))).thenReturn(true);
-    AcctServer posting = mock(AcctServer.class);
-    posting.success = 1;
-    when(posting.post(eq("DOC2"), eq(false), any(), eq(cp), eq(con))).thenReturn(true);
+    AcctServerData doc1 = new ObjenesisStd().newInstance(AcctServerData.class);
+    doc1.id = "DOC1";
+    AcctServerData doc2 = new ObjenesisStd().newInstance(AcctServerData.class);
+    doc2.id = "DOC2";
 
     try (MockedStatic<OBContext> obContext = mockStatic(OBContext.class);
         MockedStatic<OBDal> obDal = mockStatic(OBDal.class);
@@ -510,18 +559,11 @@ public class AcctServerTest {
       obDal.when(OBDal::getInstance).thenReturn(mock(OBDal.class));
       data.when(() -> AcctServerData.select(eq(cp), eq("GL_Journal"), eq("DateAcct"),
           eq("1000000"), anyString(), any(), any(), anyString()))
-          .thenReturn(new AcctServerData[] { failedRow, postedRow });
-      acctServer.when(() -> AcctServer.get("224", "1000000", "0", cp))
-          .thenReturn(failing, posting);
+          .thenReturn(new AcctServerData[] { doc1, doc2 });
+      acctServer.when(() -> AcctServer.get("224", "1000000", "0", cp)).thenReturn(first, second);
 
       instance.run(mock(VariablesSecureApp.class), "", "");
     }
-
-    assertEquals(1, instance.getSuccess());
-    assertEquals(1, instance.errors);
-    Map<String, String[]> failed = instance.getFailedDocs();
-    assertEquals(Collections.singleton("DOC1"), failed.keySet());
-    assertArrayEquals(new String[] { "GL-1", "E" }, failed.get("DOC1"));
-    verify(cp, times(2)).releaseCommitConnection(con);
+    return cp;
   }
 }

@@ -473,6 +473,8 @@ public abstract class AcctServer {
   int success = 0;
   // Record id -> {document no, posted status} of the documents that failed to post in run()
   private final Map<String, String[]> failedDocs = new LinkedHashMap<>();
+  // {record id, document no, posted status, error} of the document that ended the last run() early
+  private String[] blockedDoc;
   // Distinguish background process
   boolean isBackground = false;
 
@@ -518,6 +520,8 @@ public abstract class AcctServer {
       AD_Client_ID = vars.getClient();
     }
     Connection con = null;
+    String currentId = null;
+    blockedDoc = null;
     try {
       String strIDs = "";
 
@@ -547,7 +551,8 @@ public abstract class AcctServer {
 
       for (int i = 0; data != null && i < data.length; i++) {
         con = connectionProvider.getTransactionConnection();
-        strIDs += data[i].getField("ID") + ", ";
+        currentId = data[i].getField("ID");
+        strIDs += currentId + ", ";
         this.setMessageResult(null);
         AcctServer tempServer = get(AD_Table_ID, AD_Client_ID, AD_Org_ID, connectionProvider);
         boolean postSuccess = false;
@@ -560,6 +565,8 @@ public abstract class AcctServer {
               new String[] { tempServer.DocumentNo, tempServer.getStatus() });
         }
         if (!postSuccess) {
+          blockedDoc = new String[] { currentId, tempServer.DocumentNo, tempServer.getStatus(),
+              null };
           connectionProvider.releaseRollbackConnection(con);
           return;
         } else {
@@ -582,6 +589,9 @@ public abstract class AcctServer {
           "@CODE=" + Integer.toString(ex2.getErrorCode()) + "@" + ex2.getMessage(), ex2);
     } catch (Exception ex3) {
       log4j.error("Exception in AcctServer.run", ex3);
+      if (currentId != null) {
+        blockedDoc = new String[] { currentId, "", null, ex3.getMessage() };
+      }
       try {
         connectionProvider.releaseRollbackConnection(con);
       } catch (SQLException se) {
@@ -2510,6 +2520,15 @@ public abstract class AcctServer {
    */
   public Map<String, String[]> getFailedDocs() {
     return Collections.unmodifiableMap(failedDocs);
+  }
+
+  /**
+   * @return {record id, document no, posted status, error message} of the document that ended the
+   *         last {@link #run} before the end of its batch (not posted, e.g. locked by a concurrent
+   *         posting, or an unexpected error), or null if the batch was walked to the end
+   */
+  public String[] getBlockedDoc() {
+    return blockedDoc == null ? null : blockedDoc.clone();
   }
 
   public boolean checkDocuments() throws ServletException {

@@ -419,17 +419,22 @@ public class AcctServerProcessTest {
         eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn("Test Table");
     acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
         any())).thenReturn(mockAcctServer);
-    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true);
+    // Bounded, so a broken loop guard fails the run count instead of hanging the test
+    when(mockAcctServer.checkDocuments(anyString(), anyString()))
+        .thenReturn(true, true, true, false);
     when(mockAcctServer.getFailedDocs())
         .thenReturn(Collections.singletonMap("DOC1", new String[] { "10000261", "i" }));
     when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
+    when(mockAcctServer.getBlockedDoc()).thenReturn(new String[] { "DOC9", "1000123", "L", null });
     doReturn(" - Invalid Account").when(acctServerProcess).postedStatusName("i", TEST_LANGUAGE);
+    doReturn(" - Document Locked").when(acctServerProcess).postedStatusName("L", TEST_LANGUAGE);
 
     acctServerProcess.doExecute(mockBundle);
 
     verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log("Client " + NON_SYSTEM_CLIENT_ID + "\n");
-    verify(mockLogger).log("  Test Table: no progress, remaining documents left for the next run\n");
+    verify(mockLogger).log("  Test Table: no progress, stopped at 1000123 (DOC9) / L - Document"
+        + " Locked, remaining documents left for the next run\n");
     verify(mockLogger).log("  Test Table: posted 0, failed 1\n");
     verify(mockLogger, never()).log(argThat(msg -> msg.startsWith("Accounting - ")));
     verify(mockLogger).log(argThat(msg -> msg.contains("- failed: 1")));
@@ -449,7 +454,8 @@ public class AcctServerProcessTest {
         eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn("Test Table");
     acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
         any())).thenReturn(mockAcctServer);
-    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true);
+    when(mockAcctServer.checkDocuments(anyString(), anyString()))
+        .thenReturn(true, true, true, false);
     // First batch posts one document, the second one throws
     when(mockAcctServer.getSuccess()).thenReturn(0, 1);
     doAnswer(inv -> null).doThrow(new ServletException("deadlock detected"))
@@ -462,6 +468,48 @@ public class AcctServerProcessTest {
     order.verify(mockLogger).log(argThat(msg -> msg.startsWith("ERROR: ")
         && msg.endsWith(": deadlock detected\n")));
     verify(mockLogger).log(argThat(msg -> msg.contains("- posted: 1 - failed: 0")));
+  }
+
+  /**
+   * Tests that a table stopped for lack of progress names the document whose unexpected error
+   * ended the last batch.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testNoProgressNamesTheDocumentThatFailedWithAnError() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn("Test Table");
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString()))
+        .thenReturn(true, true, true, false);
+    when(mockAcctServer.getBlockedDoc()).thenReturn(new String[] { "DOC9", "", null, "boom" });
+    doReturn("Shipment 1 (DOC9)").when(acctServerProcess).documentLabel(any(), eq("DOC9"), eq(""));
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log("  Test Table: no progress, stopped at Shipment 1 (DOC9): boom,"
+        + " remaining documents left for the next run\n");
+  }
+
+  /**
+   * Tests that a failure reading the client list is logged with the System label.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testClientListFailureIsLoggedWithSystemLabel() throws Exception {
+    setupBasicBundleMocks();
+    when(mockVars.getClient()).thenReturn(SYSTEM_CLIENT_ID);
+    when(mockBundle.getChannel()).thenReturn(Channel.BACKGROUND);
+    when(mockOBDal.createCriteria(Client.class)).thenReturn(mockClientCriteria);
+    when(mockClientCriteria.add(any(Criterion.class))).thenReturn(mockClientCriteria);
+    when(mockClientCriteria.list()).thenThrow(new IllegalStateException("db down"));
+
+    expectThrows(IllegalStateException.class, () -> acctServerProcess.doExecute(mockBundle));
+
+    verify(mockLogger).log("ERROR: System / active clients: db down\n");
   }
 
   /**

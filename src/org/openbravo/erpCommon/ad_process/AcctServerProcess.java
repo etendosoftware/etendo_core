@@ -124,6 +124,8 @@ public class AcctServerProcess extends DalBaseProcess {
   }
 
   private void processAllClients(ProcessBundle bundle) throws Exception {
+    currentClient = "System";
+    currentTable = "active clients";
     final OBCriteria<Client> obc = OBDal.getInstance().createCriteria(Client.class);
     obc.add(Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID)));
     final List<Client> clients = obc.list();
@@ -135,7 +137,6 @@ public class AcctServerProcess extends DalBaseProcess {
       for (Client c : clients) {
         clientIds.add(c.getId());
       }
-      currentClient = "System";
       currentTable = "pending documents check";
       pendingTables = clientsWithPendingDocs(connection, selectAcctTableIds(), clientIds);
       preFiltered = true;
@@ -442,7 +443,8 @@ public class AcctServerProcess extends DalBaseProcess {
           // row mean documents left at posted='N' that would be selected again forever: leave them
           log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
           logClientHeader();
-          addLog("  " + strTableDesc + ": no progress, remaining documents left for the next run");
+          addLog("  " + strTableDesc + ": no progress" + blockedDocText(acct, ctx.getLanguage())
+              + ", remaining documents left for the next run");
           break;
         }
 
@@ -462,6 +464,24 @@ public class AcctServerProcess extends DalBaseProcess {
         collectFailedDocs(acct, strTableDesc, ctx.getLanguage());
       }
     }
+  }
+
+  /** Names the document that ended the last batch early, when posting reported one. */
+  private String blockedDocText(AcctServer acct, String language) {
+    final String[] blocked = acct.getBlockedDoc();
+    if (blocked == null) {
+      return "";
+    }
+    final String status = blocked[2];
+    final String detail;
+    if (blocked[3] != null) {
+      detail = ": " + blocked[3];
+    } else if (status != null && !status.isEmpty()) {
+      detail = " / " + status + postedStatusName(status, language);
+    } else {
+      detail = "";
+    }
+    return ", stopped at " + documentLabel(acct.AD_Table_ID, blocked[0], blocked[1]) + detail;
   }
 
   private void collectFailedDocs(AcctServer acct, String strTableDesc, String language) {
