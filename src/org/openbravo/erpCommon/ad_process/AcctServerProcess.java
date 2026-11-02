@@ -70,7 +70,7 @@ public class AcctServerProcess extends DalBaseProcess {
 
   private String[] TableIds = null;
 
-  private static final Pattern TABLE_NAME = Pattern.compile("[A-Za-z0-9_]+");
+  private static final Pattern TABLE_NAME = Pattern.compile("\\w+");
   private static final int MAX_FAILED_LINES = 100;
 
   // Run summary and error context (DefaultJob creates a new instance per run)
@@ -288,15 +288,13 @@ public class AcctServerProcess extends DalBaseProcess {
    */
   private void processClient(VariablesSecureApp vars, ProcessBundle bundle,
       Set<String> onlyTables, String clientLabel) throws ServletException, IOException {
-    VariablesSecureApp localVars = vars;
-    final String processId = bundle.getProcessId();
     final String pinstanceId = bundle.getPinstanceId();
     final ProcessContext ctx = bundle.getContext();
-    currentClient = clientLabel.isEmpty() ? localVars.getClient() : clientLabel;
+    currentClient = clientLabel.isEmpty() ? vars.getClient() : clientLabel;
     currentTable = "";
 
     if (log4j.isDebugEnabled()) {
-      log4j.debug("Processing client: " + localVars.getClient());
+      log4j.debug("Processing client: " + vars.getClient());
     }
 
     if (isDirect) {
@@ -305,46 +303,11 @@ public class AcctServerProcess extends DalBaseProcess {
       // Written with the first table line, so clients with nothing done stay out of the log
       clientHeaderLogged = false;
     }
-    if (localVars == null) {
-      try {
-        final AcctServerProcessData[] dataOrg = AcctServerProcessData.selectUserOrg(connection,
-            processId);
-        if (dataOrg == null || dataOrg.length == 0) {
-          if (isDirect) {
-            addLog("@DL_LOAD_FAILED@");
-          } else {
-            addLog("User and Organization loading failed.");
-          }
-          return;
-        }
-        localVars = new VariablesSecureApp(dataOrg[0].adUserId, ctx.getClient(),
-            dataOrg[0].adOrgId);
-      } catch (final ServletException ex) {
-        log4j.error(ex.getMessage());
-        return;
-      }
-    }
-    try {
-      final AcctServerProcessData[] data;
-      if ("0".equals(ctx.getClient())) {
-        data = AcctServerProcessData.selectAcctTable(connection);
-      } else if ("0".equals(ctx.getOrganization())) {
-        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient());
-      } else {
-        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient(),
-            ctx.getOrganization());
-      }
-      final ArrayList<Object> vTableIds = new ArrayList<Object>();
-      for (int i = 0; i < data.length; i++) {
-        vTableIds.add(data[i].adTableId);
-      }
-      TableIds = new String[vTableIds.size()];
-      vTableIds.toArray(TableIds);
-    } catch (final ServletException ex) {
-      log4j.error(ex.getMessage());
+    final VariablesSecureApp localVars = vars != null ? vars
+        : loadUserOrgVars(bundle.getProcessId(), ctx);
+    if (localVars == null || !loadTableIds(ctx)) {
       return;
     }
-    String[] tables = null;
     String strTable = "";
     // If it is the background process, we use 0
     String strOrg = "0";
@@ -362,40 +325,86 @@ public class AcctServerProcess extends DalBaseProcess {
     if (AcctServerProcessData.useRequestProcessOrg(connection)) {
       strOrg = localVars.getOrg();
     }
-    if (!strTable.equals("")) {
-      tables = new String[1];
-      tables[0] = new String(strTable);
-    } else if (onlyTables != null) {
-      tables = onlyTables.toArray(new String[0]);
-    } else {
-      tables = TableIds;
-    }
-    for (int i = 0; i < tables.length; i++) {
-      currentTable = tables[i];
+    for (String table : tablesToWalk(strTable, onlyTables)) {
+      currentTable = table;
       try {
-        processTable(tables[i], localVars, strOrg, strDateFrom, strDateTo, ctx);
+        processTable(table, localVars, strOrg, strDateFrom, strDateTo, ctx);
       } catch (Exception ex) {
         if (isConnectionFailure(ex)) {
           throw ex;
         }
-        // Keep posting the remaining tables; the run still ends as ERROR
-        log4j.error(ex.getMessage(), ex);
-        hadErrors = true;
-        logClientHeader();
-        addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
-        // Drop what the failed table left in the DAL session, so the next posted document's commit
-        // does not persist it. Documents posted so far are already committed one by one
-        try {
-          OBDal.getInstance().rollbackAndClose();
-        } catch (Exception rollbackEx) {
-          // A broken session must not stop the remaining tables: the next one opens a new one
-          log4j.error("Could not discard the DAL session after a failed table", rollbackEx);
-        }
+        logFailedTable(ex);
       }
     }
     // The pre-filter found pending documents, but none could be selected for posting
     if (onlyTables != null && !isDirect && !clientHeaderLogged) {
       notPostableClients.add(currentClient);
+    }
+  }
+
+  /** Builds the variables of the process user and organization, or returns null if missing. */
+  private VariablesSecureApp loadUserOrgVars(String processId, ProcessContext ctx) {
+    try {
+      final AcctServerProcessData[] dataOrg = AcctServerProcessData.selectUserOrg(connection,
+          processId);
+      if (dataOrg == null || dataOrg.length == 0) {
+        if (isDirect) {
+          addLog("@DL_LOAD_FAILED@");
+        } else {
+          addLog("User and Organization loading failed.");
+        }
+        return null;
+      }
+      return new VariablesSecureApp(dataOrg[0].adUserId, ctx.getClient(), dataOrg[0].adOrgId);
+    } catch (final ServletException ex) {
+      log4j.error(ex.getMessage());
+      return null;
+    }
+  }
+
+  /** Loads the accounting tables of the context into TableIds; false if they cannot be read. */
+  private boolean loadTableIds(ProcessContext ctx) {
+    try {
+      final AcctServerProcessData[] data;
+      if ("0".equals(ctx.getClient())) {
+        data = AcctServerProcessData.selectAcctTable(connection);
+      } else if ("0".equals(ctx.getOrganization())) {
+        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient());
+      } else {
+        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient(),
+            ctx.getOrganization());
+      }
+      TableIds = new String[data.length];
+      for (int i = 0; i < data.length; i++) {
+        TableIds[i] = data[i].adTableId;
+      }
+      return true;
+    } catch (final ServletException ex) {
+      log4j.error(ex.getMessage());
+      return false;
+    }
+  }
+
+  private String[] tablesToWalk(String strTable, Set<String> onlyTables) {
+    if (!strTable.equals("")) {
+      return new String[] { strTable };
+    }
+    return onlyTables != null ? onlyTables.toArray(new String[0]) : TableIds;
+  }
+
+  /** Logs a table that threw; the remaining tables are still posted and the run ends as ERROR. */
+  private void logFailedTable(Exception ex) {
+    log4j.error(ex.getMessage(), ex);
+    hadErrors = true;
+    logClientHeader();
+    addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
+    // Drop what the failed table left in the DAL session, so the next posted document's commit
+    // does not persist it. Documents posted so far are already committed one by one
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } catch (Exception rollbackEx) {
+      // A broken session must not stop the remaining tables: the next one opens a new one
+      log4j.error("Could not discard the DAL session after a failed table", rollbackEx);
     }
   }
 
@@ -453,16 +462,20 @@ public class AcctServerProcess extends DalBaseProcess {
     } finally {
       // Documents of earlier batches are already committed: count and list them even if a later
       // batch threw
-      totalPosted += acct.getSuccess();
-      final int failedCount = acct.getFailedDocs().size();
-      if (isDirect) {
-        addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()), false);
-      } else if (acct.getSuccess() > 0 || failedCount > 0) {
-        logClientHeader();
-        addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
-            + (failedCount > 0 ? ", failed " + failedCount : ""));
-        collectFailedDocs(acct, strTableDesc, ctx.getLanguage());
-      }
+      logTableResult(acct, strTableDesc, ctx.getLanguage());
+    }
+  }
+
+  private void logTableResult(AcctServer acct, String strTableDesc, String language) {
+    totalPosted += acct.getSuccess();
+    final int failedCount = acct.getFailedDocs().size();
+    if (isDirect) {
+      addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(language), false);
+    } else if (acct.getSuccess() > 0 || failedCount > 0) {
+      logClientHeader();
+      addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
+          + (failedCount > 0 ? ", failed " + failedCount : ""));
+      collectFailedDocs(acct, strTableDesc, language);
     }
   }
 
@@ -507,9 +520,9 @@ public class AcctServerProcess extends DalBaseProcess {
     OBContext.setAdminMode(true);
     try {
       final Entity entity = ModelProvider.getInstance().getEntityByTableId(tableId);
-      final BaseOBObject record = entity == null ? null
+      final BaseOBObject document = entity == null ? null
           : OBDal.getInstance().get(entity.getName(), recordId);
-      return record == null ? recordId : record.getIdentifier() + " (" + recordId + ")";
+      return document == null ? recordId : document.getIdentifier() + " (" + recordId + ")";
     } catch (Exception ex) {
       log4j.debug("Could not read the identifier of {}", recordId, ex);
       return recordId;

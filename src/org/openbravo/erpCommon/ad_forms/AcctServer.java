@@ -523,7 +523,7 @@ public abstract class AcctServer {
     String currentId = null;
     blockedDoc = null;
     try {
-      String strIDs = "";
+      final StringBuilder strIDs = new StringBuilder();
 
       if (log4j.isDebugEnabled()) {
         log4j.debug("AcctServer - Run - TableName = " + tableName + strDateFrom + strDateTo);
@@ -552,7 +552,7 @@ public abstract class AcctServer {
       for (int i = 0; data != null && i < data.length; i++) {
         con = connectionProvider.getTransactionConnection();
         currentId = data[i].getField("ID");
-        strIDs += currentId + ", ";
+        strIDs.append(currentId).append(", ");
         this.setMessageResult(null);
         AcctServer tempServer = get(AD_Table_ID, AD_Client_ID, AD_Org_ID, connectionProvider);
         boolean postSuccess = false;
