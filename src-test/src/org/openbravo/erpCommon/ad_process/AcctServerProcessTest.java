@@ -373,6 +373,8 @@ public class AcctServerProcessTest {
         any())).thenReturn(mockAcctServer);
     when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(false);
     when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
+    // Even a broken session that cannot be discarded must not stop the remaining tables
+    doThrow(new IllegalStateException("session closed")).when(mockOBDal).rollbackAndClose();
 
     expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
 
@@ -433,6 +435,33 @@ public class AcctServerProcessTest {
     verify(mockLogger).log(argThat(msg -> msg.contains("- failed: 1")));
     verify(mockLogger).log(
         "Failed: " + NON_SYSTEM_CLIENT_ID + " / Test Table / 10000261 (DOC1) / i - Invalid Account\n");
+  }
+
+  /**
+   * Tests that the documents a table posted before a later batch threw are still counted and
+   * listed: they are already committed.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testTableFailingAfterAPostedBatchKeepsItsCounts() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn("Test Table");
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true);
+    // First batch posts one document, the second one throws
+    when(mockAcctServer.getSuccess()).thenReturn(0, 1);
+    doAnswer(inv -> null).doThrow(new ServletException("deadlock detected"))
+        .when(mockAcctServer).run(any(VariablesSecureApp.class), anyString(), anyString());
+
+    expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
+
+    InOrder order = inOrder(mockLogger);
+    order.verify(mockLogger).log("  Test Table: posted 1\n");
+    order.verify(mockLogger).log(argThat(msg -> msg.startsWith("ERROR: ")
+        && msg.endsWith(": deadlock detected\n")));
+    verify(mockLogger).log(argThat(msg -> msg.contains("- posted: 1 - failed: 0")));
   }
 
   /**

@@ -184,7 +184,8 @@ public class AcctServerProcess extends DalBaseProcess {
           if (isConnectionFailure(ex)) {
             throw ex;
           }
-          log4j.warn("Pending documents pre-filter failed for table {}, walking it for every client",
+          log4j.warn(
+              "Pending documents pre-filter failed for table {}, walking it for every client",
               tableId, ex);
           conn.rollback();
           pendingClients = clientIds;
@@ -383,7 +384,12 @@ public class AcctServerProcess extends DalBaseProcess {
         addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
         // Drop what the failed table left in the DAL session, so the next posted document's commit
         // does not persist it. Documents posted so far are already committed one by one
-        OBDal.getInstance().rollbackAndClose();
+        try {
+          OBDal.getInstance().rollbackAndClose();
+        } catch (Exception rollbackEx) {
+          // A broken session must not stop the remaining tables: the next one opens a new one
+          log4j.error("Could not discard the DAL session after a failed table", rollbackEx);
+        }
       }
     }
     // The pre-filter found pending documents, but none could be selected for posting
@@ -412,44 +418,49 @@ public class AcctServerProcess extends DalBaseProcess {
     final String strTableDesc = AcctServerProcessData.selectDescription(connection,
         ctx.getLanguage(), acct.AD_Table_ID);
     currentTable = strTableDesc;
-    int total = 0;
-    int idleBatches = 0;
-    while (acct.checkDocuments(strDateFrom, strDateTo)) {
+    try {
+      int total = 0;
+      int idleBatches = 0;
+      while (acct.checkDocuments(strDateFrom, strDateTo)) {
 
-      // The background log only gets the per-table result below
-      if (isDirect) {
-        if (total == 0) {
-          addLog("@DL_ACCOUNTING@ - " + strTableDesc, false);
-        } else {
-          addLog("@DL_COUNTED@ " + total + " - " + strTableDesc, false);
+        // The background log only gets the per-table result below
+        if (isDirect) {
+          if (total == 0) {
+            addLog("@DL_ACCOUNTING@ - " + strTableDesc, false);
+          } else {
+            addLog("@DL_COUNTED@ " + total + " - " + strTableDesc, false);
+          }
         }
-      }
 
-      final int successBefore = acct.getSuccess();
-      final int failedBefore = acct.getFailedDocs().size();
-      acct.run(localVars, strDateFrom, strDateTo);
-      if (acct.getSuccess() != successBefore || acct.getFailedDocs().size() != failedBefore) {
-        idleBatches = 0;
-      } else if (++idleBatches > 1) {
-        // One idle batch can be a lock lost to a concurrent posting, so it is retried. Two in a row
-        // mean documents left at posted='N' that would be selected again forever: leave them
-        log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
+        final int successBefore = acct.getSuccess();
+        final int failedBefore = acct.getFailedDocs().size();
+        acct.run(localVars, strDateFrom, strDateTo);
+        if (acct.getSuccess() != successBefore || acct.getFailedDocs().size() != failedBefore) {
+          idleBatches = 0;
+        } else if (++idleBatches > 1) {
+          // One idle batch can be a lock lost to a concurrent posting, so it is retried. Two in a
+          // row mean documents left at posted='N' that would be selected again forever: leave them
+          log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
+          logClientHeader();
+          addLog("  " + strTableDesc + ": no progress, remaining documents left for the next run");
+          break;
+        }
+
+        total += Integer.valueOf(BATCH_SIZE).intValue();
+      }
+    } finally {
+      // Documents of earlier batches are already committed: count and list them even if a later
+      // batch threw
+      totalPosted += acct.getSuccess();
+      final int failedCount = acct.getFailedDocs().size();
+      if (isDirect) {
+        addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()), false);
+      } else if (acct.getSuccess() > 0 || failedCount > 0) {
         logClientHeader();
-        addLog("  " + strTableDesc + ": no progress, remaining documents left for the next run");
-        break;
+        addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
+            + (failedCount > 0 ? ", failed " + failedCount : ""));
+        collectFailedDocs(acct, strTableDesc, ctx.getLanguage());
       }
-
-      total += Integer.valueOf(BATCH_SIZE).intValue();
-    }
-    totalPosted += acct.getSuccess();
-    final int failedCount = acct.getFailedDocs().size();
-    if (isDirect) {
-      addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()), false);
-    } else if (acct.getSuccess() > 0 || failedCount > 0) {
-      logClientHeader();
-      addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
-          + (failedCount > 0 ? ", failed " + failedCount : ""));
-      collectFailedDocs(acct, strTableDesc, ctx.getLanguage());
     }
   }
 
