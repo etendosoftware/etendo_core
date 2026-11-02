@@ -60,6 +60,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
+import org.openbravo.erpCommon.ad_forms.AcctServerBatch;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessBundle.Channel;
@@ -124,6 +125,9 @@ public class AcctServerProcessTest {
   private AcctServer mockAcctServer;
 
   @Mock
+  private AcctServerBatch mockBatch;
+
+  @Mock
   private Client mockClient;
 
   private MockedStatic<OBDal> obDalStatic;
@@ -154,6 +158,7 @@ public class AcctServerProcessTest {
     acctServerStatic = mockStatic(AcctServer.class);
 
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
+    doReturn(mockBatch).when(acctServerProcess).newBatch(any());
   }
 
   /**
@@ -341,16 +346,16 @@ public class AcctServerProcessTest {
     // Bounded, so a broken loop guard fails the run count instead of hanging the test
     when(mockAcctServer.checkDocuments(anyString(), anyString()))
         .thenReturn(true, true, true, false);
-    when(mockAcctServer.getFailedDocs())
+    when(mockBatch.getFailedDocs())
         .thenReturn(Collections.singletonMap("DOC1", new String[] { "10000261", "i" }));
     when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
-    when(mockAcctServer.getBlockedDoc()).thenReturn(new String[] { "DOC9", "1000123", "L", null });
+    when(mockBatch.getBlockedDoc()).thenReturn(new String[] { "DOC9", "1000123", "L", null });
     doReturn(" - Invalid Account").when(acctServerProcess).postedStatusName("i", TEST_LANGUAGE);
     doReturn(" - Document Locked").when(acctServerProcess).postedStatusName("L", TEST_LANGUAGE);
 
     acctServerProcess.doExecute(mockBundle);
 
-    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log(CLIENT_PREFIX + NON_SYSTEM_CLIENT_ID + "\n");
     verify(mockLogger).log("  Test Table: no progress, stopped at 1000123 (DOC9) / L - Document"
         + " Locked, remaining documents left for the next run\n");
@@ -376,9 +381,9 @@ public class AcctServerProcessTest {
     when(mockAcctServer.checkDocuments(anyString(), anyString()))
         .thenReturn(true, true, true, false);
     // First batch posts one document, the second one throws
-    when(mockAcctServer.getSuccess()).thenReturn(0, 1);
+    when(mockBatch.getSuccess()).thenReturn(0, 1);
     doAnswer(inv -> null).doThrow(new ServletException("deadlock detected"))
-        .when(mockAcctServer).run(any(VariablesSecureApp.class), anyString(), anyString());
+        .when(mockBatch).run(any(VariablesSecureApp.class), anyString(), anyString());
 
     expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
 
@@ -403,12 +408,12 @@ public class AcctServerProcessTest {
         any())).thenReturn(mockAcctServer);
     when(mockAcctServer.checkDocuments(anyString(), anyString()))
         .thenReturn(true, true, true, false);
-    when(mockAcctServer.getBlockedDoc()).thenReturn(new String[] { "DOC9", "", null, "boom" });
+    when(mockBatch.getBlockedDoc()).thenReturn(new String[] { "DOC9", "", null, "boom" });
     doReturn("Shipment 1 (DOC9)").when(acctServerProcess).documentLabel(any(), eq("DOC9"), eq(""));
 
     acctServerProcess.doExecute(mockBundle);
 
-    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log("  Test Table: no progress, stopped at Shipment 1 (DOC9): boom,"
         + " remaining documents left for the next run\n");
   }
@@ -445,11 +450,11 @@ public class AcctServerProcessTest {
         any())).thenReturn(mockAcctServer);
     when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true, true, false);
     // First batch: 0 -> 0 (idle), second batch: 0 -> 1
-    when(mockAcctServer.getSuccess()).thenReturn(0, 0, 0, 1);
+    when(mockBatch.getSuccess()).thenReturn(0, 0, 0, 1);
 
     acctServerProcess.doExecute(mockBundle);
 
-    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log(POSTED_ONE_LINE);
     verify(mockLogger, never()).log(argThat(msg -> msg.contains("no progress")));
   }
@@ -470,13 +475,13 @@ public class AcctServerProcessTest {
     Map<String, String[]> oneFailed = failedDocsMap(1);
     Map<String, String[]> twoFailed = failedDocsMap(2);
     // Before and after each batch: 0 -> 1, then 1 -> 2
-    when(mockAcctServer.getFailedDocs()).thenReturn(Collections.emptyMap(), oneFailed, oneFailed,
+    when(mockBatch.getFailedDocs()).thenReturn(Collections.emptyMap(), oneFailed, oneFailed,
         twoFailed);
     doReturn("").when(acctServerProcess).postedStatusName(anyString(), anyString());
 
     acctServerProcess.doExecute(mockBundle);
 
-    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log("  Test Table: posted 0, failed 2\n");
   }
 
@@ -494,7 +499,7 @@ public class AcctServerProcessTest {
         any())).thenReturn(mockAcctServer);
     when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true, false);
     Map<String, String[]> failed = failedDocsMap(102);
-    when(mockAcctServer.getFailedDocs()).thenReturn(Collections.emptyMap(), failed);
+    when(mockBatch.getFailedDocs()).thenReturn(Collections.emptyMap(), failed);
     doReturn(" - Invalid Account").when(acctServerProcess).postedStatusName("i", TEST_LANGUAGE);
 
     acctServerProcess.doExecute(mockBundle);
@@ -798,14 +803,14 @@ public class AcctServerProcessTest {
         .thenReturn(true)
         .thenReturn(false);
     // 0 before the batch, 1 after it
-    when(mockAcctServer.getSuccess()).thenReturn(0, 1);
+    when(mockBatch.getSuccess()).thenReturn(0, 1);
     setPublicField(mockAcctServer, AD_TABLE_ID, TEST_TABLE_ID);
 
     // Act
     acctServerProcess.doExecute(mockBundle);
 
     // Assert
-    verify(mockAcctServer).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockBatch).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log(POSTED_ONE_LINE);
     verify(mockLogger).log(argThat(msg -> msg.contains("- posted: 1 - failed: 0")));
   }

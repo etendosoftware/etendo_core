@@ -28,10 +28,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Before;
@@ -47,16 +45,17 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 
 /**
- * Unit tests for {@link AcctServer#run}: how a batch reports the documents it posted, the ones that
+ * Unit tests for {@link AcctServerBatch}: how a batch reports the documents it posted, the ones that
  * failed to post and the one that ended it early.
  */
 @SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class AcctServerRunTest {
+public class AcctServerBatchTest {
 
   private static final String CLIENT_ID = "1000000";
 
   private AcctServer instance;
+  private AcctServerBatch batch;
 
   /**
    * Creates a concrete AcctServer without running its constructor.
@@ -64,6 +63,7 @@ public class AcctServerRunTest {
   @Before
   public void setUp() {
     instance = new ObjenesisStd().newInstance(DocGLJournal.class);
+    batch = new AcctServerBatch(instance);
   }
 
   /**
@@ -83,14 +83,14 @@ public class AcctServerRunTest {
     posting.success = 1;
     when(posting.post(eq("DOC2"), eq(false), any(), any(), any())).thenReturn(true);
 
-    ConnectionProvider cp = runBatch(failing, posting);
+    ConnectionProvider cp = runBatch(failing, posting, false);
 
-    assertEquals(1, instance.getSuccess());
+    assertEquals(1, batch.getSuccess());
     assertEquals(1, instance.errors);
-    Map<String, String[]> failed = instance.getFailedDocs();
+    Map<String, String[]> failed = batch.getFailedDocs();
     assertEquals(Collections.singleton("DOC1"), failed.keySet());
     assertArrayEquals(new String[] { "GL-1", "E" }, failed.get("DOC1"));
-    assertNull(instance.getBlockedDoc());
+    assertNull(batch.getBlockedDoc());
     verify(cp, times(2)).releaseCommitConnection(any());
   }
 
@@ -106,10 +106,10 @@ public class AcctServerRunTest {
     when(locked.getStatus()).thenReturn(AcctServer.STATUS_DocumentLocked);
     when(locked.post(eq("DOC1"), eq(false), any(), any(), any())).thenReturn(false);
 
-    ConnectionProvider cp = runBatch(locked, mock(AcctServer.class));
+    ConnectionProvider cp = runBatch(locked, mock(AcctServer.class), false);
 
-    assertArrayEquals(new String[] { "DOC1", "GL-1", "L", null }, instance.getBlockedDoc());
-    assertEquals(0, instance.getSuccess());
+    assertArrayEquals(new String[] { "DOC1", "GL-1", "L", null }, batch.getBlockedDoc());
+    assertEquals(0, batch.getSuccess());
     verify(cp).releaseRollbackConnection(any());
   }
 
@@ -124,18 +124,38 @@ public class AcctServerRunTest {
     when(broken.post(eq("DOC1"), eq(false), any(), any(), any()))
         .thenThrow(new IllegalStateException("boom"));
 
-    runBatch(broken, mock(AcctServer.class));
+    runBatch(broken, mock(AcctServer.class), false);
 
-    assertArrayEquals(new String[] { "DOC1", "", null, "boom" }, instance.getBlockedDoc());
+    assertArrayEquals(new String[] { "DOC1", "", null, "boom" }, batch.getBlockedDoc());
   }
 
   /**
-   * Runs one batch of documents DOC1 and DOC2, posted by the given servers in that order.
+   * Tests that AcctServer.run still posts the batch and updates the posted and failed counters of
+   * the AcctServer, for callers that do not use AcctServerBatch.
+   * @throws Exception if an error occurs
    */
-  private ConnectionProvider runBatch(AcctServer first, AcctServer second) throws Exception {
-    Field failedDocsField = AcctServer.class.getDeclaredField("failedDocs");
-    failedDocsField.setAccessible(true);
-    failedDocsField.set(instance, new LinkedHashMap<String, String[]>());
+  @Test
+  public void testAcctServerRunPostsTheBatch() throws Exception {
+    AcctServer failing = mock(AcctServer.class);
+    failing.errors = 1;
+    when(failing.post(eq("DOC1"), eq(false), any(), any(), any())).thenReturn(true);
+    AcctServer posting = mock(AcctServer.class);
+    posting.success = 1;
+    when(posting.post(eq("DOC2"), eq(false), any(), any(), any())).thenReturn(true);
+
+    ConnectionProvider cp = runBatch(failing, posting, true);
+
+    assertEquals(1, instance.success);
+    assertEquals(1, instance.errors);
+    verify(cp, times(2)).releaseCommitConnection(any());
+  }
+
+  /**
+   * Runs one batch of documents DOC1 and DOC2, posted by the given servers in that order, through
+   * {@link AcctServer#run} or through the batch.
+   */
+  private ConnectionProvider runBatch(AcctServer first, AcctServer second,
+      boolean throughAcctServer) throws Exception {
     ConnectionProvider cp = mock(ConnectionProvider.class);
     when(cp.getRDBMS()).thenReturn("POSTGRE");
     when(cp.getTransactionConnection()).thenReturn(mock(Connection.class));
@@ -165,7 +185,11 @@ public class AcctServerRunTest {
           .thenReturn(new AcctServerData[] { doc1, doc2 });
       acctServer.when(() -> AcctServer.get("224", CLIENT_ID, "0", cp)).thenReturn(first, second);
 
-      instance.run(mock(VariablesSecureApp.class), "", "");
+      if (throughAcctServer) {
+        instance.run(mock(VariablesSecureApp.class), "", "");
+      } else {
+        batch.run(mock(VariablesSecureApp.class), "", "");
+      }
     }
     return cp;
   }

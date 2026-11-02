@@ -46,6 +46,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
+import org.openbravo.erpCommon.ad_forms.AcctServerBatch;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.system.Client;
@@ -418,6 +419,7 @@ public class AcctServerProcess extends DalBaseProcess {
     final String strTableDesc = AcctServerProcessData.selectDescription(connection,
         ctx.getLanguage(), acct.AD_Table_ID);
     currentTable = strTableDesc;
+    final AcctServerBatch batch = newBatch(acct);
     try {
       int total = 0;
       int idleBatches = 0;
@@ -432,17 +434,17 @@ public class AcctServerProcess extends DalBaseProcess {
           }
         }
 
-        final int successBefore = acct.getSuccess();
-        final int failedBefore = acct.getFailedDocs().size();
-        acct.run(localVars, strDateFrom, strDateTo);
-        if (acct.getSuccess() != successBefore || acct.getFailedDocs().size() != failedBefore) {
+        final int successBefore = batch.getSuccess();
+        final int failedBefore = batch.getFailedDocs().size();
+        batch.run(localVars, strDateFrom, strDateTo);
+        if (batch.getSuccess() != successBefore || batch.getFailedDocs().size() != failedBefore) {
           idleBatches = 0;
         } else if (++idleBatches > 1) {
           // One idle batch can be a lock lost to a concurrent posting, so it is retried. Two in a
           // row mean documents left at posted='N' that would be selected again forever: leave them
           log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
           logClientHeader();
-          addLog("  " + strTableDesc + ": no progress" + blockedDocText(acct, ctx.getLanguage())
+          addLog("  " + strTableDesc + ": no progress" + blockedDocText(acct, batch, ctx.getLanguage())
               + ", remaining documents left for the next run");
           break;
         }
@@ -452,26 +454,32 @@ public class AcctServerProcess extends DalBaseProcess {
     } finally {
       // Documents of earlier batches are already committed: count and list them even if a later
       // batch threw
-      logTableResult(acct, strTableDesc, ctx.getLanguage());
+      logTableResult(acct, batch, strTableDesc, ctx.getLanguage());
     }
   }
 
-  private void logTableResult(AcctServer acct, String strTableDesc, String language) {
-    totalPosted += acct.getSuccess();
-    final int failedCount = acct.getFailedDocs().size();
+  /** Seam for the tests, which replace the batch of a mocked {@link AcctServer}. */
+  AcctServerBatch newBatch(AcctServer acct) {
+    return new AcctServerBatch(acct);
+  }
+
+  private void logTableResult(AcctServer acct, AcctServerBatch batch, String strTableDesc,
+      String language) {
+    totalPosted += batch.getSuccess();
+    final int failedCount = batch.getFailedDocs().size();
     if (isDirect) {
       addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(language), false);
-    } else if (acct.getSuccess() > 0 || failedCount > 0) {
+    } else if (batch.getSuccess() > 0 || failedCount > 0) {
       logClientHeader();
-      addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
+      addLog("  " + strTableDesc + ": posted " + batch.getSuccess()
           + (failedCount > 0 ? ", failed " + failedCount : ""));
-      collectFailedDocs(acct, strTableDesc, language);
+      collectFailedDocs(acct, batch, strTableDesc, language);
     }
   }
 
   /** Names the document that ended the last batch early, when posting reported one. */
-  private String blockedDocText(AcctServer acct, String language) {
-    final String[] blocked = acct.getBlockedDoc();
+  private String blockedDocText(AcctServer acct, AcctServerBatch batch, String language) {
+    final String[] blocked = batch.getBlockedDoc();
     if (blocked == null) {
       return "";
     }
@@ -487,8 +495,9 @@ public class AcctServerProcess extends DalBaseProcess {
     return ", stopped at " + documentLabel(acct.AD_Table_ID, blocked[0], blocked[1]) + detail;
   }
 
-  private void collectFailedDocs(AcctServer acct, String strTableDesc, String language) {
-    for (Map.Entry<String, String[]> failed : acct.getFailedDocs().entrySet()) {
+  private void collectFailedDocs(AcctServer acct, AcctServerBatch batch, String strTableDesc,
+      String language) {
+    for (Map.Entry<String, String[]> failed : batch.getFailedDocs().entrySet()) {
       final String status = failed.getValue()[1];
       // Lines past the cap are only counted, so skip the document lookup for them
       final String document = failedDocs.size() < MAX_FAILED_LINES

@@ -21,14 +21,11 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -471,10 +468,6 @@ public abstract class AcctServer {
   public int errors = 0;
   public static boolean throwErrors = false;
   int success = 0;
-  // Record id -> {document no, posted status} of the documents that failed to post in run()
-  private final Map<String, String[]> failedDocs = new LinkedHashMap<>();
-  // {record id, document no, posted status, error} of the document that ended the last run() early
-  private String[] blockedDoc;
   // Distinguish background process
   boolean isBackground = false;
 
@@ -516,89 +509,9 @@ public abstract class AcctServer {
 
   public void run(VariablesSecureApp vars, String strDateFrom, String strDateTo)
       throws IOException, ServletException {
-    if (AD_Client_ID.equals("")) {
-      AD_Client_ID = vars.getClient();
-    }
-    Connection con = null;
-    String currentId = null;
-    blockedDoc = null;
-    try {
-      final StringBuilder strIDs = new StringBuilder();
-
-      if (log4j.isDebugEnabled()) {
-        log4j.debug("AcctServer - Run - TableName = " + tableName + strDateFrom + strDateTo);
-      }
-
-      log4j.debug("AcctServer.run - AD_Client_ID: " + AD_Client_ID);
-
-      AcctServerData[] data = null;
-      final Set<String> orgSet = OBContext.getOBContext()
-          .getOrganizationStructureProvider(AD_Client_ID)
-          .getChildTree(AD_Org_ID, true);
-      String strOrgs = Utility.getInStrSet(orgSet);
-      // Send limit manually to SQL because auto-generated query doesn't limit properly
-      String limit = StringUtils.equals(connectionProvider.getRDBMS(), "ORACLE")
-          ? " AND ROWNUM < " + batchSize
-          : " LIMIT " + batchSize;
-      data = AcctServerData.select(connectionProvider, tableName, strDateColumn, AD_Client_ID,
-          strOrgs, strDateFrom, strDateTo, limit);
-      if (data != null && data.length > 0) {
-        if (log4j.isDebugEnabled()) {
-          log4j.debug("AcctServer - Run -Select inicial realizada N = " + data.length + " - Key: "
-              + data[0].id);
-        }
-      }
-
-      for (int i = 0; data != null && i < data.length; i++) {
-        con = connectionProvider.getTransactionConnection();
-        currentId = data[i].getField("ID");
-        strIDs.append(currentId).append(", ");
-        this.setMessageResult(null);
-        AcctServer tempServer = get(AD_Table_ID, AD_Client_ID, AD_Org_ID, connectionProvider);
-        boolean postSuccess = false;
-        postSuccess = tempServer.post(data[i].getField("ID"), false, vars, connectionProvider, con);
-        errors = errors + tempServer.errors;
-        success = success + tempServer.success;
-        // post() also returns true when the document fails to post: the error counter is the signal
-        if (tempServer.errors > 0) {
-          failedDocs.put(data[i].getField("ID"),
-              new String[] { tempServer.DocumentNo, tempServer.getStatus() });
-        }
-        if (!postSuccess) {
-          blockedDoc = new String[] { currentId, tempServer.DocumentNo, tempServer.getStatus(),
-              null };
-          connectionProvider.releaseRollbackConnection(con);
-          return;
-        } else {
-          connectionProvider.releaseCommitConnection(con);
-          OBDal.getInstance().commitAndClose();
-        }
-      }
-      if (log4j.isDebugEnabled() && data != null) {
-        log4j.debug("AcctServer - Run -" + data.length + " IDs [" + strIDs + "]");
-      }
-    } catch (NoConnectionAvailableException ex) {
-      throw new ServletException("@CODE=NoConnectionAvailable", ex);
-    } catch (SQLException ex2) {
-      try {
-        connectionProvider.releaseRollbackConnection(con);
-      } catch (SQLException se) {
-        log4j.error("Failed to close connection after an error", se);
-      }
-      throw new ServletException(
-          "@CODE=" + Integer.toString(ex2.getErrorCode()) + "@" + ex2.getMessage(), ex2);
-    } catch (Exception ex3) {
-      log4j.error("Exception in AcctServer.run", ex3);
-      if (currentId != null) {
-        blockedDoc = new String[] { currentId, "", null, ex3.getMessage() };
-      }
-      try {
-        connectionProvider.releaseRollbackConnection(con);
-      } catch (SQLException se) {
-        log4j.error("Failed to close connection after an error", se);
-      }
-    }
+    new AcctServerBatch(this).run(vars, strDateFrom, strDateTo);
   }
+
 
   /**
    * @return the isBackground
@@ -2505,30 +2418,6 @@ public abstract class AcctServer {
    */
   public String getInfo(String language) {
     return (Utility.messageBD(connectionProvider, "Created", language) + "=" + success);
-  }
-
-  /**
-   * @return the number of documents posted by {@link #run} on this instance
-   */
-  public int getSuccess() {
-    return success;
-  }
-
-  /**
-   * @return record id to {document no, posted status} of the documents that failed to post in
-   *         {@link #run}
-   */
-  public Map<String, String[]> getFailedDocs() {
-    return Collections.unmodifiableMap(failedDocs);
-  }
-
-  /**
-   * @return {record id, document no, posted status, error message} of the document that ended the
-   *         last {@link #run} before the end of its batch (not posted, e.g. locked by a concurrent
-   *         posting, or an unexpected error), or null if the batch was walked to the end
-   */
-  public String[] getBlockedDoc() {
-    return blockedDoc == null ? null : blockedDoc.clone();
   }
 
   public boolean checkDocuments() throws ServletException {
