@@ -45,6 +45,8 @@ public class SE_Invoice_Organization extends SimpleCallout {
         final String strBPartnerLocationId = info.getStringParameter("inpcBpartnerLocationId",
                 IsIDFilter.instance);
         final String strInvoice = info.getStringParameter("C_Invoice_ID", IsIDFilter.instance);
+        final String strDocTypeTarget = info.getStringParameter("inpcDoctypetargetId",
+                IsIDFilter.instance);
 
         info.addResult("inpiscashvat",
                 CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId, strBPartnerLocationId));
@@ -65,7 +67,7 @@ public class SE_Invoice_Organization extends SimpleCallout {
         }
         boolean isSales = StringUtils.equals("Y", strinpissotrx);
         if (StringUtils.isNotBlank(strBPartnerId)) {
-          BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+          BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R", strDocTypeTarget);
         }
 
     }

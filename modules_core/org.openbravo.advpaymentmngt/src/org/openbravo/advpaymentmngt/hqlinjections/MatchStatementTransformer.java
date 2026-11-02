@@ -24,6 +24,9 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext.Usage;
+import org.openbravo.advpaymentmngt.utility.BankStatementLineFilterHelper;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -48,6 +51,21 @@ public class MatchStatementTransformer extends HqlQueryTransformer {
     return transformedHql;
   }
 
+  /**
+   * Builds the where clause of the Match Statement grid. When a financial account is received, the
+   * grid shows the lines of that account that are not matched or that are matched to its last
+   * reconciliation, and that are not excluded by a
+   * {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook}.
+   * <p>
+   * The HQL datasource only applies one transformer per table, so a module that replaces this
+   * transformer must call {@link BankStatementLineFilterHelper} to keep applying the hooks.
+   *
+   * @param requestParameters
+   *          the parameters of the request, including {@code @FIN_Financial_Account.id@}
+   * @param queryNamedParameters
+   *          the named parameters of the query, where the parameters of the where clause are added
+   * @return the where clause, or an empty string if no financial account is received
+   */
   protected String getWhereClause(Map<String, String> requestParameters,
       Map<String, Object> queryNamedParameters) {
     final String financialAccountId = requestParameters.get("@FIN_Financial_Account.id@");
@@ -76,6 +94,11 @@ public class MatchStatementTransformer extends HqlQueryTransformer {
           whereClause.append(" and bsl.transactionDate <= :endingdate ");
           queryNamedParameters.put("endingdate", lastReconciliation.getEndingDate());
         }
+
+        whereClause.append(BankStatementLineFilterHelper.buildHqlCondition("bsl",
+            new BankStatementLineFilterContext(finAccount, lastReconciliation,
+                Usage.MATCH_STATEMENT_GRID),
+            queryNamedParameters));
       } finally {
         OBContext.restorePreviousMode();
       }

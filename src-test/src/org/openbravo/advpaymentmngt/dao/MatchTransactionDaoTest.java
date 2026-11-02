@@ -18,7 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
@@ -26,11 +28,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.advpaymentmngt.TestConstants;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext.Usage;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -48,8 +54,13 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 @RunWith(MockitoJUnitRunner.class)
 public class MatchTransactionDaoTest {
 
+  private static final String HOOK_CONDITION = "bsl.discarded = :test_discarded";
+  private static final String HOOK_PARAMETER = "test_discarded";
+  private static final String AND_OPEN = " and (";
+
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
+  private MockedStatic<WeldUtils> mockedWeldUtils;
   private AutoCloseable mocks;
 
   @Mock
@@ -92,6 +103,11 @@ public class MatchTransactionDaoTest {
 
     mockedOBContext = mockStatic(OBContext.class);
 
+    // No bank statement line filter hooks by default
+    mockedWeldUtils = mockStatic(WeldUtils.class);
+    mockedWeldUtils.when(() -> WeldUtils.getInstances(BankStatementLineFilterHook.class))
+        .thenReturn(Collections.emptyList());
+
     // Setup common mock behaviors
     when(mockOBDal.get(FIN_FinancialAccount.class, TestConstants.FINANCIAL_ACCOUNT_ID)).thenReturn(
         mockFinancialAccount);
@@ -108,7 +124,6 @@ public class MatchTransactionDaoTest {
     // Setup query mocks
     when(mockOBDal.createQuery(eq(FIN_BankStatementLine.class), anyString())).thenReturn(mockBankStatementLineQuery);
     when(mockOBDal.createQuery(eq(FIN_FinaccTransaction.class), anyString())).thenReturn(mockFinaccTransactionQuery);
-    when(mockBankStatementLineQuery.setNamedParameter(anyString(), any())).thenReturn(mockBankStatementLineQuery);
     when(mockFinaccTransactionQuery.setNamedParameters(any())).thenReturn(mockFinaccTransactionQuery);
 
   }
@@ -125,6 +140,9 @@ public class MatchTransactionDaoTest {
     }
     if (mockedOBContext != null) {
       mockedOBContext.close();
+    }
+    if (mockedWeldUtils != null) {
+      mockedWeldUtils.close();
     }
     if (mocks != null) {
       mocks.close();
@@ -299,8 +317,36 @@ public class MatchTransactionDaoTest {
 
     // Then
     assertEquals("Should return the list of unmatched bank statement lines", unmatchedLines, result);
-    verify(mockBankStatementLineQuery).setNamedParameter("accountId", TestConstants.FINANCIAL_ACCOUNT_ID);
+    verify(mockOBDal).createQuery(FIN_BankStatementLine.class, " as bsl "
+        + " where bsl.bankStatement.account.id = :accountId"
+        + "   and bsl.financialAccountTransaction is null"
+        + "   and bsl.bankStatement.processed = 'Y'");
+    verify(mockBankStatementLineQuery).setNamedParameters(
+        Collections.singletonMap("accountId", TestConstants.FINANCIAL_ACCOUNT_ID));
     verify(mockBankStatementLineQuery).list();
+  }
+
+  /**
+   * Tests the getUnMatchedBankStatementLines method with a bank statement line filter hook.
+   * Verifies that the hook condition and its parameters are added to the query.
+   */
+  @Test
+  public void testGetUnMatchedBankStatementLinesWithHook() {
+    // Given
+    givenFilterHook(Usage.UNMATCHED_CHECK);
+    when(mockBankStatementLineQuery.list()).thenReturn(Collections.emptyList());
+
+    // When
+    MatchTransactionDao.getUnMatchedBankStatementLines(mockFinancialAccount);
+
+    // Then
+    ArgumentCaptor<String> hql = ArgumentCaptor.forClass(String.class);
+    verify(mockOBDal).createQuery(eq(FIN_BankStatementLine.class), hql.capture());
+    assertTrue("Should add the hook condition", hql.getValue().endsWith(AND_OPEN + HOOK_CONDITION + ")"));
+    Map<String, Object> expectedParameters = new HashMap<>();
+    expectedParameters.put("accountId", TestConstants.FINANCIAL_ACCOUNT_ID);
+    expectedParameters.put(HOOK_PARAMETER, Boolean.FALSE);
+    verify(mockBankStatementLineQuery).setNamedParameters(expectedParameters);
   }
 
   /**
@@ -381,6 +427,25 @@ public class MatchTransactionDaoTest {
     assertEquals("Should return the max transaction date", maxDate, result);
     verify(mockBankStatementLineCriteria).setMaxResults(1);
     verify(mockBankStatementLineCriteria).list();
+  }
+
+  /**
+   * Registers a bank statement line filter hook that only applies its condition for the expected
+   * usage, so the tests also verify that the right usage is sent to the hooks.
+   *
+   * @param expectedUsage
+   *          the usage the hook expects to receive
+   */
+  private void givenFilterHook(Usage expectedUsage) {
+    BankStatementLineFilterHook hook = (alias, context, namedParameters) -> {
+      if (context.getUsage() != expectedUsage || context.getAccount() != mockFinancialAccount) {
+        return null;
+      }
+      namedParameters.put(HOOK_PARAMETER, Boolean.FALSE);
+      return HOOK_CONDITION.replace("bsl.", alias + ".");
+    };
+    mockedWeldUtils.when(() -> WeldUtils.getInstances(BankStatementLineFilterHook.class))
+        .thenReturn(Collections.singletonList(hook));
   }
 
   /**

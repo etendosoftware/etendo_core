@@ -18,9 +18,11 @@ import org.openbravo.advpaymentmngt.actionHandler.FundsTransferHookCallerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddOrderOrInvoiceFilterExpressionHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentDefaultValuesHandlerTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentReadOnlyLogicsHandlerTest;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContextTest;
 import org.openbravo.advpaymentmngt.process.FIN_DoubtfulDebtProcessTest;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcessTest;
 import org.openbravo.advpaymentmngt.utility.APRMSQLFunctionRegisterTest;
+import org.openbravo.advpaymentmngt.utility.BankStatementLineFilterHelperTest;
 import org.openbravo.advpaymentmngt.utility.FIN_UtilityTest;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtilityTest;
 import org.openbravo.authentication.AuthenticationExceptionTest;
@@ -162,6 +164,7 @@ import org.openbravo.erpCommon.businessUtility.AccountTreeTest;
 import org.openbravo.erpCommon.businessUtility.InitialClientSetupTest;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetupTest;
 import org.openbravo.erpCommon.businessUtility.AuditTrailDeletedRecordsTest;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtilsTest;
 import org.openbravo.test.businessutility.AuditTrailTimeFormatterTest;
 import org.openbravo.erpCommon.businessUtility.COADataTest;
 import org.openbravo.erpCommon.businessUtility.COAUtilityTest;
@@ -257,6 +260,9 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     AddPaymentDefaultValuesHandlerTest.class,
     AddPaymentReadOnlyLogicsHandlerTest.class,
 
+    // advpaymentmngt.hook
+    BankStatementLineFilterContextTest.class,
+
     // advpaymentmngt.process
     FIN_DoubtfulDebtProcessTest.class,
     FIN_PaymentProcessTest.class,
@@ -264,6 +270,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     // advpaymentmngt.utility
     APRMSQLFunctionRegisterTest.class,
     APRM_MatchingUtilityTest.class,
+    BankStatementLineFilterHelperTest.class,
     FINUtilityTest.class,
     FIN_UtilityTest.class,
 
@@ -465,6 +472,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     AccountTreeTest.class,
     AuditTrailDeletedRecordsTest.class,
     AuditTrailTimeFormatterTest.class,
+    BpDocTypeUtilsTest.class,
     COADataTest.class,
     COAUtilityTest.class,
     CancelLayawayPaymentsHookCallerTest.class,
