@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -2508,7 +2509,7 @@ public abstract class AcctServer {
    *         {@link #run}
    */
   public Map<String, String[]> getFailedDocs() {
-    return failedDocs;
+    return Collections.unmodifiableMap(failedDocs);
   }
 
   public boolean checkDocuments() throws ServletException {

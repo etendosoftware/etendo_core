@@ -19,6 +19,7 @@
 
 package org.openbravo.erpCommon.ad_process;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -100,29 +101,7 @@ public class AcctServerProcess extends DalBaseProcess {
     VariablesSecureApp vars = bundle.getContext().toVars();
     try {
       if (vars.getClient().equals(SYSTEM_CLIENT_ID)) {
-        OBCriteria<Client> obc = OBDal.getInstance().createCriteria(Client.class);
-        obc.add(Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID)));
-        final List<Client> clients = obc.list();
-        activeClients = clients.size();
-        // The direct channel ("Posting by DB tables") keeps walking every client
-        Map<String, Set<String>> pendingTables = null;
-        if (!isDirect) {
-          final Set<String> clientIds = new HashSet<>();
-          for (Client c : clients) {
-            clientIds.add(c.getId());
-          }
-          pendingTables = clientsWithPendingDocs(connection, selectAcctTableIds(), clientIds);
-        }
-        for (Client c : clients) {
-          final Set<String> clientTables = pendingTables == null ? null
-              : pendingTables.get(c.getId());
-          if (pendingTables != null && clientTables == null) {
-            continue;
-          }
-          final VariablesSecureApp vars1 = new VariablesSecureApp(bundle.getContext().getUser(),
-              c.getId(), bundle.getContext().getOrganization());
-          processClient(vars1, bundle, clientTables, clientLabel(c));
-        }
+        processAllClients(bundle);
       } else {
         activeClients = 1;
         processClient(vars, bundle, null,
@@ -137,8 +116,35 @@ public class AcctServerProcess extends DalBaseProcess {
         addSummary(System.currentTimeMillis() - start);
       }
     }
-    if (hadErrors) {
+    // "Posting by DB tables" shows the log only when the process ends normally
+    if (hadErrors && !isDirect) {
       throw new OBException("Accounting finished with errors, see the process log");
+    }
+  }
+
+  private void processAllClients(ProcessBundle bundle) throws Exception {
+    final OBCriteria<Client> obc = OBDal.getInstance().createCriteria(Client.class);
+    obc.add(Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID)));
+    final List<Client> clients = obc.list();
+    activeClients = clients.size();
+    // The direct channel ("Posting by DB tables") keeps walking every client
+    Map<String, Set<String>> pendingTables = null;
+    if (!isDirect) {
+      final Set<String> clientIds = new HashSet<>();
+      for (Client c : clients) {
+        clientIds.add(c.getId());
+      }
+      currentClient = "System";
+      currentTable = "pending documents check";
+      pendingTables = clientsWithPendingDocs(connection, selectAcctTableIds(), clientIds);
+    }
+    for (Client c : clients) {
+      final Set<String> clientTables = pendingTables == null ? null : pendingTables.get(c.getId());
+      if (pendingTables == null || clientTables != null) {
+        final VariablesSecureApp clientVars = new VariablesSecureApp(
+            bundle.getContext().getUser(), c.getId(), bundle.getContext().getOrganization());
+        processClient(clientVars, bundle, clientTables, clientLabel(c));
+      }
     }
   }
 
@@ -173,8 +179,8 @@ public class AcctServerProcess extends DalBaseProcess {
           if (isConnectionFailure(ex)) {
             throw ex;
           }
-          log4j.warn("Pending documents pre-filter failed for table " + tableId
-              + ", walking it for every client", ex);
+          log4j.warn("Pending documents pre-filter failed for table {}, walking it for every client",
+              tableId, ex);
           conn.rollback();
           pendingClients = clientIds;
         }
@@ -185,7 +191,12 @@ public class AcctServerProcess extends DalBaseProcess {
         }
       }
     } finally {
-      cp.releaseRollbackConnection(conn);
+      try {
+        cp.releaseRollbackConnection(conn);
+      } catch (SQLException ex) {
+        // Do not hide the exception that ended the loop, if any
+        log4j.warn("Could not release the pre-filter connection", ex);
+      }
     }
     return result;
   }
@@ -202,11 +213,13 @@ public class AcctServerProcess extends DalBaseProcess {
         }
       }
     }
-    final Set<String> clients = new HashSet<>();
     if (tableName == null || !TABLE_NAME.matcher(tableName).matches()) {
-      return clients;
+      // Handled by the caller's fallback: the table is walked for every client
+      throw new SQLException("No valid table name for AD_Table_ID " + tableId);
     }
-    // Same pending condition as AcctServerData.select; the table name comes from AD_Table
+    final Set<String> clients = new HashSet<>();
+    // Same pending condition as AcctServerData.select. Concatenating is safe: the table name comes
+    // from AD_Table and was checked against TABLE_NAME above
     try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT ad_client_id FROM "
         + tableName
         + " WHERE posted = 'N' AND processed = 'Y' AND (processing = 'N' OR processing IS NULL)");
@@ -219,7 +232,8 @@ public class AcctServerProcess extends DalBaseProcess {
   }
 
   /**
-   * A broken connection or pool fails every following table the same way, so the run aborts.
+   * A broken connection or pool, or a database shutting down (SQLState 57P*), fails every following
+   * table the same way, so the run aborts.
    */
   static boolean isConnectionFailure(Throwable ex) {
     for (Throwable t = ex; t != null; t = t.getCause()) {
@@ -227,7 +241,8 @@ public class AcctServerProcess extends DalBaseProcess {
         return true;
       }
       if (t instanceof SQLException && ((SQLException) t).getSQLState() != null
-          && ((SQLException) t).getSQLState().startsWith("08")) {
+          && (((SQLException) t).getSQLState().startsWith("08")
+              || ((SQLException) t).getSQLState().startsWith("57P"))) {
         return true;
       }
       if (t.getMessage() != null && t.getMessage().contains("@CODE=NoConnectionAvailable")) {
@@ -254,16 +269,16 @@ public class AcctServerProcess extends DalBaseProcess {
     }
   }
 
-  /**
-   * 
-   * @throws ServletException
-   */
   private static String clientLabel(Client client) {
     return client == null ? "" : client.getId() + " (" + client.getName() + ")";
   }
 
+  /**
+   * 
+   * @throws ServletException
+   */
   private void processClient(VariablesSecureApp vars, ProcessBundle bundle,
-      Set<String> onlyTables, String clientLabel) throws Exception {
+      Set<String> onlyTables, String clientLabel) throws ServletException, IOException {
     VariablesSecureApp localVars = vars;
     final String processId = bundle.getProcessId();
     final String pinstanceId = bundle.getPinstanceId();
@@ -357,6 +372,9 @@ public class AcctServerProcess extends DalBaseProcess {
         }
         // Keep posting the remaining tables; the run still ends as ERROR
         log4j.error(ex.getMessage(), ex);
+        // Drop what the failed table left in the DAL session, so the next posted document's commit
+        // does not persist it. Documents posted so far are already committed one by one
+        OBDal.getInstance().rollbackAndClose();
         hadErrors = true;
         logClientHeader();
         addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
@@ -376,7 +394,8 @@ public class AcctServerProcess extends DalBaseProcess {
   }
 
   private void processTable(String tableId, VariablesSecureApp localVars, String strOrg,
-      String strDateFrom, String strDateTo, ProcessContext ctx) throws Exception {
+      String strDateFrom, String strDateTo, ProcessContext ctx)
+      throws ServletException, IOException {
     final AcctServer acct = AcctServer.get(tableId, localVars.getClient(), strOrg, connection);
     if (acct == null) {
       return;
@@ -405,7 +424,7 @@ public class AcctServerProcess extends DalBaseProcess {
       if (acct.getSuccess() == successBefore && acct.getFailedDocs().size() == failedBefore) {
         // A batch that changes nothing (e.g. documents left at posted='N') would be selected again
         // forever: leave them for the next run
-        log4j.warn("No progress posting " + strTableDesc + " for client " + currentClient);
+        log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
         break;
       }
 
@@ -413,6 +432,17 @@ public class AcctServerProcess extends DalBaseProcess {
     }
     totalPosted += acct.getSuccess();
     final int failedCount = acct.getFailedDocs().size();
+    if (isDirect) {
+      addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()), false);
+    } else if (acct.getSuccess() > 0 || failedCount > 0) {
+      logClientHeader();
+      addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
+          + (failedCount > 0 ? ", failed " + failedCount : ""));
+      collectFailedDocs(acct, strTableDesc, ctx.getLanguage());
+    }
+  }
+
+  private void collectFailedDocs(AcctServer acct, String strTableDesc, String language) {
     for (Map.Entry<String, String[]> failed : acct.getFailedDocs().entrySet()) {
       final String status = failed.getValue()[1];
       // Lines past the cap are only counted, so skip the document lookup for them
@@ -420,14 +450,7 @@ public class AcctServerProcess extends DalBaseProcess {
           ? documentLabel(acct.AD_Table_ID, failed.getKey(), failed.getValue()[0])
           : failed.getKey();
       failedDocs.add(currentClient + " / " + strTableDesc + " / " + document + " / " + status
-          + postedStatusName(status, ctx.getLanguage()));
-    }
-    if (isDirect) {
-      addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()), false);
-    } else if (acct.getSuccess() > 0 || failedCount > 0) {
-      logClientHeader();
-      addLog("  " + strTableDesc + ": posted " + acct.getSuccess()
-          + (failedCount > 0 ? ", failed " + failedCount : ""));
+          + postedStatusName(status, language));
     }
   }
 
@@ -446,7 +469,7 @@ public class AcctServerProcess extends DalBaseProcess {
           : OBDal.getInstance().get(entity.getName(), recordId);
       return record == null ? recordId : record.getIdentifier() + " (" + recordId + ")";
     } catch (Exception ex) {
-      log4j.debug("Could not read the identifier of " + recordId, ex);
+      log4j.debug("Could not read the identifier of {}", recordId, ex);
       return recordId;
     } finally {
       OBContext.restorePreviousMode();
@@ -468,7 +491,7 @@ public class AcctServerProcess extends DalBaseProcess {
         final int sep = name.indexOf(": ");
         return " - " + (sep >= 0 ? name.substring(sep + 2) : name);
       } catch (Exception ex) {
-        log4j.debug("Could not resolve the name of posted status " + s, ex);
+        log4j.debug("Could not resolve the name of posted status {}", s, ex);
         return "";
       }
     });

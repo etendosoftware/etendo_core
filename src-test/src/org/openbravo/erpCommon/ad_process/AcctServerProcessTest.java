@@ -104,6 +104,7 @@ public class AcctServerProcessTest {
   private static final String INVOICE_TABLE = "C_Invoice";
   private static final String PAYMENT_TABLE = "FIN_Payment";
   private static final String OTHER_CLIENT_ID = "2000000";
+  private static final String UNKNOWN_TABLE_ID = "UNKNOWN";
   private static final String TEST_LANGUAGE = "en_US";
 
   private AcctServerProcess acctServerProcess;
@@ -135,6 +136,7 @@ public class AcctServerProcessTest {
   @Mock
   private Client mockClient;
 
+  private final List<String> pendingSql = new ArrayList<>();
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<AcctServerProcessData> acctServerProcessDataStatic;
   private MockedStatic<AcctServer> acctServerStatic;
@@ -292,14 +294,39 @@ public class AcctServerProcessTest {
         OTHER_CLIENT_ID));
 
     Map<String, Set<String>> result = AcctServerProcess.clientsWithPendingDocs(mockConnection,
-        new String[] { TEST_TABLE_ID, OTHER_TABLE_ID }, activeClients);
+        new String[] { TEST_TABLE_ID, OTHER_TABLE_ID, UNKNOWN_TABLE_ID }, activeClients);
 
-    assertEquals(new HashSet<>(Arrays.asList(TEST_TABLE_ID, OTHER_TABLE_ID)),
+    // A failing query and a table without a valid name both fall back to every active client
+    assertEquals(new HashSet<>(Arrays.asList(TEST_TABLE_ID, OTHER_TABLE_ID, UNKNOWN_TABLE_ID)),
         result.get(NON_SYSTEM_CLIENT_ID));
-    assertEquals(Collections.singleton(OTHER_TABLE_ID), result.get(OTHER_CLIENT_ID));
+    assertEquals(new HashSet<>(Arrays.asList(OTHER_TABLE_ID, UNKNOWN_TABLE_ID)),
+        result.get(OTHER_CLIENT_ID));
     assertFalse(result.containsKey("INACTIVE"));
-    verify(conn).rollback();
+    verify(conn, times(2)).rollback();
     verify(mockConnection).releaseRollbackConnection(conn);
+  }
+
+  /**
+   * Tests that the pre-filter selects exactly the documents AcctServerData.select would post,
+   * minus its organization, period and date conditions: that is what makes it a superset.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testClientsWithPendingDocsUsesThePostingSelectionCondition() throws Exception {
+    Map<String, Object> pending = new HashMap<>();
+    pending.put(INVOICE_TABLE, Collections.emptyList());
+    Connection conn = mockJdbc(pending);
+    when(mockConnection.getTransactionConnection()).thenReturn(conn);
+
+    AcctServerProcess.clientsWithPendingDocs(mockConnection, new String[] { TEST_TABLE_ID },
+        Collections.singleton(NON_SYSTEM_CLIENT_ID));
+
+    assertEquals(1, pendingSql.size());
+    String sql = pendingSql.get(0);
+    assertTrue(sql, sql.startsWith("SELECT DISTINCT ad_client_id FROM " + INVOICE_TABLE + " "));
+    assertTrue(sql, sql.contains("posted = 'N'"));
+    assertTrue(sql, sql.contains("processed = 'Y'"));
+    assertTrue(sql, sql.contains("(processing = 'N' OR processing IS NULL)"));
   }
 
   /**
@@ -340,6 +367,7 @@ public class AcctServerProcessTest {
     expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
 
     verify(mockAcctServer).setBatchSize("50");
+    verify(mockOBDal).rollbackAndClose();
     verify(mockLogger).log(
         "ERROR: " + NON_SYSTEM_CLIENT_ID + " (Acme) / " + TEST_TABLE_ID + ": boom\n");
     verify(mockLogger).log(argThat(msg -> msg.startsWith("Finished in ")));
@@ -452,7 +480,31 @@ public class AcctServerProcessTest {
         new ServletException("@CODE=NoConnectionAvailable")));
     assertFalse(AcctServerProcess.isConnectionFailure(
         new ServletException("@CODE=0@ERROR: division by zero")));
+    assertTrue(AcctServerProcess.isConnectionFailure(new SQLException("shutdown", "57P01")));
     assertFalse(AcctServerProcess.isConnectionFailure(new SQLException("syntax", "42601")));
+  }
+
+  /**
+   * Tests that "Posting by DB tables" (DIRECT channel) with a failing table writes the error to
+   * the log and ends normally, because its form only shows the log of a run that did not throw.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testDirectChannelFailingTableEndsNormallyWithErrorInLog() throws Exception {
+    setupNonSystemClientDirectChannel();
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
+        eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
+        .thenReturn(new AcctServerProcessData[] { createAcctServerProcessData(TEST_TABLE_ID) });
+    setupDirectChannelPInstanceData("", "", "");
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
+        .thenReturn(false);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenThrow(new ServletException("boom"));
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockLogger).log("ERROR: " + NON_SYSTEM_CLIENT_ID + " / " + TEST_TABLE_ID + ": boom\n");
+    verify(mockLogger, never()).log(argThat(msg -> msg.startsWith("Finished in ")));
   }
 
   /**
@@ -921,6 +973,7 @@ public class AcctServerProcessTest {
       if (sql.startsWith("SELECT tablename")) {
         return namePs;
       }
+      pendingSql.add(sql);
       for (Map.Entry<String, Object> entry : pendingByTable.entrySet()) {
         if (sql.contains(" FROM " + entry.getKey() + " ")) {
           PreparedStatement ps = mock(PreparedStatement.class);
