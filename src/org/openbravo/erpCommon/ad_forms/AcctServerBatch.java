@@ -52,6 +52,8 @@ public class AcctServerBatch {
   private String currentId;
 
   /**
+   * Creates a batch that posts the pending documents of the given table.
+   *
    * @param acct
    *     the table to post, as returned by {@link AcctServer#get}
    */
@@ -63,6 +65,15 @@ public class AcctServerBatch {
    * Posts one batch of documents, committing each one. Stops at the first document that post()
    * cannot handle (e.g. locked by a concurrent posting) and at an unexpected error, which is only
    * logged.
+   *
+   * @param vars
+   *     session variables; its client is used when the {@link AcctServer} has none
+   * @param strDateFrom
+   *     first accounting date of the documents to post, null or empty for no lower bound
+   * @param strDateTo
+   *     last accounting date of the documents to post, null or empty for no upper bound
+   * @throws ServletException
+   *     if no database connection is available or a database error occurs
    */
   public void run(VariablesSecureApp vars, String strDateFrom, String strDateTo)
       throws ServletException {
@@ -108,8 +119,8 @@ public class AcctServerBatch {
     AcctServerData[] data = AcctServerData.select(acct.connectionProvider, acct.tableName,
         acct.strDateColumn, acct.AD_Client_ID, strOrgs, strDateFrom, strDateTo, limit);
     if (data != null && data.length > 0 && log4j.isDebugEnabled()) {
-      log4j.debug(
-          "AcctServer - Run -Select inicial realizada N = " + data.length + " - Key: " + data[0].id);
+      log4j.debug("AcctServer - Run -Select inicial realizada N = " + data.length + " - Key: "
+          + data[0].id);
     }
     return data;
   }
