@@ -76,6 +76,7 @@ public class AcctServerProcess extends DalBaseProcess {
   // Run summary and error context (DefaultJob creates a new instance per run)
   private int activeClients = 0;
   private int clientsWithPending = 0;
+  private boolean preFiltered = false;
   private int totalPosted = 0;
   private final List<String> failedDocs = new ArrayList<>();
   private final Map<String, String> statusNames = new HashMap<>();
@@ -137,10 +138,14 @@ public class AcctServerProcess extends DalBaseProcess {
       currentClient = "System";
       currentTable = "pending documents check";
       pendingTables = clientsWithPendingDocs(connection, selectAcctTableIds(), clientIds);
+      preFiltered = true;
     }
     for (Client c : clients) {
       final Set<String> clientTables = pendingTables == null ? null : pendingTables.get(c.getId());
       if (pendingTables == null || clientTables != null) {
+        if (clientTables != null) {
+          clientsWithPending++;
+        }
         final VariablesSecureApp clientVars = new VariablesSecureApp(
             bundle.getContext().getUser(), c.getId(), bundle.getContext().getOrganization());
         processClient(clientVars, bundle, clientTables, clientLabel(c));
@@ -240,9 +245,8 @@ public class AcctServerProcess extends DalBaseProcess {
       if (t instanceof NoConnectionAvailableException) {
         return true;
       }
-      if (t instanceof SQLException && ((SQLException) t).getSQLState() != null
-          && (((SQLException) t).getSQLState().startsWith("08")
-              || ((SQLException) t).getSQLState().startsWith("57P"))) {
+      final String sqlState = t instanceof SQLException ? ((SQLException) t).getSQLState() : null;
+      if (sqlState != null && (sqlState.startsWith("08") || sqlState.startsWith("57P"))) {
         return true;
       }
       if (t.getMessage() != null && t.getMessage().contains("@CODE=NoConnectionAvailable")) {
@@ -254,8 +258,8 @@ public class AcctServerProcess extends DalBaseProcess {
 
   private void addSummary(long elapsedMs) {
     addLog("Finished in " + elapsedMs + " ms - active clients: " + activeClients
-        + " / with pending: " + clientsWithPending + " - posted: " + totalPosted + " - failed: "
-        + failedDocs.size());
+        + (preFiltered ? " / with pending: " + clientsWithPending : "") + " - posted: "
+        + totalPosted + " - failed: " + failedDocs.size());
     if (!notPostableClients.isEmpty()) {
       addLog("Pending but not postable (closed period or organization not ready): "
           + String.join(", ", notPostableClients));
@@ -288,7 +292,6 @@ public class AcctServerProcess extends DalBaseProcess {
     final ProcessContext ctx = bundle.getContext();
     currentClient = clientLabel.isEmpty() ? localVars.getClient() : clientLabel;
     currentTable = "";
-    clientsWithPending++;
 
     if (log4j.isDebugEnabled()) {
       log4j.debug("Processing client: " + localVars.getClient());
@@ -375,12 +378,12 @@ public class AcctServerProcess extends DalBaseProcess {
         }
         // Keep posting the remaining tables; the run still ends as ERROR
         log4j.error(ex.getMessage(), ex);
-        // Drop what the failed table left in the DAL session, so the next posted document's commit
-        // does not persist it. Documents posted so far are already committed one by one
-        OBDal.getInstance().rollbackAndClose();
         hadErrors = true;
         logClientHeader();
         addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
+        // Drop what the failed table left in the DAL session, so the next posted document's commit
+        // does not persist it. Documents posted so far are already committed one by one
+        OBDal.getInstance().rollbackAndClose();
       }
     }
     // The pre-filter found pending documents, but none could be selected for posting
@@ -410,6 +413,7 @@ public class AcctServerProcess extends DalBaseProcess {
         ctx.getLanguage(), acct.AD_Table_ID);
     currentTable = strTableDesc;
     int total = 0;
+    int idleBatches = 0;
     while (acct.checkDocuments(strDateFrom, strDateTo)) {
 
       // The background log only gets the per-table result below
@@ -424,10 +428,14 @@ public class AcctServerProcess extends DalBaseProcess {
       final int successBefore = acct.getSuccess();
       final int failedBefore = acct.getFailedDocs().size();
       acct.run(localVars, strDateFrom, strDateTo);
-      if (acct.getSuccess() == successBefore && acct.getFailedDocs().size() == failedBefore) {
-        // A batch that changes nothing (e.g. documents left at posted='N') would be selected again
-        // forever: leave them for the next run
+      if (acct.getSuccess() != successBefore || acct.getFailedDocs().size() != failedBefore) {
+        idleBatches = 0;
+      } else if (++idleBatches > 1) {
+        // One idle batch can be a lock lost to a concurrent posting, so it is retried. Two in a row
+        // mean documents left at posted='N' that would be selected again forever: leave them
         log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
+        logClientHeader();
+        addLog("  " + strTableDesc + ": no progress, remaining documents left for the next run");
         break;
       }
 

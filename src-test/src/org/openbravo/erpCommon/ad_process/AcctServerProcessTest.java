@@ -29,6 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -62,6 +63,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -216,7 +218,8 @@ public class AcctServerProcessTest {
     // Nothing posted: no client header, and no "not postable" line outside the System pre-filter
     verify(mockLogger, never()).log("Client " + NON_SYSTEM_CLIENT_ID + "\n");
     verify(mockLogger, never()).log(argThat(msg -> msg.startsWith("Pending but not postable")));
-    verify(mockLogger).log(argThat(msg -> msg.startsWith("Finished in ")));
+    verify(mockLogger).log(argThat(msg -> msg.startsWith("Finished in ")
+        && !msg.contains("with pending")));
   }
 
   /**
@@ -374,9 +377,11 @@ public class AcctServerProcessTest {
     expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
 
     verify(mockAcctServer).setBatchSize("50");
-    verify(mockOBDal).rollbackAndClose();
-    verify(mockLogger).log(
+    // The error is logged before the session is discarded, so a failing rollback cannot hide it
+    InOrder order = inOrder(mockLogger, mockOBDal);
+    order.verify(mockLogger).log(
         "ERROR: " + NON_SYSTEM_CLIENT_ID + " (Acme) / " + TEST_TABLE_ID + ": boom\n");
+    order.verify(mockOBDal).rollbackAndClose();
     verify(mockLogger).log(argThat(msg -> msg.startsWith("Finished in ")));
   }
 
@@ -401,8 +406,8 @@ public class AcctServerProcessTest {
   }
 
   /**
-   * Tests that a batch that posts nothing and fails nothing new stops the table loop, and that
-   * the failed documents are listed in the run summary.
+   * Tests that two batches in a row that post nothing and fail nothing new stop the table loop,
+   * and that the failed documents are listed in the run summary.
     * @throws Exception if an error occurs
    */
   @Test
@@ -420,13 +425,37 @@ public class AcctServerProcessTest {
 
     acctServerProcess.doExecute(mockBundle);
 
-    verify(mockAcctServer, times(1)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
     verify(mockLogger).log("Client " + NON_SYSTEM_CLIENT_ID + "\n");
+    verify(mockLogger).log("  Test Table: no progress, remaining documents left for the next run\n");
     verify(mockLogger).log("  Test Table: posted 0, failed 1\n");
     verify(mockLogger, never()).log(argThat(msg -> msg.startsWith("Accounting - ")));
     verify(mockLogger).log(argThat(msg -> msg.contains("- failed: 1")));
     verify(mockLogger).log(
         "Failed: " + NON_SYSTEM_CLIENT_ID + " / Test Table / 10000261 (DOC1) / i - Invalid Account\n");
+  }
+
+  /**
+   * Tests that a single idle batch (e.g. a document lock lost to a concurrent posting) is retried
+   * instead of leaving the rest of the table for the next run.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testSingleIdleBatchIsRetried() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn("Test Table");
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true, true, false);
+    // First batch: 0 -> 0 (idle), second batch: 0 -> 1
+    when(mockAcctServer.getSuccess()).thenReturn(0, 0, 0, 1);
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockAcctServer, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log("  Test Table: posted 1\n");
+    verify(mockLogger, never()).log(argThat(msg -> msg.contains("no progress")));
   }
 
   /**

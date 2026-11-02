@@ -1,21 +1,39 @@
 package org.openbravo.erpCommon.ad_forms;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.security.OrganizationStructureProvider;
+import org.openbravo.dal.service.OBDal;
+import org.openbravo.database.ConnectionProvider;
 
 /**
  * Unit tests for AcctServer.
@@ -443,5 +461,67 @@ public class AcctServerTest {
 
     instance.DateAcct = "";
     assertEquals("", method.invoke(instance));
+  }
+
+  /**
+   * Tests that run() records a document that failed to post even though post() returned true:
+   * the per-document error counter is what marks the failure. AcctServerProcess relies on it to
+   * list failed documents and to detect batches that make no progress.
+   * @throws Exception if an error occurs
+   */
+  @Test
+  public void testRunRecordsDocumentsThatFailToPost() throws Exception {
+    Field failedDocsField = AcctServer.class.getDeclaredField("failedDocs");
+    failedDocsField.setAccessible(true);
+    failedDocsField.set(instance, new LinkedHashMap<String, String[]>());
+    ConnectionProvider cp = mock(ConnectionProvider.class);
+    Connection con = mock(Connection.class);
+    when(cp.getRDBMS()).thenReturn("POSTGRE");
+    when(cp.getTransactionConnection()).thenReturn(con);
+    instance.connectionProvider = cp;
+    instance.AD_Client_ID = "1000000";
+    instance.AD_Org_ID = "0";
+    instance.AD_Table_ID = "224";
+    instance.tableName = "GL_Journal";
+    instance.strDateColumn = "DateAcct";
+
+    AcctServerData failedRow = new ObjenesisStd().newInstance(AcctServerData.class);
+    failedRow.id = "DOC1";
+    AcctServerData postedRow = new ObjenesisStd().newInstance(AcctServerData.class);
+    postedRow.id = "DOC2";
+    AcctServer failing = mock(AcctServer.class);
+    failing.errors = 1;
+    failing.DocumentNo = "GL-1";
+    when(failing.getStatus()).thenReturn("E");
+    when(failing.post(eq("DOC1"), eq(false), any(), eq(cp), eq(con))).thenReturn(true);
+    AcctServer posting = mock(AcctServer.class);
+    posting.success = 1;
+    when(posting.post(eq("DOC2"), eq(false), any(), eq(cp), eq(con))).thenReturn(true);
+
+    try (MockedStatic<OBContext> obContext = mockStatic(OBContext.class);
+        MockedStatic<OBDal> obDal = mockStatic(OBDal.class);
+        MockedStatic<AcctServerData> data = mockStatic(AcctServerData.class);
+        MockedStatic<AcctServer> acctServer = mockStatic(AcctServer.class)) {
+      OBContext context = mock(OBContext.class);
+      OrganizationStructureProvider osp = mock(OrganizationStructureProvider.class);
+      obContext.when(OBContext::getOBContext).thenReturn(context);
+      when(context.getOrganizationStructureProvider("1000000")).thenReturn(osp);
+      when(osp.getChildTree("0", true)).thenReturn(Collections.singleton("0"));
+      obDal.when(OBDal::getInstance).thenReturn(mock(OBDal.class));
+      data.when(() -> AcctServerData.select(eq(cp), eq("GL_Journal"), eq("DateAcct"),
+          eq("1000000"), anyString(), any(), any(), anyString()))
+          .thenReturn(new AcctServerData[] { failedRow, postedRow });
+      acctServer.when(() -> AcctServer.get("224", "1000000", "0", cp))
+          .thenReturn(failing, posting);
+
+      instance.run(mock(VariablesSecureApp.class), "", "");
+    }
+
+    assertEquals(1, instance.getSuccess());
+    assertEquals(1, instance.errors);
+    Map<String, String[]> failed = instance.getFailedDocs();
+    assertEquals(Collections.singleton("DOC1"), failed.keySet());
+    assertArrayEquals(new String[] { "GL-1", "E" }, failed.get("DOC1"));
+    verify(cp, times(2)).releaseCommitConnection(con);
   }
 }
