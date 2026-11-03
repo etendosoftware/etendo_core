@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -510,76 +509,9 @@ public abstract class AcctServer {
 
   public void run(VariablesSecureApp vars, String strDateFrom, String strDateTo)
       throws IOException, ServletException {
-    if (AD_Client_ID.equals("")) {
-      AD_Client_ID = vars.getClient();
-    }
-    Connection con = null;
-    try {
-      String strIDs = "";
-
-      if (log4j.isDebugEnabled()) {
-        log4j.debug("AcctServer - Run - TableName = " + tableName + strDateFrom + strDateTo);
-      }
-
-      log4j.debug("AcctServer.run - AD_Client_ID: " + AD_Client_ID);
-
-      AcctServerData[] data = null;
-      final Set<String> orgSet = OBContext.getOBContext()
-          .getOrganizationStructureProvider(AD_Client_ID)
-          .getChildTree(AD_Org_ID, true);
-      String strOrgs = Utility.getInStrSet(orgSet);
-      // Send limit manually to SQL because auto-generated query doesn't limit properly
-      String limit = StringUtils.equals(connectionProvider.getRDBMS(), "ORACLE")
-          ? " AND ROWNUM < " + batchSize
-          : " LIMIT " + batchSize;
-      data = AcctServerData.select(connectionProvider, tableName, strDateColumn, AD_Client_ID,
-          strOrgs, strDateFrom, strDateTo, limit);
-      if (data != null && data.length > 0) {
-        if (log4j.isDebugEnabled()) {
-          log4j.debug("AcctServer - Run -Select inicial realizada N = " + data.length + " - Key: "
-              + data[0].id);
-        }
-      }
-
-      for (int i = 0; data != null && i < data.length; i++) {
-        con = connectionProvider.getTransactionConnection();
-        strIDs += data[i].getField("ID") + ", ";
-        this.setMessageResult(null);
-        AcctServer tempServer = get(AD_Table_ID, AD_Client_ID, AD_Org_ID, connectionProvider);
-        boolean postSuccess = false;
-        postSuccess = tempServer.post(data[i].getField("ID"), false, vars, connectionProvider, con);
-        errors = errors + tempServer.errors;
-        success = success + tempServer.success;
-        if (!postSuccess) {
-          connectionProvider.releaseRollbackConnection(con);
-          return;
-        } else {
-          connectionProvider.releaseCommitConnection(con);
-          OBDal.getInstance().commitAndClose();
-        }
-      }
-      if (log4j.isDebugEnabled() && data != null) {
-        log4j.debug("AcctServer - Run -" + data.length + " IDs [" + strIDs + "]");
-      }
-    } catch (NoConnectionAvailableException ex) {
-      throw new ServletException("@CODE=NoConnectionAvailable", ex);
-    } catch (SQLException ex2) {
-      try {
-        connectionProvider.releaseRollbackConnection(con);
-      } catch (SQLException se) {
-        log4j.error("Failed to close connection after an error", se);
-      }
-      throw new ServletException(
-          "@CODE=" + Integer.toString(ex2.getErrorCode()) + "@" + ex2.getMessage(), ex2);
-    } catch (Exception ex3) {
-      log4j.error("Exception in AcctServer.run", ex3);
-      try {
-        connectionProvider.releaseRollbackConnection(con);
-      } catch (SQLException se) {
-        log4j.error("Failed to close connection after an error", se);
-      }
-    }
+    new AcctServerBatch(this).run(vars, strDateFrom, strDateTo);
   }
+
 
   /**
    * @return the isBackground

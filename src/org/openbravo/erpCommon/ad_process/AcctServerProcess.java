@@ -19,19 +19,36 @@
 
 package org.openbravo.erpCommon.ad_process;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.exception.OBException;
+import org.openbravo.base.model.Entity;
+import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.base.structure.BaseOBObject;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
+import org.openbravo.erpCommon.ad_forms.AcctServerBatch;
+import org.openbravo.erpCommon.utility.Utility;
+import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessBundle.Channel;
@@ -51,6 +68,22 @@ public class AcctServerProcess extends DalBaseProcess {
 
   private String[] TableIds = null;
 
+  private static final Pattern TABLE_NAME = Pattern.compile("\\w+");
+  private static final int MAX_FAILED_LINES = 100;
+
+  // Run summary and error context (DefaultJob creates a new instance per run)
+  private int activeClients = 0;
+  private int clientsWithPending = 0;
+  private boolean preFiltered = false;
+  private int totalPosted = 0;
+  private final List<String> failedDocs = new ArrayList<>();
+  private final Map<String, String> statusNames = new HashMap<>();
+  private boolean hadErrors = false;
+  private boolean clientHeaderLogged = false;
+  private final List<String> notPostableClients = new ArrayList<>();
+  private String currentClient = "";
+  private String currentTable = "";
+
   private ProcessLogger logger;
   private ConnectionProvider connection;
 
@@ -61,82 +94,204 @@ public class AcctServerProcess extends DalBaseProcess {
 
     logger = bundle.getLogger();
     connection = bundle.getConnection();
+    isDirect = bundle.getChannel() == Channel.DIRECT;
+    final long start = System.currentTimeMillis();
 
     VariablesSecureApp vars = bundle.getContext().toVars();
-    if (vars.getClient().equals(SYSTEM_CLIENT_ID)) {
-      OBCriteria<Client> obc = OBDal.getInstance().createCriteria(Client.class);
-      obc.add(Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID)));
-      for (Client c : obc.list()) {
-        final VariablesSecureApp vars1 = new VariablesSecureApp(bundle.getContext().getUser(),
-            c.getId(), bundle.getContext().getOrganization());
-        processClient(vars1, bundle);
+    try {
+      if (vars.getClient().equals(SYSTEM_CLIENT_ID)) {
+        processAllClients(bundle);
+      } else {
+        activeClients = 1;
+        processClient(vars, bundle, null,
+            clientLabel(OBDal.getInstance().get(Client.class, vars.getClient())));
       }
-    } else {
-      processClient(vars, bundle);
+    } catch (Exception ex) {
+      // DefaultJob only sends the exception to log4j: write it where the Process Monitor shows it
+      addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
+      throw ex;
+    } finally {
+      if (!isDirect) {
+        addSummary(System.currentTimeMillis() - start);
+      }
+    }
+    // "Posting by DB tables" shows the log only when the process ends normally
+    if (hadErrors && !isDirect) {
+      throw new OBException("Accounting finished with errors, see the process log");
+    }
+  }
+
+  private void processAllClients(ProcessBundle bundle) throws Exception {
+    currentClient = "System";
+    currentTable = "active clients";
+    final OBCriteria<Client> obc = OBDal.getInstance().createCriteria(Client.class);
+    obc.add(Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID)));
+    final List<Client> clients = obc.list();
+    activeClients = clients.size();
+    // The direct channel ("Posting by DB tables") keeps walking every client
+    Map<String, Set<String>> pendingTables = null;
+    if (!isDirect) {
+      final Set<String> clientIds = new HashSet<>();
+      for (Client c : clients) {
+        clientIds.add(c.getId());
+      }
+      currentTable = "pending documents check";
+      pendingTables = clientsWithPendingDocs(connection, selectAcctTableIds(), clientIds);
+      preFiltered = true;
+    }
+    for (Client c : clients) {
+      final Set<String> clientTables = pendingTables == null ? null : pendingTables.get(c.getId());
+      if (pendingTables == null || clientTables != null) {
+        if (clientTables != null) {
+          clientsWithPending++;
+        }
+        final VariablesSecureApp clientVars = new VariablesSecureApp(
+            bundle.getContext().getUser(), c.getId(), bundle.getContext().getOrganization());
+        processClient(clientVars, bundle, clientTables, clientLabel(c));
+      }
+    }
+  }
+
+  private String[] selectAcctTableIds() throws ServletException {
+    final AcctServerProcessData[] data = AcctServerProcessData.selectAcctTable(connection);
+    final String[] ids = new String[data.length];
+    for (int i = 0; i < data.length; i++) {
+      ids[i] = data[i].adTableId;
+    }
+    return ids;
+  }
+
+  /**
+   * Returns, for each of the given clients, the accounting tables that hold at least one document
+   * pending to be posted. It is a superset of what {@link AcctServer#checkDocuments} finds (no
+   * organization, period or date filter), so skipping the other (client, table) pairs never skips
+   * a document.
+   *
+   * A table whose query fails is kept for every client, as it was before this pre-filter existed.
+   * A lost connection is not told apart here (SqlC drops the SQL state): the table falls back too
+   * and the run aborts on the first table it posts.
+   */
+  static Map<String, Set<String>> clientsWithPendingDocs(ConnectionProvider cp,
+      String[] tableIds, Set<String> clientIds) {
+    final Map<String, Set<String>> result = new HashMap<>();
+    for (String tableId : tableIds) {
+      Set<String> pendingClients;
+      try {
+        pendingClients = selectClientsWithPendingDocs(cp, tableId);
+      } catch (ServletException ex) {
+        log4j.warn(
+            "Pending documents pre-filter failed for table {}, walking it for every client",
+            tableId, ex);
+        discardFailedQuery();
+        pendingClients = clientIds;
+      }
+      for (String clientId : pendingClients) {
+        if (clientIds.contains(clientId)) {
+          result.computeIfAbsent(clientId, k -> new LinkedHashSet<>()).add(tableId);
+        }
+      }
+    }
+    return result;
+  }
+
+  private static Set<String> selectClientsWithPendingDocs(ConnectionProvider cp, String tableId)
+      throws ServletException {
+    final String tableName = AcctServerProcessData.selectTableName(cp, tableId);
+    // SqlC pastes the table name into the query: only a plain identifier may get there
+    if (!TABLE_NAME.matcher(tableName).matches()) {
+      // Handled by the caller's fallback: the table is walked for every client
+      throw new ServletException("No valid table name for AD_Table_ID " + tableId);
+    }
+    final Set<String> clients = new HashSet<>();
+    for (AcctServerProcessData row : AcctServerProcessData.selectClientsWithPendingDocs(cp,
+        tableName)) {
+      clients.add(row.adClientId);
+    }
+    return clients;
+  }
+
+  /**
+   * A failed query aborts the PostgreSQL transaction of the process connection, so every later
+   * query would fail too. Nothing has been written yet when the pre-filter runs.
+   */
+  private static void discardFailedQuery() {
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } catch (Exception ex) {
+      log4j.error("Could not discard the DAL session after a failed pre-filter query", ex);
     }
   }
 
   /**
-   * 
-   * @throws ServletException
+   * A broken connection or pool, or a database shutting down (SQLState 57P*), fails every following
+   * table the same way, so the run aborts.
    */
-  private void processClient(VariablesSecureApp vars, ProcessBundle bundle)
-      throws ServletException {
-    VariablesSecureApp localVars = vars;
-    final String processId = bundle.getProcessId();
+  static boolean isConnectionFailure(Throwable ex) {
+    for (Throwable t = ex; t != null; t = t.getCause()) {
+      if (t instanceof NoConnectionAvailableException) {
+        return true;
+      }
+      final String sqlState = t instanceof SQLException ? ((SQLException) t).getSQLState() : null;
+      if (sqlState != null && (sqlState.startsWith("08") || sqlState.startsWith("57P"))) {
+        return true;
+      }
+      if (t.getMessage() != null && t.getMessage().contains("@CODE=NoConnectionAvailable")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void addSummary(long elapsedMs) {
+    addLog("Finished in " + elapsedMs + " ms - active clients: " + activeClients
+        + (preFiltered ? " / with pending: " + clientsWithPending : "") + " - posted: "
+        + totalPosted + " - failed: " + failedDocs.size());
+    if (!notPostableClients.isEmpty()) {
+      addLog("Pending but not postable (closed period or organization not ready): "
+          + String.join(", ", notPostableClients));
+    }
+    // shortcut: only the first MAX_FAILED_LINES failed documents are listed, raise it if needed
+    for (int i = 0; i < failedDocs.size() && i < MAX_FAILED_LINES; i++) {
+      addLog("Failed: " + failedDocs.get(i));
+    }
+    if (failedDocs.size() > MAX_FAILED_LINES) {
+      addLog("Failed: ... and " + (failedDocs.size() - MAX_FAILED_LINES) + " more");
+    }
+  }
+
+  private static String clientLabel(Client client) {
+    return client == null ? "" : client.getId() + " (" + client.getName() + ")";
+  }
+
+  /**
+   * Posts the pending documents of one client, table by table. A failing table is logged and the
+   * remaining tables are still posted; only a lost database connection aborts the run.
+   *
+   * @param onlyTables
+   *          tables to walk, or null to walk every accounting table
+   */
+  private void processClient(VariablesSecureApp vars, ProcessBundle bundle,
+      Set<String> onlyTables, String clientLabel) throws ServletException, IOException {
     final String pinstanceId = bundle.getPinstanceId();
     final ProcessContext ctx = bundle.getContext();
-    isDirect = bundle.getChannel() == Channel.DIRECT;
+    currentClient = clientLabel.isEmpty() ? vars.getClient() : clientLabel;
+    currentTable = "";
 
     if (log4j.isDebugEnabled()) {
-      log4j.debug("Processing client: " + localVars.getClient());
+      log4j.debug("Processing client: " + vars.getClient());
     }
 
     if (isDirect) {
       addLog("@DL_STARTING@", false);
     } else {
-      addLog("Starting background process.");
+      // Written with the first table line, so clients with nothing done stay out of the log
+      clientHeaderLogged = false;
     }
-    if (localVars == null) {
-      try {
-        final AcctServerProcessData[] dataOrg = AcctServerProcessData.selectUserOrg(connection,
-            processId);
-        if (dataOrg == null || dataOrg.length == 0) {
-          if (isDirect) {
-            addLog("@DL_LOAD_FAILED@");
-          } else {
-            addLog("User and Organization loading failed.");
-          }
-          return;
-        }
-        localVars = new VariablesSecureApp(dataOrg[0].adUserId, ctx.getClient(),
-            dataOrg[0].adOrgId);
-      } catch (final ServletException ex) {
-        log4j.error(ex.getMessage());
-        return;
-      }
-    }
-    try {
-      final AcctServerProcessData[] data;
-      if ("0".equals(ctx.getClient())) {
-        data = AcctServerProcessData.selectAcctTable(connection);
-      } else if ("0".equals(ctx.getOrganization())) {
-        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient());
-      } else {
-        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient(),
-            ctx.getOrganization());
-      }
-      final ArrayList<Object> vTableIds = new ArrayList<Object>();
-      for (int i = 0; i < data.length; i++) {
-        vTableIds.add(data[i].adTableId);
-      }
-      TableIds = new String[vTableIds.size()];
-      vTableIds.toArray(TableIds);
-    } catch (final ServletException ex) {
-      log4j.error(ex.getMessage());
+    final VariablesSecureApp localVars = vars != null ? vars
+        : loadUserOrgVars(bundle.getProcessId(), ctx);
+    if (localVars == null || !loadTableIds(ctx)) {
       return;
     }
-    String[] tables = null;
     String strTable = "";
     // If it is the background process, we use 0
     String strOrg = "0";
@@ -154,55 +309,246 @@ public class AcctServerProcess extends DalBaseProcess {
     if (AcctServerProcessData.useRequestProcessOrg(connection)) {
       strOrg = localVars.getOrg();
     }
-    if (!strTable.equals("")) {
-      tables = new String[1];
-      tables[0] = new String(strTable);
-    } else {
-      tables = TableIds;
+    for (String table : tablesToWalk(strTable, onlyTables)) {
+      processTableOrLogFailure(table, localVars, strOrg, strDateFrom, strDateTo, ctx);
     }
-    String strTableDesc;
-    for (int i = 0; i < tables.length; i++) {
-      final AcctServer acct = AcctServer.get(tables[i], localVars.getClient(), strOrg, connection);
-      if (acct == null) {
-        continue;
+    // The pre-filter found pending documents, but none could be selected for posting
+    if (onlyTables != null && !isDirect && !clientHeaderLogged) {
+      notPostableClients.add(currentClient);
+    }
+  }
+
+  /** Builds the variables of the process user and organization, or returns null if missing. */
+  private VariablesSecureApp loadUserOrgVars(String processId, ProcessContext ctx) {
+    try {
+      final AcctServerProcessData[] dataOrg = AcctServerProcessData.selectUserOrg(connection,
+          processId);
+      if (dataOrg == null || dataOrg.length == 0) {
+        if (isDirect) {
+          addLog("@DL_LOAD_FAILED@");
+        } else {
+          addLog("User and Organization loading failed.");
+        }
+        return null;
       }
-      acct.setBatchSize(BATCH_SIZE);
-      // Sets execution as background
-      acct.setBackground(true);
-      strTableDesc = AcctServerProcessData.selectDescription(connection, ctx.getLanguage(),
-          acct.AD_Table_ID);
+      return new VariablesSecureApp(dataOrg[0].adUserId, ctx.getClient(), dataOrg[0].adOrgId);
+    } catch (final ServletException ex) {
+      log4j.error(ex.getMessage());
+      return null;
+    }
+  }
+
+  /** Loads the accounting tables of the context into TableIds; false if they cannot be read. */
+  private boolean loadTableIds(ProcessContext ctx) {
+    try {
+      final AcctServerProcessData[] data;
+      if ("0".equals(ctx.getClient())) {
+        data = AcctServerProcessData.selectAcctTable(connection);
+      } else if ("0".equals(ctx.getOrganization())) {
+        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient());
+      } else {
+        data = AcctServerProcessData.selectAcctTable(connection, ctx.getClient(),
+            ctx.getOrganization());
+      }
+      TableIds = new String[data.length];
+      for (int i = 0; i < data.length; i++) {
+        TableIds[i] = data[i].adTableId;
+      }
+      return true;
+    } catch (final ServletException ex) {
+      log4j.error(ex.getMessage());
+      return false;
+    }
+  }
+
+  private String[] tablesToWalk(String strTable, Set<String> onlyTables) {
+    if (!strTable.equals("")) {
+      return new String[] { strTable };
+    }
+    return onlyTables != null ? onlyTables.toArray(new String[0]) : TableIds;
+  }
+
+  /** Posts one table; a failure other than a lost connection is logged and the run goes on. */
+  private void processTableOrLogFailure(String table, VariablesSecureApp localVars, String strOrg,
+      String strDateFrom, String strDateTo, ProcessContext ctx)
+      throws ServletException, IOException {
+    currentTable = table;
+    try {
+      processTable(table, localVars, strOrg, strDateFrom, strDateTo, ctx);
+    } catch (Exception ex) {
+      if (isConnectionFailure(ex)) {
+        throw ex;
+      }
+      logFailedTable(ex);
+    }
+  }
+
+  /** Logs a table that threw; the remaining tables are still posted and the run ends as ERROR. */
+  private void logFailedTable(Exception ex) {
+    log4j.error(ex.getMessage(), ex);
+    hadErrors = true;
+    logClientHeader();
+    addLog("ERROR: " + currentClient + " / " + currentTable + ": " + ex.getMessage());
+    // Drop what the failed table left in the DAL session, so the next posted document's commit
+    // does not persist it. Documents posted so far are already committed one by one
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } catch (Exception rollbackEx) {
+      // A broken session must not stop the remaining tables: the next one opens a new one
+      log4j.error("Could not discard the DAL session after a failed table", rollbackEx);
+    }
+  }
+
+  private void logClientHeader() {
+    if (!isDirect && !clientHeaderLogged) {
+      addLog("Client " + currentClient);
+      clientHeaderLogged = true;
+    }
+  }
+
+  private void processTable(String tableId, VariablesSecureApp localVars, String strOrg,
+      String strDateFrom, String strDateTo, ProcessContext ctx)
+      throws ServletException, IOException {
+    final AcctServer acct = AcctServer.get(tableId, localVars.getClient(), strOrg, connection);
+    if (acct == null) {
+      return;
+    }
+    acct.setBatchSize(BATCH_SIZE);
+    // Sets execution as background
+    acct.setBackground(true);
+    final String strTableDesc = AcctServerProcessData.selectDescription(connection,
+        ctx.getLanguage(), acct.AD_Table_ID);
+    currentTable = strTableDesc;
+    final AcctServerBatch batch = newBatch(acct);
+    try {
       int total = 0;
+      int idleBatches = 0;
       while (acct.checkDocuments(strDateFrom, strDateTo)) {
 
-        if (total == 0) {
-          if (isDirect) {
+        // The background log only gets the per-table result below
+        if (isDirect) {
+          if (total == 0) {
             addLog("@DL_ACCOUNTING@ - " + strTableDesc, false);
           } else {
-            addLog("Accounting - " + strTableDesc, false);
-          }
-        } else {
-          if (isDirect) {
             addLog("@DL_COUNTED@ " + total + " - " + strTableDesc, false);
-          } else {
-            addLog("Counted " + total + " - " + strTableDesc, false);
           }
         }
 
-        try {
-          acct.run(localVars, strDateFrom, strDateTo);
-        } catch (final Exception ex) {
-          log4j.error(ex.getMessage(), ex);
-          return;
+        final int successBefore = batch.getSuccess();
+        final int failedBefore = batch.getFailedDocs().size();
+        batch.run(localVars, strDateFrom, strDateTo);
+        if (batch.getSuccess() != successBefore || batch.getFailedDocs().size() != failedBefore) {
+          idleBatches = 0;
+        } else if (++idleBatches > 1) {
+          // One idle batch can be a lock lost to a concurrent posting, so it is retried. Two in a
+          // row mean documents left at posted='N' that would be selected again forever: leave them
+          log4j.warn("No progress posting {} for client {}", strTableDesc, currentClient);
+          logClientHeader();
+          addLog("  " + strTableDesc + ": no progress" + blockedDocText(acct, batch, ctx.getLanguage())
+              + ", remaining documents left for the next run");
+          break;
         }
 
         total += Integer.valueOf(BATCH_SIZE).intValue();
       }
-      if (isDirect) {
-        addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()), false);
-      } else {
-        addLog("Table = " + strTableDesc + " - " + acct.getInfo(ctx.getLanguage()));
-      }
+    } finally {
+      // Documents of earlier batches are already committed: count and list them even if a later
+      // batch threw
+      logTableResult(acct, batch, strTableDesc, ctx.getLanguage());
     }
+  }
+
+  /** Seam for the tests, which replace the batch of a mocked {@link AcctServer}. */
+  AcctServerBatch newBatch(AcctServer acct) {
+    return new AcctServerBatch(acct);
+  }
+
+  private void logTableResult(AcctServer acct, AcctServerBatch batch, String strTableDesc,
+      String language) {
+    totalPosted += batch.getSuccess();
+    final int failedCount = batch.getFailedDocs().size();
+    if (isDirect) {
+      addLog("@DL_TABLE@ = " + strTableDesc + " - " + acct.getInfo(language), false);
+    } else if (batch.getSuccess() > 0 || failedCount > 0) {
+      logClientHeader();
+      addLog("  " + strTableDesc + ": posted " + batch.getSuccess()
+          + (failedCount > 0 ? ", failed " + failedCount : ""));
+      collectFailedDocs(acct, batch, strTableDesc, language);
+    }
+  }
+
+  /** Names the document that ended the last batch early, when posting reported one. */
+  private String blockedDocText(AcctServer acct, AcctServerBatch batch, String language) {
+    final String[] blocked = batch.getBlockedDoc();
+    if (blocked == null) {
+      return "";
+    }
+    final String status = blocked[2];
+    final String detail;
+    if (blocked[3] != null) {
+      detail = ": " + blocked[3];
+    } else if (status != null && !status.isEmpty()) {
+      detail = " / " + status + postedStatusName(status, language);
+    } else {
+      detail = "";
+    }
+    return ", stopped at " + documentLabel(acct.AD_Table_ID, blocked[0], blocked[1]) + detail;
+  }
+
+  private void collectFailedDocs(AcctServer acct, AcctServerBatch batch, String strTableDesc,
+      String language) {
+    for (Map.Entry<String, String[]> failed : batch.getFailedDocs().entrySet()) {
+      final String status = failed.getValue()[1];
+      // Lines past the cap are only counted, so skip the document lookup for them
+      final String document = failedDocs.size() < MAX_FAILED_LINES
+          ? documentLabel(acct.AD_Table_ID, failed.getKey(), failed.getValue()[0])
+          : failed.getKey();
+      failedDocs.add(currentClient + " / " + strTableDesc + " / " + document + " / " + status
+          + postedStatusName(status, language));
+    }
+  }
+
+  /**
+   * Returns "document (record id)". Not every document type loads its number while posting (e.g.
+   * goods shipments), so it falls back to the record identifier, or to the bare id.
+   */
+  String documentLabel(String tableId, String recordId, String documentNo) {
+    if (documentNo != null && !documentNo.isEmpty()) {
+      return documentNo + " (" + recordId + ")";
+    }
+    OBContext.setAdminMode(true);
+    try {
+      final Entity entity = ModelProvider.getInstance().getEntityByTableId(tableId);
+      final BaseOBObject document = entity == null ? null
+          : OBDal.getInstance().get(entity.getName(), recordId);
+      return document == null ? recordId : document.getIdentifier() + " (" + recordId + ")";
+    } catch (Exception ex) {
+      log4j.debug("Could not read the identifier of {}", recordId, ex);
+      return recordId;
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  /**
+   * Returns " - " plus the name of a posted status (e.g. "Cost Not Calculated" for NC), or an
+   * empty string when it cannot be resolved. Names are cached for the run.
+   */
+  String postedStatusName(String status, String language) {
+    return statusNames.computeIfAbsent(String.valueOf(status), s -> {
+      try {
+        // "All_Posted Status" holds the Post button labels, e.g. "Post: Cost Not Calculated"
+        final String name = Utility.getListValueName("All_Posted Status", s, language);
+        if (name == null || name.equals(s)) {
+          return "";
+        }
+        final int sep = name.indexOf(": ");
+        return " - " + (sep >= 0 ? name.substring(sep + 2) : name);
+      } catch (Exception ex) {
+        log4j.debug("Could not resolve the name of posted status {}", s, ex);
+        return "";
+      }
+    });
   }
 
   /**

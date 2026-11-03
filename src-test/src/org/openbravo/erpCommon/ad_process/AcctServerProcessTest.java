@@ -16,10 +16,16 @@
  */
 package org.openbravo.erpCommon.ad_process;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -29,9 +35,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 
@@ -40,15 +49,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
+import org.openbravo.erpCommon.ad_forms.AcctServerBatch;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessBundle.Channel;
@@ -74,7 +86,17 @@ public class AcctServerProcessTest {
   private static final String TEST_PROCESS_ID = "PROCESS_123";
   private static final String TEST_PINSTANCE_ID = "PINSTANCE_456";
   private static final String TEST_TABLE_ID = "318";
+  private static final String OTHER_TABLE_ID = "4D8C3B3C31D1410DA046140C9F024D17";
+  private static final String INVOICE_TABLE = "C_Invoice";
+  private static final String PAYMENT_TABLE = "FIN_Payment";
+  private static final String OTHER_CLIENT_ID = "2000000";
   private static final String TEST_LANGUAGE = "en_US";
+  private static final String TEST_TABLE_DESC = "Test Table";
+  private static final String POSTED_ONE_LINE = "  " + TEST_TABLE_DESC + ": posted 1\n";
+  private static final String ERROR_PREFIX = "ERROR: ";
+  private static final String FINISHED_PREFIX = "Finished in ";
+  private static final String CLIENT_PREFIX = "Client ";
+  private static final String FAILED_PREFIX = "Failed: ";
 
   private AcctServerProcess acctServerProcess;
 
@@ -103,6 +125,9 @@ public class AcctServerProcessTest {
   private AcctServer mockAcctServer;
 
   @Mock
+  private AcctServerBatch mockBatch;
+
+  @Mock
   private Client mockClient;
 
   private MockedStatic<OBDal> obDalStatic;
@@ -122,12 +147,18 @@ public class AcctServerProcessTest {
     // Initialize fields via reflection
     setPrivateField(acctServerProcess, "lastLog", new StringBuffer());
     setPrivateField(acctServerProcess, "message", new StringBuffer());
+    setPrivateField(acctServerProcess, "failedDocs", new ArrayList<String>());
+    setPrivateField(acctServerProcess, "statusNames", new HashMap<String, String>());
+    setPrivateField(acctServerProcess, "notPostableClients", new ArrayList<String>());
+    setPrivateField(acctServerProcess, "currentClient", "");
+    setPrivateField(acctServerProcess, "currentTable", "");
 
     obDalStatic = mockStatic(OBDal.class);
     acctServerProcessDataStatic = mockStatic(AcctServerProcessData.class);
     acctServerStatic = mockStatic(AcctServer.class);
 
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
+    doReturn(mockBatch).when(acctServerProcess).newBatch(any());
   }
 
   /**
@@ -174,47 +205,375 @@ public class AcctServerProcessTest {
     acctServerProcess.doExecute(mockBundle);
 
     // Assert
-    verify(mockLogger, times(1)).log(anyString());
+    // Nothing posted: no client header, and no "not postable" line outside the System pre-filter
+    verify(mockLogger, never()).log(CLIENT_PREFIX + NON_SYSTEM_CLIENT_ID + "\n");
+    verify(mockLogger, never()).log(argThat(msg -> msg.startsWith("Pending but not postable")));
+    verify(mockLogger).log(argThat(msg -> msg.startsWith(FINISHED_PREFIX)
+        && !msg.contains("with pending")));
   }
 
   /**
    * Tests doExecute with system client (client ID = "0").
-   * Verifies that it iterates through all non-system clients.
+   * Verifies that only the clients with pending documents are walked, and only for the tables
+   * where they have them.
     * @throws Exception if an error occurs
    */
   @Test
-  public void testDoExecuteWithSystemClient() throws Exception {
+  public void testDoExecuteWithSystemClientWalksOnlyClientsWithPendingDocs() throws Exception {
     // Arrange
     setupBasicBundleMocks();
     when(mockVars.getClient()).thenReturn(SYSTEM_CLIENT_ID);
 
-    List<Client> clientList = new ArrayList<>();
-    clientList.add(mockClient);
+    Client idleClient = mock(Client.class);
+    when(idleClient.getId()).thenReturn(OTHER_CLIENT_ID);
     when(mockClient.getId()).thenReturn(NON_SYSTEM_CLIENT_ID);
-
+    when(mockClient.getName()).thenReturn("Acme");
     when(mockOBDal.createCriteria(Client.class)).thenReturn(mockClientCriteria);
     when(mockClientCriteria.add(any(Criterion.class))).thenReturn(mockClientCriteria);
-    when(mockClientCriteria.list()).thenReturn(clientList);
+    when(mockClientCriteria.list()).thenReturn(Arrays.asList(mockClient, idleClient));
 
     when(mockContext.getUser()).thenReturn(TEST_USER_ID);
-    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockContext.getOrganization()).thenReturn(SYSTEM_CLIENT_ID);
+    when(mockContext.getClient()).thenReturn(SYSTEM_CLIENT_ID);
     when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
+    when(mockBundle.getChannel()).thenReturn(Channel.BACKGROUND);
 
-    AcctServerProcessData[] emptyData = new AcctServerProcessData[0];
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
-        eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
-        .thenReturn(emptyData);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(mockConnection))
+        .thenReturn(new AcctServerProcessData[] { createAcctServerProcessData(TEST_TABLE_ID),
+            createAcctServerProcessData(OTHER_TABLE_ID) });
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
         .thenReturn(false);
+    // Pending documents: only the first client, only in the first table
+    AcctServerProcessData pendingRow = createAcctServerProcessData(null);
+    pendingRow.adClientId = NON_SYSTEM_CLIENT_ID;
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTableName(mockConnection,
+        TEST_TABLE_ID)).thenReturn(INVOICE_TABLE);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTableName(mockConnection,
+        OTHER_TABLE_ID)).thenReturn(PAYMENT_TABLE);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(
+        mockConnection, INVOICE_TABLE)).thenReturn(new AcctServerProcessData[] { pendingRow });
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectClientsWithPendingDocs(
+        mockConnection, PAYMENT_TABLE)).thenReturn(new AcctServerProcessData[0]);
 
-    when(mockBundle.getChannel()).thenReturn(Channel.BACKGROUND);
+    acctServerStatic.when(() -> AcctServer.get(anyString(), anyString(), anyString(), any()))
+        .thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(any(), any())).thenReturn(false);
+    when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
 
     // Act
     acctServerProcess.doExecute(mockBundle);
 
     // Assert
     verify(mockOBDal).createCriteria(Client.class);
+    acctServerStatic.verify(() -> AcctServer.get(eq(TEST_TABLE_ID), eq(NON_SYSTEM_CLIENT_ID),
+        anyString(), any()));
+    acctServerStatic.verify(() -> AcctServer.get(eq(OTHER_TABLE_ID), anyString(), anyString(),
+        any()), never());
+    acctServerStatic.verify(() -> AcctServer.get(anyString(), eq(OTHER_CLIENT_ID), anyString(),
+        any()), never());
+    // No query failed, so the DAL session is kept
+    verify(mockOBDal, never()).rollbackAndClose();
+    verify(mockLogger).log(argThat(msg -> msg.contains("active clients: 2 / with pending: 1")));
+    // Its pending documents could not be selected (checkDocuments false): no header, listed once
+    verify(mockLogger, never()).log(argThat(msg -> msg.startsWith(CLIENT_PREFIX)));
+    verify(mockLogger).log("Pending but not postable (closed period or organization not ready): "
+        + NON_SYSTEM_CLIENT_ID + " (Acme)\n");
+  }
+
+  /**
+   * Tests that a failing table is written to the process log, the next table is still posted and
+   * the run ends with an error.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testFailingTableIsLoggedAndRunContinuesThenFails() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID, OTHER_TABLE_ID);
+    when(mockClient.getId()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockClient.getName()).thenReturn("Acme");
+    when(mockOBDal.get(Client.class, NON_SYSTEM_CLIENT_ID)).thenReturn(mockClient);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenThrow(new ServletException("boom"));
+    acctServerStatic.when(() -> AcctServer.get(eq(OTHER_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(false);
+    when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
+    // Even a broken session that cannot be discarded must not stop the remaining tables
+    doThrow(new IllegalStateException("session closed")).when(mockOBDal).rollbackAndClose();
+
+    expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
+
+    verify(mockAcctServer).setBatchSize("50");
+    // The error is logged before the session is discarded, so a failing rollback cannot hide it
+    InOrder order = inOrder(mockLogger, mockOBDal);
+    order.verify(mockLogger).log(
+        ERROR_PREFIX + NON_SYSTEM_CLIENT_ID + " (Acme) / " + TEST_TABLE_ID + ": boom\n");
+    order.verify(mockOBDal).rollbackAndClose();
+    verify(mockLogger).log(argThat(msg -> msg.startsWith(FINISHED_PREFIX)));
+  }
+
+  /**
+   * Tests that a connection failure aborts the run right away with the original exception.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testConnectionFailureAbortsRun() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID, OTHER_TABLE_ID);
+    ServletException noConnection = new ServletException("@CODE=NoConnectionAvailable");
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenThrow(noConnection);
+
+    Exception thrown = expectThrows(ServletException.class,
+        () -> acctServerProcess.doExecute(mockBundle));
+
+    assertSame(noConnection, thrown);
+    acctServerStatic.verify(() -> AcctServer.get(eq(OTHER_TABLE_ID), anyString(), anyString(),
+        any()), never());
+    verify(mockLogger).log(argThat(msg -> msg.startsWith(ERROR_PREFIX + NON_SYSTEM_CLIENT_ID)));
+  }
+
+  /**
+   * Tests that two batches in a row that post nothing and fail nothing new stop the table loop,
+   * and that the failed documents are listed in the run summary.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testNoProgressBatchStopsLoopAndFailedDocsAreSummarized() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn(TEST_TABLE_DESC);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    // Bounded, so a broken loop guard fails the run count instead of hanging the test
+    when(mockAcctServer.checkDocuments(anyString(), anyString()))
+        .thenReturn(true, true, true, false);
+    when(mockBatch.getFailedDocs())
+        .thenReturn(Collections.singletonMap("DOC1", new String[] { "10000261", "i" }));
+    when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
+    when(mockBatch.getBlockedDoc()).thenReturn(new String[] { "DOC9", "1000123", "L", null });
+    doReturn(" - Invalid Account").when(acctServerProcess).postedStatusName("i", TEST_LANGUAGE);
+    doReturn(" - Document Locked").when(acctServerProcess).postedStatusName("L", TEST_LANGUAGE);
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log(CLIENT_PREFIX + NON_SYSTEM_CLIENT_ID + "\n");
+    verify(mockLogger).log("  Test Table: no progress, stopped at 1000123 (DOC9) / L - Document"
+        + " Locked, remaining documents left for the next run\n");
+    verify(mockLogger).log("  Test Table: posted 0, failed 1\n");
+    verify(mockLogger, never()).log(argThat(msg -> msg.startsWith("Accounting - ")));
+    verify(mockLogger).log(argThat(msg -> msg.contains("- failed: 1")));
+    verify(mockLogger).log(
+        FAILED_PREFIX + NON_SYSTEM_CLIENT_ID + " / Test Table / 10000261 (DOC1) / i - Invalid Account\n");
+  }
+
+  /**
+   * Tests that the documents a table posted before a later batch threw are still counted and
+   * listed: they are already committed.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testTableFailingAfterAPostedBatchKeepsItsCounts() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn(TEST_TABLE_DESC);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString()))
+        .thenReturn(true, true, true, false);
+    // First batch posts one document, the second one throws
+    when(mockBatch.getSuccess()).thenReturn(0, 1);
+    doAnswer(inv -> null).doThrow(new ServletException("deadlock detected"))
+        .when(mockBatch).run(any(VariablesSecureApp.class), anyString(), anyString());
+
+    expectThrows(OBException.class, () -> acctServerProcess.doExecute(mockBundle));
+
+    InOrder order = inOrder(mockLogger);
+    order.verify(mockLogger).log(POSTED_ONE_LINE);
+    order.verify(mockLogger).log(argThat(msg -> msg.startsWith(ERROR_PREFIX)
+        && msg.endsWith(": deadlock detected\n")));
+    verify(mockLogger).log(argThat(msg -> msg.contains("- posted: 1 - failed: 0")));
+  }
+
+  /**
+   * Tests that a table stopped for lack of progress names the document whose unexpected error
+   * ended the last batch.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testNoProgressNamesTheDocumentThatFailedWithAnError() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn(TEST_TABLE_DESC);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString()))
+        .thenReturn(true, true, true, false);
+    when(mockBatch.getBlockedDoc()).thenReturn(new String[] { "DOC9", "", null, "boom" });
+    doReturn("Shipment 1 (DOC9)").when(acctServerProcess).documentLabel(any(), eq("DOC9"), eq(""));
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log("  Test Table: no progress, stopped at Shipment 1 (DOC9): boom,"
+        + " remaining documents left for the next run\n");
+  }
+
+  /**
+   * Tests that a failure reading the client list is logged with the System label.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testClientListFailureIsLoggedWithSystemLabel() throws Exception {
+    setupBasicBundleMocks();
+    when(mockVars.getClient()).thenReturn(SYSTEM_CLIENT_ID);
+    when(mockBundle.getChannel()).thenReturn(Channel.BACKGROUND);
+    when(mockOBDal.createCriteria(Client.class)).thenReturn(mockClientCriteria);
+    when(mockClientCriteria.add(any(Criterion.class))).thenReturn(mockClientCriteria);
+    when(mockClientCriteria.list()).thenThrow(new IllegalStateException("db down"));
+
+    expectThrows(IllegalStateException.class, () -> acctServerProcess.doExecute(mockBundle));
+
+    verify(mockLogger).log("ERROR: System / active clients: db down\n");
+  }
+
+  /**
+   * Tests that a single idle batch (e.g. a document lock lost to a concurrent posting) is retried
+   * instead of leaving the rest of the table for the next run.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testSingleIdleBatchIsRetried() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn(TEST_TABLE_DESC);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true, true, false);
+    // First batch: 0 -> 0 (idle), second batch: 0 -> 1
+    when(mockBatch.getSuccess()).thenReturn(0, 0, 0, 1);
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log(POSTED_ONE_LINE);
+    verify(mockLogger, never()).log(argThat(msg -> msg.contains("no progress")));
+  }
+
+  /**
+   * Tests that a batch which only adds failed documents still counts as progress, so the table
+   * loop keeps going until no documents are left.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testBatchWithOnlyFailuresKeepsLooping() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn(TEST_TABLE_DESC);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true, true, false);
+    Map<String, String[]> oneFailed = failedDocsMap(1);
+    Map<String, String[]> twoFailed = failedDocsMap(2);
+    // Before and after each batch: 0 -> 1, then 1 -> 2
+    when(mockBatch.getFailedDocs()).thenReturn(Collections.emptyMap(), oneFailed, oneFailed,
+        twoFailed);
+    doReturn("").when(acctServerProcess).postedStatusName(anyString(), anyString());
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockBatch, times(2)).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log("  Test Table: posted 0, failed 2\n");
+  }
+
+  /**
+   * Tests that documents failing to post are only reported: the run does not end with an error
+   * and the DAL session is not discarded. The "Failed:" lines are capped at MAX_FAILED_LINES.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testFailedDocsAreCappedAndDoNotFailTheRun() throws Exception {
+    setupBackgroundClientWithTables(TEST_TABLE_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
+        eq(mockConnection), eq(TEST_LANGUAGE), any())).thenReturn(TEST_TABLE_DESC);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(true, false);
+    Map<String, String[]> failed = failedDocsMap(102);
+    when(mockBatch.getFailedDocs()).thenReturn(Collections.emptyMap(), failed);
+    doReturn(" - Invalid Account").when(acctServerProcess).postedStatusName("i", TEST_LANGUAGE);
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockOBDal, never()).rollbackAndClose();
+    verify(mockLogger).log(argThat(msg -> msg.contains("- failed: 102")));
+    verify(mockLogger, times(100)).log(argThat(msg -> msg.startsWith(FAILED_PREFIX)
+        && !msg.startsWith("Failed: ... ")));
+    verify(mockLogger).log("Failed: ... and 2 more\n");
+    verify(mockLogger).log(
+        FAILED_PREFIX + NON_SYSTEM_CLIENT_ID + " / Test Table / DOCNO1 (DOC1) / i - Invalid Account\n");
+  }
+
+  /**
+   * Tests that "Posting by DB tables" (DIRECT channel) run as System walks every client without
+   * the pending documents pre-filter, and writes no client header or run summary.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testDirectChannelSystemRunSkipsPreFilterAndSummary() throws Exception {
+    setupBasicBundleMocks();
+    when(mockVars.getClient()).thenReturn(SYSTEM_CLIENT_ID);
+    when(mockClient.getId()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockClient.getName()).thenReturn("Acme");
+    when(mockOBDal.createCriteria(Client.class)).thenReturn(mockClientCriteria);
+    when(mockClientCriteria.add(any(Criterion.class))).thenReturn(mockClientCriteria);
+    when(mockClientCriteria.list()).thenReturn(Collections.singletonList(mockClient));
+    when(mockContext.getUser()).thenReturn(TEST_USER_ID);
+    when(mockContext.getOrganization()).thenReturn(SYSTEM_CLIENT_ID);
+    when(mockContext.getClient()).thenReturn(SYSTEM_CLIENT_ID);
+    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
+    when(mockBundle.getChannel()).thenReturn(Channel.DIRECT);
+    when(mockBundle.getPinstanceId()).thenReturn(TEST_PINSTANCE_ID);
+    setupDirectChannelPInstanceData("", "", "");
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(mockConnection))
+        .thenReturn(new AcctServerProcessData[] { createAcctServerProcessData(TEST_TABLE_ID) });
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
+        .thenReturn(false);
+    acctServerStatic.when(() -> AcctServer.get(anyString(), anyString(), anyString(), any()))
+        .thenReturn(mockAcctServer);
+    when(mockAcctServer.checkDocuments(any(), any())).thenReturn(false);
+    when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
+
+    acctServerProcess.doExecute(mockBundle);
+
+    acctServerProcessDataStatic.verify(() -> AcctServerProcessData.selectClientsWithPendingDocs(
+        any(), anyString()), never());
+    acctServerStatic.verify(() -> AcctServer.get(eq(TEST_TABLE_ID), eq(NON_SYSTEM_CLIENT_ID),
+        anyString(), any()));
+    verify(mockLogger, never()).log(argThat(msg -> msg.startsWith(CLIENT_PREFIX)
+        || msg.startsWith(FINISHED_PREFIX) || msg.startsWith("Pending but not postable")));
+  }
+
+  /**
+   * Tests that "Posting by DB tables" (DIRECT channel) with a failing table writes the error to
+   * the log and ends normally, because its form only shows the log of a run that did not throw.
+    * @throws Exception if an error occurs
+   */
+  @Test
+  public void testDirectChannelFailingTableEndsNormallyWithErrorInLog() throws Exception {
+    setupNonSystemClientDirectChannel();
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
+        eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
+        .thenReturn(new AcctServerProcessData[] { createAcctServerProcessData(TEST_TABLE_ID) });
+    setupDirectChannelPInstanceData("", "", "");
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
+        .thenReturn(false);
+    acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), anyString(), anyString(),
+        any())).thenThrow(new ServletException("boom"));
+
+    acctServerProcess.doExecute(mockBundle);
+
+    verify(mockLogger).log(ERROR_PREFIX + NON_SYSTEM_CLIENT_ID + " / " + TEST_TABLE_ID + ": boom\n");
+    verify(mockLogger, never()).log(argThat(msg -> msg.startsWith(FINISHED_PREFIX)));
   }
 
   /**
@@ -264,7 +623,7 @@ public class AcctServerProcessTest {
         .thenReturn(false);
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
         eq(mockConnection), eq(TEST_LANGUAGE), eq(TEST_TABLE_ID)))
-        .thenReturn("Test Table");
+        .thenReturn(TEST_TABLE_DESC);
 
     acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), eq(NON_SYSTEM_CLIENT_ID),
         eq(TEST_ORG_ID), eq(mockConnection)))
@@ -433,7 +792,7 @@ public class AcctServerProcessTest {
         .thenReturn(false);
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
         eq(mockConnection), eq(TEST_LANGUAGE), eq(TEST_TABLE_ID)))
-        .thenReturn("Test Table");
+        .thenReturn(TEST_TABLE_DESC);
 
     acctServerStatic.when(() -> AcctServer.get(eq(TEST_TABLE_ID), eq(NON_SYSTEM_CLIENT_ID),
         eq("0"), eq(mockConnection)))
@@ -443,63 +802,17 @@ public class AcctServerProcessTest {
     when(mockAcctServer.checkDocuments(anyString(), anyString()))
         .thenReturn(true)
         .thenReturn(false);
-    when(mockAcctServer.getInfo(anyString())).thenReturn("Created=1");
+    // 0 before the batch, 1 after it
+    when(mockBatch.getSuccess()).thenReturn(0, 1);
     setPublicField(mockAcctServer, AD_TABLE_ID, TEST_TABLE_ID);
 
     // Act
     acctServerProcess.doExecute(mockBundle);
 
     // Assert
-    verify(mockAcctServer).run(any(VariablesSecureApp.class), anyString(), anyString());
-    verify(mockAcctServer).getInfo(TEST_LANGUAGE);
-  }
-
-  /**
-   * Tests the addLog private method via reflection.
-   * Verifies that messages are logged correctly in background mode.
-    * @throws Exception if an error occurs
-   */
-  @Test
-  public void testAddLogInBackgroundMode() throws Exception {
-    // Arrange
-    setPrivateField(acctServerProcess, "logger", mockLogger);
-    setPrivateField(acctServerProcess, "isDirect", false);
-
-    // Act
-    Method addLogMethod = AcctServerProcess.class.getDeclaredMethod("addLog", String.class);
-    addLogMethod.setAccessible(true);
-    addLogMethod.invoke(acctServerProcess, "Test message");
-
-    // Assert
-    verify(mockLogger).log("Test message\n");
-
-    CharSequence message = (CharSequence) getPrivateField(acctServerProcess, "message");
-    assertNotNull(message);
-  }
-
-  /**
-   * Tests the addLog private method in direct mode.
-   * Verifies that HTML formatting is applied correctly.
-    * @throws Exception if an error occurs
-   */
-  @Test
-  public void testAddLogInDirectMode() throws Exception {
-    // Arrange
-    setPrivateField(acctServerProcess, "logger", mockLogger);
-    setPrivateField(acctServerProcess, "isDirect", true);
-
-    // Act
-    Method addLogMethod = AcctServerProcess.class.getDeclaredMethod("addLog", String.class, boolean.class);
-    addLogMethod.setAccessible(true);
-    addLogMethod.invoke(acctServerProcess, "Test message", false);
-
-    // Assert
-    verify(mockLogger).log("Test message\n");
-
-    CharSequence lastLog = (CharSequence) getPrivateField(acctServerProcess, "lastLog");
-    assertNotNull(lastLog);
-    String logContent = lastLog.toString();
-    assertNotNull(logContent);
+    verify(mockBatch).run(any(VariablesSecureApp.class), anyString(), anyString());
+    verify(mockLogger).log(POSTED_ONE_LINE);
+    verify(mockLogger).log(argThat(msg -> msg.contains("- posted: 1 - failed: 0")));
   }
 
   /**
@@ -587,6 +900,9 @@ public class AcctServerProcessTest {
     verify(mockAcctServer1).setBackground(true);
     verify(mockAcctServer2).setBatchSize("50");
     verify(mockAcctServer2).setBackground(true);
+    // Nothing posted or failed: the background log gets no line for these tables
+    verify(mockLogger, never()).log(argThat(msg -> msg.contains("Table 1")
+        || msg.contains("Table 2")));
   }
 
   /**
@@ -613,7 +929,54 @@ public class AcctServerProcessTest {
     acctServerProcess.doExecute(mockBundle);
 
     // Assert - process should complete without throwing
-    verify(mockLogger).log(anyString());
+    verify(mockLogger).log(argThat(msg -> msg.startsWith(FINISHED_PREFIX)));
+  }
+
+  private interface ThrowingRunnable {
+    void run() throws Exception;
+  }
+
+  private <T extends Exception> T expectThrows(Class<T> expected, ThrowingRunnable action) {
+    try {
+      action.run();
+    } catch (Exception ex) {
+      if (expected.isInstance(ex)) {
+        return expected.cast(ex);
+      }
+      throw new AssertionError("Expected " + expected.getName() + " but got " + ex, ex);
+    }
+    fail("Expected " + expected.getName());
+    return null;
+  }
+
+  /**
+   * Sets up a non-system client in BACKGROUND channel whose accounting tables are the given ones.
+   */
+  private void setupBackgroundClientWithTables(String... tableIds) {
+    setupBasicBundleMocks();
+    when(mockVars.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
+    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
+    when(mockBundle.getChannel()).thenReturn(Channel.BACKGROUND);
+    AcctServerProcessData[] tableData = new AcctServerProcessData[tableIds.length];
+    for (int i = 0; i < tableIds.length; i++) {
+      tableData[i] = createAcctServerProcessData(tableIds[i]);
+    }
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
+        eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
+        .thenReturn(tableData);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
+        .thenReturn(false);
+  }
+
+  /** Failed documents DOC1..DOCn, numbered DOCNO1..DOCNOn, all with status "i". */
+  private Map<String, String[]> failedDocsMap(int count) {
+    Map<String, String[]> failed = new LinkedHashMap<>();
+    for (int i = 1; i <= count; i++) {
+      failed.put("DOC" + i, new String[] { "DOCNO" + i, "i" });
+    }
+    return failed;
   }
 
   /**
@@ -684,19 +1047,6 @@ public class AcctServerProcessTest {
     Field field = target.getClass().getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
-  }
-
-  /**
-   * Gets a private field value via reflection.
-   *
-   * @param target the object containing the field
-   * @param fieldName the name of the field
-   * @return the field value
-   */
-  private Object getPrivateField(Object target, String fieldName) throws IllegalAccessException, NoSuchFieldException {
-    Field field = target.getClass().getDeclaredField(fieldName);
-    field.setAccessible(true);
-    return field.get(target);
   }
 
   /**
