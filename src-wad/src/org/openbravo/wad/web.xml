@@ -42,6 +42,35 @@
     </filter>
   </FIELDS_TMP>
 
+  <!-- ETP-6074: application-level HTTP security headers (Tomcat HttpHeaderSecurityFilter).
+       antiClickJackingOption MUST be set: the filter defaults to DENY, which would block even
+       the same-origin framing the new UI uses for Classic (/meta/legacy/*). SAMEORIGIN allows it.
+       If the new UI and Classic are served from DIFFERENT origins (cross-site deployment), this
+       SAMEORIGIN will block the legacy popups/iframes — in that case change the frame policy
+       (e.g. a CSP frame-ancestors rule at the reverse proxy) or disable antiClickJacking here.
+       HSTS is only emitted over HTTPS, so it is harmless on plain-HTTP local/dev. -->
+  <filter>
+    <filter-name>httpHeaderSecurity</filter-name>
+    <filter-class>org.apache.catalina.filters.HttpHeaderSecurityFilter</filter-class>
+    <init-param>
+      <param-name>antiClickJackingOption</param-name>
+      <param-value>SAMEORIGIN</param-value>
+    </init-param>
+    <init-param>
+      <param-name>blockContentTypeSniffingEnabled</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>hstsEnabled</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>hstsMaxAgeSeconds</param-name>
+      <param-value>31536000</param-value>
+    </init-param>
+    <async-supported>true</async-supported>
+  </filter>
+
 
   <FIELDS_TMP id="sectionResource">
     <resource-ref>
@@ -98,6 +127,12 @@
       <url-pattern><FIELD_TMP id="fieldFilterMClassName">codigo</FIELD_TMP></url-pattern>
     </filter-mapping>
   </FIELDS_TMP>
+
+  <!-- ETP-6074: emit the security headers on every response -->
+  <filter-mapping>
+    <filter-name>httpHeaderSecurity</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
   
   <FIELDS_TMP id="sectionDetailMappingTab">
     <servlet-mapping>
