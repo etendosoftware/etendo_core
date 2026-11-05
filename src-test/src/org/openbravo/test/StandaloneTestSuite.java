@@ -40,6 +40,7 @@ import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.ad_actionButton.CreateFromTest;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.ad_callouts.SE_Payment_MultiCurrencyTest;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtilsTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.erpReports.ReportTaxPaymentJRTest;
@@ -484,6 +485,9 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Create From
     CreateFromTest.class,
+
+    // Business Partner Document Type resolution
+    BpDocTypeUtilsTest.class,
 })
 @SelectPackages({"org.openbravo.service.centralrepository",
     "org.openbravo.service.db",

@@ -300,7 +300,7 @@
             FROM M_INOUT
             WHERE M_INOUT.M_INOUT_id = v_Record_ID;
       -- Skip MovementQtyCheck when it is reversed document
-      if(v_isreturndoctype = 'N' AND v_isSoTrx = 'Y' and v_DocAction<>'RC' AND v_IsReversedDoc='N') then
+      if(v_isreturndoctype = 'N' and v_DocAction<>'RC' AND v_IsReversedDoc='N') then
         v_message := null;
         for Cur_OrderLine in (
           select c_orderline_id, line, m_product_id

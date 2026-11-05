@@ -461,7 +461,7 @@ public class ActivationKey {
         String unitsPack = getProperty("wsUnitsPerUnit");
 
         if (StringUtils.isEmpty(packs) || StringUtils.isEmpty(unitsPack)) {
-          log.warn("Couldn't determine ws call limitation, setting unlimited.");
+          log.info("Couldn't determine ws call limitation, setting unlimited.");
           limitedWsAccess = false;
         } else {
           try {
