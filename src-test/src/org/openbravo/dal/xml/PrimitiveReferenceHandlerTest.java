@@ -177,12 +177,12 @@ public class PrimitiveReferenceHandlerTest {
   @Test
   public void getPrimitiveReferencesForAttachment() {
     Entity entity = entityNamed(Attachment.ENTITY_NAME);
-    Property record = mock(Property.class);
-    when(entity.getProperty(Attachment.PROPERTY_RECORD)).thenReturn(record);
+    Property recordProperty = mock(Property.class);
+    when(entity.getProperty(Attachment.PROPERTY_RECORD)).thenReturn(recordProperty);
 
     List<Property> result = handler.getPrimitiveReferences(entity);
     assertEquals(1, result.size());
-    assertSame(record, result.get(0));
+    assertSame(recordProperty, result.get(0));
     assertSame(result, handler.getPrimitiveReferences(entity));
   }
 

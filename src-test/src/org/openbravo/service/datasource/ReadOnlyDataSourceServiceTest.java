@@ -158,7 +158,11 @@ public class ReadOnlyDataSourceServiceTest {
     }
   }
 
-  /** Without paging parameters the total is the number of rows returned. */
+  /**
+   * Without paging parameters the total is the number of rows returned.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchWithoutPagingReturnsAllRows() throws Exception {
     service.pages.add(rows(3));
@@ -175,7 +179,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(-1, service.calls.get(0)[1]);
   }
 
-  /** With paging, the count from getCount is used when available. */
+  /**
+   * With paging, the count from getCount is used when available.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchWithPagingUsesCount() throws Exception {
     setRange("0", "1");
@@ -189,7 +197,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(1, service.calls.get(0)[1]);
   }
 
-  /** Unknown count and fewer rows than the page: total is start plus rows returned. */
+  /**
+   * Unknown count and fewer rows than the page: total is start plus rows returned.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchWithUnknownCountAndShortPage() throws Exception {
     setRange("5", "15");
@@ -202,7 +214,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(7, resp.getInt(JsonConstants.RESPONSE_ENDROW));
   }
 
-  /** Unknown count and a full page: total is endRow + 2 so the grid asks for more. */
+  /**
+   * Unknown count and a full page: total is endRow + 2 so the grid asks for more.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchWithUnknownCountAndFullPage() throws Exception {
     setRange("0", "2");
@@ -213,7 +229,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(4, resp.getInt(JsonConstants.RESPONSE_TOTALROWS));
   }
 
-  /** Only an end row is enough to trigger a count request. */
+  /**
+   * Only an end row is enough to trigger a count request.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchWithOnlyEndRowCounts() throws Exception {
     setRange(null, "5");
@@ -226,7 +246,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(-1, service.calls.get(0)[0]);
   }
 
-  /** With noCount and one extra row returned, the extra row is dropped and the total bumped. */
+  /**
+   * With noCount and one extra row returned, the extra row is dropped and the total bumped.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchNoCountTrimsExtraRow() throws Exception {
     setRange("0", "2");
@@ -241,7 +265,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(2, resp.getJSONArray(JsonConstants.RESPONSE_DATA).length());
   }
 
-  /** With noCount and fewer rows than requested, nothing is trimmed. */
+  /**
+   * With noCount and fewer rows than requested, nothing is trimmed.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchNoCountWithShortPage() throws Exception {
     setRange("0", "10");
@@ -254,7 +282,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(2, resp.getJSONArray(JsonConstants.RESPONSE_DATA).length());
   }
 
-  /** With noCount and no end row, the total is start plus the rows returned. */
+  /**
+   * With noCount and no end row, the total is start plus the rows returned.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchNoCountWithoutEndRow() throws Exception {
     setRange("4", null);
@@ -285,7 +317,11 @@ public class ReadOnlyDataSourceServiceTest {
     verify(converter).setAdditionalProperties(Arrays.asList("a", "b"));
   }
 
-  /** Pick and edit flag set to false uses the normal data path. */
+  /**
+   * Pick and edit flag set to false uses the normal data path.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchPickAndEditFalseUsesNormalPath() throws Exception {
     setRange("0", "2");
@@ -299,7 +335,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertNull(params.get(NEW_END_ROW));
   }
 
-  /** Pick and edit with more selected records than the page size loads all selected ones. */
+  /**
+   * Pick and edit with more selected records than the page size loads all selected ones.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchPickAndEditWithManySelectedRecords() throws Exception {
     setRange("0", "2");
@@ -318,7 +358,11 @@ public class ReadOnlyDataSourceServiceTest {
     assertEquals(152, response(json).getInt(JsonConstants.RESPONSE_TOTALROWS));
   }
 
-  /** Pick and edit increases the page size once when the last row of a full page is selected. */
+  /**
+   * Pick and edit increases the page size once when the last row of a full page is selected.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void fetchPickAndEditIncreasesPageOnce() throws Exception {
     setRange("0", "2");

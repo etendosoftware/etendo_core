@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.ad_forms;
+package org.openbravo.erpCommon.ad_forms; // NOSONAR java:S120 package must match the package-private class under test
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -38,12 +38,12 @@ public class DocLine_PaymentCoverageTest {
   private static final String HEADER = "HDR";
   private static final String LINE = "LN";
 
-  private DocLine_Payment line;
+  private DocLine_Payment paymentLine;
 
   /** Creates a fresh line for each test. */
   @Before
   public void setUp() {
-    line = new DocLine_Payment(DOC_TYPE, HEADER, LINE);
+    paymentLine = new DocLine_Payment(DOC_TYPE, HEADER, LINE);
   }
 
   /** The inherited constructor rejects a null document type. */
@@ -55,23 +55,23 @@ public class DocLine_PaymentCoverageTest {
   /** The constructor stores header/line ids and defaults the payment fields. */
   @Test
   public void constructorInitializesFields() {
-    assertEquals(DOC_TYPE, line.p_DocumentType);
-    assertEquals(HEADER, line.m_TrxHeader_ID);
-    assertEquals(LINE, line.m_TrxLine_ID);
-    assertEquals(LINE, line.getLine_ID());
-    assertEquals(LINE, line.m_Record_Id2);
-    assertNull(line.getC_Currency_ID_From());
-    assertNull(line.getConversionDate());
-    assertEquals("", line.getC_INVOICE_ID());
-    assertEquals("", line.getC_BPARTNER_ID());
-    assertEquals("", line.getC_WITHHOLDING_ID());
-    assertEquals("", line.getWithHoldAmt());
-    assertEquals("", line.getC_BANKACCOUNT_ID());
-    assertEquals("", line.getC_BANKSTATEMENTLINE_ID());
-    assertEquals("", line.getC_CASHBOOK_ID());
-    assertEquals("", line.getC_CASHLINE_ID());
-    assertEquals("", line.getC_Settlement_Cancel_ID());
-    assertEquals("", line.getC_Settlement_Generate_ID());
+    assertEquals(DOC_TYPE, paymentLine.p_DocumentType);
+    assertEquals(HEADER, paymentLine.m_TrxHeader_ID);
+    assertEquals(LINE, paymentLine.m_TrxLine_ID);
+    assertEquals(LINE, paymentLine.getLine_ID());
+    assertEquals(LINE, paymentLine.m_Record_Id2);
+    assertNull(paymentLine.getC_Currency_ID_From());
+    assertNull(paymentLine.getConversionDate());
+    assertEquals("", paymentLine.getC_INVOICE_ID());
+    assertEquals("", paymentLine.getC_BPARTNER_ID());
+    assertEquals("", paymentLine.getC_WITHHOLDING_ID());
+    assertEquals("", paymentLine.getWithHoldAmt());
+    assertEquals("", paymentLine.getC_BANKACCOUNT_ID());
+    assertEquals("", paymentLine.getC_BANKSTATEMENTLINE_ID());
+    assertEquals("", paymentLine.getC_CASHBOOK_ID());
+    assertEquals("", paymentLine.getC_CASHLINE_ID());
+    assertEquals("", paymentLine.getC_Settlement_Cancel_ID());
+    assertEquals("", paymentLine.getC_Settlement_Generate_ID());
   }
 
   /** A null line id is propagated to both the line id and the secondary record id. */
@@ -86,25 +86,25 @@ public class DocLine_PaymentCoverageTest {
   /** The line id setter overrides the value set by the constructor. */
   @Test
   public void setLineIdOverridesConstructorValue() {
-    line.setLine_ID("OTHER");
-    assertEquals("OTHER", line.getLine_ID());
-    assertEquals(LINE, line.m_Record_Id2);
+    paymentLine.setLine_ID("OTHER");
+    assertEquals("OTHER", paymentLine.getLine_ID());
+    assertEquals(LINE, paymentLine.m_Record_Id2);
   }
 
   /** The bank, cash and withholding amount setters round-trip their values. */
   @Test
   public void bankAndCashSettersRoundTrip() {
-    line.setWithHoldAmt("1.5");
-    line.setC_BANKACCOUNT_ID("BA");
-    line.setC_BANKSTATEMENTLINE_ID("BSL");
-    line.setC_CASHBOOK_ID("CB");
-    line.setC_CASHLINE_ID("CL");
+    paymentLine.setWithHoldAmt("1.5");
+    paymentLine.setC_BANKACCOUNT_ID("BA");
+    paymentLine.setC_BANKSTATEMENTLINE_ID("BSL");
+    paymentLine.setC_CASHBOOK_ID("CB");
+    paymentLine.setC_CASHLINE_ID("CL");
 
-    assertEquals("1.5", line.getWithHoldAmt());
-    assertEquals("BA", line.getC_BANKACCOUNT_ID());
-    assertEquals("BSL", line.getC_BANKSTATEMENTLINE_ID());
-    assertEquals("CB", line.getC_CASHBOOK_ID());
-    assertEquals("CL", line.getC_CASHLINE_ID());
+    assertEquals("1.5", paymentLine.getWithHoldAmt());
+    assertEquals("BA", paymentLine.getC_BANKACCOUNT_ID());
+    assertEquals("BSL", paymentLine.getC_BANKSTATEMENTLINE_ID());
+    assertEquals("CB", paymentLine.getC_CASHBOOK_ID());
+    assertEquals("CL", paymentLine.getC_CASHLINE_ID());
   }
 
   /** {@code clone} returns a new instance copying every inherited and payment-specific field. */
@@ -112,12 +112,12 @@ public class DocLine_PaymentCoverageTest {
   public void cloneCopiesInheritedAndPaymentFields() {
     ProductInfo productInfo = mock(ProductInfo.class);
     Account account = mock(Account.class);
-    populateInheritedFields(line, productInfo, account);
-    populatePaymentFields(line);
+    populateInheritedFields(paymentLine, productInfo, account);
+    populatePaymentFields(paymentLine);
 
-    DocLine_Payment copy = DocLine_Payment.clone(line);
+    DocLine_Payment copy = DocLine_Payment.clone(paymentLine);
 
-    assertNotSame(line, copy);
+    assertNotSame(paymentLine, copy);
     assertEquals(DOC_TYPE, copy.p_DocumentType);
     assertEquals(HEADER, copy.m_TrxHeader_ID);
     assertEquals(LINE, copy.m_TrxLine_ID);
@@ -175,13 +175,13 @@ public class DocLine_PaymentCoverageTest {
   /** {@code clone} does not copy the bank/cash/withholding amount fields; they keep defaults. */
   @Test
   public void cloneDoesNotCopyBankAndCashFields() {
-    line.setWithHoldAmt("9");
-    line.setC_BANKACCOUNT_ID("BA");
-    line.setC_BANKSTATEMENTLINE_ID("BSL");
-    line.setC_CASHBOOK_ID("CB");
-    line.setC_CASHLINE_ID("CL");
+    paymentLine.setWithHoldAmt("9");
+    paymentLine.setC_BANKACCOUNT_ID("BA");
+    paymentLine.setC_BANKSTATEMENTLINE_ID("BSL");
+    paymentLine.setC_CASHBOOK_ID("CB");
+    paymentLine.setC_CASHLINE_ID("CL");
 
-    DocLine_Payment copy = DocLine_Payment.clone(line);
+    DocLine_Payment copy = DocLine_Payment.clone(paymentLine);
 
     assertEquals("", copy.getWithHoldAmt());
     assertEquals("", copy.getC_BANKACCOUNT_ID());
@@ -193,7 +193,7 @@ public class DocLine_PaymentCoverageTest {
   /** The servlet info string is fixed. */
   @Test
   public void servletInfoIsFixed() {
-    assertEquals("Servlet for accounting", line.getServletInfo());
+    assertEquals("Servlet for accounting", paymentLine.getServletInfo());
   }
 
   private static void populateInheritedFields(DocLine_Payment target, ProductInfo productInfo,

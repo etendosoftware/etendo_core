@@ -89,6 +89,10 @@ public class DalPropertyAccessTest {
 
   /** POJO without any accessor methods. */
   public static class EmptyPojo {
+    @Override
+    public String toString() {
+      return "EmptyPojo";
+    }
   }
 
   @Mock

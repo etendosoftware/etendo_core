@@ -14,7 +14,7 @@
  * Contributor(s): Futit Services S.L.
  *************************************************************************
  */
-package org.openbravo.erpCommon.utility;
+package org.openbravo.erpCommon.utility; // NOSONAR java:S120 package must match the package-private class under test
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -102,14 +102,22 @@ public class ErrorTextParserPOSTGRETest {
     return d;
   }
 
-  /** An empty message is not parsed at all. */
+  /**
+   * An empty message is not parsed at all.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseReturnsNullForEmptyMessage() throws Exception {
     parser.setMessage("");
     assertNull(parser.parse());
   }
 
-  /** A missing connection is not parsed at all. */
+  /**
+   * A missing connection is not parsed at all.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseReturnsNullWithoutConnection() throws Exception {
     parser.setConnection(null);
@@ -120,6 +128,8 @@ public class ErrorTextParserPOSTGRETest {
   /**
    * A message with an @-placeholder is translated after stripping the "ERROR: " prefix and the
    * JDBC "Where:" trailer.
+   *
+   * @throws Exception if the code under test fails
    */
   @Test
   public void parseTranslatesPlaceholderMessageAndStripsPrefixAndWhere() throws Exception {
@@ -134,7 +144,11 @@ public class ErrorTextParserPOSTGRETest {
     dataStatic.verify(() -> ErrorTextParserData.select(any(), anyString()), never());
   }
 
-  /** A placeholder message without prefix nor Where trailer is translated as is. */
+  /**
+   * A placeholder message without prefix nor Where trailer is translated as is.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseTranslatesPlaceholderMessageWithoutPrefix() throws Exception {
     parser.setMessage("@CODE=0@Some text");
@@ -144,7 +158,11 @@ public class ErrorTextParserPOSTGRETest {
     assertEquals("translated", parser.parse().getMessage());
   }
 
-  /** A short "ERROR: " message (length not greater than 7) keeps its prefix. */
+  /**
+   * A short "ERROR: " message (length not greater than 7) keeps its prefix.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseTranslatesShortPlaceholderMessage() throws Exception {
     parser.setMessage("@A@");
@@ -153,7 +171,11 @@ public class ErrorTextParserPOSTGRETest {
     assertEquals("ok", parser.parse().getMessage());
   }
 
-  /** Without any quoted name the original message is returned. */
+  /**
+   * Without any quoted name the original message is returned.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseReturnsOriginalMessageWhenNoConstraintNameFound() throws Exception {
     String msg = "ERROR: Unit of Measure mismatch (product/transaction)";
@@ -166,7 +188,11 @@ public class ErrorTextParserPOSTGRETest {
     dataStatic.verify(() -> ErrorTextParserData.select(any(), anyString()), never());
   }
 
-  /** A single quoted name is used as constraint; a null lookup yields the original message. */
+  /**
+   * A single quoted name is used as constraint; a null lookup yields the original message.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseReturnsOriginalMessageWhenConstraintLookupIsNull() throws Exception {
     parser.setMessage(UNIQUE_MSG);
@@ -178,7 +204,11 @@ public class ErrorTextParserPOSTGRETest {
     dataStatic.verify(() -> ErrorTextParserData.select(conn, CONSTRAINT));
   }
 
-  /** With two quoted names the second one is used; an empty lookup yields the original message. */
+  /**
+   * With two quoted names the second one is used; an empty lookup yields the original message.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseUsesSecondQuotedNameAndHandlesEmptyLookup() throws Exception {
     String msg = "ERROR:  insert or update on table \"ad_attachment\" violates foreign key "
@@ -191,7 +221,11 @@ public class ErrorTextParserPOSTGRETest {
     dataStatic.verify(() -> ErrorTextParserData.select(conn, "addatatype_adattachment"));
   }
 
-  /** Spanish style guillemet quotes are recognized as well. */
+  /**
+   * Spanish style guillemet quotes are recognized as well.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseRecognizesGuillemetQuotes() throws Exception {
     String msg = "ERROR:  inserción o actualización en la tabla «c_bpartner» viola la llave "
@@ -202,7 +236,11 @@ public class ErrorTextParserPOSTGRETest {
     dataStatic.verify(() -> ErrorTextParserData.select(conn, "c_bpartner_c_bp_group"));
   }
 
-  /** A constraint with a dedicated AD message is returned via the shared handler. */
+  /**
+   * A constraint with a dedicated AD message is returned via the shared handler.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseReturnsHandledConstraintError() throws Exception {
     parser.setMessage(UNIQUE_MSG);
@@ -219,7 +257,11 @@ public class ErrorTextParserPOSTGRETest {
     assertEquals("User name already exists", error.getMessage());
   }
 
-  /** A constraint that the shared handler cannot handle falls back to the original message. */
+  /**
+   * A constraint that the shared handler cannot handle falls back to the original message.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseFallsBackToOriginalMessageWhenHandlerReturnsNull() throws Exception {
     parser.setMessage(UNIQUE_MSG);
@@ -232,7 +274,11 @@ public class ErrorTextParserPOSTGRETest {
     assertEquals(UNIQUE_MSG, error.getMessage());
   }
 
-  /** Parsing with debug logging enabled exercises the debug-only branch. */
+  /**
+   * Parsing with debug logging enabled exercises the debug-only branch.
+   *
+   * @throws Exception if the code under test fails
+   */
   @Test
   public void parseWithDebugLoggingEnabled() throws Exception {
     Level previous = LogManager.getLogger(LOGGER_NAME).getLevel();
