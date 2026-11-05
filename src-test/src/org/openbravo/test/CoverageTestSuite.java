@@ -226,6 +226,12 @@ import org.openbravo.dal.xml.XMLTypeConverterTest;
 import org.openbravo.service.json.AdvancedQueryBuilderTest;
 import org.openbravo.erpCommon.utility.UtilityPureMethodsTest;
 import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
+import org.openbravo.erpCommon.utility.ErrorTextParserPOSTGRETest;
+import org.openbravo.service.datasource.ReadOnlyDataSourceServiceTest;
+import org.openbravo.dal.xml.PrimitiveReferenceHandlerTest;
+import org.openbravo.dal.core.DalPropertyAccessTest;
+import org.openbravo.costing.CostAdjustmentLineParametersTest;
+import org.openbravo.erpCommon.ad_forms.DocLine_PaymentCoverageTest;
 
 /**
  * Test suite for auto-generated coverage tests.
@@ -568,6 +574,18 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
 
     // userinterface.selector
     DefaultExpressionCalloutTest.class,
+
+    // erpCommon.utility / service.datasource
+    ErrorTextParserPOSTGRETest.class,
+    ReadOnlyDataSourceServiceTest.class,
+
+    // dal.xml / dal.core
+    PrimitiveReferenceHandlerTest.class,
+    DalPropertyAccessTest.class,
+
+    // costing / erpCommon.ad_forms
+    CostAdjustmentLineParametersTest.class,
+    DocLine_PaymentCoverageTest.class,
 })
 public class CoverageTestSuite {
 }
