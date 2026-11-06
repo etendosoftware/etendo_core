@@ -24,6 +24,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import java.sql.Connection;
 
@@ -82,6 +83,8 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
   /** A unique index with no backing constraint is reported like a unique constraint. */
   @Test
   public void testUniqueIndexWithoutConstraint() throws Exception {
+    // the unique index fallback is implemented by the PostgreSQL parser only
+    assumeTrue("Executing only in PostgreSQL", "POSTGRE".equals(getConnectionProvider().getRDBMS()));
     doErrorTextParserTest(10);
   }
 
