@@ -41,6 +41,7 @@ import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.client.kernel.KernelUtilsIntegrationTest;
 import org.openbravo.client.application.report.ReportingUtilsIntegrationTest;
 import org.openbravo.service.json.DefaultJsonDataServiceIntegrationTest;
+import org.openbravo.erpCommon.businessUtility.InitialSetupUtilityClientNameIntegrationTest;
 import org.openbravo.erpCommon.utility.DimensionDisplayUtilityIntegrationTest;
 import org.openbravo.erpCommon.utility.OBCurrencyUtilsIntegrationTest;
 import org.openbravo.email.ResolvedSmtpConfigTest;
@@ -102,6 +103,7 @@ import org.openbravo.test.dal.DalUtilTest;
 import org.openbravo.test.dal.DynamicEntityTest;
 import org.openbravo.test.dal.HiddenUpdateTest;
 import org.openbravo.test.dal.ImageTest;
+import org.openbravo.test.dal.IdentifierTranslationPreloadTest;
 import org.openbravo.test.dal.IssuesTest;
 import org.openbravo.test.dal.MappingGenerationTest;
 import org.openbravo.test.dal.OBContextTest;
@@ -263,6 +265,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     DynamicEntityTest.class, //
     HiddenUpdateTest.class, //
     MappingGenerationTest.class, //
+    IdentifierTranslationPreloadTest.class, //
     ValidationTest.class, //
     OBContextTest.class, //
     DalStoredProcedureTest.class, //
@@ -311,6 +314,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     SystemValidatorTest.class, //
     ErrorTextParserTest.class, //
     ErrorTextParserIntegrationTest.class, //
+    InitialSetupUtilityClientNameIntegrationTest.class, //
     TestInfrastructure.class, //
     Issue29934Test.class, //
     ImportEntrySizeTest.class, //
