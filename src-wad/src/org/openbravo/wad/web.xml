@@ -42,6 +42,34 @@
     </filter>
   </FIELDS_TMP>
 
+  <!-- ETP-6074: application-level HTTP security headers (Tomcat HttpHeaderSecurityFilter).
+       antiClickJacking is disabled on purpose: the new UI frames Classic pages (legacy processes,
+       /meta/legacy/*) straight from Tomcat, which is a different origin than the UI (e.g.
+       :3000 vs :8080), so any X-Frame-Options value would block them. Restrict framing at the
+       reverse proxy instead, with a CSP frame-ancestors rule that allows the UI origin.
+       HSTS is only emitted over HTTPS, so it is harmless on plain-HTTP local/dev. -->
+  <filter>
+    <filter-name>httpHeaderSecurity</filter-name>
+    <filter-class>org.apache.catalina.filters.HttpHeaderSecurityFilter</filter-class>
+    <init-param>
+      <param-name>antiClickJackingEnabled</param-name>
+      <param-value>false</param-value>
+    </init-param>
+    <init-param>
+      <param-name>blockContentTypeSniffingEnabled</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>hstsEnabled</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>hstsMaxAgeSeconds</param-name>
+      <param-value>31536000</param-value>
+    </init-param>
+    <async-supported>true</async-supported>
+  </filter>
+
 
   <FIELDS_TMP id="sectionResource">
     <resource-ref>
@@ -98,6 +126,12 @@
       <url-pattern><FIELD_TMP id="fieldFilterMClassName">codigo</FIELD_TMP></url-pattern>
     </filter-mapping>
   </FIELDS_TMP>
+
+  <!-- ETP-6074: emit the security headers on every response -->
+  <filter-mapping>
+    <filter-name>httpHeaderSecurity</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
   
   <FIELDS_TMP id="sectionDetailMappingTab">
     <servlet-mapping>
