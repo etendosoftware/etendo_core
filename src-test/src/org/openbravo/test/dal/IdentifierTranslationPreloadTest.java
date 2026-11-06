@@ -44,12 +44,11 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.financialmgmt.tax.TaxTrl;
 import org.openbravo.model.financialmgmt.tax.TaxZone;
-import org.openbravo.service.db.CallProcess;
 import org.openbravo.test.base.OBBaseTest;
+import org.openbravo.test.base.SystemLanguageFixture;
 import org.openbravo.test.base.TestConstants.Clients;
 import org.openbravo.test.base.TestConstants.Languages;
 import org.openbravo.test.base.TestConstants.Orgs;
@@ -65,41 +64,21 @@ import org.openbravo.test.base.TestConstants.Users;
 public class IdentifierTranslationPreloadTest extends OBBaseTest {
   private static final String MARK = "ETP6103-trl ";
   private static final int PAGE = 40;
-  private static boolean restoreSystemLanguage = false;
 
   private Statistics statistics;
 
   // A translation is only looked up when a second system language is installed
+  private static final SystemLanguageFixture SPANISH = new SystemLanguageFixture(
+      Languages.ES_ES_LANG_ID);
+
   @BeforeClass
   public static void installSpanish() {
-    try {
-      OBContext.setAdminMode(false);
-      final Language spanish = OBDal.getInstance().get(Language.class, Languages.ES_ES_LANG_ID);
-      if (!spanish.isSystemLanguage()) {
-        spanish.setSystemLanguage(true);
-        restoreSystemLanguage = true;
-        CallProcess.getInstance().call("AD_Language_Create", null, null);
-      }
-      OBDal.getInstance().commitAndClose();
-    } finally {
-      OBContext.restorePreviousMode();
-    }
+    SPANISH.install();
   }
 
   @AfterClass
   public static void restoreSpanish() {
-    try {
-      OBContext.setAdminMode(false);
-      if (restoreSystemLanguage) {
-        final Language spanish = OBDal.getInstance()
-            .get(Language.class, Languages.ES_ES_LANG_ID);
-        spanish.setSystemLanguage(false);
-        OBDal.getInstance().save(spanish);
-        OBDal.getInstance().commitAndClose();
-      }
-    } finally {
-      OBContext.restorePreviousMode();
-    }
+    SPANISH.restore();
   }
 
   @Before
@@ -180,6 +159,27 @@ public class IdentifierTranslationPreloadTest extends OBBaseTest {
     assertEquals(expected, labels(rows));
     assertEquals(0, statistics.getPrepareStatementCount());
     assertTrue(rows.stream().anyMatch(tax -> tax.getId().equals(taxId)));
+  }
+
+  // getValue, not get: the walk must not trip the derived-readable check of a non-admin caller
+  @Test
+  public void nonAdminCallerGetsTheSameLabelsWithNoQuery() {
+    OBContext.restorePreviousMode();
+    try {
+      OBContext.setOBContext(TEST_USER_ID, TEST_ROLE_ID, TEST_CLIENT_ID, TEST_ORG_ID,
+          Languages.ES_ES_ISOCODE);
+      final List<String> expected = labels(taxes());
+
+      final List<TaxRate> rows = taxes();
+      IdentifierProvider.getInstance().preloadTranslations(rows);
+      statistics.clear();
+
+      assertEquals(expected, labels(rows));
+      assertEquals(0, statistics.getPrepareStatementCount());
+    } finally {
+      // the @After restores the administrator mode this test left
+      OBContext.setAdminMode(true);
+    }
   }
 
   @Test
