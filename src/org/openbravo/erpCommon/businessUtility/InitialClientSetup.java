@@ -226,7 +226,9 @@ public class InitialClientSetup {
 
     log4j.debug("insertClient() - Checking if name chosen for the client is already in use.");
     try {
-      if (InitialSetupUtility.existsClientName(strClientName)) {
+      // A template may drop the unique name index on purpose: then repeated names are allowed
+      if (InitialSetupUtility.isClientNameUnique()
+          && InitialSetupUtility.existsClientName(strClientName)) {
         return logErrorAndRollback("@DuplicateClient@",
             "insertClient() - ERROR - Client Name already existed in database: " + strClientName);
       }

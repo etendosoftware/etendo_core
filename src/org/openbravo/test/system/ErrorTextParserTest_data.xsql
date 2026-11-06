@@ -49,13 +49,20 @@
         <Parameter name="name"/>
    </SqlMethod>
 
-   <SqlMethod name="insertClientWithName" type="preparedStatement" connection="true" return="rowCount">
+   <SqlMethod name="insertLanguageDuplicated" type="preparedStatement" connection="true" return="rowCount">
       <Sql>
-        INSERT INTO AD_CLIENT (AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, VALUE, NAME)
-        VALUES (get_uuid(), '0', 'Y', now(), '0', now(), '0', ?, ?)
+        INSERT INTO AD_LANGUAGE (AD_LANGUAGE_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, AD_LANGUAGE, NAME)
+        VALUES (get_uuid(), '0', '0', 'Y', now(), '0', now(), '0', 'en_US', 'Duplicated en_US')
       </Sql>
-        <Parameter name="name"/>
-        <Parameter name="username"/>
+   </SqlMethod>
+
+   <SqlMethod name="insertWindowAccessDuplicated" type="preparedStatement" connection="true" return="rowCount">
+      <Sql>
+        INSERT INTO AD_WINDOW_ACCESS (AD_WINDOW_ACCESS_ID, AD_WINDOW_ID, AD_ROLE_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, ISREADWRITE)
+        SELECT get_uuid(), AD_WINDOW_ID, AD_ROLE_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, now(), '0', now(), '0', ISREADWRITE
+        FROM AD_WINDOW_ACCESS
+        WHERE AD_WINDOW_ACCESS_ID = (SELECT MIN(AD_WINDOW_ACCESS_ID) FROM AD_WINDOW_ACCESS)
+      </Sql>
    </SqlMethod>
 
    <SqlMethod name="insertUser" type="preparedStatement" connection="true" return="rowCount">

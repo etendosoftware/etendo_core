@@ -116,6 +116,28 @@ public class InitialSetupUtility {
   }
 
   /**
+   * Tells whether the database itself keeps client names unique: a unique index or constraint on
+   * {@code AD_CLIENT.NAME} alone. Core declares one; a template can drop it to allow clients with
+   * the same name, and then setup processes must not reject a repeated name either.
+   *
+   * @return true if a unique index or constraint covers exactly {@code AD_CLIENT.NAME}
+   */
+  public static boolean isClientNameUnique() {
+    // user_indexes / user_ind_columns exist natively in Oracle and as views in PostgreSQL
+    final String sql = "select count(*) from user_indexes i"
+        + " where upper(i.table_name) = 'AD_CLIENT' and i.uniqueness = 'UNIQUE'"
+        + " and exists (select 1 from user_ind_columns c"
+        + "   where c.index_name = i.index_name and upper(c.column_name) = 'NAME')"
+        + " and not exists (select 1 from user_ind_columns c"
+        + "   where c.index_name = i.index_name and upper(c.column_name) <> 'NAME')";
+    final Number count = (Number) OBDal.getInstance()
+        .getSession()
+        .createNativeQuery(sql)
+        .uniqueResult();
+    return count != null && count.intValue() > 0;
+  }
+
+  /**
    * 
    * @param strUser
    *          user name

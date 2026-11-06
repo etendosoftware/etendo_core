@@ -20,9 +20,23 @@
 package org.openbravo.base.structure;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
+import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -31,6 +45,8 @@ import org.openbravo.base.provider.OBSingleton;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.system.Language;
 
 /**
@@ -46,6 +62,9 @@ import org.openbravo.model.ad.system.Language;
 public class IdentifierProvider implements OBSingleton {
 
   public static final String SEPARATOR = " - ";
+  private static final Logger log = LogManager.getLogger();
+  // Oracle rejects an IN list longer than 1000 elements
+  private static final int MAX_IN_SIZE = 1000;
   private static IdentifierProvider instance;
 
   public static synchronized IdentifierProvider getInstance() {
@@ -76,6 +95,109 @@ public class IdentifierProvider implements OBSingleton {
     final Language lang = OBContext.getOBContext() != null ? OBContext.getOBContext().getLanguage()
         : null;
     return getIdentifier(o, true, lang);
+  }
+
+  /**
+   * Looks up in bulk the translations that {@link #getIdentifier(Object)} would otherwise look up
+   * one object at a time, for the given objects and for every object their identifiers reach
+   * through foreign keys. Runs one query per translation entity (per 1000 objects) and stores the
+   * result in each object's translation memo, so the later {@code getIdentifier()} calls do not
+   * query. Labels do not change: an object this method misses is still looked up as before.
+   *
+   * Identifiers shown through a display column are not walked. Does nothing when no translation is
+   * installed or there is no current language. Never throws: a failed lookup is logged and those
+   * objects fall back to the per-object lookup.
+   *
+   * @param objects
+   *          the objects whose identifiers are about to be computed, typically a page of rows
+   */
+  public void preloadTranslations(Collection<?> objects) {
+    final OBContext context = OBContext.getOBContext();
+    final Language language = context != null ? context.getLanguage() : null;
+    if (objects == null || objects.isEmpty() || language == null
+        || !OBContext.hasTranslationInstalled()) {
+      return;
+    }
+    // translation parent property -> object id -> objects with that id
+    final Map<Property, Map<Object, List<BaseOBObject>>> pending = new LinkedHashMap<>();
+    final Set<BaseOBObject> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    final Deque<Object> queue = new ArrayDeque<>();
+    for (Object o : objects) {
+      if (o != null) {
+        queue.add(o);
+      }
+    }
+    while (!queue.isEmpty()) {
+      try {
+        final Object real = Hibernate.unproxy(queue.pop());
+        if (real instanceof BaseOBObject && visited.add((BaseOBObject) real)) {
+          collectTranslationLookups((BaseOBObject) real, pending, queue);
+        }
+      } catch (Exception e) {
+        // e.g. a dangling foreign key: getIdentifier() deals with this object as it always did
+        log.debug("Skipping an object while preloading translations", e);
+      }
+    }
+    pending.forEach((trlParent, byId) -> preloadTranslations(trlParent, byId, language));
+  }
+
+  // Mirrors the branches of getIdentifier(Object, boolean, Language) that read a translation
+  private void collectTranslationLookups(BaseOBObject bob,
+      Map<Property, Map<Object, List<BaseOBObject>>> pending, Deque<Object> queue) {
+    final Entity entity = bob.getEntity();
+    boolean translationSeen = false;
+    for (final Property identifier : entity.getIdentifierProperties()) {
+      final Property property = entity.getProperty(identifier.getName());
+      if (property.hasDisplayColumn()) {
+        // read without id, so it shows the base value and never queries
+        continue;
+      }
+      if (property.isTranslatable()) {
+        // the object memoizes the first translation lookup, whatever its outcome
+        final Object id = bob.getId();
+        if (!translationSeen && property.getTrlParentProperty() != null && id instanceof String) {
+          pending.computeIfAbsent(property.getTrlParentProperty(), k -> new HashMap<>())
+              .computeIfAbsent(id, k -> new ArrayList<>())
+              .add(bob);
+        }
+        translationSeen = true;
+      } else if (!property.isPrimitive()) {
+        final Object value = bob.getValue(property.getName());
+        if (value != null) {
+          queue.add(value);
+        }
+      }
+    }
+  }
+
+  private void preloadTranslations(Property trlParent, Map<Object, List<BaseOBObject>> byId,
+      Language language) {
+    final String parentName = trlParent.getName();
+    final List<Object> ids = new ArrayList<>(byId.keySet());
+    for (int from = 0; from < ids.size(); from += MAX_IN_SIZE) {
+      final List<Object> chunk = ids.subList(from, Math.min(from + MAX_IN_SIZE, ids.size()));
+      final Map<Object, BaseOBObject> found = new HashMap<>();
+      try {
+        final OBCriteria<BaseOBObject> criteria = OBDal.getInstance()
+            .createCriteria(trlParent.getEntity().getName())
+            .add(Restrictions.in(parentName + ".id", chunk))
+            .add(Restrictions.eq("language", language))
+            .setFilterOnReadableClients(false)
+            .setFilterOnReadableOrganization(false);
+        for (BaseOBObject trl : criteria.list()) {
+          // getValue, not get: no derived-readable check for non-admin callers
+          found.putIfAbsent(DalUtil.getId(trl.getValue(parentName)), trl);
+        }
+      } catch (Exception e) {
+        log.debug("Could not preload translations of {}. Looking them up one by one", trlParent, e);
+        continue;
+      }
+      for (Object id : chunk) {
+        for (BaseOBObject bob : byId.get(id)) {
+          bob.setPreloadedTranslation(found.get(id));
+        }
+      }
+    }
   }
 
   // identifyDeep determines if refered to objects are used

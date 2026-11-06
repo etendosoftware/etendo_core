@@ -147,6 +147,19 @@ public abstract class BaseOBObject
     return data[p.getIndexInEntity()];
   }
 
+  /**
+   * Stores a translation row looked up in bulk by
+   * {@link IdentifierProvider#preloadTranslations(java.util.Collection)}, so the next translated
+   * read does not query. A null row means "no translation". No-op once a lookup was done.
+   */
+  void setPreloadedTranslation(BaseOBObject translation) {
+    if (hasLookedForTrl) {
+      return;
+    }
+    hasLookedForTrl = true;
+    dataTrl = translation;
+  }
+
   private BaseOBObject getTranslation(Property trlParentProperty, Language language, String id) {
     OBCriteria<BaseOBObject> obCriteria = OBDal.getInstance()
         .createCriteria(trlParentProperty.getEntity().getName())

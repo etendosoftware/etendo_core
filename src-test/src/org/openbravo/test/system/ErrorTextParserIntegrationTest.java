@@ -24,6 +24,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import java.sql.Connection;
 
@@ -77,6 +78,14 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
   @Test
   public void testUniqueMultipleFields() throws Exception {
     doErrorTextParserTest(5);
+  }
+
+  /** A unique index with no backing constraint is reported like a unique constraint. */
+  @Test
+  public void testUniqueIndexWithoutConstraint() throws Exception {
+    // the unique index fallback is implemented by the PostgreSQL parser only
+    assumeTrue("Executing only in PostgreSQL", "POSTGRE".equals(getConnectionProvider().getRDBMS()));
+    doErrorTextParserTest(10);
   }
 
   @Test
@@ -169,8 +178,10 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
           ErrorTextParserTestData.insertUser(con, conn, "B", "name");
           break;
         case 4:
-          expectedErrorMessage = "There is already a Client with the same Name. Name must be unique. You must change the values entered.";
-          ErrorTextParserTestData.insertClientWithName(con, conn, "System", "System");
+          // AD_LANGUAGE_UN: a real single-column UNIQUE constraint that no template removes
+          // (AD_CLIENT_NAME is a unique index since ETP-5459, and the GO template drops it)
+          expectedErrorMessage = "There is already a Language ID with the same Language. Language must be unique. You must change the values entered.";
+          ErrorTextParserTestData.insertLanguageDuplicated(con, conn);
           break;
         case 5:
           expectedErrorMessage = "There is already a Month Translation with the same (Language, Month). (Language, Month) must be unique. You must change the values entered.";
@@ -191,6 +202,11 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
         case 9:
           expectedErrorMessage = "Cannot update an object in a module not in development and without an active template";
           ErrorTextParserTestData.updateTableDescription(con, conn, "description", "146");
+          break;
+        case 10:
+          // AD_WINDOW_ACCESS_UN_KEY is a unique index, not a constraint
+          expectedErrorMessage = "There is already a AD_Window_Access_ID with the same (Role, Window). (Role, Window) must be unique. You must change the values entered.";
+          ErrorTextParserTestData.insertWindowAccessDuplicated(con, conn);
           break;
       }
 

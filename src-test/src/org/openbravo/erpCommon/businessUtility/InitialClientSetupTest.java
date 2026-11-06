@@ -17,11 +17,13 @@
 package org.openbravo.erpCommon.businessUtility;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -156,6 +158,7 @@ public class InitialClientSetupTest extends BaseCoreTest {
     @DisplayName("insertClient returns error when client name already exists")
     void insertClientDuplicateName() {
       try (MockedStatic<InitialSetupUtility> utilMock = mockStatic(InitialSetupUtility.class)) {
+        utilMock.when(InitialSetupUtility::isClientNameUnique).thenReturn(true);
         utilMock.when(() -> InitialSetupUtility.existsClientName(anyString())).thenReturn(true);
 
         InitialClientSetup setup = new InitialClientSetup();
@@ -163,6 +166,23 @@ public class InitialClientSetupTest extends BaseCoreTest {
 
         OBError result = setup.insertClient(vars, "TestClient", "TestUser", "102");
         assertEquals(ERROR, result.getType());
+        assertTrue(result.getMessage().contains("DuplicateClient"));
+      }
+    }
+
+    @Test
+    @DisplayName("insertClient accepts a repeated name when the database allows it")
+    void insertClientRepeatedNameAllowed() {
+      try (MockedStatic<InitialSetupUtility> utilMock = mockStatic(InitialSetupUtility.class)) {
+        utilMock.when(InitialSetupUtility::isClientNameUnique).thenReturn(false);
+        utilMock.when(() -> InitialSetupUtility.existsClientName(anyString())).thenReturn(true);
+
+        OBError result = new InitialClientSetup().insertClient(mock(VariablesSecureApp.class),
+            "TestClient", "TestUser", "102");
+
+        // whatever happens later in the setup, the name itself is not the reason
+        assertFalse(String.valueOf(result.getMessage()).contains("DuplicateClient"));
+        utilMock.verify(() -> InitialSetupUtility.existsClientName(anyString()), never());
       }
     }
   }
