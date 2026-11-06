@@ -71,11 +71,13 @@ public class IdentifierTranslationPreloadTest extends OBBaseTest {
   private static final SystemLanguageFixture SPANISH = new SystemLanguageFixture(
       Languages.ES_ES_LANG_ID);
 
+  /** Makes Spanish a system language for this class, so translations are looked up. */
   @BeforeClass
   public static void installSpanish() {
     SPANISH.install();
   }
 
+  /** Restores the system languages {@link #installSpanish()} changed. */
   @AfterClass
   public static void restoreSpanish() {
     SPANISH.restore();

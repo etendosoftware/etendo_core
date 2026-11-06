@@ -33,6 +33,11 @@ public class SystemLanguageFixture {
   private final String languageId;
   private boolean installedHere = false;
 
+  /**
+   * Creates a fixture for one language.
+   *
+   * @param languageId the {@code AD_Language_ID} to make a system language
+   */
   public SystemLanguageFixture(String languageId) {
     this.languageId = languageId;
   }
