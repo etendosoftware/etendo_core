@@ -169,8 +169,10 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
           ErrorTextParserTestData.insertUser(con, conn, "B", "name");
           break;
         case 4:
-          expectedErrorMessage = "There is already a Client with the same Name. Name must be unique. You must change the values entered.";
-          ErrorTextParserTestData.insertClientWithName(con, conn, "System", "System");
+          // AD_LANGUAGE_UN: a real single-column UNIQUE constraint that no template removes
+          // (AD_CLIENT_NAME is a unique index since ETP-5459, and the GO template drops it)
+          expectedErrorMessage = "There is already a Language ID with the same Language. Language must be unique. You must change the values entered.";
+          ErrorTextParserTestData.insertLanguageDuplicated(con, conn);
           break;
         case 5:
           expectedErrorMessage = "There is already a Month Translation with the same (Language, Month). (Language, Month) must be unique. You must change the values entered.";
