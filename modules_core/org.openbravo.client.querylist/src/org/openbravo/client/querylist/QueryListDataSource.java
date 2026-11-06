@@ -33,6 +33,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
@@ -91,6 +93,9 @@ import org.openbravo.service.json.JsonUtils;
 public class QueryListDataSource extends ReadOnlyDataSourceService implements PortalAccessible {
   private static final String OPTIONAL_FILTERS = "@optional_filters@";
   private static final Logger log = LogManager.getLogger();
+  // the from keyword delimited by any whitespace, e.g. " from ", "\nfrom ", "\nfrom\n\t"
+  private static final Pattern FROM_KEYWORD_PATTERN = Pattern.compile("\\sfrom\\s",
+      Pattern.CASE_INSENSITIVE);
   private static final String OPERATOR = "$OPERATOR";
 
   @Override
@@ -432,21 +437,17 @@ public class QueryListDataSource extends ReadOnlyDataSourceService implements Po
   }
 
   /**
-   * Removes the select clause of a hql query
-   * 
+   * Removes the select clause of a hql query. The from keyword is matched as a whole word
+   * delimited by any whitespace character (space, new line, tab...), so queries where from is
+   * alone on its own line are also supported.
+   *
    * @param hql
    *          the original hql query
    * @return the original hql query without its select clause
    */
   private String removeSelectClause(String hql) {
-    String hqlWithoutSelectClause = hql;
-    String hqlLowerCase = hql.toLowerCase();
-    if (hqlLowerCase.indexOf(" from ") != -1) {
-      hqlWithoutSelectClause = hqlWithoutSelectClause.substring(hqlLowerCase.indexOf(" from "));
-    } else if (hqlWithoutSelectClause.toLowerCase().indexOf("\nfrom ") != -1) {
-      hqlWithoutSelectClause = hqlWithoutSelectClause.substring(hqlLowerCase.indexOf("\nfrom "));
-    }
-    return hqlWithoutSelectClause;
+    Matcher fromMatcher = FROM_KEYWORD_PATTERN.matcher(hql);
+    return fromMatcher.find() ? hql.substring(fromMatcher.start()) : hql;
   }
 
   private String removeOrderByClause(String hql) {
