@@ -241,7 +241,72 @@ public final class BpDocTypeUtils {
   }
 
   /**
+   * Resolves the {@code C_DocType_ID} to apply from a window callout, preserving the value
+   * already selected in the form when neither the Business Partner nor the Organization
+   * defines a document type. Resolution order:
+   * <ol>
+   *   <li>Business Partner configuration ({@code C_BPartner_DocType}).</li>
+   *   <li>Organization default ({@code C_DocType.IsDefault = 'Y'}).</li>
+   *   <li>The current form value, if it is still valid for the organization and flow.</li>
+   *   <li>The first matching document type, only when the form has no valid value.</li>
+   * </ol>
+   * Automatic processes must keep using {@link #resolveDocTypeId}, as they have no form value.
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param orgId Organization ID ({@code AD_Org_ID}). Must not be blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
+   * @param category Document category to resolve (ORDER/INVOICE/SHIPMENT).
+   * @param currentDocTypeId DocType currently selected in the form; may be {@code null}/blank.
+   * @return The resolved {@code C_DocType_ID}, or {@code null} if none can be determined.
+   */
+  static String resolveDocTypeIdForCallout(String bpId, String orgId, boolean isSO,
+      Category category, String currentDocTypeId) {
+    if (StringUtils.isBlank(orgId) || category == null) {
+      return null;
+    }
+    String id = StringUtils.isNotBlank(bpId) ? findDocTypeForBp(bpId, orgId, isSO, category) : null;
+    if (id != null) {
+      return id;
+    }
+    final String dbt = category.docBaseType(isSO);
+    id = runDefaultDocTypeQuery(orgId, isSO, dbt);
+    if (id != null) {
+      return id;
+    }
+    if (StringUtils.isNotBlank(currentDocTypeId)
+        && isDocTypeValidForOrg(currentDocTypeId, orgId, isSO, dbt)) {
+      return currentDocTypeId;
+    }
+    return runFirstMatchingDocTypeQuery(orgId, isSO, dbt);
+  }
+
+  /**
+   * Checks whether the given DocType is active, matches the flow and DocBaseType, and belongs
+   * to the organization tree of the given organization.
+   */
+  private static boolean isDocTypeValidForOrg(String docTypeId, String orgId, boolean isSO,
+      String docBaseType) {
+    final String sql =
+      "select dt.c_doctype_id " +
+      "from c_doctype dt " +
+      "where dt.c_doctype_id = :docTypeId " +
+      "  and dt.isactive = 'Y' " +
+      "  and dt.issotrx = :isSO " +
+      "  and dt.docbasetype = :dbt " +
+      "  and AD_ISORGINCLUDED(:orgId, dt.ad_org_id, dt.ad_client_id) <> -1";
+    Query q = OBDal.getInstance().getSession()
+      .createNativeQuery(sql)
+      .setParameter("docTypeId", docTypeId)
+      .setParameter(ISSO, isSO ? "Y" : "N")
+      .setParameter(DBT, docBaseType)
+      .setParameter(ORG, orgId)
+      .setMaxResults(1);
+    return q.uniqueResult() != null;
+  }
+
+  /**
    * Resolves and applies the Order document type to the UI in an Order window callout.
+   * The current form value is not preserved; use the overload receiving
+   * {@code currentDocTypeId} from window callouts.
    * @param info The current {@link SimpleCallout.CalloutInfo} used to push values to the client.
    * @param orgId Organization ID ({@code AD_Org_ID}).
    * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
@@ -251,7 +316,24 @@ public final class BpDocTypeUtils {
    * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
    */
   public static String applyOrderDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField) {
-    String id = resolveDocTypeId(bpId, orgId, isSO, Category.ORDER);
+    return applyOrderDocType(info, orgId, bpId, isSO, idField, idRefField, null);
+  }
+
+  /**
+   * Resolves and applies the Order document type to the UI in an Order window callout,
+   * keeping the current form value when neither the Business Partner nor the Organization
+   * defines a document type (see {@link #resolveDocTypeIdForCallout}).
+   * @param info The current {@link SimpleCallout.CalloutInfo} used to push values to the client.
+   * @param orgId Organization ID ({@code AD_Org_ID}).
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
+   * @param idField Name of the target field to receive the DocType ID (mandatory).
+   * @param idRefField Name of the companion “_R” field to receive the DocType identifier (optional; pass {@code null} or blank to skip).
+   * @param currentDocTypeId DocType currently selected in the form; may be {@code null}/blank.
+   * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
+   */
+  public static String applyOrderDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField, String currentDocTypeId) {
+    String id = resolveDocTypeIdForCallout(bpId, orgId, isSO, Category.ORDER, currentDocTypeId);
     if (StringUtils.isBlank(id)) {
       return null;
     }
@@ -280,7 +362,24 @@ public final class BpDocTypeUtils {
    * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
    */
   public static String applyInvoiceDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField) {
-    String id = resolveDocTypeId(bpId, orgId, isSO, Category.INVOICE);
+    return applyInvoiceDocType(info, orgId, bpId, isSO, idField, idRefField, null);
+  }
+
+  /**
+   * Resolves and applies the Invoice document type to the UI in an Invoice window callout,
+   * keeping the current form value when neither the Business Partner nor the Organization
+   * defines a document type (see {@link #resolveDocTypeIdForCallout}).
+   * @param info The current {@link SimpleCallout.CalloutInfo}.
+   * @param orgId Organization ID ({@code AD_Org_ID}).
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param isSO {@code true} for sales (AR) invoices, {@code false} for purchase (AP) invoices.
+   * @param idField Name of the target field to receive the DocType ID (mandatory).
+   * @param idRefField Name of the companion “_R” field to receive the DocType identifier (optional; pass {@code null} or blank to skip).
+   * @param currentDocTypeId DocType currently selected in the form; may be {@code null}/blank.
+   * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
+   */
+  public static String applyInvoiceDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField, String currentDocTypeId) {
+    String id = resolveDocTypeIdForCallout(bpId, orgId, isSO, Category.INVOICE, currentDocTypeId);
     if (StringUtils.isBlank(id)) {
       return null;
     }
@@ -306,7 +405,24 @@ public final class BpDocTypeUtils {
    * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
    */
   public static String applyShipmentDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField) {
-    String id = resolveDocTypeId(bpId, orgId, isSO, Category.SHIPMENT);
+    return applyShipmentDocType(info, orgId, bpId, isSO, idField, idRefField, null);
+  }
+
+  /**
+   * Resolves and applies the Shipment/Receipt document type to the UI in a Shipment (In/Out)
+   * window callout, keeping the current form value when neither the Business Partner nor the
+   * Organization defines a document type (see {@link #resolveDocTypeIdForCallout}).
+   * @param info The current {@link SimpleCallout.CalloutInfo}.
+   * @param orgId Organization ID ({@code AD_Org_ID}).
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param isSO {@code true} for sales shipments (MMS), {@code false} for purchase receipts (MMR).
+   * @param idField Name of the target field to receive the DocType ID (mandatory).
+   * @param idRefField Name of the companion “_R” field to receive the DocType identifier (optional; pass {@code null} or blank to skip).
+   * @param currentDocTypeId DocType currently selected in the form; may be {@code null}/blank.
+   * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
+   */
+  public static String applyShipmentDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField, String currentDocTypeId) {
+    String id = resolveDocTypeIdForCallout(bpId, orgId, isSO, Category.SHIPMENT, currentDocTypeId);
     if (StringUtils.isBlank(id)) {
       return null;
     }

@@ -119,6 +119,7 @@ import org.openbravo.erpCommon.ad_callouts.BusinessPartnerDocTypeValidationTest;
 import org.openbravo.erpCommon.ad_callouts.CalloutHelperTest;
 import org.openbravo.erpCommon.ad_callouts.EmailConfiguration_PortTest;
 import org.openbravo.erpCommon.ad_callouts.GtinFormatTest;
+import org.openbravo.erpCommon.ad_callouts.SE_Payment_MultiCurrencyTest;
 import org.openbravo.erpCommon.ad_forms.AboutTest;
 import org.openbravo.erpCommon.ad_forms.AccountTest;
 import org.openbravo.erpCommon.ad_forms.AcctSchemaElementTest;
@@ -164,6 +165,7 @@ import org.openbravo.erpCommon.businessUtility.AccountTreeTest;
 import org.openbravo.erpCommon.businessUtility.InitialClientSetupTest;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetupTest;
 import org.openbravo.erpCommon.businessUtility.AuditTrailDeletedRecordsTest;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtilsTest;
 import org.openbravo.test.businessutility.AuditTrailTimeFormatterTest;
 import org.openbravo.erpCommon.businessUtility.COADataTest;
 import org.openbravo.erpCommon.businessUtility.COAUtilityTest;
@@ -415,6 +417,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     CalloutHelperTest.class,
     EmailConfiguration_PortTest.class,
     GtinFormatTest.class,
+    SE_Payment_MultiCurrencyTest.class,
 
     // erpCommon.ad_forms
     AboutTest.class,
@@ -471,6 +474,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     AccountTreeTest.class,
     AuditTrailDeletedRecordsTest.class,
     AuditTrailTimeFormatterTest.class,
+    BpDocTypeUtilsTest.class,
     COADataTest.class,
     COAUtilityTest.class,
     CancelLayawayPaymentsHookCallerTest.class,
