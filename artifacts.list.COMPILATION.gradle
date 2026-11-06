@@ -126,7 +126,7 @@ List<String> _dependenciesListCOMPILATION = [
   'org.jvnet.staxex:stax-ex:1.8',
 
   // Template and Scripting Engines
-  'org.freemarker:freemarker:2.3.16',
+  'org.freemarker:freemarker:2.3.35',
   'org.mozilla:rhino:1.8.0',
   'org.mozilla:rhino-engine:1.8.0',
 
