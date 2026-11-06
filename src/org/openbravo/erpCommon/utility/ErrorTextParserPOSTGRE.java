@@ -111,6 +111,9 @@ class ErrorTextParserPOSTGRE extends ErrorTextParser {
     } catch (ServletException se) {
       log4j.error("Error reading list of columns for constraint: " + constraintName, se);
     }
+    if (colString.isEmpty()) {
+      return getColumnNamesForUniqueIndex(constraintName);
+    }
     // colString pattern "colA","colB"
     String[] cols = colString.split(",");
     for (int i = 0; i < cols.length; i++) {
@@ -125,6 +128,54 @@ class ErrorTextParserPOSTGRE extends ErrorTextParser {
     Arrays.sort(cols);
 
     return cols;
+  }
+
+  /**
+   * Reads the columns of a unique index that has no backing constraint.
+   *
+   * @param indexName
+   *          name of the unique index
+   * @return the index columns, sorted like the constraint columns
+   */
+  private String[] getColumnNamesForUniqueIndex(String indexName) {
+    String[] cols = new String[0];
+    try {
+      String query = "column_name as columnname from user_ind_columns where index_name = upper(?)";
+      cols = Arrays.stream(ErrorTextParserData.selectColumnNamesForConstraint(getConnection(),
+          query, indexName)).map(col -> col.columnname).toArray(String[]::new);
+    } catch (ServletException se) {
+      log4j.error("Error reading list of columns for unique index: " + indexName, se);
+    }
+    Arrays.sort(cols);
+    return cols;
+  }
+
+  /**
+   * Looks up a unique index that has no backing constraint, so its violation is reported like the
+   * violation of a unique constraint. Expression and partial indexes are left out: their column
+   * list does not describe the rule the user broke.
+   *
+   * @param indexName
+   *          name taken from the error message
+   * @return one row shaped like {@link ErrorTextParserData#select}, or an empty array
+   */
+  private ErrorTextParserData[] selectUniqueIndex(String indexName) throws ServletException {
+    String query = "upper(t.relname) as columnname from pg_index x"
+        + " join pg_class i on i.oid = x.indexrelid join pg_class t on t.oid = x.indrelid"
+        + " join pg_namespace n on n.oid = i.relnamespace"
+        + " where n.nspname = current_schema() and x.indisunique"
+        + " and x.indexprs is null and x.indpred is null and upper(i.relname) = upper(?)";
+    ErrorTextParserData[] rows = ErrorTextParserData.selectColumnNamesForConstraint(getConnection(),
+        query, indexName);
+    if (rows == null || rows.length == 0) {
+      return new ErrorTextParserData[0];
+    }
+    ErrorTextParserData index = new ErrorTextParserData();
+    index.constraintName = indexName;
+    index.constraintType = "U";
+    index.tableName = rows[0].columnname;
+    index.searchCondition = "";
+    return new ErrorTextParserData[] { index };
   }
 
   /*
@@ -174,6 +225,9 @@ class ErrorTextParserPOSTGRE extends ErrorTextParser {
 
     // lookup constraint data
     ErrorTextParserData[] constraintData = ErrorTextParserData.select(getConnection(), objectName);
+    if (constraintData == null || constraintData.length == 0) {
+      constraintData = selectUniqueIndex(objectName);
+    }
 
     // BEGIN Specific parse for CONSTRAINT DB objects
 

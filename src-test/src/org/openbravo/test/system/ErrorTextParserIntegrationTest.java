@@ -79,6 +79,12 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
     doErrorTextParserTest(5);
   }
 
+  /** A unique index with no backing constraint is reported like a unique constraint. */
+  @Test
+  public void testUniqueIndexWithoutConstraint() throws Exception {
+    doErrorTextParserTest(10);
+  }
+
   @Test
   public void testFKInsert() throws Exception {
     doErrorTextParserTest(6);
@@ -193,6 +199,11 @@ public class ErrorTextParserIntegrationTest extends OBBaseTest {
         case 9:
           expectedErrorMessage = "Cannot update an object in a module not in development and without an active template";
           ErrorTextParserTestData.updateTableDescription(con, conn, "description", "146");
+          break;
+        case 10:
+          // AD_WINDOW_ACCESS_UN_KEY is a unique index, not a constraint
+          expectedErrorMessage = "There is already a AD_Window_Access_ID with the same (Role, Window). (Role, Window) must be unique. You must change the values entered.";
+          ErrorTextParserTestData.insertWindowAccessDuplicated(con, conn);
           break;
       }
 
