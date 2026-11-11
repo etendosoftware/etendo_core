@@ -543,12 +543,13 @@ pipeline {
 
               echo '-------------------------- Executing SonarQube Analysis --------------------------'
               sh """
+                set +x
                 cd ${REPO_NAME}
                 ${WORKSPACE}/sonar-scanner-${SONAR_VERSION}-linux/bin/sonar-scanner -X \
                     -Dsonar.projectKey=${env.PROJECT_KEY} \
                     -Dsonar.sources=${modules_src_dirs}src \
                     -Dsonar.host.url=${SONAR_SERVER} \
-                    -Dsonar.token=${SONAR_TOKEN} \
+                    -Dsonar.token=\$SONAR_TOKEN \
                     -Dsonar.branch.name=${GIT_BRANCH} \
                     -Dsonar.projectVersion=${GIT_COMMIT} \
                     -Dsonar.java.coveragePlugin=jacoco \
@@ -557,6 +558,9 @@ pipeline {
                     -Dsonar.exclusions=${sourceExclusions} \
                     -Dsonar.coverage.exclusions=${coverageExclusions}
               """
+              def reportTaskFile = "${REPO_NAME}/.scannerwork/report-task.txt"
+              env.SONAR_CE_TASK_ID = fileExists(reportTaskFile) ? (readProperties(file: reportTaskFile).ceTaskId ?: '') : ''
+              echo "SonarQube background task: ${env.SONAR_CE_TASK_ID}"
               echo "---------------------- Getting SonarQube Report URL ----------------------"
               def branchName = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
               def projectUrl = "${SONAR_SERVER}/dashboard?id=${PROJECT_KEY}&branch=${branchName}"
@@ -603,6 +607,9 @@ pipeline {
                                      GIT_BRANCH.startsWith('hotfix/') || 
                                      GIT_BRANCH.startsWith('epic/')
             echo "Check commit for current branch (${GIT_BRANCH}): ${checkCommitCurrent}"
+            if (env.SONAR_CE_TASK_ID) {
+              sonarUtils.waitForCeTask(env.SONAR_CE_TASK_ID, SONAR_TOKEN, SONAR_SERVER)
+            }
             def coverageCurrent = sonarUtils.getCoverageWithRetry(
               GIT_BRANCH,
               checkCommitCurrent,
