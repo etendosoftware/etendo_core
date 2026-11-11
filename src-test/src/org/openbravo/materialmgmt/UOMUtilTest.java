@@ -1,13 +1,15 @@
 package org.openbravo.materialmgmt;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -26,7 +29,10 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
+import org.openbravo.erpCommon.utility.PropertyNotFoundException;
+import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.plm.ProductUOM;
 import org.openbravo.model.common.uom.UOM;
 
@@ -43,12 +49,24 @@ public class UOMUtilTest {
   private static final String TEST_DOCTYPE_ID = "TEST_DOCTYPE_ID";
   private static final String TEST_UOM_ID = "TEST_UOM_ID";
   private static final String TEST_UOM_NAME = "Test UOM";
+  private static final String UOM_PROPERTY = "UomManagement";
+  private static final String TEST_CLIENT_ID = "TEST_CLIENT_ID";
+  private static final String SYSTEM_CLIENT_ID = "0";
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<FieldProviderFactory> mockedFieldProviderFactory;
   private MockedStatic<UOMUtil> mockedUOMUtil;
   private OBDal mockDal;
   private OBCriteria<ProductUOM> mockCriteria;
+
+  /**
+   * The call UOMUtil makes to read the UomManagement preference, with matchers for a lookup by
+   * client only.
+   */
+  private static String preferenceLookup(String clientId) throws Exception {
+    return Preferences.getPreferenceValue(eq(UOM_PROPERTY), eq(true), eq(clientId), ArgumentMatchers.isNull(),
+        ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull());
+  }
 
   /**
    * Sets up the mock environment before each test.
@@ -209,7 +227,6 @@ public class UOMUtilTest {
     assertEquals(SHOULD_BE_EMPTY_ARRAY, 0, result.length);
   }
 
-
   /**
    * Tests the {@link UOMUtil#selectUOM(String)} method for a successful scenario.
    */
@@ -281,5 +298,132 @@ public class UOMUtilTest {
 
     assertNotNull(RESULT_NOT_NULL, result);
     assertEquals(SHOULD_BE_EMPTY_ARRAY, 0, result.length);
+  }
+
+  /**
+   * Tests that {@link UOMUtil#isUomManagementEnabled()} resolves the preference against the client
+   * of the current context.
+   *
+   * @throws Exception
+   *           if the preference lookup cannot be stubbed or verified
+   */
+  @Test
+  public void testIsUomManagementEnabledUsesCurrentClient() throws Exception {
+    mockCurrentClient(TEST_CLIENT_ID);
+
+    try (MockedStatic<Preferences> mockedPreferences = mockStatic(Preferences.class)) {
+      stubPreference(mockedPreferences, TEST_CLIENT_ID, "Y");
+
+      assertTrue("Should be enabled when the preference is Y for the current client", UOMUtil.isUomManagementEnabled());
+
+      mockedPreferences.verify(() -> preferenceLookup(SYSTEM_CLIENT_ID), never());
+    }
+  }
+
+  /**
+   * Regression test: a client level override of the preference must win over the System default.
+   * Before the fix the preference was always resolved against the System client, so the override
+   * was ignored.
+   *
+   * @throws Exception
+   *           if the preference lookup cannot be stubbed or verified
+   */
+  @Test
+  public void testIsUomManagementEnabledHonorsClientOverride() throws Exception {
+    mockCurrentClient(TEST_CLIENT_ID);
+
+    // Any lookup answers Y (the System default) except the one for the current client
+    try (MockedStatic<Preferences> mockedPreferences = mockStatic(Preferences.class, invocation -> "Y")) {
+      stubPreference(mockedPreferences, TEST_CLIENT_ID, "N");
+
+      assertFalse("Should be disabled when the current client overrides the preference with N",
+          UOMUtil.isUomManagementEnabled());
+    }
+  }
+
+  /**
+   * Tests that the System client is used when there is no current context.
+   *
+   * @throws Exception
+   *           if the preference lookup cannot be stubbed or verified
+   */
+  @Test
+  public void testIsUomManagementEnabledFallsBackToSystemWithoutContext() throws Exception {
+    mockedOBContext.when(OBContext::getOBContext).thenReturn(null);
+
+    try (MockedStatic<Preferences> mockedPreferences = mockStatic(Preferences.class)) {
+      stubPreference(mockedPreferences, SYSTEM_CLIENT_ID, "Y");
+
+      assertTrue("Should resolve the preference against the System client", UOMUtil.isUomManagementEnabled());
+    }
+  }
+
+  /**
+   * Tests that the System client is used when the context has no current client.
+   *
+   * @throws Exception
+   *           if the preference lookup cannot be stubbed or verified
+   */
+  @Test
+  public void testIsUomManagementEnabledFallsBackToSystemWithoutCurrentClient() throws Exception {
+    mockCurrentClient(null);
+
+    try (MockedStatic<Preferences> mockedPreferences = mockStatic(Preferences.class)) {
+      stubPreference(mockedPreferences, SYSTEM_CLIENT_ID, "Y");
+
+      assertTrue("Should resolve the preference against the System client", UOMUtil.isUomManagementEnabled());
+    }
+  }
+
+  /**
+   * Tests that the method returns false when the preference is not defined.
+   *
+   * @throws Exception
+   *           if the preference lookup cannot be stubbed or verified
+   */
+  @Test
+  public void testIsUomManagementEnabledPreferenceNotFound() throws Exception {
+    mockCurrentClient(TEST_CLIENT_ID);
+
+    try (MockedStatic<Preferences> mockedPreferences = mockStatic(Preferences.class)) {
+      mockedPreferences.when(() -> preferenceLookup(TEST_CLIENT_ID)).thenThrow(new PropertyNotFoundException());
+
+      assertFalse("Should be disabled when the preference is not found", UOMUtil.isUomManagementEnabled());
+    }
+  }
+
+  /**
+   * Tests that the method returns false when the preference value is null.
+   *
+   * @throws Exception
+   *           if the preference lookup cannot be stubbed or verified
+   */
+  @Test
+  public void testIsUomManagementEnabledNullValue() throws Exception {
+    mockCurrentClient(TEST_CLIENT_ID);
+
+    try (MockedStatic<Preferences> mockedPreferences = mockStatic(Preferences.class)) {
+      stubPreference(mockedPreferences, TEST_CLIENT_ID, null);
+
+      assertFalse("Should be disabled when the preference value is null", UOMUtil.isUomManagementEnabled());
+    }
+  }
+
+  /**
+   * Sets the current context to one whose current client has the given id. If the id is null, the
+   * context has no current client.
+   */
+  private void mockCurrentClient(String clientId) {
+    OBContext context = Mockito.mock(OBContext.class);
+    if (clientId != null) {
+      Client client = Mockito.mock(Client.class);
+      when(client.getId()).thenReturn(clientId);
+      when(context.getCurrentClient()).thenReturn(client);
+    }
+    mockedOBContext.when(OBContext::getOBContext).thenReturn(context);
+  }
+
+  private void stubPreference(MockedStatic<Preferences> mockedPreferences, String clientId, String value) {
+    mockedPreferences.when(() -> preferenceLookup(clientId)).thenReturn(value);
   }
 }
