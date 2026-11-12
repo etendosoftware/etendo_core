@@ -48,6 +48,69 @@ def waitForCeTask(ceTaskId, sonarToken, sonarServer) {
   error("SonarQube task ${ceTaskId} did not finish after ${maxPolls * pollSeconds / 60} minutes")
 }
 
+def githubPrBase(repoName, branch, accessToken) {
+  try {
+    def resp = withEnv(["GH_API_TOKEN=${accessToken}", "GH_API_URL=https://api.github.com/repos/etendosoftware/${repoName}/pulls", "GH_HEAD=etendosoftware:${branch}"]) {
+      sh(
+        script: '''set +x
+curl -s -G -H "Authorization: token $GH_API_TOKEN" -H "Accept: application/vnd.github+json" --data-urlencode "head=$GH_HEAD" --data-urlencode "state=open" "$GH_API_URL"''',
+        returnStdout: true
+      ).trim()
+    }
+    def pulls = readJSON(text: resp)
+    if (pulls instanceof List && pulls.size() > 0) {
+      echo "Open PR #${pulls[0].number} for '${branch}' targets '${pulls[0].base.ref}'"
+      return pulls[0].base.ref
+    }
+    echo "No open PR found for '${branch}'"
+  } catch (Exception e) {
+    echo "Could not look up the PR for '${branch}': ${e.getMessage()}"
+  }
+  return null
+}
+
+def hasAnalyses(branch, sonarProjectKey, sonarToken, sonarServer) {
+  try {
+    def encodedBranch = URLEncoder.encode(branch, "UTF-8")
+    def resp = sonarGet(sonarToken, "${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=1")
+    return ((readJSON(text: resp))?.analyses ?: []).size() > 0
+  } catch (Exception e) {
+    echo "Could not check analyses for '${branch}': ${e.getMessage()}"
+    return false
+  }
+}
+
+def resolveCompareBranch(repoName, accessToken, sonarProjectKey, sonarToken, sonarServer) {
+  def branch = env.GIT_BRANCH
+  def candidates = []
+  def prBase = githubPrBase(repoName, branch, accessToken)
+  if (prBase) {
+    candidates << prBase
+  }
+  if (env.FROM_BACKPORT == 'true' && env.BACKPORT_BRANCH) {
+    candidates << env.BACKPORT_BRANCH
+  }
+  if (env.FROM_PRERELEASE == 'true' && env.PRERELEASE_BRANCH) {
+    candidates << env.PRERELEASE_BRANCH
+  }
+  if (branch.startsWith('feature/') && env.EPIC_BRANCH) {
+    candidates << env.EPIC_BRANCH
+  }
+  if (branch.startsWith('feature/') || branch.startsWith('epic/')) {
+    candidates << 'develop'
+  }
+  candidates << env.MAIN_BRANCH
+  candidates = candidates.findAll { it && it != branch }.unique()
+  echo "Coverage base candidates for '${branch}': ${candidates.join(', ')}"
+  for (candidate in candidates) {
+    if (hasAnalyses(candidate, sonarProjectKey, sonarToken, sonarServer)) {
+      return candidate
+    }
+    echo "No SonarQube analyses for '${candidate}', trying the next candidate"
+  }
+  return env.MAIN_BRANCH
+}
+
 /**
  * Checks if this is the first analysis for a given branch
  * @param branch Branch name to check

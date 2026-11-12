@@ -594,15 +594,11 @@ printenv | sed -E 's/^([^=]*(TOKEN|SECRET|PASS)[^=]*)=.*/\\1=****/'
         script {
           try {
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Comparing Coverage Results\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-            def branchCompare = env.MAIN_BRANCH
             env.COMPARE_COVERAGE_STATUS = SUCCESS
-            if (env.FROM_BACKPORT == TRUE) {
-              branchCompare = env.BACKPORT_BRANCH
-            }
-            echo "-------------------------- Comparing Coverage with ${branchCompare} Branch --------------------------"
-
             def rootDir = pwd()
             def sonarUtils = load "${rootDir}/pipelines/unittests/utils/sonarUtils.groovy"
+            def branchCompare = sonarUtils.resolveCompareBranch(REPO_NAME, ACCESS_TOKEN, env.PROJECT_KEY, SONAR_TOKEN, SONAR_SERVER)
+            echo "-------------------------- Comparing Coverage with ${branchCompare} Branch --------------------------"
 
             // Only check commit on PR branches
             def checkCommitCurrent = GIT_BRANCH.startsWith('feature/') || 
