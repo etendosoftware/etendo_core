@@ -62,7 +62,9 @@ pipeline {
                         env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
                         env.STATUS_BUILD = FAILED // Variable to track the status of the build.
                         env.FAILED_SUITES = "" // List to collect failed test suites
-                        sh 'printenv'
+                        sh '''set +x
+printenv | sed -E 's/^([^=]*(TOKEN|SECRET|PASS)[^=]*)=.*/\\1=****/'
+                        '''
 
                         def skipConditions = load "${pwd()}/pipelines/unittests/utils/skipConditions.groovy"
 
