@@ -1,6 +1,117 @@
 // pipelines/sonarUtils.groovy
 
 /**
+ * GET on the SonarQube API without the token reaching the build log:
+ * curl gets it through the environment and the shell trace is off.
+ * @param sonarToken SonarQube API token
+ * @param url Full API URL
+ * @return Response body
+ */
+def sonarGet(sonarToken, url) {
+  withEnv(["SONAR_API_TOKEN=${sonarToken}", "SONAR_API_URL=${url}"]) {
+    return sh(
+      script: '''set +x
+curl -s -u "$SONAR_API_TOKEN:" "$SONAR_API_URL"''',
+      returnStdout: true
+    ).trim()
+  }
+}
+
+/**
+ * Waits for the SonarQube background task that processes the report the scanner uploaded.
+ * @param ceTaskId Task id from .scannerwork/report-task.txt
+ * @param sonarToken SonarQube API token
+ * @param sonarServer SonarQube server URL
+ * @throws error if the task fails, is canceled or does not finish in time
+ */
+def waitForCeTask(ceTaskId, sonarToken, sonarServer) {
+  int pollSeconds = 20
+  int maxPolls = 90
+  for (int poll = 1; poll <= maxPolls; poll++) {
+    def resp = sonarGet(sonarToken, "${sonarServer}/api/ce/task?id=${ceTaskId}")
+    def task = null
+    try {
+      task = (readJSON(text: resp))?.task
+    } catch (Exception e) {
+      echo "Unreadable SonarQube task response: ${resp}"
+    }
+    def status = task?.status ?: 'UNKNOWN'
+    echo "SonarQube task ${ceTaskId}: ${status} (${poll}/${maxPolls})"
+    if (status == 'SUCCESS') {
+      return
+    }
+    if (status == 'FAILED' || status == 'CANCELED') {
+      error("SonarQube could not process the analysis (task ${ceTaskId} ${status}): ${task?.errorMessage ?: 'no error message'}")
+    }
+    sleep(time: pollSeconds, unit: 'SECONDS')
+  }
+  error("SonarQube task ${ceTaskId} did not finish after ${maxPolls * pollSeconds / 60} minutes")
+}
+
+def githubPrBase(repoName, branch, accessToken) {
+  try {
+    def resp = withEnv(["GH_API_TOKEN=${accessToken}", "GH_API_URL=https://api.github.com/repos/etendosoftware/${repoName}/pulls", "GH_HEAD=etendosoftware:${branch}"]) {
+      sh(
+        script: '''set +x
+curl -s -G -H "Authorization: token $GH_API_TOKEN" -H "Accept: application/vnd.github+json" --data-urlencode "head=$GH_HEAD" --data-urlencode "state=open" "$GH_API_URL"''',
+        returnStdout: true
+      ).trim()
+    }
+    def pulls = readJSON(text: resp)
+    if (pulls instanceof List && pulls.size() > 0) {
+      echo "Open PR #${pulls[0].number} for '${branch}' targets '${pulls[0].base.ref}'"
+      return pulls[0].base.ref
+    }
+    echo "No open PR found for '${branch}'"
+  } catch (Exception e) {
+    echo "Could not look up the PR for '${branch}': ${e.getMessage()}"
+  }
+  return null
+}
+
+def hasAnalyses(branch, sonarProjectKey, sonarToken, sonarServer) {
+  try {
+    def encodedBranch = URLEncoder.encode(branch, "UTF-8")
+    def resp = sonarGet(sonarToken, "${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=1")
+    return ((readJSON(text: resp))?.analyses ?: []).size() > 0
+  } catch (Exception e) {
+    echo "Could not check analyses for '${branch}': ${e.getMessage()}"
+    return false
+  }
+}
+
+def resolveCompareBranch(repoName, accessToken, sonarProjectKey, sonarToken, sonarServer) {
+  def branch = env.GIT_BRANCH
+  def candidates = []
+  def prBase = githubPrBase(repoName, branch, accessToken)
+  if (prBase) {
+    candidates << prBase
+  }
+  if (env.FROM_BACKPORT == 'true' && env.BACKPORT_BRANCH) {
+    candidates << env.BACKPORT_BRANCH
+  }
+  if (env.FROM_PRERELEASE == 'true' && env.PRERELEASE_BRANCH) {
+    candidates << env.PRERELEASE_BRANCH
+  }
+  if (branch.startsWith('feature/') && env.EPIC_BRANCH) {
+    candidates << env.EPIC_BRANCH
+  }
+  if (branch.startsWith('feature/') || branch.startsWith('epic/')) {
+    candidates << 'develop'
+  }
+  candidates << env.MAIN_BRANCH
+  candidates = candidates.findAll { it && it != branch }.unique()
+  echo "Coverage base candidates for '${branch}': ${candidates.join(', ')}"
+  for (candidate in candidates) {
+    if (hasAnalyses(candidate, sonarProjectKey, sonarToken, sonarServer)) {
+      return candidate
+    }
+    echo "No SonarQube analyses for '${candidate}', trying the next candidate"
+  }
+  return env.MAIN_BRANCH
+}
+
+/**
  * Checks if this is the first analysis for a given branch
  * @param branch Branch name to check
  * @param sonarToken SonarQube API token
@@ -9,10 +120,7 @@
  */
 def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
   try {
-    def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=1\"",
-      returnStdout: true
-    ).trim()
+    def analysisResp = sonarGet(sonarToken, "${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=1")
     
     echo "Checking if first analysis for branch '${branch}': ${analysisResp}"
     
@@ -66,10 +174,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
   for (int attempt = 0; attempt < maxRetries; attempt++) {
     echo "🔍 Attempt ${attempt + 1}/${maxRetries} - Retrieving analysis data for branch '${branch}'..."
     
-    def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=5\"",
-      returnStdout: true
-    ).trim()
+    def analysisResp = sonarGet(sonarToken, "${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=5")
     
     echo "📊 Analysis API response: ${analysisResp}"
     def analysisJson = readJSON text: analysisResp
@@ -131,10 +236,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
       echo "🎯 Target analysis details: Date=${targetAnalysis.date}, Revision=${targetAnalysis.revision}"
       
       // First try: Get measures directly from analysis key (if API supports it)
-      response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
-        returnStdout: true
-      ).trim()
+      response = sonarGet(sonarToken, "${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage")
       
       echo "📈 Component measures API response: ${response}"
       def json = readJSON text: response
@@ -164,19 +266,13 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
         echo "🔄 Falling back to branch-level measures..."
         
         // Fallback to normal branch API if analysis-specific fails
-        response = sh(
-          script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
-          returnStdout: true
-        ).trim()
+        response = sonarGet(sonarToken, "${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage")
         echo "📈 Fallback branch measures API response: ${response}"
       }
     } else {
       // For most recent analysis, use normal API
       echo "📊 Getting coverage for most recent analysis"
-      response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
-        returnStdout: true
-      ).trim()
+      response = sonarGet(sonarToken, "${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage")
     }
     
     echo "📈 Coverage API response for branch '${branch}': ${response}"
@@ -235,10 +331,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
   if (coverage == -1) {
     if (!checkCommit) {
       // If it is the main branch and after the attempts the coverage is 0, return 0
-      def response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
-        returnStdout: true
-      ).trim()
+      def response = sonarGet(sonarToken, "${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage")
       def json = readJSON text: response
       def measures = json?.component?.measures ?: []
       def covStr = measures.find { it.metric == 'coverage' }?.value
