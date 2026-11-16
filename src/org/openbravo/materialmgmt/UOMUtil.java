@@ -301,14 +301,19 @@ public class UOMUtil {
 
   /**
    * Returns if the UomManagement preference is enabled
-   * 
+   * <p>
+   * The preference is resolved against the client of the current context, so overrides defined with
+   * Visible at Client set to a real client are honored. If there is no current context, the System
+   * client is used.
+   *
    * @return true if enabled, false otherwise
    */
   public static boolean isUomManagementEnabled() {
     String propertyValue = "N";
     try {
-      propertyValue = Preferences.getPreferenceValue(UOM_PROPERTY, true, "0", null, null, null,
-          null);
+      OBContext context = OBContext.getOBContext();
+      String clientId = context != null && context.getCurrentClient() != null ? context.getCurrentClient().getId() : "0";
+      propertyValue = Preferences.getPreferenceValue(UOM_PROPERTY, true, clientId, null, null, null, null);
     } catch (PropertyException e) {
       log4j.debug("Preference UomManagement not found", e);
     }

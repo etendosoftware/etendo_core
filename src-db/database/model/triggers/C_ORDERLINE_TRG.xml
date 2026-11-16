@@ -188,7 +188,7 @@ IF (UPDATING) THEN
   IF (v_istaxincluded = 'Y') THEN
 
     -- If tax included taxes recalculate net price
-    :new.line_gross_amount := ROUND(:new.gross_unit_price * :new.qtyordered, v_prec);
+    :new.line_gross_amount := ROUND(COALESCE(:new.gross_unit_price, 0) * :new.qtyordered, v_prec);
 
     SELECT tc.ASBOM INTO v_AsBOM FROM C_TAXCATEGORY tc, C_tax t WHERE tc.C_TAXCATEGORY_ID = t.C_TAXCATEGORY_ID AND t.C_TAX_ID = :new.C_Tax_ID;
     IF (v_AsBOM = 'Y') THEN

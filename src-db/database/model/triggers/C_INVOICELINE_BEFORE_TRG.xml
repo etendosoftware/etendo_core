@@ -81,7 +81,7 @@ BEGIN
   
       -- If tax included taxes recalculate net price / amounts
       IF (:new.qtyinvoiced <> 0) THEN
-        :new.line_gross_amount := ROUND(:new.gross_unit_price * :new.Qtyinvoiced, v_std_prec);
+        :new.line_gross_amount := ROUND(COALESCE(:new.gross_unit_price, 0) * :new.Qtyinvoiced, v_std_prec);
       END IF;
       
       SELECT tc.ASBOM INTO v_AsBOM FROM C_TAXCATEGORY tc, C_tax t WHERE tc.C_TAXCATEGORY_ID = t.C_TAXCATEGORY_ID AND t.C_TAX_ID = :new.C_Tax_ID;
