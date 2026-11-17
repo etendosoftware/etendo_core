@@ -160,6 +160,7 @@ import org.openbravo.test.security.WritableReadableOrganizationClientTest;
 import org.openbravo.test.services.ServicesTest;
 import org.openbravo.test.services.ServicesTest2;
 import org.openbravo.test.services.ServicesTest3;
+import org.openbravo.test.stockReservation.ReactivateOrderWithReservationTest;
 import org.openbravo.test.stockReservation.StockReservationTest;
 import org.openbravo.test.stockValuationReport.ReportValuationStockTest;
 import org.openbravo.test.system.CryptoUtilities;
@@ -424,6 +425,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Create Order and Physical Inventory From Stock Reservation Test
     StockReservationTest.class,
+    ReactivateOrderWithReservationTest.class,
 
     // Utils process Test
     ProcessUtilsTest.class,

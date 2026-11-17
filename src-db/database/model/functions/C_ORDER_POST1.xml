@@ -513,6 +513,33 @@
         IF (v_DocSubTypeSO IN ('WR', 'WI')) THEN
           RAISE_APPLICATION_ERROR(-20000, '@ActionNotSupported@');
         END IF;
+        -- Sales orders cannot be reactivated if they have deliveries or closed stock reservations
+        -- (WP subtype is excluded because its reactivation cancels its own shipments, and DirectShip
+        -- lines are excluded because their delivered quantity is set on completion without a shipment)
+        IF (v_IsSOTrx = 'Y' AND COALESCE(v_DocSubTypeSO, 'EMPTY') <> 'WP') THEN
+          SELECT COUNT(1)
+            INTO v_Aux
+          FROM DUAL
+          WHERE EXISTS (SELECT 1
+                        FROM C_ORDERLINE
+                        WHERE C_ORDER_ID = v_Record_ID
+                          AND QTYDELIVERED <> 0
+                          AND DIRECTSHIP = 'N');
+          IF (v_Aux > 0) THEN
+            RAISE_APPLICATION_ERROR(-20000, '@ReactivateOrderWithDeliveries@');
+          END IF;
+          SELECT COUNT(1)
+            INTO v_Aux
+          FROM DUAL
+          WHERE EXISTS (SELECT 1
+                        FROM M_RESERVATION R
+                        JOIN C_ORDERLINE OL ON OL.C_ORDERLINE_ID = R.C_ORDERLINE_ID
+                        WHERE OL.C_ORDER_ID = v_Record_ID
+                          AND R.RES_STATUS = 'CL');
+          IF (v_Aux > 0) THEN
+            RAISE_APPLICATION_ERROR(-20000, '@ReactivateOrderWithClosedReservations@');
+          END IF;
+        END IF;
         --Verify not managed debtPayments added by ALO
         --Added by P.Sarobe. New messages
         SELECT max(c_debt_payment_id), COUNT(*)
