@@ -84,10 +84,20 @@ public class SL_Order_Amt extends SimpleCallout {
 
     // Standard Precision, Price Precision, IsTaxIncluded for Price List
     SLOrderAmtData[] data = SLOrderAmtData.select(this, strCOrderId);
-    int stdPrecision = Integer.valueOf(data[0].stdprecision);
-    int pricePrecision = Integer.valueOf(data[0].priceprecision);
-    PriceList currentPriceList = OBDal.getInstance().get(PriceList.class, data[0].mPricelistId);
-    boolean isTaxIncludedPriceList = currentPriceList.isPriceIncludesTax();
+    int stdPrecision = 0;
+    int pricePrecision = 0;
+    PriceList currentPriceList = null;
+    boolean isTaxIncludedPriceList = false;
+    if (data != null && data.length > 0) {
+      stdPrecision = Integer.valueOf(StringUtils.isEmpty(data[0].stdprecision) ? "0" : data[0].stdprecision);
+      pricePrecision = Integer.valueOf(StringUtils.isEmpty(data[0].priceprecision) ? "0" : data[0].priceprecision);
+      if (StringUtils.isNotEmpty(data[0].mPricelistId)) {
+        currentPriceList = OBDal.getInstance().get(PriceList.class, data[0].mPricelistId);
+      }
+    }
+    if (currentPriceList != null) {
+      isTaxIncludedPriceList = currentPriceList.isPriceIncludesTax();
+    }
 
     // Apply Price Precision and Standard Precision
     priceActual = priceActual.setScale(pricePrecision, RoundingMode.HALF_UP);
@@ -307,7 +317,7 @@ public class SL_Order_Amt extends SimpleCallout {
       stockSecurity = new BigDecimal(dataStock[0].stock);
       strEnforceAttribute = dataStock[0].enforceAttribute;
     }
-    if (order.isSalesTransaction() && stockSecurity.compareTo(BigDecimal.ZERO) != 0
+    if (order != null && order.isSalesTransaction() && stockSecurity.compareTo(BigDecimal.ZERO) != 0
         && qtyOrdered.compareTo(BigDecimal.ZERO) != 0) {
       BigDecimal stockNoAttribute, stockAttribute, resultStock;
       if (StringUtils.equals(strEnforceAttribute, "N")) {
@@ -332,7 +342,7 @@ public class SL_Order_Amt extends SimpleCallout {
     // Check Price Limit
     if (!StringUtils.equals(strChanged, INPQTYORDERED)
         || StringUtils.equals(strChanged, "inplinenetamt")) {
-      boolean enforced = SLOrderAmtData.listPriceType(this, currentPriceList.getId());
+      boolean enforced = currentPriceList != null && SLOrderAmtData.listPriceType(this, currentPriceList.getId());
       if (enforced && priceLimit.compareTo(BigDecimal.ZERO) != 0
           && priceActual.compareTo(priceLimit) < 0) {
         info.showMessage(FormatUtilities

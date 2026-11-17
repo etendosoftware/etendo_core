@@ -210,6 +210,40 @@ public class SLOrderAmtPriceAdjustmentTest {
   }
 
   /**
+   * Tests that the callout does not fail and falls back to safe defaults when the order id does
+   * not resolve to an existing order, so the price list query returns no rows.
+   *
+   * @throws ServletException
+   *     if the callout execution fails
+   */
+  @Test
+  public void testUsesSafeDefaultsWhenOrderIsNotResolvable() throws ServletException {
+    BigDecimal qty = BigDecimal.ONE;
+    BigDecimal finalPrice = ROUNDED_PROMOTION_PRICE;
+
+    stubCalloutParameters(finalPrice, LIST_PRICE, LIST_PRICE, ZERO_MANUAL_DISCOUNT, qty);
+
+    try (MockedStatic<OBDal> obDalMock = mockStatic(
+        OBDal.class); MockedStatic<SLOrderAmtData> orderAmtDataMock = mockStatic(
+        SLOrderAmtData.class); MockedStatic<SLOrderStockData> orderStockDataMock = mockStatic(
+        SLOrderStockData.class); MockedStatic<PriceAdjustment> priceAdjustmentMock = mockStatic(
+        PriceAdjustment.class)) {
+      stubUnresolvedOrderData(obDalMock, orderAmtDataMock, orderStockDataMock);
+      // Mimics the real fallback: without applicable adjustments the received price is returned
+      priceAdjustmentMock.when(() -> PriceAdjustment.calculatePriceStd(any(), any(), any(), any())).thenAnswer(
+          invocation -> invocation.getArgument(3));
+
+      callout.execute(info);
+
+      // Price precision falls back to 0, so amounts are rounded to integers
+      assertEquals(BigDecimal.ONE, results.get(PRICE_STD_PARAMETER));
+      assertEquals(0, ((BigDecimal) results.get(LINE_NET_AMT_PARAMETER)).scale());
+      // Without a resolved price list the price limit check must be skipped
+      orderAmtDataMock.verify(() -> SLOrderAmtData.listPriceType(any(), anyString()), never());
+    }
+  }
+
+  /**
    * Stubs the callout input parameters required by the sales order amount calculation.
    *
    * @param finalPrice
@@ -277,6 +311,27 @@ public class SLOrderAmtPriceAdjustmentTest {
     orderAmtDataMock.when(() -> SLOrderAmtData.select(callout, ORDER_ID)).thenReturn(
         new SLOrderAmtData[]{ orderAmtData });
     orderAmtDataMock.when(() -> SLOrderAmtData.listPriceType(callout, PRICE_LIST_ID)).thenReturn(false);
+    orderStockDataMock.when(() -> SLOrderStockData.select(callout, PRODUCT_ID)).thenReturn(new SLOrderStockData[0]);
+  }
+
+  /**
+   * Stubs the DAL and generated data access collaborators for an order id that cannot be
+   * resolved: no order entity is found and the price list query returns no rows.
+   *
+   * @param obDalMock
+   *     static DAL mock used to resolve order and product entities
+   * @param orderAmtDataMock
+   *     static generated data mock used to return an empty precision data result
+   * @param orderStockDataMock
+   *     static generated data mock used to avoid stock related side effects
+   */
+  private void stubUnresolvedOrderData(MockedStatic<OBDal> obDalMock, MockedStatic<SLOrderAmtData> orderAmtDataMock,
+      MockedStatic<SLOrderStockData> orderStockDataMock) {
+    obDalMock.when(OBDal::getInstance).thenReturn(obDal);
+    when(obDal.get(Order.class, ORDER_ID)).thenReturn(null);
+    when(obDal.get(Product.class, PRODUCT_ID)).thenReturn(product);
+
+    orderAmtDataMock.when(() -> SLOrderAmtData.select(callout, ORDER_ID)).thenReturn(new SLOrderAmtData[0]);
     orderStockDataMock.when(() -> SLOrderStockData.select(callout, PRODUCT_ID)).thenReturn(new SLOrderStockData[0]);
   }
 }
