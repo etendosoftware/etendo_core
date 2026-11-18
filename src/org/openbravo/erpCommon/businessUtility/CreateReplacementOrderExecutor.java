@@ -115,6 +115,7 @@ class CreateReplacementOrderExecutor extends CancelAndReplaceUtils {
         newOrderLine.setWarehouse(warehouse);
         newOrderLine.setDeliveredQuantity(BigDecimal.ZERO);
         newOrderLine.setReservedQuantity(BigDecimal.ZERO);
+        newOrderLine.setPhysicalReservedQuantity(BigDecimal.ZERO);
         newOrderLine.setInvoicedQuantity(BigDecimal.ZERO);
         newOrderLine.setSalesOrder(newOrder);
         newOrderLine.setReplacedorderline(oldOrderLine);

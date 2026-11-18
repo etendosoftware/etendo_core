@@ -361,6 +361,17 @@ BEGIN
         SET so_res_status = 'NR'
         WHERE c_orderline_id = v_orderline_id;
 
+        -- The reactivated reservation no longer holds stock. The line keeps the quantity of its
+        -- other active reservation, if any (a closed reservation can be reactivated while
+        -- another one is active).
+        UPDATE c_orderline
+        SET qtyphysicalreserved = (SELECT COALESCE(SUM(r.reservedqty), 0)
+                                   FROM m_reservation r
+                                   WHERE r.c_orderline_id = v_orderline_id
+                                     AND r.m_reservation_id <> v_reservation_id
+                                     AND r.res_status IN ('CO', 'HO'))
+        WHERE c_orderline_id = v_orderline_id;
+
         SELECT c_order_id
         INTO v_sales_order_id
         FROM c_orderline

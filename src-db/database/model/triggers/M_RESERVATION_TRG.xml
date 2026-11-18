@@ -49,7 +49,7 @@ BEGIN
 
   END IF;
   IF (UPDATING) THEN
-    IF ( :NEW.quantity <> :old.quantity OR :NEW.reservedqty <> :OLD.reservedqty) THEN
+    IF ( :NEW.quantity <> :old.quantity OR COALESCE(:NEW.reservedqty, 0) <> COALESCE(:OLD.reservedqty, 0)) THEN
       v_updateOrderAndLines := 'Y';
     END IF;
   END IF;
@@ -62,7 +62,8 @@ BEGIN
       SET so_res_status = CASE WHEN :NEW.quantity <= :NEW.reservedqty THEN 'CR'
                                WHEN :NEW.quantity > :NEW.reservedqty AND :NEW.reservedqty > 0 THEN 'PR'
                                ELSE 'NR'
-                          END
+                          END,
+          qtyphysicalreserved = COALESCE(:NEW.reservedqty, 0)
       WHERE c_orderline_id = :NEW.c_orderline_id;
 
       SELECT c_order_id INTO v_sales_order_id
@@ -83,6 +84,38 @@ BEGIN
                                ELSE 'NR'
                           END
       WHERE c_order_id = v_sales_order_id;
+    END IF;
+  END IF;
+
+  -- Keep the physically reserved quantity of the order line in sync with its active reservation
+  -- when the reservation status or its order line changes.
+  -- An order line can have only one active (completed or on hold) reservation, so the value is
+  -- taken from it without querying M_Reservation, which a row trigger cannot do on its own table.
+  -- Draft reservations do not hold stock and closed reservations keep the last value.
+  -- Reactivating a closed reservation is handled in M_RESERVATION_POST, because the line can
+  -- have another active reservation.
+  IF (UPDATING) THEN
+    IF (COALESCE(:OLD.c_orderline_id, '0') <> COALESCE(:NEW.c_orderline_id, '0')) THEN
+      IF (:OLD.c_orderline_id IS NOT NULL AND :OLD.res_status IN ('CO', 'HO')) THEN
+        UPDATE c_orderline
+        SET qtyphysicalreserved = 0
+        WHERE c_orderline_id = :OLD.c_orderline_id;
+      END IF;
+      IF (:NEW.c_orderline_id IS NOT NULL AND :NEW.res_status IN ('CO', 'HO')) THEN
+        UPDATE c_orderline
+        SET qtyphysicalreserved = COALESCE(:NEW.reservedqty, 0)
+        WHERE c_orderline_id = :NEW.c_orderline_id;
+      END IF;
+    ELSIF (:NEW.c_orderline_id IS NOT NULL AND :NEW.res_status <> :OLD.res_status) THEN
+      IF (:NEW.res_status IN ('CO', 'HO')) THEN
+        UPDATE c_orderline
+        SET qtyphysicalreserved = COALESCE(:NEW.reservedqty, 0)
+        WHERE c_orderline_id = :NEW.c_orderline_id;
+      ELSIF (:NEW.res_status = 'DR' AND :OLD.res_status IN ('CO', 'HO')) THEN
+        UPDATE c_orderline
+        SET qtyphysicalreserved = 0
+        WHERE c_orderline_id = :NEW.c_orderline_id;
+      END IF;
     END IF;
   END IF;
 

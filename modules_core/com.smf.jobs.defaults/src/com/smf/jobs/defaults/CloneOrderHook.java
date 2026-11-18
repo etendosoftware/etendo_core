@@ -101,6 +101,7 @@ public class CloneOrderHook extends CloneRecordHook {
             BigDecimal bdPriceList = getPriceList(ordLine.getProduct().getId(), strPriceVersionId);
             OrderLine objCloneOrdLine = (OrderLine) DalUtil.copy(ordLine, false);
             objCloneOrdLine.setReservedQuantity(new BigDecimal("0"));
+            objCloneOrdLine.setPhysicalReservedQuantity(BigDecimal.ZERO);
             objCloneOrdLine.setDeliveredQuantity(new BigDecimal("0"));
             objCloneOrdLine.setInvoicedQuantity(new BigDecimal("0"));
             if (bdPriceList != null && bdPriceList.compareTo(BigDecimal.ZERO) != 0) {

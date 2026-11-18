@@ -432,6 +432,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
     // Set inverse order delivered quantity zero
     inverseOrderLine.setDeliveredQuantity(BigDecimal.ZERO);
     inverseOrderLine.setReservedQuantity(BigDecimal.ZERO);
+    inverseOrderLine.setPhysicalReservedQuantity(BigDecimal.ZERO);
     inverseOrderLine.setInvoicedQuantity(BigDecimal.ZERO);
 
     inverseOrder.getOrderLineList().add(inverseOrderLine);
