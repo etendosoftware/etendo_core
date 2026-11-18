@@ -743,7 +743,7 @@ When saving the current unit costs will be deleted if the currency is changed. P
 <!--42B286FCB7054BD49A7FCDE676DB736A-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--42B286FCB7054BD49A7FCDE676DB736A-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--42B286FCB7054BD49A7FCDE676DB736A-->  <VALUE><![CDATA[OBUIAPP_gSignInButtonDemoCommunity]]></VALUE>
-<!--42B286FCB7054BD49A7FCDE676DB736A-->  <MSGTEXT><![CDATA[<a href="http://wiki.openbravo.com/wiki/Configuration_Manual/Google_Integration" target="_blank">Log in to application using Google Account</a> is a Premium Feature]]></MSGTEXT>
+<!--42B286FCB7054BD49A7FCDE676DB736A-->  <MSGTEXT><![CDATA[<a href="https://docs.etendo.software/developer-guide/etendo-classic/concepts/authentication/" target="_blank">Log in to application using Google Account</a> is a Premium Feature.]]></MSGTEXT>
 <!--42B286FCB7054BD49A7FCDE676DB736A-->  <MSGTYPE><![CDATA[I]]></MSGTYPE>
 <!--42B286FCB7054BD49A7FCDE676DB736A-->  <AD_MODULE_ID><![CDATA[9BA0836A3CD74EE4AB48753A47211BCC]]></AD_MODULE_ID>
 <!--42B286FCB7054BD49A7FCDE676DB736A-->  <ISINCLUDEINI18N><![CDATA[N]]></ISINCLUDEINI18N>
@@ -3403,7 +3403,7 @@ Please save or discard them before add or remove a note.]]></MSGTEXT>
 <!--FF8080813198F7290131995F17A8004E-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--FF8080813198F7290131995F17A8004E-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--FF8080813198F7290131995F17A8004E-->  <VALUE><![CDATA[OBUIAPP_ActivateMessagePersonalization]]></VALUE>
-<!--FF8080813198F7290131995F17A8004E-->  <MSGTEXT><![CDATA[<a href="http://wiki.openbravo.com/wiki/User_Manual/Window_Personalization" target="_blank">Form Personalization</a> is a Premium Feature]]></MSGTEXT>
+<!--FF8080813198F7290131995F17A8004E-->  <MSGTEXT><![CDATA[<a href="https://docs.etendo.software/getting-started/user-interface/grid-and-forms/#form-personalization" target="_blank">Form Personalization</a> is a Premium Feature.]]></MSGTEXT>
 <!--FF8080813198F7290131995F17A8004E-->  <MSGTYPE><![CDATA[I]]></MSGTYPE>
 <!--FF8080813198F7290131995F17A8004E-->  <AD_MODULE_ID><![CDATA[9BA0836A3CD74EE4AB48753A47211BCC]]></AD_MODULE_ID>
 <!--FF8080813198F7290131995F17A8004E-->  <ISINCLUDEINI18N><![CDATA[N]]></ISINCLUDEINI18N>
@@ -5284,7 +5284,7 @@ Please <b>logout</b> from the application unless your access is authorised by th
 <!--FF80818132D5240F0132D856F3D20023-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--FF80818132D5240F0132D856F3D20023-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--FF80818132D5240F0132D856F3D20023-->  <VALUE><![CDATA[OBUIAPP_ActivateMessageWindowPersonalization]]></VALUE>
-<!--FF80818132D5240F0132D856F3D20023-->  <MSGTEXT><![CDATA[<a href="http://wiki.openbravo.com/wiki/User_Manual/Window_Personalization#Saved_and_Named_Views" target="_blank">Window Personalization</a> is a Premium Feature]]></MSGTEXT>
+<!--FF80818132D5240F0132D856F3D20023-->  <MSGTEXT><![CDATA[<a href="https://docs.etendo.software/user-guide/etendo-classic/basic-features/general-setup/application/window-personalization/" target="_blank">Window Personalization</a> is a Premium Feature.]]></MSGTEXT>
 <!--FF80818132D5240F0132D856F3D20023-->  <MSGTYPE><![CDATA[I]]></MSGTYPE>
 <!--FF80818132D5240F0132D856F3D20023-->  <AD_MODULE_ID><![CDATA[9BA0836A3CD74EE4AB48753A47211BCC]]></AD_MODULE_ID>
 <!--FF80818132D5240F0132D856F3D20023-->  <ISINCLUDEINI18N><![CDATA[N]]></ISINCLUDEINI18N>
