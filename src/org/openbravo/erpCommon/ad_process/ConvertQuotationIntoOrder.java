@@ -224,6 +224,7 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
       // Set last values of new Sales Order line
       newSalesOrderLine.setSalesOrder(newSalesOrder);
       newSalesOrderLine.setReservedQuantity(BigDecimal.ZERO);
+      newSalesOrderLine.setPhysicalReservedQuantity(BigDecimal.ZERO);
       newSalesOrderLine.setDeliveredQuantity(BigDecimal.ZERO);
       newSalesOrderLine.setInvoicedQuantity(BigDecimal.ZERO);
       newSalesOrderLine.setQuotationLine(quotationLine);
