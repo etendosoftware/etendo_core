@@ -25,14 +25,20 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONObject;
@@ -45,6 +51,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_process.HeartbeatProcess;
@@ -81,6 +88,13 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   private static final String PURPOSE_TRIAL = "TRIAL";
   private static final String PURPOSE_PRODUCTION = "PRODUCTION";
   private static final String MSG_KEYS_MUST_BE_RESOLVED = "Message keys must be resolved: ";
+  private static final String TYPE_SUCCESS = "Success";
+  private static final String MSG_SUCCESS_KEY = "@Success@";
+  private static final String PARAM_ACTIVATION_KEY = "activationKey";
+  private static final String UPLOAD_CONTENT = "content";
+  private static final String UPLOAD_FILE_NAME = "fileName";
+  private static final String UPLOAD_FILE_SIZE = "size";
+  private static final String UPLOADED_FILE_NAME = "activation-file.xml";
 
   private InstanceManagementAction instanceManagementAction;
   private JSONObject parameters;
@@ -90,6 +104,9 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // These tests execute the activation/deactivation logic against the real database, so make
+    // sure nothing is committed and the instance activation state is left untouched.
+    SessionHandler.getInstance().setDoRollback(true);
     OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
         TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
     VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
@@ -533,9 +550,69 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     }
   }
 
+  /**
+   * Runs INSTALLFILE the way the UI does: the JSON parameters only hold the name of the file, and
+   * the file itself is available in the request parameters. Returns the activation key that was
+   * handed to ActiveInstanceProcess.
+   */
+  private Object runInstallFileAndCaptureActivationKey(Map<String, Object> requestParameters)
+      throws Exception {
+    InstanceManagementAction action = new InstanceManagementAction() {
+      @Override
+      protected Map<String, Object> getRequestParameters() {
+        return requestParameters;
+      }
+    };
+    parameters.put(PARAM_COMMAND, CMD_INSTALL_FILE);
+    parameters.put(PARAM_PUBLIC_KEY, TEST_PUBLIC_KEY);
+    parameters.put(PARAM_FILE_CONTENT, UPLOADED_FILE_NAME);
+
+    AtomicReference<Object> activationKey = new AtomicReference<>();
+    try (MockedConstruction<ActiveInstanceProcess> ignored = mockConstruction(
+        ActiveInstanceProcess.class, (mockProcess, context) -> doAnswer(inv -> {
+          ProcessBundle bundle = inv.getArgument(0);
+          activationKey.set(bundle.getParams().get(PARAM_ACTIVATION_KEY));
+          OBError ok = new OBError();
+          ok.setType(TYPE_SUCCESS);
+          ok.setMessage(MSG_SUCCESS_KEY);
+          bundle.setResult(ok);
+          return null;
+        }).when(mockProcess).execute(any(ProcessBundle.class)))) {
+      action.action(parameters, isStopped);
+    }
+    return activationKey.get();
+  }
+
+  /**
+   * Regression test: when the activation file is uploaded from the UI, its content must be read
+   * from the uploaded file and not from the "fileContent" JSON parameter, which only contains the
+   * file name. Using the name as activation key made the installation always fail with "The
+   * activation key is not signed by Etendo".
+   */
+  @Test
+  public void testInstallFileReadsContentFromUploadedFile() throws Exception {
+    String fileContent = "uploaded-activation-file-content";
+    Map<String, Object> uploadedFile = Map.of(
+        UPLOAD_CONTENT, new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)),
+        UPLOAD_FILE_NAME, UPLOADED_FILE_NAME,
+        UPLOAD_FILE_SIZE, (long) fileContent.length());
+
+    Object activationKey = runInstallFileAndCaptureActivationKey(
+        Map.of(PARAM_FILE_CONTENT, uploadedFile));
+
+    assertEquals(fileContent, activationKey);
+  }
+
+  @Test
+  public void testInstallFileFallsBackToJsonFileContentWithoutUploadedFile() throws Exception {
+    Object activationKey = runInstallFileAndCaptureActivationKey(Collections.emptyMap());
+
+    assertEquals(UPLOADED_FILE_NAME, activationKey);
+  }
+
   @Test
   public void testInstallFileSuccessMessageKeyIsTranslated() throws Exception {
-    ActionResult result = runInstallFileWithProcessResult("Success", "@Success@");
+    ActionResult result = runInstallFileWithProcessResult(TYPE_SUCCESS, MSG_SUCCESS_KEY);
 
     assertNotNull(result);
     assertEquals(Result.Type.SUCCESS, result.getType());
@@ -824,6 +901,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
    */
   @After
   public void cleanUp() {
+    SessionHandler.getInstance().setDoRollback(true);
     try {
       OBContext.setAdminMode();
     } finally {

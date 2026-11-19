@@ -19,9 +19,12 @@
 
 package org.openbravo.erpCommon.instancemanagement;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.enterprise.context.Dependent;
 
@@ -134,6 +137,26 @@ public class InstanceManagementAction extends Action {
       }
     }
     return value;
+  }
+
+  /**
+   * Returns the content of the activation file. When the process is executed from the UI, the file
+   * is sent as a binary part of a multipart request, so it is available in the request parameters
+   * as an InputStream and not in the JSON parameters (which only hold the file name). If there is
+   * no uploaded file, the "fileContent" JSON parameter is used instead; it may be percent-encoded
+   * when it comes from the classic UI.
+   */
+  private String readFileContent(JSONObject parameters) throws IOException {
+    Map<String, Object> requestParameters = getRequestParameters();
+    if (requestParameters != null && requestParameters.get(FILE_CONTENT) instanceof Map) {
+      Object content = ((Map<?, ?>) requestParameters.get(FILE_CONTENT)).get(PARAM_FILE_CONTENT);
+      if (content instanceof InputStream) {
+        try (InputStream in = (InputStream) content) {
+          return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+      }
+    }
+    return urlDecodeIfNeeded(parameters.optString(FILE_CONTENT));
   }
 
   /**
@@ -361,8 +384,7 @@ public class InstanceManagementAction extends Action {
           publicKey = ak.getPublicKey();
         }
       }
-      // File content may also be percent-encoded when uploaded through the classic UI.
-      String fileContent = urlDecodeIfNeeded(parameters.optString(FILE_CONTENT));
+      String fileContent = readFileContent(parameters);
 
       if (fileContent == null || fileContent.isEmpty()) {
         result.setType(Result.Type.ERROR);
