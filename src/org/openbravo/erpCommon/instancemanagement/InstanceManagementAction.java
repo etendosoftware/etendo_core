@@ -137,6 +137,15 @@ public class InstanceManagementAction extends Action {
   }
 
   /**
+   * Resolves the message keys (e.g. @Success@) of a message into their translated text using the
+   * current user language. Unknown keys are left untouched.
+   */
+  private String translate(String message) {
+    VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
+    return Utility.parseTranslation(new DalConnectionProvider(false), vars, vars.getLanguage(), message);
+  }
+
+  /**
    * Handles the activation of an instance
    */
   private ActionResult handleActivate(JSONObject parameters) {
@@ -158,12 +167,13 @@ public class InstanceManagementAction extends Action {
       String purpose = parameters.optString(PURPOSE, "");
       String instanceNo = parameters.optString(INSTANCE_NO, "");
       OBError processResult = activateCancelRemote(publicKey, purpose, instanceNo, true);
+      String processMessage = translate(processResult.getMessage());
 
       if (StringUtils.equals(SUCCESS, processResult.getType())) {
         result.setType(Result.Type.SUCCESS);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS,
-            processResult.getMessage());
+            processMessage);
         responseActions.setRefreshParent(true);
 
         // Check for heartbeat warning
@@ -181,9 +191,9 @@ public class InstanceManagementAction extends Action {
         }
       } else {
         result.setType(Result.Type.ERROR);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.ERROR,
-            processResult.getMessage());
+            processMessage);
 
         // Enable retry on failure
         responseActions.retryExecution();
@@ -299,18 +309,19 @@ public class InstanceManagementAction extends Action {
       String purpose = ActivationKey.getInstance().getProperty(PURPOSE);
 
       OBError processResult = activateCancelRemote(publicKey, purpose, instanceNo, false);
+      String processMessage = translate(processResult.getMessage());
 
       if (StringUtils.equals(SUCCESS, processResult.getType())) {
         result.setType(Result.Type.SUCCESS);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS,
-            processResult.getMessage());
+            processMessage);
         responseActions.setRefreshParent(true);
       } else {
         result.setType(Result.Type.ERROR);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.ERROR,
-            processResult.getMessage());
+            processMessage);
 
         // Enable retry on failure
         responseActions.retryExecution();
@@ -381,13 +392,14 @@ public class InstanceManagementAction extends Action {
 
       OBError msg = (OBError) pb.getResult();
       Result.Type resultType = Result.Type.valueOf(msg.getType().toUpperCase());
+      String translatedMessage = translate(msg.getMessage());
       result.setType(resultType);
-      result.setMessage(msg.getMessage());
+      result.setMessage(translatedMessage);
 
       // Show message based on result type
       ResponseActionsBuilder.MessageType msgType = ResponseActionsBuilder.MessageType.valueOf(
           msg.getType().toUpperCase());
-      responseActions.showMsgInProcessView(msgType, msg.getMessage());
+      responseActions.showMsgInProcessView(msgType, translatedMessage);
 
       if (resultType == Result.Type.SUCCESS) {
         responseActions.setRefreshParent(true);

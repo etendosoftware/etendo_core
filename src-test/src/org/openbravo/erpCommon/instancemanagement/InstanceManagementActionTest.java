@@ -22,9 +22,11 @@ package org.openbravo.erpCommon.instancemanagement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +39,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -49,6 +52,7 @@ import org.openbravo.erpCommon.obps.ActivationKey;
 import org.openbravo.erpCommon.obps.ActiveInstanceProcess;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.module.Module;
+import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.model.ad.system.System;
 import org.openbravo.test.base.TestConstants;
 
@@ -491,6 +495,98 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     assertNotNull(result);
     assertEquals(Result.Type.ERROR, result.getType());
     assertTrue(result.getMessage().contains("failed") || result.getMessage().length() > 0);
+  }
+
+  /**
+   * Runs INSTALLFILE with ActiveInstanceProcess mocked so that it leaves the given OBError in the
+   * process bundle.
+   */
+  private ActionResult runInstallFileWithProcessResult(String type, String message)
+      throws Exception {
+    parameters.put("command", "INSTALLFILE");
+    parameters.put("publicKey", "test-public-key");
+    parameters.put("fileContent", "SOME_ACTIVATION_KEY_DATA");
+    try (MockedConstruction<ActiveInstanceProcess> ignored = mockConstruction(
+        ActiveInstanceProcess.class, (mockProcess, context) -> org.mockito.Mockito.doAnswer(inv -> {
+          OBError error = new OBError();
+          error.setType(type);
+          error.setMessage(message);
+          ((ProcessBundle) inv.getArgument(0)).setResult(error);
+          return null;
+        }).when(mockProcess).execute(any(ProcessBundle.class)))) {
+      return instanceManagementAction.action(parameters, isStopped);
+    }
+  }
+
+  @Test
+  public void testInstallFileSuccessMessageKeyIsTranslated() throws Exception {
+    ActionResult result = runInstallFileWithProcessResult("Success", "@Success@");
+
+    assertNotNull(result);
+    assertEquals(Result.Type.SUCCESS, result.getType());
+    assertNotNull(result.getMessage());
+    assertFalse("Message keys must be resolved: " + result.getMessage(),
+        result.getMessage().contains("@"));
+  }
+
+  @Test
+  public void testInstallFileNotSignedMessageKeyIsTranslated() throws Exception {
+    ActionResult result = runInstallFileWithProcessResult("Error", "@NotSigned@");
+
+    assertNotNull(result);
+    assertEquals(Result.Type.ERROR, result.getType());
+    assertFalse("Message keys must be resolved: " + result.getMessage(),
+        result.getMessage().contains("@"));
+    assertTrue("Expected the translated NotSigned text but got: " + result.getMessage(),
+        result.getMessage().toLowerCase().contains("not signed"));
+  }
+
+  @Test
+  public void testCancelWSErrorMessageKeyIsTranslated() throws Exception {
+    InstanceManagementAction testAction = new InstanceManagementAction() {
+      @Override
+      protected OBError activateCancelRemote(String publicKey, String purpose, String instanceNo,
+          boolean activate) {
+        OBError err = new OBError();
+        err.setType("Error");
+        err.setMessage("@WSError@");
+        return err;
+      }
+    };
+    setActivationKeyProperties("123", "PRODUCTION");
+
+    parameters.put("command", "CANCEL");
+    ActionResult result = testAction.action(parameters, isStopped);
+
+    assertNotNull(result);
+    assertEquals(Result.Type.ERROR, result.getType());
+    assertFalse("Message keys must be resolved: " + result.getMessage(),
+        result.getMessage().contains("@"));
+  }
+
+  @Test
+  public void testActivateWSErrorMessageKeyIsTranslated() throws Exception {
+    InstanceManagementAction testAction = new InstanceManagementAction() {
+      @Override
+      protected OBError activateCancelRemote(String publicKey, String purpose, String instanceNo,
+          boolean activate) {
+        OBError err = new OBError();
+        err.setType("Error");
+        err.setMessage("@WSError@");
+        return err;
+      }
+    };
+
+    parameters.put("command", "ACTIVATE");
+    parameters.put("publicKey", "test-public-key");
+    parameters.put("purpose", "TRIAL");
+    parameters.put("instanceNo", "999");
+    ActionResult result = testAction.action(parameters, isStopped);
+
+    assertNotNull(result);
+    assertEquals(Result.Type.ERROR, result.getType());
+    assertFalse("Message keys must be resolved: " + result.getMessage(),
+        result.getMessage().contains("@"));
   }
 
   @Test
