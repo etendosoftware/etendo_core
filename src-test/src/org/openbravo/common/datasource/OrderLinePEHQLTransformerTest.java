@@ -208,4 +208,34 @@ public class OrderLinePEHQLTransformerTest {
     assertFalse(result.contains("e.client.id in"));
     assertFalse(result.contains("e.organization in"));
   }
+
+  /**
+   * Tests that, for a sales transaction, the query hides fully invoiced order lines
+   * unless the product has the "Is Quantity Variable" flag enabled.
+   */
+  @Test
+  public void testTransformHqlQuerySalesTransactionFiltersFullyInvoicedLines() {
+    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
+    staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
+
+    String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
+
+    assertAll(() -> assertTrue(result.contains("e.orderedQuantity - COALESCE(e.invoicedQuantity, 0) <> 0")),
+        () -> assertTrue(result.contains("p.id = e.product.id and p.isquantityvariable = true")));
+  }
+
+  /**
+   * Tests that, for a purchase transaction, the fully invoiced lines filter based on the
+   * "Is Quantity Variable" flag is not applied.
+   */
+  @Test
+  public void testTransformHqlQueryPurchaseTransactionDoesNotApplyQuantityVariableFilter() {
+    requestParameters.put(SALES_TRANSACTION_PARAM, "false");
+    staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
+
+    String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
+
+    assertAll(() -> assertFalse(result.contains("e.orderedQuantity - COALESCE(e.invoicedQuantity, 0) <> 0")),
+        () -> assertFalse(result.contains("isquantityvariable")));
+  }
 }
