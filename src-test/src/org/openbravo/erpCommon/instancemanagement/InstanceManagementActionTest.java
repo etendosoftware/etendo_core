@@ -52,8 +52,8 @@ import org.openbravo.erpCommon.obps.ActivationKey;
 import org.openbravo.erpCommon.obps.ActiveInstanceProcess;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.module.Module;
-import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.model.ad.system.System;
+import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.test.base.TestConstants;
 
 import com.smf.jobs.ActionResult;
@@ -66,6 +66,21 @@ import com.smf.jobs.Result;
  * @author Etendo
  */
 public class InstanceManagementActionTest extends WeldBaseTest {
+
+  private static final String PARAM_COMMAND = "command";
+  private static final String PARAM_PUBLIC_KEY = "publicKey";
+  private static final String PARAM_PURPOSE = "purpose";
+  private static final String PARAM_INSTANCE_NO = "instanceNo";
+  private static final String PARAM_FILE_CONTENT = "fileContent";
+  private static final String CMD_INSTALL_FILE = "INSTALLFILE";
+  private static final String CMD_ACTIVATE = "ACTIVATE";
+  private static final String CMD_CANCEL = "CANCEL";
+  private static final String CMD_DEACTIVATE = "DEACTIVATE";
+  private static final String TEST_PUBLIC_KEY = "test-public-key";
+  private static final String TYPE_ERROR = "Error";
+  private static final String PURPOSE_TRIAL = "TRIAL";
+  private static final String PURPOSE_PRODUCTION = "PRODUCTION";
+  private static final String MSG_KEYS_MUST_BE_RESOLVED = "Message keys must be resolved: ";
 
   private InstanceManagementAction instanceManagementAction;
   private JSONObject parameters;
@@ -102,7 +117,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionDefaultCommand() throws Exception {
     // Given
-    parameters.put("command", "DEFAULT");
+    parameters.put(PARAM_COMMAND, "DEFAULT");
 
     // When
     ActionResult result = instanceManagementAction.action(parameters, isStopped);
@@ -116,8 +131,8 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionInstallFileCommandWithoutFileContent() throws Exception {
     // Given
-    parameters.put("command", "INSTALLFILE");
-    parameters.put("publicKey", "test-public-key");
+    parameters.put(PARAM_COMMAND, CMD_INSTALL_FILE);
+    parameters.put(PARAM_PUBLIC_KEY, TEST_PUBLIC_KEY);
     // No fileContent parameter
 
     // When - Execute without mocking (will fail gracefully)
@@ -132,7 +147,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionWithException() throws Exception {
     // Given
-    parameters.put("command", "ACTIVATE");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
     // Create invalid parameters that will cause an exception
     parameters = null;
 
@@ -142,7 +157,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     // Then
     assertNotNull(result);
     assertEquals(Result.Type.ERROR, result.getType());
-    assertTrue(result.getMessage().contains("Error"));
+    assertTrue(result.getMessage().contains(TYPE_ERROR));
   }
 
   @Test
@@ -168,10 +183,10 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   public void testActionActivateWithTrialPurpose() throws Exception {
     // Given - This test specifically targets the heartbeat warning path
     // by using TRIAL purpose which could trigger the heartbeat check
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", "trial-test-key-456");
-    parameters.put("purpose", "TRIAL");
-    parameters.put("instanceNo", "789");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, "trial-test-key-456");
+    parameters.put(PARAM_PURPOSE, PURPOSE_TRIAL);
+    parameters.put(PARAM_INSTANCE_NO, "789");
 
     // When - Execute activation with TRIAL purpose
     ActionResult result = instanceManagementAction.action(parameters, isStopped);
@@ -201,7 +216,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     // Given - Test to cover lines 223-244 (ELSE block when deactivable = true)
     // This test verifies successful deactivation when NO commercial modules are installed
     // We create a subclass that overrides the OBCriteria to return empty list
-    parameters.put("command", "DEACTIVATE");
+    parameters.put(PARAM_COMMAND, CMD_DEACTIVATE);
 
     // Create a custom action that simulates no commercial modules
     InstanceManagementAction testAction = new InstanceManagementAction() {
@@ -251,7 +266,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   public void testHandleDeactivateIfBlockWithCommercialModules() throws Exception {
     // Given - Test to cover lines 213-222 (IF block when deactivable = false)
     // This test verifies error when commercial modules ARE installed
-    parameters.put("command", "DEACTIVATE");
+    parameters.put(PARAM_COMMAND, CMD_DEACTIVATE);
 
     // When - Execute deactivation
     // Note: This will pass/fail based on whether commercial modules exist in test DB
@@ -285,7 +300,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testHandleDeactivateElseForcedByMocks() throws Exception {
     // Given - force ELSE branch by mocking criteria to return empty list (no commercial modules)
-    parameters.put("command", "DEACTIVATE");
+    parameters.put(PARAM_COMMAND, CMD_DEACTIVATE);
 
     // Prepare static and instance mocks
     try (MockedStatic<OBDal> mockedOBDal = mockStatic(OBDal.class);
@@ -361,7 +376,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
           .thenAnswer(invocation -> null);
       mockedHB.when(() -> HeartbeatProcess.isClonedInstance()).thenReturn(false);
 
-      parameters.put("command", "DEACTIVATE");
+      parameters.put(PARAM_COMMAND, CMD_DEACTIVATE);
       ActionResult resultIf = testAction.action(parameters, isStopped);
       assertNotNull(resultIf);
       assertEquals(Result.Type.ERROR, resultIf.getType());
@@ -390,7 +405,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
           .thenAnswer(invocation -> null);
       mockedHB.when(() -> HeartbeatProcess.isClonedInstance()).thenReturn(false);
 
-      parameters.put("command", "DEACTIVATE");
+      parameters.put(PARAM_COMMAND, CMD_DEACTIVATE);
       ActionResult resultElse = testAction.action(parameters, isStopped);
       assertNotNull(resultElse);
       assertEquals(Result.Type.SUCCESS, resultElse.getType());
@@ -401,7 +416,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionCancelVerifyBothPaths() throws Exception {
     // Given - Execute cancel multiple times to potentially hit both SUCCESS and ERROR paths
-    parameters.put("command", "CANCEL");
+    parameters.put(PARAM_COMMAND, CMD_CANCEL);
 
     // When - First execution
     ActionResult result1 = instanceManagementAction.action(parameters, isStopped);
@@ -453,9 +468,9 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     }
 
     // Ensure ActivationKey has instance properties to avoid NPE in getProperty()
-    setActivationKeyProperties("123", "PRODUCTION");
+    setActivationKeyProperties("123", PURPOSE_PRODUCTION);
 
-    parameters.put("command", "CANCEL");
+    parameters.put(PARAM_COMMAND, CMD_CANCEL);
     ActionResult result = testAction.action(parameters, isStopped);
     assertNotNull(result);
     assertEquals(Result.Type.SUCCESS, result.getType());
@@ -469,7 +484,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       protected OBError activateCancelRemote(String publicKey, String purpose, String instanceNo,
           boolean activate) {
         OBError err = new OBError();
-        err.setType("Error");
+        err.setType(TYPE_ERROR);
         err.setMessage("Remote cancel failed");
         return err;
       }
@@ -488,9 +503,9 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     }
 
     // Ensure ActivationKey has instance properties to avoid NPE in getProperty()
-    setActivationKeyProperties("123", "PRODUCTION");
+    setActivationKeyProperties("123", PURPOSE_PRODUCTION);
 
-    parameters.put("command", "CANCEL");
+    parameters.put(PARAM_COMMAND, CMD_CANCEL);
     ActionResult result = testAction.action(parameters, isStopped);
     assertNotNull(result);
     assertEquals(Result.Type.ERROR, result.getType());
@@ -503,9 +518,9 @@ public class InstanceManagementActionTest extends WeldBaseTest {
    */
   private ActionResult runInstallFileWithProcessResult(String type, String message)
       throws Exception {
-    parameters.put("command", "INSTALLFILE");
-    parameters.put("publicKey", "test-public-key");
-    parameters.put("fileContent", "SOME_ACTIVATION_KEY_DATA");
+    parameters.put(PARAM_COMMAND, CMD_INSTALL_FILE);
+    parameters.put(PARAM_PUBLIC_KEY, TEST_PUBLIC_KEY);
+    parameters.put(PARAM_FILE_CONTENT, "SOME_ACTIVATION_KEY_DATA");
     try (MockedConstruction<ActiveInstanceProcess> ignored = mockConstruction(
         ActiveInstanceProcess.class, (mockProcess, context) -> org.mockito.Mockito.doAnswer(inv -> {
           OBError error = new OBError();
@@ -525,17 +540,17 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     assertNotNull(result);
     assertEquals(Result.Type.SUCCESS, result.getType());
     assertNotNull(result.getMessage());
-    assertFalse("Message keys must be resolved: " + result.getMessage(),
+    assertFalse(MSG_KEYS_MUST_BE_RESOLVED + result.getMessage(),
         result.getMessage().contains("@"));
   }
 
   @Test
   public void testInstallFileNotSignedMessageKeyIsTranslated() throws Exception {
-    ActionResult result = runInstallFileWithProcessResult("Error", "@NotSigned@");
+    ActionResult result = runInstallFileWithProcessResult(TYPE_ERROR, "@NotSigned@");
 
     assertNotNull(result);
     assertEquals(Result.Type.ERROR, result.getType());
-    assertFalse("Message keys must be resolved: " + result.getMessage(),
+    assertFalse(MSG_KEYS_MUST_BE_RESOLVED + result.getMessage(),
         result.getMessage().contains("@"));
     assertTrue("Expected the translated NotSigned text but got: " + result.getMessage(),
         result.getMessage().toLowerCase().contains("not signed"));
@@ -548,19 +563,19 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       protected OBError activateCancelRemote(String publicKey, String purpose, String instanceNo,
           boolean activate) {
         OBError err = new OBError();
-        err.setType("Error");
+        err.setType(TYPE_ERROR);
         err.setMessage("@WSError@");
         return err;
       }
     };
-    setActivationKeyProperties("123", "PRODUCTION");
+    setActivationKeyProperties("123", PURPOSE_PRODUCTION);
 
-    parameters.put("command", "CANCEL");
+    parameters.put(PARAM_COMMAND, CMD_CANCEL);
     ActionResult result = testAction.action(parameters, isStopped);
 
     assertNotNull(result);
     assertEquals(Result.Type.ERROR, result.getType());
-    assertFalse("Message keys must be resolved: " + result.getMessage(),
+    assertFalse(MSG_KEYS_MUST_BE_RESOLVED + result.getMessage(),
         result.getMessage().contains("@"));
   }
 
@@ -571,30 +586,30 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       protected OBError activateCancelRemote(String publicKey, String purpose, String instanceNo,
           boolean activate) {
         OBError err = new OBError();
-        err.setType("Error");
+        err.setType(TYPE_ERROR);
         err.setMessage("@WSError@");
         return err;
       }
     };
 
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", "test-public-key");
-    parameters.put("purpose", "TRIAL");
-    parameters.put("instanceNo", "999");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, TEST_PUBLIC_KEY);
+    parameters.put(PARAM_PURPOSE, PURPOSE_TRIAL);
+    parameters.put(PARAM_INSTANCE_NO, "999");
     ActionResult result = testAction.action(parameters, isStopped);
 
     assertNotNull(result);
     assertEquals(Result.Type.ERROR, result.getType());
-    assertFalse("Message keys must be resolved: " + result.getMessage(),
+    assertFalse(MSG_KEYS_MUST_BE_RESOLVED + result.getMessage(),
         result.getMessage().contains("@"));
   }
 
   @Test
   public void testActionInstallFileWithValidContent() throws Exception {
     // Given - This test covers the path after file content validation in handleInstallFile
-    parameters.put("command", "INSTALLFILE");
-    parameters.put("publicKey", "test-key-789");
-    parameters.put("fileContent", "VALID_ACTIVATION_KEY_CONTENT_HERE");
+    parameters.put(PARAM_COMMAND, CMD_INSTALL_FILE);
+    parameters.put(PARAM_PUBLIC_KEY, "test-key-789");
+    parameters.put(PARAM_FILE_CONTENT, "VALID_ACTIVATION_KEY_CONTENT_HERE");
 
     // When - Execute install file with valid content
     ActionResult result = instanceManagementAction.action(parameters, isStopped);
@@ -612,10 +627,10 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionActivateWithEmptyPublicKey() throws Exception {
     // Given - This test covers activation with empty public key (will try to get from ActivationKey)
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", "");
-    parameters.put("purpose", "TRIAL");
-    parameters.put("instanceNo", "999");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, "");
+    parameters.put(PARAM_PURPOSE, PURPOSE_TRIAL);
+    parameters.put(PARAM_INSTANCE_NO, "999");
 
     // When - Execute activation
     ActionResult result = instanceManagementAction.action(parameters, isStopped);
@@ -633,9 +648,9 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionInstallFileWithEmptyPublicKey() throws Exception {
     // Given - This test covers install file with empty public key
-    parameters.put("command", "INSTALLFILE");
-    parameters.put("publicKey", "");
-    parameters.put("fileContent", "SOME_ACTIVATION_KEY_DATA");
+    parameters.put(PARAM_COMMAND, CMD_INSTALL_FILE);
+    parameters.put(PARAM_PUBLIC_KEY, "");
+    parameters.put(PARAM_FILE_CONTENT, "SOME_ACTIVATION_KEY_DATA");
 
     // When
     ActionResult result = instanceManagementAction.action(parameters, isStopped);
@@ -653,7 +668,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   @Test
   public void testActionWithStoppedFlag() throws Exception {
     // Given - Test with isStopped flag
-    parameters.put("command", "DEFAULT");
+    parameters.put(PARAM_COMMAND, "DEFAULT");
     isStopped.setValue(true);
 
     // When
@@ -683,10 +698,10 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       }
     };
 
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", "test-key");
-    parameters.put("purpose", "PRODUCTION");
-    parameters.put("instanceNo", "123");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, "test-key");
+    parameters.put(PARAM_PURPOSE, PURPOSE_PRODUCTION);
+    parameters.put(PARAM_INSTANCE_NO, "123");
 
     // When - Execute with the test action that returns Success
     ActionResult result = testAction.action(parameters, isStopped);
@@ -724,10 +739,10 @@ public class InstanceManagementActionTest extends WeldBaseTest {
     // Given - Test to cover lines 161-168 when processResult.getType() does NOT equal "Success"
     // This test specifically targets the ELSE branch (false case)
     // We use invalid/malformed parameters to trigger an error from activateCancelRemote
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", ""); // Empty public key should cause failure
-    parameters.put("purpose", "INVALID_PURPOSE");
-    parameters.put("instanceNo", "");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, ""); // Empty public key should cause failure
+    parameters.put(PARAM_PURPOSE, "INVALID_PURPOSE");
+    parameters.put(PARAM_INSTANCE_NO, "");
 
     // When - Execute activation that should fail
     ActionResult result = instanceManagementAction.action(parameters, isStopped);
@@ -761,10 +776,10 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       }
     };
 
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", "test-public-key");
-    parameters.put("purpose", "PRODUCTION");
-    parameters.put("instanceNo", "12345");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, TEST_PUBLIC_KEY);
+    parameters.put(PARAM_PURPOSE, PURPOSE_PRODUCTION);
+    parameters.put(PARAM_INSTANCE_NO, "12345");
 
     ActionResult result = testAction.action(parameters, isStopped);
 
@@ -784,16 +799,16 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       protected OBError activateCancelRemote(String publicKey, String purpose, String instanceNo,
           boolean activate) {
         OBError errorResult = new OBError();
-        errorResult.setType("Error");
+        errorResult.setType(TYPE_ERROR);
         errorResult.setMessage("Activation failed");
         return errorResult;
       }
     };
 
-    parameters.put("command", "ACTIVATE");
-    parameters.put("publicKey", "test-public-key");
-    parameters.put("purpose", "PRODUCTION");
-    parameters.put("instanceNo", "12345");
+    parameters.put(PARAM_COMMAND, CMD_ACTIVATE);
+    parameters.put(PARAM_PUBLIC_KEY, TEST_PUBLIC_KEY);
+    parameters.put(PARAM_PURPOSE, PURPOSE_PRODUCTION);
+    parameters.put(PARAM_INSTANCE_NO, "12345");
 
     ActionResult result = testAction.action(parameters, isStopped);
 
@@ -822,10 +837,10 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       ActivationKey ak = ActivationKey.getInstance();
       Properties props = new Properties();
       if (instanceNo != null) {
-        props.setProperty("instanceNo", instanceNo);
+        props.setProperty(PARAM_INSTANCE_NO, instanceNo);
       }
       if (purpose != null) {
-        props.setProperty("purpose", purpose);
+        props.setProperty(PARAM_PURPOSE, purpose);
       }
       Field f = ActivationKey.class.getDeclaredField("instanceProperties");
       f.setAccessible(true);
