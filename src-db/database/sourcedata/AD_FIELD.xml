@@ -14412,7 +14412,7 @@ Price Lists are used to determine the pricing, margin and cost of items purchase
 <!--1085-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--1085-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--1085-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--1085-->  <SEQNO><![CDATA[20]]></SEQNO>
+<!--1085-->  <SEQNO><![CDATA[50]]></SEQNO>
 <!--1085-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--1085-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--1085-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -21720,7 +21720,7 @@ Usually, company's internal identifiers for various records (products, customers
 <!--1573-->  <DISPLAYLOGIC><![CDATA[@ACCT_DIMENSION_DISPLAY@]]></DISPLAYLOGIC>
 <!--1573-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--1573-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--1573-->  <SEQNO><![CDATA[50]]></SEQNO>
+<!--1573-->  <SEQNO><![CDATA[20]]></SEQNO>
 <!--1573-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--1573-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--1573-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -35141,7 +35141,7 @@ Usually, company's internal identifiers for various records (products, customers
 <!--2766-->  <DISPLAYLOGIC><![CDATA[@ACCT_DIMENSION_DISPLAY@]]></DISPLAYLOGIC>
 <!--2766-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--2766-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--2766-->  <SEQNO><![CDATA[50]]></SEQNO>
+<!--2766-->  <SEQNO><![CDATA[20]]></SEQNO>
 <!--2766-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--2766-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--2766-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -36528,7 +36528,7 @@ Usually, company's internal identifiers for various records (products, customers
 <!--2928-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--2928-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--2928-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--2928-->  <SEQNO><![CDATA[50]]></SEQNO>
+<!--2928-->  <SEQNO><![CDATA[20]]></SEQNO>
 <!--2928-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--2928-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--2928-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -36614,7 +36614,7 @@ Usually, company's internal identifiers for various records (products, customers
 <!--2931-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--2931-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--2931-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--2931-->  <SEQNO><![CDATA[20]]></SEQNO>
+<!--2931-->  <SEQNO><![CDATA[50]]></SEQNO>
 <!--2931-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--2931-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--2931-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -37214,7 +37214,7 @@ Usually, company's internal identifiers for various records (products, customers
 <!--2954-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--2954-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--2954-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--2954-->  <SEQNO><![CDATA[20]]></SEQNO>
+<!--2954-->  <SEQNO><![CDATA[50]]></SEQNO>
 <!--2954-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--2954-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--2954-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -41582,7 +41582,7 @@ NOTE: You will not be able to close the fiscal year if you close all its periods
 <!--3325-->  <DISPLAYLOGIC><![CDATA[@ACCT_DIMENSION_DISPLAY@]]></DISPLAYLOGIC>
 <!--3325-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--3325-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--3325-->  <SEQNO><![CDATA[50]]></SEQNO>
+<!--3325-->  <SEQNO><![CDATA[20]]></SEQNO>
 <!--3325-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--3325-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--3325-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -42072,7 +42072,7 @@ NOTE: You will not be able to close the fiscal year if you close all its periods
 <!--3344-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--3344-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--3344-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--3344-->  <SEQNO><![CDATA[20]]></SEQNO>
+<!--3344-->  <SEQNO><![CDATA[50]]></SEQNO>
 <!--3344-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--3344-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--3344-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -44003,7 +44003,7 @@ Price Lists are used to determine the pricing, margin and cost of items purchase
 <!--3419-->  <DISPLAYLOGIC><![CDATA[@ACCT_DIMENSION_DISPLAY@]]></DISPLAYLOGIC>
 <!--3419-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--3419-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--3419-->  <SEQNO><![CDATA[50]]></SEQNO>
+<!--3419-->  <SEQNO><![CDATA[20]]></SEQNO>
 <!--3419-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--3419-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--3419-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -44260,7 +44260,7 @@ Price Lists are used to determine the pricing, margin and cost of items purchase
 <!--3428-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--3428-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--3428-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--3428-->  <SEQNO><![CDATA[20]]></SEQNO>
+<!--3428-->  <SEQNO><![CDATA[50]]></SEQNO>
 <!--3428-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--3428-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--3428-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -45803,7 +45803,7 @@ Price Lists are used to determine the pricing, margin and cost of items purchase
 <!--3486-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--3486-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--3486-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--3486-->  <SEQNO><![CDATA[50]]></SEQNO>
+<!--3486-->  <SEQNO><![CDATA[30]]></SEQNO>
 <!--3486-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--3486-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--3486-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
@@ -45889,7 +45889,7 @@ Price Lists are used to determine the pricing, margin and cost of items purchase
 <!--3489-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--3489-->  <DISPLAYLENGTH><![CDATA[44]]></DISPLAYLENGTH>
 <!--3489-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
-<!--3489-->  <SEQNO><![CDATA[30]]></SEQNO>
+<!--3489-->  <SEQNO><![CDATA[50]]></SEQNO>
 <!--3489-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--3489-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--3489-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>
