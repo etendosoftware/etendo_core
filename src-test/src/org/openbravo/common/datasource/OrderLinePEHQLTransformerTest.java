@@ -34,6 +34,8 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 @ExtendWith(MockitoExtension.class)
 public class OrderLinePEHQLTransformerTest {
   private static final String SALES_TRANSACTION_PARAM = "@Invoice.salesTransaction@" ;
+  private static final String IS_SALES_TRANSACTION = "true";
+  private static final String IS_PURCHASE_TRANSACTION = "false";
   private static final String TEST_BUSINESS_PARTNER_ID = "testBusinessPartnerId";
   private static final String TEST_CURRENCY_ID = "testCurrencyId";
 
@@ -108,7 +110,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQuerySalesTransaction() {
-    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_SALES_TRANSACTION);
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
@@ -130,7 +132,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryPurchaseTransaction() {
-    requestParameters.put(SALES_TRANSACTION_PARAM, "false");
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_PURCHASE_TRANSACTION);
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
@@ -152,7 +154,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryWithFilterByDaysPreference() {
-    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_SALES_TRANSACTION);
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     when(mockDal.get(Window.class, "D0E067F649AC457D9EA2CDAC2E8571D7")).thenReturn(mockWindow);
@@ -177,7 +179,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryAdditionalFilters() {
-    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_SALES_TRANSACTION);
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization in ('1')";
@@ -196,7 +198,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryAdditionalFiltersPurchaseTransaction() {
-    requestParameters.put(SALES_TRANSACTION_PARAM, "false");
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_PURCHASE_TRANSACTION);
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization in ('1')";
@@ -207,5 +209,35 @@ public class OrderLinePEHQLTransformerTest {
     assertTrue(result.contains("o.organization.id in ('1')"));
     assertFalse(result.contains("e.client.id in"));
     assertFalse(result.contains("e.organization in"));
+  }
+
+  /**
+   * Tests that, for a sales transaction, the query hides fully invoiced order lines
+   * unless the product has the "Is Quantity Variable" flag enabled.
+   */
+  @Test
+  public void testTransformHqlQuerySalesTransactionFiltersFullyInvoicedLines() {
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_SALES_TRANSACTION);
+    staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
+
+    String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
+
+    assertAll(() -> assertTrue(result.contains("e.orderedQuantity - COALESCE(e.invoicedQuantity, 0) <> 0")),
+        () -> assertTrue(result.contains("p.id = e.product.id and p.isquantityvariable = true")));
+  }
+
+  /**
+   * Tests that, for a purchase transaction, the fully invoiced lines filter based on the
+   * "Is Quantity Variable" flag is not applied.
+   */
+  @Test
+  public void testTransformHqlQueryPurchaseTransactionDoesNotApplyQuantityVariableFilter() {
+    requestParameters.put(SALES_TRANSACTION_PARAM, IS_PURCHASE_TRANSACTION);
+    staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
+
+    String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
+
+    assertAll(() -> assertFalse(result.contains("e.orderedQuantity - COALESCE(e.invoicedQuantity, 0) <> 0")),
+        () -> assertFalse(result.contains("isquantityvariable")));
   }
 }

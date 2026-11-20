@@ -116,6 +116,10 @@ public class OrderLinePEHQLTransformer extends HqlQueryTransformer {
       whereClause.append("    HAVING SUM(ol2.orderedQuantity) - SUM(ol2.invoicedQuantity) <> 0))");
       whereClause.append("  or (ic.term = 'O' and ic.orderedQuantity = ic.deliveredQuantity)");
       whereClause.append(" )");
+      // Hide fully invoiced lines unless the product allows over-invoicing (variable quantity)
+      whereClause.append(" and (e.orderedQuantity - COALESCE(e.invoicedQuantity, 0) <> 0");
+      whereClause.append("  or exists (select 1 from Product p");
+      whereClause.append("   where p.id = e.product.id and p.isquantityvariable = true))");
     } else {
       whereClause.append(" and o.salesTransaction = :issotrx");
       whereClause.append(" and o.priceIncludesTax = :plIncTax");
