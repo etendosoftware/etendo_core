@@ -1086,7 +1086,7 @@ public class OBViewTab extends BaseTemplateComponent {
       String processUrl = getPrintUrl(tab);
 
       hasEmail = processUrl.contains("orders") || processUrl.contains("invoices")
-          || processUrl.contains("payments");
+          || processUrl.contains("payments") || processUrl.contains("shipments");
 
       type = "print";
       action = "OB.ToolbarUtils.print(this.view, '" + processUrl + "', " + process.isDirectPrint()
