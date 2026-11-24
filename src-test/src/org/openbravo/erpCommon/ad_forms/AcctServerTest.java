@@ -5,20 +5,37 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.OBQuery;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.model.common.currency.ConversionRateDoc;
+import org.openbravo.model.common.currency.Currency;
 
 /**
  * Unit tests for AcctServer.
@@ -446,5 +463,78 @@ public class AcctServerTest {
 
     instance.DateAcct = "";
     assertEquals("", method.invoke(instance));
+  }
+
+  /**
+   * ETP-6365: the document's own rate (C_Conversion_Rate_Document) is found whatever the posting
+   * context. The background posting runs with the System context, whose readable client filter
+   * hid the tenant's rows: the count ran outside admin mode and with the readable filters on, so
+   * it saw nothing and the document fell back to the general rate (or was not convertible). The
+   * query mock answers a row only when it is counted in admin mode with both filters off.
+   *
+   * @throws Exception if the reflection or the mocks fail
+   */
+  @Test
+  public void isConvertibleReadsTheDocumentRateOutsideTheTenantContext() throws Exception {
+    AcctServer doc = new ObjenesisStd().newInstance(DocGLJournal.class);
+    doc.AD_Table_ID = AcctServer.TABLEID_Invoice;
+    doc.Record_ID = "INVOICE-ID";
+    doc.C_Currency_ID = "MXN-ID";
+    doc.p_lines = new DocLine[0];
+    AcctSchema schema = new ObjenesisStd().newInstance(AcctSchema.class);
+    schema.m_C_Currency_ID = "EUR-ID";
+
+    AtomicBoolean adminMode = new AtomicBoolean(false);
+    AtomicBoolean clientFilterOff = new AtomicBoolean(false);
+    AtomicBoolean orgFilterOff = new AtomicBoolean(false);
+    @SuppressWarnings("unchecked")
+    OBQuery<ConversionRateDoc> query = mock(OBQuery.class);
+    doAnswer(inv -> {
+      clientFilterOff.set(!(Boolean) inv.getArgument(0));
+      return null;
+    }).when(query).setFilterOnReadableClients(anyBoolean());
+    doAnswer(inv -> {
+      orgFilterOff.set(!(Boolean) inv.getArgument(0));
+      return null;
+    }).when(query).setFilterOnReadableOrganization(anyBoolean());
+    when(query.count()).thenAnswer(
+        inv -> adminMode.get() && clientFilterOff.get() && orgFilterOff.get() ? 1 : 0);
+    ConversionRateDoc rate = mock(ConversionRateDoc.class);
+    when(rate.getRate()).thenReturn(new BigDecimal("0.05"));
+    when(query.list()).thenReturn(List.of(rate));
+
+    @SuppressWarnings("unchecked")
+    OBCriteria<Currency> currencies = mock(OBCriteria.class);
+    when(currencies.add(any())).thenReturn(currencies);
+    when(currencies.setProjection(any())).thenReturn(currencies);
+    when(currencies.count()).thenReturn(1);
+    Currency euro = mock(Currency.class);
+    when(euro.getStandardPrecision()).thenReturn(2L);
+    when(currencies.list()).thenReturn(List.of(euro));
+
+    OBDal dal = mock(OBDal.class);
+    doReturn(query).when(dal).createQuery(eq(ConversionRateDoc.class), anyString());
+    doReturn(currencies).when(dal).createCriteria(Currency.class);
+
+    try (MockedStatic<OBDal> obDal = mockStatic(OBDal.class);
+        MockedStatic<OBContext> obContext = mockStatic(OBContext.class);
+        MockedStatic<AcctServer> generalRate = mockStatic(AcctServer.class)) {
+      obDal.when(OBDal::getInstance).thenReturn(dal);
+      obContext.when(() -> OBContext.setAdminMode(true)).thenAnswer(inv -> {
+        adminMode.set(true);
+        return null;
+      });
+      obContext.when(OBContext::restorePreviousMode).thenAnswer(inv -> {
+        adminMode.set(false);
+        return null;
+      });
+      // The general-rate fallback finds nothing, as with no range open at 00:00.
+      generalRate.when(() -> AcctServer.getConvertedAmt(anyString(), anyString(), anyString(),
+          any(), any(), any(), any(), any(ConnectionProvider.class))).thenReturn("");
+
+      assertTrue(doc.isConvertible(schema, mock(ConnectionProvider.class)));
+      generalRate.verify(() -> AcctServer.getConvertedAmt(anyString(), anyString(), anyString(),
+          any(), any(), any(), any(), any(ConnectionProvider.class)), never());
+    }
   }
 }

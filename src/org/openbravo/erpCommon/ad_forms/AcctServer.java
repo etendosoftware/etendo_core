@@ -1380,14 +1380,21 @@ public abstract class AcctServer {
           conversionQuery = OBDal.getInstance().createQuery(ConversionRateDoc.class, whereClause);
         }
         //@formatter:on
-        if (conversionQuery != null) {
-          conversionQuery.setNamedParameter("recordId", Record_ID);
-          conversionQuery.setNamedParameter("currency", currency);
-          conversionQuery.setNamedParameter("toCurrency", acctSchema.m_C_Currency_ID);
-          conversionCount = conversionQuery.count();
-        }
         try {
+          // The document's own rate is read whatever the posting context: the background posting
+          // runs with the System context, whose readable client/organization filter hid the
+          // tenant's C_Conversion_Rate_Document rows (the count ran outside admin mode, and admin
+          // mode does not lift that filter) and fell back to the general rate. The query is keyed
+          // by the posted document's id, so no other tenant's row can match.
           OBContext.setAdminMode(true);
+          if (conversionQuery != null) {
+            conversionQuery.setFilterOnReadableClients(false);
+            conversionQuery.setFilterOnReadableOrganization(false);
+            conversionQuery.setNamedParameter("recordId", Record_ID);
+            conversionQuery.setNamedParameter("currency", currency);
+            conversionQuery.setNamedParameter("toCurrency", acctSchema.m_C_Currency_ID);
+            conversionCount = conversionQuery.count();
+          }
           if (conversionCount > 0) {
             List<ConversionRateDoc> conversionRate = conversionQuery.list();
             OBCriteria<Currency> currencyCrit = OBDal.getInstance().createCriteria(Currency.class);
