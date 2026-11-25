@@ -133,7 +133,7 @@ public class BpDocTypeUtilsTest {
   /**
    * Falls back to the first matching DocType (by hierarchy/name/default/id ordering) when no default exists.
    * This is the behavior expected by automatic processes (no form value to preserve); window callouts
-   * keep the current form value instead (see testApplyOrderDocTypeKeepsCurrentWhenNoBpNorDefault).
+   * keep the current form value instead (see testApplyOrderDocTypeKeepsCurrentWhenBpHasNoConfig).
    */
   @Test
   public void testFindDefaultDocTypeUsesFirstMatchWhenNoDefault() {
@@ -249,15 +249,14 @@ public class BpDocTypeUtilsTest {
   }
 
   /**
-   * Keeps the DocType already selected in the form when neither the BP nor the organization
-   * defines one, instead of applying the first-match fallback.
+   * Keeps the DocType already selected in the form when the BP has no configuration and the
+   * current value is still valid, regardless of whether the organization defines a default.
    */
   @Test
-  public void testApplyOrderDocTypeKeepsCurrentWhenNoBpNorDefault() {
+  public void testApplyOrderDocTypeKeepsCurrentWhenBpHasNoConfig() {
     when(q1.uniqueResult()).thenReturn(null);
     when(q2.uniqueResult()).thenReturn(null);
-    when(q3.uniqueResult()).thenReturn(null);
-    when(q4.uniqueResult()).thenReturn(DOC_CURRENT);
+    when(q3.uniqueResult()).thenReturn(DOC_CURRENT);
     when(obDal.get(DocumentType.class, DOC_CURRENT)).thenReturn(docType);
     when(docType.getId()).thenReturn(DOC_CURRENT);
     when(docType.getIdentifier()).thenReturn(IDF_CURRENT);
@@ -266,8 +265,40 @@ public class BpDocTypeUtilsTest {
     assertEquals(DOC_CURRENT, result);
     verify(info).addResult(DOCTYPE_ID, DOC_CURRENT);
     verify(info).addResult(DOCTYPE_ID_R, IDF_CURRENT);
-    // BP (org + org 0), org default and current value check; first-match query is never run
-    verify(session, times(4)).createNativeQuery(anyString());
+    // BP (org + org 0) and current value check; org default and first-match are never queried
+    verify(session, times(3)).createNativeQuery(anyString());
+  }
+
+  /**
+   * Applies the organization default as the initial value when the form has no DocType yet.
+   */
+  @Test
+  public void testApplyInvoiceDocTypeUsesOrgDefaultWhenCurrentIsBlank() {
+    when(q1.uniqueResult()).thenReturn(DOC_DEF);
+    when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_DEF);
+    String result = BpDocTypeUtils.applyInvoiceDocType(info, ORG, "", true, DOCTYPE_ID,
+        DOCTYPE_ID_R, "");
+    assertEquals(DOC_DEF, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_DEF);
+    verify(session, times(1)).createNativeQuery(anyString());
+  }
+
+  /**
+   * Applies the organization default when the current DocType is no longer valid for the
+   * organization or flow.
+   */
+  @Test
+  public void testApplyShipmentDocTypeUsesOrgDefaultWhenCurrentIsNotValid() {
+    when(q1.uniqueResult()).thenReturn(null);
+    when(q2.uniqueResult()).thenReturn(DOC_DEF);
+    when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_DEF);
+    String result = BpDocTypeUtils.applyShipmentDocType(info, ORG, "", true, DOCTYPE_ID,
+        DOCTYPE_ID_R, DOC_CURRENT);
+    assertEquals(DOC_DEF, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_DEF);
+    verify(session, times(2)).createNativeQuery(anyString());
   }
 
   /**
@@ -303,17 +334,18 @@ public class BpDocTypeUtilsTest {
   }
 
   /**
-   * The organization default still takes precedence over the current form value.
+   * A valid current form value takes precedence over the organization default.
    */
   @Test
-  public void testApplyShipmentDocTypePrefersOrgDefaultOverCurrent() {
-    when(q1.uniqueResult()).thenReturn(DOC_DEF);
-    when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(docType);
-    when(docType.getId()).thenReturn(DOC_DEF);
+  public void testApplyShipmentDocTypeKeepsCurrentOverOrgDefault() {
+    when(q1.uniqueResult()).thenReturn(DOC_CURRENT);
+    when(obDal.get(DocumentType.class, DOC_CURRENT)).thenReturn(docType);
+    when(docType.getId()).thenReturn(DOC_CURRENT);
     String result = BpDocTypeUtils.applyShipmentDocType(info, ORG, "", true, DOCTYPE_ID,
         DOCTYPE_ID_R, DOC_CURRENT);
-    assertEquals(DOC_DEF, result);
-    verify(info).addResult(DOCTYPE_ID, DOC_DEF);
+    assertEquals(DOC_CURRENT, result);
+    verify(info).addResult(DOCTYPE_ID, DOC_CURRENT);
+    verify(session, times(1)).createNativeQuery(anyString());
   }
 
   /**
