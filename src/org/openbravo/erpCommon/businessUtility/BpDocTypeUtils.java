@@ -242,13 +242,14 @@ public final class BpDocTypeUtils {
 
   /**
    * Resolves the {@code C_DocType_ID} to apply from a window callout, preserving the value
-   * already selected in the form when neither the Business Partner nor the Organization
-   * defines a document type. Resolution order:
+   * already selected in the form whenever it is still valid and the Business Partner defines
+   * no document type. The Organization default only seeds an empty or invalid value.
+   * Resolution order:
    * <ol>
-   *   <li>Business Partner configuration ({@code C_BPartner_DocType}).</li>
-   *   <li>Organization default ({@code C_DocType.IsDefault = 'Y'}).</li>
+   *   <li>Business Partner configuration ({@code C_BPartner_DocType}); always overrides.</li>
    *   <li>The current form value, if it is still valid for the organization and flow.</li>
-   *   <li>The first matching document type, only when the form has no valid value.</li>
+   *   <li>Organization default ({@code C_DocType.IsDefault = 'Y'}).</li>
+   *   <li>The first matching document type.</li>
    * </ol>
    * Automatic processes must keep using {@link #resolveDocTypeId}, as they have no form value.
    * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
@@ -268,13 +269,13 @@ public final class BpDocTypeUtils {
       return id;
     }
     final String dbt = category.docBaseType(isSO);
-    id = runDefaultDocTypeQuery(orgId, isSO, dbt);
-    if (id != null) {
-      return id;
-    }
     if (StringUtils.isNotBlank(currentDocTypeId)
         && isDocTypeValidForOrg(currentDocTypeId, orgId, isSO, dbt)) {
       return currentDocTypeId;
+    }
+    id = runDefaultDocTypeQuery(orgId, isSO, dbt);
+    if (id != null) {
+      return id;
     }
     return runFirstMatchingDocTypeQuery(orgId, isSO, dbt);
   }
@@ -321,8 +322,8 @@ public final class BpDocTypeUtils {
 
   /**
    * Resolves and applies the Order document type to the UI in an Order window callout,
-   * keeping the current form value when neither the Business Partner nor the Organization
-   * defines a document type (see {@link #resolveDocTypeIdForCallout}).
+   * keeping the current form value when it is still valid and the Business Partner defines
+   * no document type (see {@link #resolveDocTypeIdForCallout}).
    * @param info The current {@link SimpleCallout.CalloutInfo} used to push values to the client.
    * @param orgId Organization ID ({@code AD_Org_ID}).
    * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
@@ -367,8 +368,8 @@ public final class BpDocTypeUtils {
 
   /**
    * Resolves and applies the Invoice document type to the UI in an Invoice window callout,
-   * keeping the current form value when neither the Business Partner nor the Organization
-   * defines a document type (see {@link #resolveDocTypeIdForCallout}).
+   * keeping the current form value when it is still valid and the Business Partner defines
+   * no document type (see {@link #resolveDocTypeIdForCallout}).
    * @param info The current {@link SimpleCallout.CalloutInfo}.
    * @param orgId Organization ID ({@code AD_Org_ID}).
    * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
@@ -410,8 +411,8 @@ public final class BpDocTypeUtils {
 
   /**
    * Resolves and applies the Shipment/Receipt document type to the UI in a Shipment (In/Out)
-   * window callout, keeping the current form value when neither the Business Partner nor the
-   * Organization defines a document type (see {@link #resolveDocTypeIdForCallout}).
+   * window callout, keeping the current form value when it is still valid and the Business
+   * Partner defines no document type (see {@link #resolveDocTypeIdForCallout}).
    * @param info The current {@link SimpleCallout.CalloutInfo}.
    * @param orgId Organization ID ({@code AD_Org_ID}).
    * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
