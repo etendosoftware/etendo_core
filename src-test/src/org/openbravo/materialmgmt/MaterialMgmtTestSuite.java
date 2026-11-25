@@ -38,6 +38,7 @@ import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromGoodsShipm
     StockUtilsTest.class,
     ServiceDeliverUtilityTest.class,
     ResetValuedStockAggregatedTest.class,
+    ResetValuedStockAggregatedPeriodScopeTest.class,
     UOMUtilTest.class,
     ProductCharacteristicsDSTest.class,
     VariantAutomaticGenerationProcessAdditionalTest.class,

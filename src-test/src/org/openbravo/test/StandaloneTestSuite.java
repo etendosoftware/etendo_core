@@ -38,6 +38,11 @@ import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
+import org.openbravo.client.kernel.KernelUtilsIntegrationTest;
+import org.openbravo.client.application.report.ReportingUtilsIntegrationTest;
+import org.openbravo.service.json.DefaultJsonDataServiceIntegrationTest;
+import org.openbravo.erpCommon.utility.DimensionDisplayUtilityIntegrationTest;
+import org.openbravo.erpCommon.utility.OBCurrencyUtilsIntegrationTest;
 import org.openbravo.email.ResolvedSmtpConfigTest;
 import org.openbravo.email.SmtpCascadeResolverTest;
 import org.openbravo.email.actionhandler.TestSmtpConnectionActionHandlerTest;
@@ -79,6 +84,7 @@ import org.openbravo.test.conversionratedoc.ConversionRateDocUniqueTestSuite;
 import org.openbravo.test.copyLinesFromOrders.CopyLinesFromOrdersTest;
 import org.openbravo.test.costing.TestCosting;
 import org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTest;
+import org.openbravo.test.createlinesfrom.AlternateTaxBaseAmountProratingTest;
 import org.openbravo.test.createlinesfrom.CreateLinesFromTest;
 import org.openbravo.test.dal.AdminContextTest;
 import org.openbravo.test.dal.ComputedColumnsTest;
@@ -112,6 +118,7 @@ import org.openbravo.test.expression.OBBindingsTest;
 import org.openbravo.test.generalsetup.enterprise.organization.ADOrgPersistInfoTestSuite;
 import org.openbravo.test.inventoryStatus.InventoryStatusTest;
 import org.openbravo.test.invoice.CloneInvoiceTest;
+import org.openbravo.test.invoice.InvoiceDimensionsFromShipmentTest;
 import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromShipmentTest;
 import org.openbravo.test.materialMgmt.iscompletelyinvoicedshipment.IsCompletelyInvoicedShipment;
 import org.openbravo.test.materialMgmt.linevalidation.GoodMovementTest;
@@ -164,6 +171,7 @@ import org.openbravo.test.system.Issue29934Test;
 import org.openbravo.test.system.JSONSerialization;
 import org.openbravo.test.system.OBPropertiesProviderTest;
 import org.openbravo.test.system.Sessions;
+import org.openbravo.test.system.SystemInfoHostTest;
 import org.openbravo.test.system.SystemServiceTest;
 import org.openbravo.test.system.SystemValidatorTest;
 import org.openbravo.test.system.TestInfrastructure;
@@ -212,6 +220,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Create Lines From refactor
     CreateLinesFromTest.class,
+    AlternateTaxBaseAmountProratingTest.class,
 
     // AD_IsOrgIncluded
     Ad_isorgincludedTest.class, //
@@ -395,6 +404,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     CancelAndReplaceTest.class, //
 
     // Automatic Invoice from Goods Shipment
+    InvoiceDimensionsFromShipmentTest.class,
     InvoiceFromShipmentTest.class,
 
     // Clone Invoice
@@ -450,6 +460,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     JobInitializationListenerTest.class, //
     ProcessGroupTest.class, //
     SchedulerTimeUtilsTest.class, //
+    SystemInfoHostTest.class, //
     GroupInfoTest.class, //
     JobDetailProviderTest.class, //
     ProcessMonitorTest.class, //
@@ -476,6 +487,13 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
     
+    // Core coverage — integration tests
+    OBCurrencyUtilsIntegrationTest.class,
+    DimensionDisplayUtilityIntegrationTest.class,
+    KernelUtilsIntegrationTest.class,
+    ReportingUtilsIntegrationTest.class,
+    DefaultJsonDataServiceIntegrationTest.class,
+
     // Email
     BPContactEmailSelectorTest.class,
     ResolvedSmtpConfigTest.class,
@@ -525,6 +543,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     "org.openbravo.role.inheritance.access.AlertRecipientAccessInjectorTest",
     "org.openbravo.base.secureApp.DefaultValidationExceptionTest",
     "org.openbravo.base.secureApp.DefaultValuesDataTest",
+    "org.openbravo.service.db.DataImportServiceTest",
 })
 public class StandaloneTestSuite {
 }

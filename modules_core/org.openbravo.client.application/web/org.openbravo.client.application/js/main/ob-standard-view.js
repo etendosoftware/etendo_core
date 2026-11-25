@@ -522,6 +522,27 @@ isc.OBStandardView.addProperties({
     }
   },
 
+  // A save rejected because the record changed underneath can reach the client rewritten as an
+  // HTTP 409. SmartClient discards the body of any response outside the 2xx range and hands over
+  // a bare "Transport error - HTTP code: 409", which tells the user nothing about what happened
+  // or what to do about it, so the conflict is recognised by the code its body carries.
+  staleObjectConflictCode: 'STALE_OBJECT',
+  staleObjectMessage: '@OBJSON_StaleDate@',
+
+  isStaleObjectConflict: function(resp) {
+    if (!resp || resp.httpResponseCode !== 409 || !resp.httpResponseText) {
+      return false;
+    }
+    try {
+      return (
+        JSON.parse(resp.httpResponseText).code === this.staleObjectConflictCode
+      );
+    } catch (ignored) {
+      // a body that is not the expected JSON is not a conflict we can recognise
+      return false;
+    }
+  },
+
   // handles different ways by which an error can be passed from the
   // system, translates this to an object with a type, title and message
   setErrorMessageFromResponse: function(resp, data, req) {
@@ -530,6 +551,11 @@ isc.OBStandardView.addProperties({
     // only handle it once
     if (resp._errorMessageHandled) {
       return true;
+    }
+
+    // the transport error carries no usable text, the message code does
+    if (this.isStaleObjectConflict(resp)) {
+      data = this.staleObjectMessage;
     }
     var msg = '',
       title = null,

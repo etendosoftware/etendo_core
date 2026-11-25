@@ -22,11 +22,13 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -52,9 +54,12 @@ public class ReportingUtilsTest extends WeldBaseTest {
 
   @After
   public void cleanUp() {
-    File report = getTmpFile();
-    if (report.exists()) {
-      report.delete();
+    for (ExportType exportType : new ExportType[] { ExportType.HTML, ExportType.XLS,
+        ExportType.XLSX }) {
+      File report = getTmpFile(exportType);
+      if (report.exists()) {
+        report.delete();
+      }
     }
   }
 
@@ -84,15 +89,57 @@ public class ReportingUtilsTest extends WeldBaseTest {
 
   private void generateReport(File report, ConnectionProvider connectionProvider) {
     try {
-      ReportingUtils.exportJR(getReportPath().toString(), ExportType.HTML, new HashMap<>(), report,
-          true, connectionProvider, null, new HashMap<>());
+      exportReport(report, connectionProvider, ExportType.HTML);
     } catch (Exception ex) {
       log.error("Could not generate test report", ex);
     }
   }
 
+  private void exportReport(File report, ConnectionProvider connectionProvider,
+      ExportType exportType) throws Exception {
+    ReportingUtils.exportJR(getReportPath().toString(), exportType, new HashMap<>(), report, true,
+        connectionProvider, null, new HashMap<>());
+  }
+
   private File getTmpFile() {
-    return new File(ReportingUtils.getTempFolder(), "tmp.html");
+    return getTmpFile(ExportType.HTML);
+  }
+
+  private File getTmpFile(ExportType exportType) {
+    return new File(ReportingUtils.getTempFolder(), "tmp." + exportType.getExtension());
+  }
+
+  /**
+   * Exports a report to the legacy Excel format, which relies on the Apache POI HSSF
+   * implementation. It ensures that the JasperReports and POI libraries shipped with the platform
+   * are compatible and that all their runtime dependencies are available.
+   * 
+   * @throws Exception
+   *           if the report cannot be exported or the generated file cannot be read
+   */
+  @Test
+  @Issue("#1146")
+  public void generateLegacyExcelReport() throws Exception {
+    File report = getTmpFile(ExportType.XLS);
+    exportReport(report, null, ExportType.XLS);
+    assertThat("xls report generated correctly", report.exists(), equalTo(true));
+    try (HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(report))) {
+      assertThat("xls report contains a sheet", workbook.getNumberOfSheets() > 0, equalTo(true));
+    }
+  }
+
+  /**
+   * Exports a report to the OOXML Excel format, which is the default one.
+   * 
+   * @throws Exception
+   *           if the report cannot be exported
+   */
+  @Test
+  @Issue("#1146")
+  public void generateExcelReport() throws Exception {
+    File report = getTmpFile(ExportType.XLSX);
+    exportReport(report, null, ExportType.XLSX);
+    assertThat("xlsx report generated correctly", report.exists(), equalTo(true));
   }
 
   private Path getReportPath() throws URISyntaxException {

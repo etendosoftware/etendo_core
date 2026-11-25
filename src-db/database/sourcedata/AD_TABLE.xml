@@ -2570,7 +2570,7 @@ Employee defines a Business Partner who is an Employee of this organization.  If
 <!--316-->  <TABLENAME><![CDATA[C_Activity]]></TABLENAME>
 <!--316-->  <CLASSNAME><![CDATA[ABCActivity]]></CLASSNAME>
 <!--316-->  <ISVIEW><![CDATA[N]]></ISVIEW>
-<!--316-->  <ACCESSLEVEL><![CDATA[7]]></ACCESSLEVEL>
+<!--316-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
 <!--316-->  <AD_WINDOW_ID><![CDATA[134]]></AD_WINDOW_ID>
 <!--316-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
 <!--316-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>

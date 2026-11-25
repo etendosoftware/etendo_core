@@ -19,12 +19,15 @@
 
 package org.openbravo.common.actionhandler.createlinesfromprocess;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -89,7 +92,8 @@ public class CreateInvoiceLinesFromProcess {
       validateAndSetLinesFromClassOrThrowException(selectedLinesFromClass);
       // Initialize the line number with the last one in the processing invoice.
       lastLineNo = getLastLineNoOfCurrentInvoice(currentInvoice);
-      return createInvoiceLines(currentInvoice, getLinesToProcess(selectedLinesParam));
+      return createInvoiceLines(currentInvoice,
+          getLinesToProcess(selectedLinesParam, currentInvoice));
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
       throw new OBException(e);
@@ -133,14 +137,15 @@ public class CreateInvoiceLinesFromProcess {
    *
    *
    */
-  private JSONArray getLinesToProcess(final JSONArray selectedLinesParam) throws JSONException {
+  private JSONArray getLinesToProcess(final JSONArray selectedLinesParam,
+      final Invoice currentInvoice) throws JSONException {
     final JSONArray linesToProcess = new JSONArray();
     for (int index = 0; index < selectedLinesParam.length(); index++) {
       JSONObject selectedLine = selectedLinesParam.getJSONObject(index);
       BaseOBObject copiedLine = OBDal.getInstance()
           .get(linesFromClass, selectedLine.getString("id"));
       List<JSONObject> relatedInOutLinesNotAlreadyInvoiced = getRelatedInOutLinesNotAlreadyInvoiced(
-          selectedLine, copiedLine);
+          selectedLine, copiedLine, currentInvoice);
       if (relatedInOutLinesNotAlreadyInvoiced != null
           && !relatedInOutLinesNotAlreadyInvoiced.isEmpty()) {
         for (JSONObject inOutLineRelatedToOrderLine : relatedInOutLinesNotAlreadyInvoiced) {
@@ -252,21 +257,25 @@ public class CreateInvoiceLinesFromProcess {
   }
 
   private List<JSONObject> getRelatedInOutLinesNotAlreadyInvoiced(JSONObject selectedLine,
-      BaseOBObject copiedLine) {
+      BaseOBObject copiedLine, Invoice currentInvoice) {
     boolean isOrderLineWithRelatedShipmentReceiptLines = CreateLinesFromUtil
         .isOrderLineWithRelatedShipmentReceiptLines(copiedLine, selectedLine);
     List<JSONObject> relatedInOutLinesNotAlreadyInvoiced = null;
     if (isOrderLineWithRelatedShipmentReceiptLines) {
       relatedInOutLinesNotAlreadyInvoiced = getRelatedNotInvoicedInOutLinesAsJSONObjects(
-          (OrderLine) copiedLine);
+          (OrderLine) copiedLine, currentInvoice);
     }
     return relatedInOutLinesNotAlreadyInvoiced;
   }
 
-  private List<JSONObject> getRelatedNotInvoicedInOutLinesAsJSONObjects(final OrderLine orderLine) {
+  private List<JSONObject> getRelatedNotInvoicedInOutLinesAsJSONObjects(final OrderLine orderLine,
+      final Invoice currentInvoice) {
     final List<JSONObject> relatedShipmentLinesToOrderLine = new ArrayList<>();
     for (InOutLineData shipmentInOutLineData : CreateLinesFromUtil
         .getRelatedNotInvoicedInOutLines(orderLine)) {
+      if (!subtractQuantityAlreadyLinkedInCurrentInvoice(shipmentInOutLineData, currentInvoice)) {
+        continue;
+      }
       relatedShipmentLinesToOrderLine
           .add(getInOutLineJson((OrderLine) orderLine, shipmentInOutLineData));
       OBDal.getInstance()
@@ -275,6 +284,43 @@ public class CreateInvoiceLinesFromProcess {
               .getProxy(ShipmentInOutLine.class, shipmentInOutLineData.getShipmentInOutLineId()));
     }
     return relatedShipmentLinesToOrderLine;
+  }
+
+  private boolean subtractQuantityAlreadyLinkedInCurrentInvoice(
+      final InOutLineData shipmentInOutLineData, final Invoice currentInvoice) {
+    final BigDecimal alreadyLinkedQuantity = currentInvoice.getInvoiceLineList()
+        .stream()
+        .filter(invoiceLine -> invoiceLine.getGoodsShipmentLine() != null
+            && shipmentInOutLineData.getShipmentInOutLineId()
+                .equals(invoiceLine.getGoodsShipmentLine().getId()))
+        .map(InvoiceLine::getInvoicedQuantity)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    if (alreadyLinkedQuantity.signum() == 0) {
+      return true;
+    }
+
+    final ShipmentInOutLine shipmentInOutLine = OBDal.getInstance()
+        .get(ShipmentInOutLine.class, shipmentInOutLineData.getShipmentInOutLineId());
+    final BigDecimal remainingQuantity = shipmentInOutLineData.getMovementQuantity()
+        .subtract(alreadyLinkedQuantity);
+    if (remainingQuantity.signum() == 0
+        || remainingQuantity.signum() != shipmentInOutLine.getMovementQuantity().signum()) {
+      return false;
+    }
+
+    final BigDecimal remainingRatio = remainingQuantity
+        .divide(shipmentInOutLine.getMovementQuantity(), MathContext.DECIMAL128);
+    shipmentInOutLineData.setMovementQuantity(remainingQuantity);
+    if (shipmentInOutLine.getOrderQuantity() != null) {
+      shipmentInOutLineData
+          .setOrderQuantity(shipmentInOutLine.getOrderQuantity().multiply(remainingRatio));
+    }
+    if (shipmentInOutLine.getOperativeQuantity() != null) {
+      shipmentInOutLineData
+          .setOperativeQuantity(shipmentInOutLine.getOperativeQuantity().multiply(remainingRatio));
+    }
+    return true;
   }
 
   private JSONObject getInOutLineJson(OrderLine orderLine, InOutLineData shipmentInOutLineData) {

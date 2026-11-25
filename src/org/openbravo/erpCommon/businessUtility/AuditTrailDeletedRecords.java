@@ -105,8 +105,10 @@ class AuditTrailDeletedRecords {
       if (hasRange && conn.getRDBMS().equalsIgnoreCase("ORACLE")) {
         sql.append("SELECT ROWNUM AS RN1, ").append(tableName).append(".* FROM(\n");
       }
+      // event_time is formatted here with an explicit pattern so it is read back in a known
+      // format, independently of the RDBMS, and can be converted to the user timezone afterwards
       sql.append(
-          "SELECT record_id as rowkey, event_time as audittrailtime, ad_user_id as audittrailuser, processType as audittrailprocesstype, process_id as audittrailprocessid\n");
+          "SELECT record_id as rowkey, TO_CHAR(event_time, 'YYYY-MM-DD HH24:MI:SS') as audittrailtime, ad_user_id as audittrailuser, processType as audittrailprocesstype, process_id as audittrailprocessid\n");
       for (Column col : tab.getTable().getADColumnList()) {
         // obtain information for all columns
         sql.append(", ");

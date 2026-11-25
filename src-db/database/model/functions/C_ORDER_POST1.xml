@@ -760,11 +760,23 @@
           v_linenetamt NUMBER;
           v_linegrossamt NUMBER;
           v_ProductUOM M_PRODUCT_UOM.C_UOM_ID%TYPE;
+          v_prorate_taxbaseamt VARCHAR(1);
       BEGIN
 
         -- When closing the order it calculates the difference between the ordered and received/delivered quantities ant it
         -- updates the m_storage_pending.
         IF (v_DocAction='CL') THEN
+          -- Get AlternateTaxBaseAmountProrating value. Closing the order overwrites QtyOrdered with the
+          -- delivered/invoiced quantity, so the Alternate Tax Base Amount has to be prorated here in order
+          -- to keep the invoicing flows consistent no matter whether the order is closed or not.
+          v_prorate_taxbaseamt := 'N';
+          BEGIN
+            v_prorate_taxbaseamt := AD_GET_PREFERENCE_VALUE('AlternateTaxBaseAmountProrating', 'Y', v_Client_ID, v_Org_ID, v_UpdatedBy, NULL, NULL);
+            EXCEPTION
+              WHEN OTHERS THEN
+              -- Nothing to do, v_prorate_taxbaseamt = 'N'
+              DBMS_OUTPUT.PUT_LINE('No AlternateTaxBaseAmountProrating preference found') ;
+          END;
           -- Cancel undelivered Items
           IF (v_isSoTrx='Y') THEN --Sales orders
             FOR Cur_Inventory IN (
@@ -812,6 +824,9 @@
                 linenetamt=v_linenetamt,
                 line_gross_amount=v_linegrossamt,
                 QuantityOrder=v_QuantityOrder,
+                taxbaseamt = CASE WHEN v_prorate_taxbaseamt = 'Y' AND Cur_Inventory.QtyOrdered <> 0
+                                  THEN C_Currency_Round(taxbaseamt*v_QtyOrdered/Cur_Inventory.QtyOrdered, Cur_Inventory.C_Currency_ID, NULL)
+                                  ELSE taxbaseamt END,
                 Updated=now()
               WHERE C_ORDERLINE_ID = Cur_Inventory.ID;
             END LOOP;
@@ -879,6 +894,9 @@
                 linenetamt=v_linenetamt,
                 line_gross_amount=v_linegrossamt,
                 QuantityOrder=v_QuantityOrder,
+                taxbaseamt = CASE WHEN v_prorate_taxbaseamt = 'Y' AND Cur_Inventory.QtyOrdered <> 0
+                                  THEN C_Currency_Round(taxbaseamt*v_QtyOrdered/Cur_Inventory.QtyOrdered, Cur_Inventory.C_Currency_ID, NULL)
+                                  ELSE taxbaseamt END,
                 Updated=now()
               WHERE C_ORDERLINE_ID = Cur_Inventory.ID;
             END LOOP;

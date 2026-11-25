@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.FetchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.audittrail.AuditTrailTimeFormatter;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.IsPositiveIntFilter;
 import org.openbravo.base.filter.RequestFilter;
@@ -132,6 +133,7 @@ public class AuditTrailPopup extends HttpSecureAppServlet {
         vars.removeSessionValue("AuditTrail.tabId");
         vars.removeSessionValue("AuditTrail.tableId");
         vars.removeSessionValue("AuditTrail.recordId");
+        AuditTrailTimeFormatter.removeClientTimeZoneOffset(vars);
 
         // read request params, and save in session
         String tabId = vars.getGlobalVariable("inpTabId", "AuditTrail.tabId", IsIDFilter.instance);
@@ -140,6 +142,7 @@ public class AuditTrailPopup extends HttpSecureAppServlet {
         // recordId is optional as popup can be called from empty grid
         String recordId = vars.getGlobalVariable("inpRecordId", "AuditTrail.recordId", false, false,
             false, "", IsIDFilter.instance);
+        AuditTrailTimeFormatter.saveClientTimeZoneOffset(vars);
         printPagePopupHistory(response, vars, tabId, tableId, recordId);
 
       } else if (vars.commandIn("STRUCTURE_HISTORY")) {
@@ -191,6 +194,9 @@ public class AuditTrailPopup extends HttpSecureAppServlet {
         // recordId is optional as popup can be called from empty grid
         String recordId = vars.getGlobalVariable("inpRecordId", "AuditTrail.recordId", false, false,
             false, "", IsIDFilter.instance);
+        // the offset is not removed here on purpose: this popup is opened from the history one,
+        // which is the one receiving it, so it is only overwritten when it is sent again
+        AuditTrailTimeFormatter.saveClientTimeZoneOffset(vars);
         printPagePopupDeleted(response, vars, recordId, tabId, tableId);
 
       } else if (vars.commandIn("STRUCTURE_DELETED")) {
@@ -1178,14 +1184,12 @@ public class AuditTrailPopup extends HttpSecureAppServlet {
   }
 
   private static String getFormattedTime(VariablesSecureApp vars, Date time) {
-    SimpleDateFormat format = new SimpleDateFormat(vars.getJavaDataTimeFormat());
-    return format.format(time);
+    return AuditTrailTimeFormatter.format(vars, time);
   }
 
-  // used for deleted records view, time already comes in a sqldatetimeformat
+  // used for deleted records view, time comes from the query as a string
   private static String getFormattedTime(VariablesSecureApp vars, String time) {
-    // currently no-op
-    return time;
+    return AuditTrailTimeFormatter.format(vars, time);
   }
 
   /*

@@ -20,6 +20,7 @@
 package org.openbravo.materialmgmt;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,6 +43,10 @@ import org.openbravo.service.db.DalBaseProcess;
 public class GenerateAggregatedDataBackground extends DalBaseProcess {
 
   private static final Logger log4j = LogManager.getLogger();
+
+  private static final String SUCCESS = "Success";
+  private static final String ERROR = "Error";
+
   private ProcessLogger logger;
 
   @Override
@@ -52,8 +57,8 @@ public class GenerateAggregatedDataBackground extends DalBaseProcess {
     try {
       OBContext.setAdminMode(true);
 
-      result.setType("Success");
-      result.setTitle(OBMessageUtils.messageBD("Success"));
+      result.setType(SUCCESS);
+      result.setTitle(OBMessageUtils.messageBD(SUCCESS));
 
       List<Organization> legalEntities = new ArrayList<Organization>();
       Organization org = OBContext.getOBContext().getCurrentOrganization();
@@ -76,54 +81,19 @@ public class GenerateAggregatedDataBackground extends DalBaseProcess {
       // If there are no Legal Entities present raise an error
       if (legalEntities.isEmpty()) {
         result.setMessage(OBMessageUtils.messageBD("NoLegalEntityFound"));
-        result.setType("Error");
-        result.setTitle(OBMessageUtils.messageBD("Error"));
+        result.setType(ERROR);
+        result.setTitle(OBMessageUtils.messageBD(ERROR));
         logger.logln(OBMessageUtils.messageBD("NoLegalEntityFound"));
         bundle.setResult(result);
         return;
       }
 
       for (Organization legalEntity : legalEntities) {
-
-        // Get Closed Periods that need to be aggregated
-        List<Period> periodList = ResetValuedStockAggregated.getClosedPeriodsToAggregate(new Date(),
-            legalEntity.getClient().getId(), legalEntity.getId());
-
-        DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        Date startingDate = formatter.parse("01-01-0000");
-        int totalNumberOfPeriods = periodList.size();
-        int contPeriodNumber = 0;
-        long start = System.currentTimeMillis();
-
-        log4j.debug("[GenerateAggregatedDataBackground] Total number of Periods to aggregate: "
-            + totalNumberOfPeriods);
-
-        for (Period period : periodList) {
-          long startPeriod = System.currentTimeMillis();
-          // Aggregate Data for Valued Stock
-          if (ResetValuedStockAggregated.noAggregatedDataForPeriod(period)
-              && ResetValuedStockAggregated.costingRuleDefindedForPeriod(legalEntity, period)) {
-            ResetValuedStockAggregated.insertValuesIntoValuedStockAggregated(legalEntity, period,
-                startingDate);
-            startingDate = period.getEndingDate();
-
-            // Aggregate Data for other entities below this line
-          }
-          long elapsedTimePeriod = (System.currentTimeMillis() - startPeriod);
-          contPeriodNumber++;
-          log4j.debug("[GenerateAggregatedDataBackground] Periods processed: " + contPeriodNumber
-              + " of " + totalNumberOfPeriods);
-          log4j.debug(
-              "[GenerateAggregatedDataBackground] Time to process period: " + elapsedTimePeriod);
-        }
-        long elapsedTime = (System.currentTimeMillis() - start);
-        log4j.debug(
-            "[GenerateAggregatedDataBackground] Time to process all periods: " + elapsedTime);
+        aggregateLegalEntity(legalEntity);
       }
 
-      logger.logln(OBMessageUtils.messageBD("Success"));
+      logger.logln(OBMessageUtils.messageBD(SUCCESS));
       bundle.setResult(result);
-      return;
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
@@ -131,15 +101,60 @@ public class GenerateAggregatedDataBackground extends DalBaseProcess {
           bundle.getContext().toVars(), OBContext.getOBContext().getLanguage().getLanguage(),
           e.getMessage());
       result.setMessage(message);
-      result.setType("Error");
-      result.setTitle(OBMessageUtils.messageBD("Error"));
+      result.setType(ERROR);
+      result.setTitle(OBMessageUtils.messageBD(ERROR));
       log4j.error(message, e);
       logger.logln(message);
       bundle.setResult(result);
-      return;
     } finally {
       OBContext.restorePreviousMode();
     }
 
+  }
+
+  /*
+   * Aggregates the Valued Stock data of every closed Period pending for the given Legal Entity
+   */
+  private void aggregateLegalEntity(Organization legalEntity) throws ParseException {
+    // Get Closed Periods that need to be aggregated
+    List<Period> periodList = ResetValuedStockAggregated.getClosedPeriodsToAggregate(new Date(),
+        legalEntity.getClient().getId(), legalEntity.getId());
+
+    int totalNumberOfPeriods = periodList.size();
+    if (totalNumberOfPeriods == 0) {
+      // Staying silent here is what kept this situation unnoticed
+      logger.logln(OBMessageUtils.messageBD(ResetValuedStockAggregated.NO_CLOSED_PERIODS_MSG) + " ("
+          + legalEntity.getName() + ")");
+      return;
+    }
+
+    DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+    Date startingDate = formatter.parse("01-01-0000");
+    int contPeriodNumber = 0;
+    long start = System.currentTimeMillis();
+
+    log4j.debug("[GenerateAggregatedDataBackground] Total number of Periods to aggregate: "
+        + totalNumberOfPeriods);
+
+    for (Period period : periodList) {
+      long startPeriod = System.currentTimeMillis();
+      // Aggregate Data for Valued Stock
+      if (ResetValuedStockAggregated.noAggregatedDataForPeriod(period)
+          && ResetValuedStockAggregated.costingRuleDefindedForPeriod(legalEntity, period)) {
+        ResetValuedStockAggregated.insertValuesIntoValuedStockAggregated(legalEntity, period,
+            startingDate);
+        startingDate = period.getEndingDate();
+
+        // Aggregate Data for other entities below this line
+      }
+      long elapsedTimePeriod = (System.currentTimeMillis() - startPeriod);
+      contPeriodNumber++;
+      log4j.debug("[GenerateAggregatedDataBackground] Periods processed: " + contPeriodNumber
+          + " of " + totalNumberOfPeriods);
+      log4j.debug(
+          "[GenerateAggregatedDataBackground] Time to process period: " + elapsedTimePeriod);
+    }
+    long elapsedTime = (System.currentTimeMillis() - start);
+    log4j.debug("[GenerateAggregatedDataBackground] Time to process all periods: " + elapsedTime);
   }
 }

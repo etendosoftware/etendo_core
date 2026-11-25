@@ -33,6 +33,9 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext;
+import org.openbravo.advpaymentmngt.hook.BankStatementLineFilterContext.Usage;
+import org.openbravo.advpaymentmngt.utility.BankStatementLineFilterHelper;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -98,17 +101,30 @@ public class MatchTransactionDao {
     }
   }
 
+  /**
+   * Returns the processed bank statement lines of the given financial account that are not matched
+   * to any transaction. Lines excluded by a
+   * {@link org.openbravo.advpaymentmngt.hook.BankStatementLineFilterHook} are not returned.
+   *
+   * @param account
+   *          the financial account
+   * @return the unmatched bank statement lines
+   */
   public static List<FIN_BankStatementLine> getUnMatchedBankStatementLines(
       FIN_FinancialAccount account) {
+    final Map<String, Object> parameters = new HashMap<>();
+    parameters.put("accountId", account.getId());
     //@formatter:off
-    final String whereClause = " as bsl " 
+    final String whereClause = " as bsl "
         + " where bsl.bankStatement.account.id = :accountId"
         + "   and bsl.financialAccountTransaction is null"
-        + "   and bsl.bankStatement.processed = 'Y'";
+        + "   and bsl.bankStatement.processed = 'Y'"
+        + BankStatementLineFilterHelper.buildHqlCondition("bsl",
+            new BankStatementLineFilterContext(account, null, Usage.UNMATCHED_CHECK), parameters);
     //@formatter:on
     final OBQuery<FIN_BankStatementLine> obData = OBDal.getInstance()
         .createQuery(FIN_BankStatementLine.class, whereClause);
-    obData.setNamedParameter("accountId", account.getId());
+    obData.setNamedParameters(parameters);
     return obData.list();
   }
 

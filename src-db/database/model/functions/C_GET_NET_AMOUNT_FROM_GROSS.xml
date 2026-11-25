@@ -43,7 +43,7 @@ v_NetAmount NUMBER;
 
 BEGIN --BODY
 
-  IF (p_grossamt = 0) THEN
+  IF (p_grossamt IS NULL OR p_grossamt = 0) THEN
     RETURN 0;
   END IF;
 

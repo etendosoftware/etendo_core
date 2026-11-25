@@ -29,9 +29,18 @@ var arrDatos = null;
 var arrDatos2 = null
 </script>
 <script language="JavaScript" type="text/javascript">
-function responseReturn(dataArray, dataArray2){
-  if (parent.frameButton)
+var RESPONSE_RETURN_MAX_ATTEMPTS = 20;
+var RESPONSE_RETURN_RETRY_MS = 50;
+
+function responseReturn(dataArray, dataArray2, attempt){
+  attempt = attempt || 0;
+  if (parent.frameButton) {
     parent.frameButton.updateInvoices(dataArray, dataArray2);
+  } else if (attempt < RESPONSE_RETURN_MAX_ATTEMPTS) {
+    setTimeout(function(){ responseReturn(dataArray, dataArray2, attempt + 1); }, RESPONSE_RETURN_RETRY_MS);
+  } else if (window.console && console.warn) {
+    console.warn("CreateFrom_F0: parent.frameButton was not available, Invoice/Purchase Order combos were not refreshed.");
+  }
 }
 </script>
 </head>

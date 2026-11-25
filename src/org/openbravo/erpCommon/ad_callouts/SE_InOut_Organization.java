@@ -51,11 +51,12 @@ public class SE_InOut_Organization extends SimpleCallout {
         String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
         String strInOut = info.getStringParameter("M_InOut_ID", IsIDFilter.instance);
         String strBPId = info.getStringParameter("inpcBpartnerId", IsIDFilter.instance);
+        String strDocType = info.getStringParameter("inpcDoctypeId", IsIDFilter.instance);
         FieldProvider[] td = null;
 
         final boolean isSales = StringUtils.equals("Y", strIsSOTrx);
         if (StringUtils.isNotBlank(strBPId)) {
-          BpDocTypeUtils.applyShipmentDocType(info, strOrgId, strBPId, isSales, "inpcDoctypeId", "inpcDoctypeId_R");
+          BpDocTypeUtils.applyShipmentDocType(info, strOrgId, strBPId, isSales, "inpcDoctypeId", "inpcDoctypeId_R", strDocType);
         }
         
         /* Warehouse */

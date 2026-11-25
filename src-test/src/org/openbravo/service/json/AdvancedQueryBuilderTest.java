@@ -9,6 +9,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import java.lang.reflect.InvocationTargetException;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.junit.Before;
@@ -505,6 +506,137 @@ public class AdvancedQueryBuilderTest {
     invokeGetBetweenOperator(EQUALS, false);
   }
 
+  // --- escapeLike tests (private method via reflection) ---
+  /**
+   * Escape like null returns null.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testEscapeLikeNull() throws Exception {
+    assertNull(invokeEscapeLike(null));
+  }
+  /**
+   * Escape like empty returns empty.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testEscapeLikeEmpty() throws Exception {
+    assertEquals("", invokeEscapeLike(""));
+  }
+  /**
+   * Escape like with underscore.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testEscapeLikeWithUnderscore() throws Exception {
+    assertEquals("test|_value", invokeEscapeLike("test_value"));
+  }
+  /**
+   * Escape like with percent.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testEscapeLikeWithPercent() throws Exception {
+    assertEquals("test|%value", invokeEscapeLike("test%value"));
+  }
+  /**
+   * Escape like with pipe.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testEscapeLikeWithPipe() throws Exception {
+    assertEquals("test||value", invokeEscapeLike("test|value"));
+  }
+  /**
+   * Escape like no special chars.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testEscapeLikeNoSpecialChars() throws Exception {
+    assertEquals("normal", invokeEscapeLike("normal"));
+  }
+
+  // --- setMainAlias tests ---
+  /**
+   * Set main alias.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testSetMainAlias() throws Exception {
+    instance.setMainAlias("testAlias");
+    Field aliasField = AdvancedQueryBuilder.class.getDeclaredField("mainAlias");
+    aliasField.setAccessible(true);
+    assertEquals("testAlias", aliasField.get(instance));
+  }
+
+  // --- setOrderBy tests ---
+  /**
+   * Set order by simple.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testSetOrderBySimple() throws Exception {
+    instance.setOrderBy("name");
+    assertEquals("name", instance.getOrderBy());
+  }
+  /**
+   * Set order by with multiple dots sets main alias.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testSetOrderByWithMultipleDots() throws Exception {
+    instance.setOrderBy("product.category.name");
+    assertEquals("product.category.name", instance.getOrderBy());
+    Field aliasField = AdvancedQueryBuilder.class.getDeclaredField("mainAlias");
+    aliasField.setAccessible(true);
+    assertEquals("e", aliasField.get(instance));
+  }
+
+  // --- clearCachedValues tests ---
+  /**
+   * Clear cached values.
+   * @throws Exception if an error occurs
+   */
+
+  @Test
+  public void testClearCachedValues() throws Exception {
+    Field joinClauseField = AdvancedQueryBuilder.class.getDeclaredField("joinClause");
+    joinClauseField.setAccessible(true);
+    joinClauseField.set(instance, "some join");
+
+    Field whereClauseField = AdvancedQueryBuilder.class.getDeclaredField("whereClause");
+    whereClauseField.setAccessible(true);
+    whereClauseField.set(instance, "some where");
+
+    Field orderByClauseField = AdvancedQueryBuilder.class.getDeclaredField("orderByClause");
+    orderByClauseField.setAccessible(true);
+    orderByClauseField.set(instance, "some order");
+
+    // Initialize collections that clearCachedValues calls .clear() on
+    Field joinDefsField = AdvancedQueryBuilder.class.getDeclaredField("joinDefinitions");
+    joinDefsField.setAccessible(true);
+    joinDefsField.set(instance, new java.util.ArrayList<>());
+
+    Field typedParamsField = AdvancedQueryBuilder.class.getDeclaredField("typedParameters");
+    typedParamsField.setAccessible(true);
+    typedParamsField.set(instance, new java.util.ArrayList<>());
+
+    instance.clearCachedValues();
+
+    assertNull(joinClauseField.get(instance));
+    assertNull(whereClauseField.get(instance));
+    assertNull(orderByClauseField.get(instance));
+  }
+
   // --- Helper methods for reflection-based testing ---
 
   private boolean invokeIsLike(String operator) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
@@ -567,5 +699,11 @@ public class AdvancedQueryBuilderTest {
       }
       throw e;
     }
+  }
+
+  private String invokeEscapeLike(String value) throws Exception {
+    Method method = AdvancedQueryBuilder.class.getDeclaredMethod("escapeLike", String.class);
+    method.setAccessible(true);
+    return (String) method.invoke(instance, value);
   }
 }

@@ -19,9 +19,12 @@
 
 package org.openbravo.erpCommon.instancemanagement;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.enterprise.context.Dependent;
 
@@ -137,6 +140,35 @@ public class InstanceManagementAction extends Action {
   }
 
   /**
+   * Returns the content of the activation file. When the process is executed from the UI, the file
+   * is sent as a binary part of a multipart request, so it is available in the request parameters
+   * as an InputStream and not in the JSON parameters (which only hold the file name). If there is
+   * no uploaded file, the "fileContent" JSON parameter is used instead; it may be percent-encoded
+   * when it comes from the classic UI.
+   */
+  private String readFileContent(JSONObject parameters) throws IOException {
+    Map<String, Object> requestParameters = getRequestParameters();
+    if (requestParameters != null && requestParameters.get(FILE_CONTENT) instanceof Map) {
+      Object content = ((Map<?, ?>) requestParameters.get(FILE_CONTENT)).get(PARAM_FILE_CONTENT);
+      if (content instanceof InputStream) {
+        try (InputStream in = (InputStream) content) {
+          return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+      }
+    }
+    return urlDecodeIfNeeded(parameters.optString(FILE_CONTENT));
+  }
+
+  /**
+   * Resolves the message keys (e.g. @Success@) of a message into their translated text using the
+   * current user language. Unknown keys are left untouched.
+   */
+  private String translate(String message) {
+    VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
+    return Utility.parseTranslation(new DalConnectionProvider(false), vars, vars.getLanguage(), message);
+  }
+
+  /**
    * Handles the activation of an instance
    */
   private ActionResult handleActivate(JSONObject parameters) {
@@ -158,12 +190,13 @@ public class InstanceManagementAction extends Action {
       String purpose = parameters.optString(PURPOSE, "");
       String instanceNo = parameters.optString(INSTANCE_NO, "");
       OBError processResult = activateCancelRemote(publicKey, purpose, instanceNo, true);
+      String processMessage = translate(processResult.getMessage());
 
       if (StringUtils.equals(SUCCESS, processResult.getType())) {
         result.setType(Result.Type.SUCCESS);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS,
-            processResult.getMessage());
+            processMessage);
         responseActions.setRefreshParent(true);
 
         // Check for heartbeat warning
@@ -181,9 +214,9 @@ public class InstanceManagementAction extends Action {
         }
       } else {
         result.setType(Result.Type.ERROR);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.ERROR,
-            processResult.getMessage());
+            processMessage);
 
         // Enable retry on failure
         responseActions.retryExecution();
@@ -299,18 +332,19 @@ public class InstanceManagementAction extends Action {
       String purpose = ActivationKey.getInstance().getProperty(PURPOSE);
 
       OBError processResult = activateCancelRemote(publicKey, purpose, instanceNo, false);
+      String processMessage = translate(processResult.getMessage());
 
       if (StringUtils.equals(SUCCESS, processResult.getType())) {
         result.setType(Result.Type.SUCCESS);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS,
-            processResult.getMessage());
+            processMessage);
         responseActions.setRefreshParent(true);
       } else {
         result.setType(Result.Type.ERROR);
-        result.setMessage(processResult.getMessage());
+        result.setMessage(processMessage);
         responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.ERROR,
-            processResult.getMessage());
+            processMessage);
 
         // Enable retry on failure
         responseActions.retryExecution();
@@ -350,8 +384,7 @@ public class InstanceManagementAction extends Action {
           publicKey = ak.getPublicKey();
         }
       }
-      // File content may also be percent-encoded when uploaded through the classic UI.
-      String fileContent = urlDecodeIfNeeded(parameters.optString(FILE_CONTENT));
+      String fileContent = readFileContent(parameters);
 
       if (fileContent == null || fileContent.isEmpty()) {
         result.setType(Result.Type.ERROR);
@@ -381,13 +414,14 @@ public class InstanceManagementAction extends Action {
 
       OBError msg = (OBError) pb.getResult();
       Result.Type resultType = Result.Type.valueOf(msg.getType().toUpperCase());
+      String translatedMessage = translate(msg.getMessage());
       result.setType(resultType);
-      result.setMessage(msg.getMessage());
+      result.setMessage(translatedMessage);
 
       // Show message based on result type
       ResponseActionsBuilder.MessageType msgType = ResponseActionsBuilder.MessageType.valueOf(
           msg.getType().toUpperCase());
-      responseActions.showMsgInProcessView(msgType, msg.getMessage());
+      responseActions.showMsgInProcessView(msgType, translatedMessage);
 
       if (resultType == Result.Type.SUCCESS) {
         responseActions.setRefreshParent(true);

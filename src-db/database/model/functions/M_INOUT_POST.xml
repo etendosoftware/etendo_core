@@ -216,6 +216,26 @@
              RAISE_APPLICATION_ERROR(-20000, '@Inline@ '||v_Message_product||' '||'@ProductNullAndMovementQtyGreaterZero@') ;
           END IF;
 	     End ;
+       Declare
+       v_Message_product_qty_zero VARCHAR(2000);
+       Begin
+          FOR Cur_Lines IN (
+                             SELECT M.line
+                             FROM M_InOut I,
+                                  M_InOutLine M
+                             WHERE I.M_InOut_ID=M.M_InOut_ID
+                               AND I.M_INOUT_ID=v_Record_ID
+                               AND M.M_PRODUCT_ID IS NULL
+                               AND M.MOVEMENTQTY = 0
+                               AND COALESCE(M.ISDESCRIPTION, 'N') = 'N'
+                               ORDER BY M.line
+                            ) LOOP
+               v_Message_product_qty_zero := COALESCE(v_Message_product_qty_zero, '') || Cur_Lines.line || ', ';
+          END LOOP;
+          IF (v_Message_product_qty_zero IS NOT NULL) THEN
+             RAISE_APPLICATION_ERROR(-20000, '@Inline@ '||v_Message_product_qty_zero||' '||'@ProductNullAndMovementQtyZero@') ;
+          END IF;
+       End ;
 	     Declare
        v_Message_Qty VARCHAR(2000);
 	     BEGIN
@@ -280,7 +300,7 @@
             FROM M_INOUT
             WHERE M_INOUT.M_INOUT_id = v_Record_ID;
       -- Skip MovementQtyCheck when it is reversed document
-      if(v_isreturndoctype = 'N' AND v_isSoTrx = 'Y' and v_DocAction<>'RC' AND v_IsReversedDoc='N') then
+      if(v_isreturndoctype = 'N' and v_DocAction<>'RC' AND v_IsReversedDoc='N') then
         v_message := null;
         for Cur_OrderLine in (
           select c_orderline_id, line, m_product_id
@@ -859,18 +879,18 @@
                 ELSE
                   IF (v_DocStatus = 'CO') THEN
                     UPDATE C_ORDERLINE
-                      SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
-                      QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
-                      DATEDELIVERED = (CASE WHEN (ABS(QtyDelivered) + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered)))) > 0 
+                      SET QtyDelivered = QtyDelivered + v_QtyPO,
+                      QtyReserved = QtyReserved - v_QtyPO,
+                      DATEDELIVERED = (CASE WHEN ABS(QtyDelivered + v_QtyPO) > 0
                                       THEN v_DateDelivered ELSE NULL END),
                       Updated = now(),
                       UpdatedBy = v_User
                     WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
                   ELSE 
                     UPDATE C_ORDERLINE
-                      SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
-                      QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
-                      DATEDELIVERED = (CASE WHEN (ABS(QtyDelivered) + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered)))) > 0 
+                      SET QtyDelivered = QtyDelivered + v_QtyPO,
+                      QtyReserved = QtyReserved - v_QtyPO,
+                      DATEDELIVERED = (CASE WHEN ABS(QtyDelivered + v_QtyPO) > 0
                                       THEN v_DateDelivered ELSE NULL END),
                       Updated = now(),
                       UpdatedBy = v_User
@@ -894,9 +914,9 @@
                   WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
                 ELSE
                   UPDATE C_ORDERLINE
-                    SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
-                    QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
-                    DATEDELIVERED = (CASE WHEN (ABS(QtyDelivered) + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered)))) > 0 
+                    SET QtyDelivered = QtyDelivered + v_QtyPO,
+                    QtyReserved = QtyReserved - v_QtyPO,
+                    DATEDELIVERED = (CASE WHEN ABS(QtyDelivered + v_QtyPO) > 0
                                     THEN v_DateDelivered ELSE NULL END),
                     Updated = now(),
                     UpdatedBy = v_User
@@ -930,7 +950,9 @@
              IF (v_IsReversedDoc = 'N') THEN
                -- Normal Scenario
                UPDATE C_Order o
-               SET IsDelivered = 'Y'
+               SET IsDelivered = 'Y',
+                   Updated = now(),
+                   UpdatedBy = v_User
                WHERE o.c_order_id = Cur_Order.c_order_id 
                AND o.IsDelivered = 'N'
                AND o.processed = 'Y'                
@@ -943,7 +965,9 @@
              ELSIF (v_IsReversedDoc = 'Y') THEN
                -- Void Scenario
                UPDATE C_Order o
-               SET IsDelivered = 'N'
+               SET IsDelivered = 'N',
+                   Updated = now(),
+                   UpdatedBy = v_User
                WHERE o.c_order_id = Cur_Order.c_order_id
                AND o.IsDelivered = 'Y'
                AND EXISTS (SELECT 1
@@ -1031,9 +1055,9 @@
                 Ad_Sequence_Next('M_MatchInv', Cur_ILines.AD_Org_ID, v_MatchInv_ID) ;
                 -- The min qty. Modified by Ismael Ciordia
                 v_Qty:=Cur_ILines.MovementQty;
-                --IF (ABS(Cur_ILines.MovementQty) > ABS(Cur_ILines.QtyInvoiced)) THEN
-                -- v_Qty := Cur_ILines.QtyInvoiced;
-                --END IF;
+                IF (ABS(Cur_ILines.MovementQty) > ABS(Cur_ILines.QTYINVOICED)) THEN
+                  v_Qty := Cur_ILines.QTYINVOICED;
+                END IF;
                 v_ResultStr:='InsertMatchPO ' || v_MatchPO_ID;
                 INSERT
                 INTO M_MATCHINV

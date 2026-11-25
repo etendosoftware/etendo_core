@@ -39,6 +39,9 @@ BEGIN
     FROM AD_TREE
     WHERE treetype='AY'
       AND AD_Client_ID=:NEW.AD_Client_ID;
+    IF (v_xTree_ID IS NULL) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@NoActivityTreeForClient@');
+    END IF;
     --  Insert into TreeNode
     INSERT
     INTO AD_TREENODE
@@ -70,6 +73,11 @@ BEGIN
    OR COALESCE(:OLD.IsActive, '.') <> COALESCE(:NEW.IsActive, '.')))
   THEN
       IF(:OLD.IsActive!=:NEW.IsActive) THEN
+        SELECT AD_TREE_ID
+        INTO v_xTree_ID
+        FROM AD_TREE
+        WHERE treetype='AY'
+          AND AD_Client_ID=:NEW.AD_Client_ID;
         UPDATE AD_TREENODE
           SET IsActive=:NEW.IsActive
         WHERE AD_Tree_ID=v_xTree_ID

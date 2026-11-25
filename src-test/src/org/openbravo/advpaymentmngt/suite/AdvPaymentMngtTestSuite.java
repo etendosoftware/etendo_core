@@ -70,6 +70,7 @@ import org.openbravo.advpaymentmngt.process.RecordID2FillingTest;
 import org.openbravo.advpaymentmngt.test.DocumentNumberGeneration;
 import org.openbravo.advpaymentmngt.test.FinancialAccountTest;
 import org.openbravo.advpaymentmngt.test.PaymentMethodTest;
+import org.openbravo.advpaymentmngt.test.PaymentScheduleDetailOrgTest;
 import org.openbravo.advpaymentmngt.test.PaymentTest_01;
 import org.openbravo.advpaymentmngt.test.PaymentTest_02;
 import org.openbravo.advpaymentmngt.test.PaymentTest_03;
@@ -189,6 +190,7 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     PaymentTest_06.class,
     PaymentTest_11.class,
     ReversePaymentTest.class,
+    PaymentScheduleDetailOrgTest.class,
     FinancialAccountTest.class,
     PaymentMethodTest.class,
     APRMActionHandlerTest.class,

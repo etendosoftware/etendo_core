@@ -19,8 +19,12 @@
 
 package org.openbravo.test.createlinesfrom;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +44,7 @@ import org.openbravo.base.weld.test.ParameterCdiTest;
 import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromProcess;
+import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.invoice.Invoice;
@@ -47,6 +52,7 @@ import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
+import org.openbravo.model.procurement.ReceiptInvoiceMatch;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.test.createlinesfrom.data.CLFTestDataPO_02;
 import org.openbravo.test.createlinesfrom.data.CLFTestDataSO_01;
@@ -76,6 +82,8 @@ public class CreateLinesFromTest extends WeldBaseTest {
   private static final String INVOICE_COMPLETE_PROCEDURE_NAME = "c_invoice_post";
   // Shipment Complete Procedure
   private static final String SHIPMENT_INOUT_COMPLETE_PROCEDURE_NAME = "m_inout_post";
+  private static final String OPERATIVE_QUANTITY = "operativeQuantity";
+  private static final String ORDERED_QUANTITY = "orderedQuantity";
 
   // Test information
   private String testNumber;
@@ -189,6 +197,87 @@ public class CreateLinesFromTest extends WeldBaseTest {
     data.assertCompletedInvoice(invoice);
   }
 
+  /**
+   * Verifies that an order quantity not physically received is not linked to a receipt line already
+   * used by another line in the same draft invoice.
+   */
+  @Test
+  public void testUnreceivedOrderQuantityIsNotLinkedToReceipt() throws JSONException {
+    if (data.isSales()) {
+      return;
+    }
+
+    Order order = data.createOrder();
+    order.setDocumentAction("CO");
+    order = processOrder(order);
+    OrderLine orderLine = order.getOrderLineList().get(0);
+
+    ShipmentInOut receipt = data.createShipmentInOut();
+    receipt.setSalesOrder(order);
+    ShipmentInOutLine receiptLine = receipt.getMaterialMgmtShipmentInOutLineList().get(0);
+    receiptLine.setSalesOrderLine(orderLine);
+    receiptLine.setMovementQuantity(new BigDecimal("9"));
+    OBDal.getInstance().save(receiptLine);
+    OBDal.getInstance().save(receipt);
+    OBDal.getInstance().flush();
+    receipt.setDocumentAction("CO");
+    receipt = processShipmentInOut(receipt);
+    receiptLine = receipt.getMaterialMgmtShipmentInOutLineList().get(0);
+    OBDal.getInstance().refresh(orderLine);
+
+    Invoice invoice = data.createInvoiceHeader();
+    CreateInvoiceLinesFromProcess createLinesFromProcess = WeldUtils
+        .getInstanceFromStaticBeanManager(CreateInvoiceLinesFromProcess.class);
+
+    JSONArray partiallyInvoicedReceipt = createSelectedLinesFromShipmentInOut(receipt);
+    JSONObject selectedReceiptLine = partiallyInvoicedReceipt.getJSONObject(0);
+    selectedReceiptLine.put("movementQuantity", new BigDecimal("4").toString());
+    selectedReceiptLine.put(OPERATIVE_QUANTITY, new BigDecimal("4").toString());
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(partiallyInvoicedReceipt, invoice,
+        ShipmentInOutLine.class);
+
+    OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
+    invoice = OBDal.getInstance().get(Invoice.class, invoice.getId());
+    order = OBDal.getInstance().get(Order.class, order.getId());
+    receiptLine = OBDal.getInstance().get(ShipmentInOutLine.class, receiptLine.getId());
+
+    JSONArray receivedOrderQuantity = createSelectedLinesFromOrder(order);
+    JSONObject selectedReceivedOrderLine = receivedOrderQuantity.getJSONObject(0);
+    selectedReceivedOrderLine.put(ORDERED_QUANTITY, new BigDecimal("6").toString());
+    selectedReceivedOrderLine.put(OPERATIVE_QUANTITY, new BigDecimal("6").toString());
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(receivedOrderQuantity, invoice,
+        OrderLine.class);
+
+    JSONArray remainingOrderQuantity = createSelectedLinesFromOrder(order);
+    JSONObject selectedOrderLine = remainingOrderQuantity.getJSONObject(0);
+    selectedOrderLine.put(ORDERED_QUANTITY, BigDecimal.ONE.toString());
+    selectedOrderLine.put(OPERATIVE_QUANTITY, BigDecimal.ONE.toString());
+    createLinesFromProcess.createInvoiceLinesFromDocumentLines(remainingOrderQuantity, invoice,
+        OrderLine.class);
+
+    OBDal.getInstance().refresh(invoice);
+    InvoiceLine unreceivedInvoiceLine = invoice.getInvoiceLineList()
+        .stream()
+        .filter(line -> BigDecimal.ONE.compareTo(line.getInvoicedQuantity()) == 0)
+        .findFirst()
+        .orElse(null);
+    assertNotNull("The invoice line for the unreceived unit was not created",
+        unreceivedInvoiceLine);
+    assertNull("The unreceived unit must not be linked to a goods receipt line",
+        unreceivedInvoiceLine.getGoodsShipmentLine());
+
+    processInvoice(invoice);
+    receiptLine = OBDal.getInstance()
+        .get(ShipmentInOutLine.class, receiptLine.getId());
+    BigDecimal matchedQuantity = receiptLine.getProcurementReceiptInvoiceMatchList()
+        .stream()
+        .map(ReceiptInvoiceMatch::getQuantity)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    assertEquals("Matched quantity must equal the quantity physically received", 0,
+        new BigDecimal("9").compareTo(matchedQuantity));
+  }
+
   private Order processOrder(Order testOrder) {
     final List<Object> params = new ArrayList<Object>();
     params.add(null);
@@ -226,8 +315,8 @@ public class CreateLinesFromTest extends WeldBaseTest {
         line.put("product", orderLine.getProduct().getId());
         line.put("product$_identifier", orderLine.getProduct().getIdentifier());
         line.put("lineNo", orderLine.getLineNo());
-        line.put("orderedQuantity", orderLine.getOrderedQuantity().toString());
-        line.put("operativeQuantity",
+        line.put(ORDERED_QUANTITY, orderLine.getOrderedQuantity().toString());
+        line.put(OPERATIVE_QUANTITY,
             orderLine.getOperativeQuantity() == null ? orderLine.getOrderedQuantity().toString()
                 : orderLine.getOperativeQuantity().toString());
         line.put("id", orderLine.getId());
@@ -271,7 +360,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
         line.put("product$_identifier", shipmentInOutLine.getProduct().getIdentifier());
         line.put("lineNo", shipmentInOutLine.getLineNo());
         line.put("movementQuantity", shipmentInOutLine.getMovementQuantity().toString());
-        line.put("operativeQuantity",
+        line.put(OPERATIVE_QUANTITY,
             shipmentInOutLine.getOperativeQuantity() == null
                 ? shipmentInOutLine.getMovementQuantity().toString()
                 : shipmentInOutLine.getOperativeQuantity().toString());

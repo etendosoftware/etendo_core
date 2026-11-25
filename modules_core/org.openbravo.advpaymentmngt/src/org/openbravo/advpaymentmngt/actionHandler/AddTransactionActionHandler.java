@@ -167,10 +167,17 @@ public class AddTransactionActionHandler extends BaseProcessActionHandler {
 
       if (!paymentId.equals("null")) { // Payment
         payment = OBDal.getInstance().get(FIN_Payment.class, paymentId);
-        depositAmt = FIN_Utility.getDepositAmount(payment.isReceipt(),
-            payment.getFinancialTransactionAmount());
-        paymentAmt = FIN_Utility.getPaymentAmount(payment.isReceipt(),
-            payment.getFinancialTransactionAmount());
+        // Use payment.getAmount() sign for direction (matches AddTransactionOnChangePaymentActionHandler)
+        // to correctly handle negative receipts (credit notes) regardless of financialTransactionAmount sign
+        boolean isDeposit = (payment.isReceipt() && payment.getAmount().compareTo(BigDecimal.ZERO) > 0)
+            || (!payment.isReceipt() && payment.getAmount().compareTo(BigDecimal.ZERO) < 0);
+        if (isDeposit) {
+          depositAmt = payment.getFinancialTransactionAmount().abs();
+          paymentAmt = BigDecimal.ZERO;
+        } else {
+          depositAmt = BigDecimal.ZERO;
+          paymentAmt = payment.getFinancialTransactionAmount().abs();
+        }
         isReceipt = payment.isReceipt();
         String paymentDescription = StringUtils.isNotBlank(payment.getDescription())
             ? payment.getDescription().replace("\n", ". ")

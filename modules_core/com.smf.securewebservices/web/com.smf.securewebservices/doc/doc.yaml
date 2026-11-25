@@ -246,7 +246,7 @@ paths:
           schema:
             type: string
             default: Product
-        - name: id
+        - name: recordID
           in: path
           required: true
           description: ID of the record to be obtained.

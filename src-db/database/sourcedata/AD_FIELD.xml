@@ -95013,9 +95013,10 @@ Usually, company's internal identifiers for various records (products, customers
 <!--8245-->  <AD_TAB_ID><![CDATA[297]]></AD_TAB_ID>
 <!--8245-->  <AD_COLUMN_ID><![CDATA[9869]]></AD_COLUMN_ID>
 <!--8245-->  <IGNOREINWAD><![CDATA[N]]></IGNOREINWAD>
-<!--8245-->  <ISDISPLAYED><![CDATA[N]]></ISDISPLAYED>
+<!--8245-->  <ISDISPLAYED><![CDATA[Y]]></ISDISPLAYED>
 <!--8245-->  <DISPLAYLENGTH><![CDATA[1]]></DISPLAYLENGTH>
 <!--8245-->  <ISREADONLY><![CDATA[N]]></ISREADONLY>
+<!--8245-->  <SEQNO><![CDATA[105]]></SEQNO>
 <!--8245-->  <ISSAMELINE><![CDATA[N]]></ISSAMELINE>
 <!--8245-->  <ISFIELDONLY><![CDATA[N]]></ISFIELDONLY>
 <!--8245-->  <ISENCRYPTED><![CDATA[N]]></ISENCRYPTED>

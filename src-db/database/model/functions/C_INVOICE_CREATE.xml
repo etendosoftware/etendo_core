@@ -90,6 +90,9 @@
     v_InOutLine_ID C_InvoiceLine.M_InOutLine_ID%TYPE;
 
     v_uom_preference VARCHAR(1);	
+    v_prorate_taxbaseamt VARCHAR(1);
+    v_pref_client_id VARCHAR2(32);
+    v_pref_org_id VARCHAR2(32);
     v_default_aum C_UOM.C_UOM_ID%TYPE;
     v_aum_qty NUMBER;
     c_soo_doctype C_DOCTYPE.C_DOCTYPE_ID%TYPE := '01360D369B5F473686354A701A6EA559';
@@ -248,6 +251,38 @@
             WHEN OTHERS THEN
             -- Nothing to do, v_uom_preference = 'N'
             DBMS_OUTPUT.PUT_LINE('No UomManagement preference found') ;
+        END;
+
+        -- Get AlternateTaxBaseAmountProrating value. When it is not enabled the Alternate Tax
+        -- Base Amount is a manual amount and it is inherited without prorating it.
+        v_prorate_taxbaseamt := 'N';
+        v_pref_client_id := NULL;
+        v_pref_org_id := v_AD_Org_ID;
+        BEGIN
+          -- The organization is resolved as well: AD_GET_PREFERENCE_VALUE turns a NULL organization
+          -- into '0', and AD_ISORGINCLUDED then discards any preference defined at a specific one.
+          IF (p_PInstance_ID IS NOT NULL) THEN
+            SELECT i.AD_Client_ID, COALESCE(v_AD_Org_ID, i.AD_Org_ID)
+            INTO v_pref_client_id, v_pref_org_id
+            FROM AD_PINSTANCE i
+            WHERE i.AD_PInstance_ID = p_PInstance_ID;
+          ELSIF (p_Order_ID IS NOT NULL) THEN
+            SELECT o.AD_Client_ID, COALESCE(v_AD_Org_ID, o.AD_Org_ID)
+            INTO v_pref_client_id, v_pref_org_id
+            FROM C_ORDER o
+            WHERE o.C_Order_ID = p_Order_ID;
+          END IF;
+          IF (v_pref_client_id IS NULL) THEN
+            -- The client could not be determined, so the preference cannot be resolved and the
+            -- Alternate Tax Base Amount is inherited without prorating it.
+            DBMS_OUTPUT.PUT_LINE('AlternateTaxBaseAmountProrating not evaluated, unknown client') ;
+          ELSE
+            v_prorate_taxbaseamt := AD_GET_PREFERENCE_VALUE('AlternateTaxBaseAmountProrating', 'Y', v_pref_client_id, v_pref_org_id, v_ADUserId, NULL, NULL);
+          END IF;
+          EXCEPTION
+            WHEN OTHERS THEN
+            -- Nothing to do, v_prorate_taxbaseamt = 'N'
+            DBMS_OUTPUT.PUT_LINE('No AlternateTaxBaseAmountProrating preference found') ;
         END;
         
         /**
@@ -644,7 +679,8 @@
                         v_aum_qty, v_default_aum,
                         ptr_ol.C_Tax_ID,  --MODIFIED BY F.IRIAZABAL
                         v_QtyOrder, ptr_ol.M_Product_Uom_ID, ptr_ol.PriceStd,
-                        ptr_ol.m_attributesetinstance_id, ptr_ol.taxbaseamt,
+                        ptr_ol.m_attributesetinstance_id,
+                        CASE WHEN v_prorate_taxbaseamt = 'Y' AND ptr_ol.QtyOrdered <> 0 THEN C_Currency_Round(ptr_ol.taxbaseamt*v_Qty/ptr_ol.QtyOrdered, Cur_Order.C_Currency_ID, NULL) ELSE ptr_ol.taxbaseamt END,
                         ptr_ol.gross_unit_price, C_Currency_Round(v_Qty*ptr_ol.gross_unit_price, Cur_Order.C_Currency_ID, NULL),
                         COALESCE(ptr_ol.grosspricestd,0), COALESCE(ptr_ol.grosspricelist,0),
                         v_isdeferred_inv, v_defplantype_inv, v_periodnumber_inv, v_period_inv,
@@ -765,7 +801,7 @@
                         ptr_sl.C_Tax_ID,  --MODIFIED BY F.IRIAZABAL
                         ptr_sl.QuantityOrder, ptr_sl.M_Product_Uom_ID, ptr_sl.PriceStd,
                         ptr_sl.m_attributesetinstance_id,
-                        CASE WHEN ptr_sl.QtyOrdered != 0 THEN C_Currency_Round(ptr_sl.taxbaseamt*ptr_sl.MovementQty/ptr_sl.QtyOrdered, Cur_Order.C_Currency_ID, NULL) ELSE ptr_sl.taxbaseamt END,
+                        CASE WHEN v_prorate_taxbaseamt = 'Y' AND ptr_sl.QtyOrdered != 0 THEN C_Currency_Round(ptr_sl.taxbaseamt*ptr_sl.MovementQty/ptr_sl.QtyOrdered, Cur_Order.C_Currency_ID, NULL) ELSE ptr_sl.taxbaseamt END,
                         ptr_sl.gross_unit_price, C_Currency_Round(ptr_sl.MovementQty*ptr_sl.gross_unit_price, Cur_Order.C_Currency_ID, NULL),
                         COALESCE(ptr_sl.grosspricestd,0), COALESCE(ptr_sl.grosspricelist,0),
                         v_isdeferred_inv, v_defplantype_inv, v_periodnumber_inv, v_period_inv,
@@ -1360,7 +1396,7 @@
                     Cur_InvoiceSchedule.C_Tax_ID,  --MODIFIED BY F.IRIAZABAL
                     Cur_InvoiceSchedule.QuantityOrder, Cur_InvoiceSchedule.M_Product_Uom_ID, Cur_InvoiceSchedule.PriceStd,
                     Cur_InvoiceSchedule.m_attributesetinstance_id, 
-                    CASE WHEN Cur_InvoiceSchedule.QtyOrdered != 0 THEN C_Currency_Round(Cur_InvoiceSchedule.taxbaseamt*Cur_InvoiceSchedule.MovementQty/Cur_InvoiceSchedule.QtyOrdered, Cur_InvoiceSchedule.C_Currency_ID, NULL) ELSE Cur_InvoiceSchedule.taxbaseamt END,
+                    CASE WHEN v_prorate_taxbaseamt = 'Y' AND Cur_InvoiceSchedule.QtyOrdered != 0 THEN C_Currency_Round(Cur_InvoiceSchedule.taxbaseamt*Cur_InvoiceSchedule.MovementQty/Cur_InvoiceSchedule.QtyOrdered, Cur_InvoiceSchedule.C_Currency_ID, NULL) ELSE Cur_InvoiceSchedule.taxbaseamt END,
                     Cur_InvoiceSchedule.gross_unit_price, C_Currency_Round(Cur_InvoiceSchedule.MovementQty*Cur_InvoiceSchedule.gross_unit_price, Cur_InvoiceSchedule.C_Currency_ID, NULL),
                     COALESCE(Cur_InvoiceSchedule.grosspricestd,0), COALESCE(Cur_InvoiceSchedule.grosspricelist,0),
                     v_isdeferred_inv, v_defplantype_inv, v_periodnumber_inv, v_period_inv,

@@ -225,6 +225,7 @@ BEGIN
       SELECT DISTINCT c_orderline.c_order_id AS order_id, fin_payment_scheduledetail.amount + COALESCE(fin_payment_scheduledetail.writeoffamt,0) AS amount,
              fin_payment_scheduledetail_id,
              fin_payment_scheduledetail.fin_payment_schedule_order,
+             fin_payment_schedule.ad_org_id AS order_org_id,
              fin_payment_scheduledetail.fin_payment_detail_id,
              fin_payment_scheduledetail.isinvoicepaid AS paid,
              CASE WHEN fin_payment_scheduledetail.fin_payment_detail_id is not null THEN 0 ELSE 1 END AS priority
@@ -480,7 +481,7 @@ BEGIN
                 )
                 VALUES
                 (
-                  v_new_scheduledetailid, v_Client_ID, v_Org_ID, 'Y',
+                  v_new_scheduledetailid, v_Client_ID, order_schdet.order_org_id, 'Y',
                   now(), p_user, now(), p_user,
                   order_schdet.fin_payment_schedule_order,
                   null,
@@ -507,8 +508,12 @@ BEGIN
               END IF;
 
               -- link current current payment schedule detail to the invoice
+              -- an unpaid detail not visible from the invoice organization moves to it
               UPDATE fin_payment_scheduledetail
               SET fin_payment_schedule_invoice = v_payment_schedule_invoice,
+                  ad_org_id = CASE WHEN fin_payment_detail_id IS NULL
+                                    AND AD_ISORGINCLUDED(ad_org_id, v_Org_ID, v_Client_ID) = -1
+                                   THEN v_Org_ID ELSE ad_org_id END,
                   updated = now(),
                   updatedby = p_user
               WHERE fin_payment_scheduledetail_id = v_scheduledetailid;
@@ -1234,8 +1239,13 @@ BEGIN
                   (v_reversalinvoice_id IS NOT NULL AND c_invoice_id = v_reversalinvoice_id))))
         LOOP
 
+        -- unpaid details go back to the organization of the order
         UPDATE fin_payment_scheduledetail
-        SET fin_payment_schedule_invoice = null
+        SET fin_payment_schedule_invoice = null,
+            ad_org_id = CASE WHEN fin_payment_detail_id IS NULL
+                             THEN (SELECT ps.ad_org_id FROM fin_payment_schedule ps
+                                   WHERE ps.fin_payment_schedule_id = cur_ps.fin_payment_schedule_order)
+                             ELSE ad_org_id END
         WHERE fin_payment_schedule_invoice IN
           (SELECT fin_payment_schedule_id
            FROM fin_payment_schedule
