@@ -34,7 +34,6 @@ import org.openbravo.client.kernel.Template;
 import org.openbravo.client.kernel.TemplateProcessor;
 
 import freemarker.core.Environment;
-import freemarker.core.TemplateClassResolver;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.TemplateException;
@@ -114,8 +113,6 @@ public class FreemarkerTemplateProcessor
     final Configuration cfg = new Configuration();
     cfg.setObjectWrapper(new DefaultObjectWrapper());
     cfg.setTemplateExceptionHandler(new OBExceptionHandler());
-    // templates must not instantiate arbitrary classes through ?new (e.g. freemarker Execute)
-    cfg.setNewBuiltinClassResolver(TemplateClassResolver.SAFER_RESOLVER);
     return cfg;
   }
 
