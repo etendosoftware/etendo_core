@@ -43,6 +43,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -59,6 +60,7 @@ import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
+import org.openbravo.financial.FinancialUtils;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -1378,16 +1380,49 @@ public class FIN_Utility {
   }
 
   /**
+   * Converts an amount expressed in the currency of the given invoice to the currency of its
+   * Business Partner. The conversion uses the same criteria applied when the invoice was completed:
+   * the conversion rate defined on the invoice document if any, otherwise the rate valid at the
+   * invoice date for the invoice organization.
+   *
+   * @param invoice
+   *     Invoice whose currency, date, organization and conversion rates are used
+   * @param amount
+   *     Amount expressed in the invoice currency
+   * @return The amount expressed in the Business Partner currency, or the same amount when both
+   *     currencies are the same
+   * @throws OBException
+   *     if the Business Partner has no currency or no conversion rate can be found
+   */
+  public static BigDecimal convertAmountToBPCurrency(Invoice invoice, BigDecimal amount) {
+    BusinessPartner businessPartner = invoice.getBusinessPartner();
+    Currency bpCurrency = businessPartner.getCurrency();
+    if (bpCurrency == null) {
+      throw new OBException(String.format(OBMessageUtils.messageBD("InitBPCurrencyLnk", false), businessPartner.getId(),
+          businessPartner.getName()));
+    }
+    Currency invoiceCurrency = invoice.getCurrency();
+    if (StringUtils.equals(invoiceCurrency.getId(), bpCurrency.getId())) {
+      return amount;
+    }
+    List<ConversionRateDoc> rateDocs = invoice.getCurrencyConversionRateDocList();
+    return FinancialUtils.getConvertedAmount(amount, invoiceCurrency, bpCurrency, invoice.getInvoiceDate(),
+        invoice.getOrganization(), null, rateDocs != null ? rateDocs : new ArrayList<ConversionRateDoc>());
+  }
+
+  /**
    * This function should only be called when it should update the payment amounts
    */
   public static void updatePaymentAmounts(FIN_PaymentScheduleDetail psd) {
 
     if (psd.getInvoicePaymentSchedule() != null) {
-      BusinessPartner bPartner = psd.getInvoicePaymentSchedule().getInvoice().getBusinessPartner();
+      Invoice invoice = psd.getInvoicePaymentSchedule().getInvoice();
+      BusinessPartner bPartner = invoice.getBusinessPartner();
       BigDecimal creditUsed = bPartner.getCreditUsed();
-      BigDecimal amountWithSign = psd.getInvoicePaymentSchedule().getInvoice().isSalesTransaction()
-          ? psd.getAmount()
-          : psd.getAmount().negate();
+      // SO_CreditUsed is expressed in the BP currency, while the psd amount is in the invoice
+      // currency
+      BigDecimal convertedAmount = convertAmountToBPCurrency(invoice, psd.getAmount());
+      BigDecimal amountWithSign = invoice.isSalesTransaction() ? convertedAmount : convertedAmount.negate();
       creditUsed = creditUsed.subtract(amountWithSign);
       bPartner.setCreditUsed(creditUsed);
       OBDal.getInstance().save(bPartner);
@@ -1435,8 +1470,8 @@ public class FIN_Utility {
 
   /**
    * Returns the sequence number of payment status in reference list
-   * 
-   * 
+   *
+   *
    */
   public static int seqnumberpaymentstatus(String status) {
     List<Object> parameters = new ArrayList<Object>();
@@ -1464,13 +1499,15 @@ public class FIN_Utility {
           paymentScheduleDetail.getInvoicePaymentSchedule(), psdAmount.negate(),
           psdWriteoffAmount.negate());
       // BP SO_CreditUsed
-      businessPartner = paymentScheduleDetail.getInvoicePaymentSchedule()
-          .getInvoice()
-          .getBusinessPartner();
+      Invoice invoice = paymentScheduleDetail.getInvoicePaymentSchedule().getInvoice();
+      businessPartner = invoice.getBusinessPartner();
+      // SO_CreditUsed is expressed in the BP currency, while the psd amount is in the invoice
+      // currency
+      BigDecimal convertedAmount = convertAmountToBPCurrency(invoice, amount);
       if (paymentScheduleDetail.getPaymentDetails().getFinPayment().isReceipt()) {
-        increaseCustomerCredit(businessPartner, amount);
+        increaseCustomerCredit(businessPartner, convertedAmount);
       } else {
-        decreaseCustomerCredit(businessPartner, amount);
+        decreaseCustomerCredit(businessPartner, convertedAmount);
       }
 
     }
