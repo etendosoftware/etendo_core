@@ -345,6 +345,11 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
             && !strSetAmount) {
           businessPartner.setCreditUsed(creditUsed.multiply(rate));
         }
+        // The Credit Line Limit is expressed in the BP currency, so it must follow the new currency
+        if (!strSetAmount) {
+          businessPartner.setCreditLimit(
+              convertCreditLimit(businessPartner.getCreditLimit(), rate, businessPartner.getCurrency()));
+        }
       }
       OBDal.getInstance().save(businessPartner);
       String messageText = OBMessageUtils.messageBD("CurrencyUpdated");
@@ -373,6 +378,24 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
       OBContext.restorePreviousMode();
     }
     return jsonRequest;
+  }
+
+  /**
+   * Converts the Credit Line Limit of a Business Partner to its new currency.
+   *
+   * @param limit
+   *     the current Credit Line Limit, expressed in the previous BP currency
+   * @param rate
+   *     the conversion rate from the previous to the new BP currency
+   * @param toCurrency
+   *     the new BP currency, used to round the result to its standard precision
+   * @return the converted limit, or the same limit when it or the rate is null or zero
+   */
+  static BigDecimal convertCreditLimit(BigDecimal limit, BigDecimal rate, Currency toCurrency) {
+    if (limit == null || limit.signum() == 0 || rate == null || rate.signum() == 0) {
+      return limit;
+    }
+    return limit.multiply(rate).setScale(toCurrency.getStandardPrecision().intValue(), RoundingMode.HALF_UP);
   }
 
   private BigDecimal getConversionRate(String strOrgId, String strFromCurrencyId,
