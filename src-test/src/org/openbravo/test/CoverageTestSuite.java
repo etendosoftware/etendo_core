@@ -77,6 +77,7 @@ import org.openbravo.client.kernel.reference.AbsoluteTimeUIDefinitionTest;
 import org.openbravo.client.querylist.CheckOptionalFilterCalloutTest;
 import org.openbravo.common.actionhandler.ChangeInventoryStatusActionHandlerTest;
 import org.openbravo.common.actionhandler.CheckAvailableCreditActionHandlerTest;
+import org.openbravo.common.actionhandler.SetNewBPCurrencyTest;
 import org.openbravo.common.actionhandler.copyfromorderprocess.CopyFromOrdersProcessFilterExpressionTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromInOutLinesTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromOrderLinesTest;
@@ -274,6 +275,7 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     BankStatementLineFilterHelperTest.class,
     FINUtilityTest.class,
     FIN_UtilityTest.class,
+    SetNewBPCurrencyTest.class,
 
     // advpaymentmngt.dao — core coverage
     AdvPaymentMngtDaoTest.class,
