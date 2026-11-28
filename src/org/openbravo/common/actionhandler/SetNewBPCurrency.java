@@ -99,6 +99,8 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
       BusinessPartner businessPartner = OBDal.getInstance()
           .get(BusinessPartner.class, strBpartnerId);
       creditUsed = businessPartner.getCreditUsed();
+      final BigDecimal recomputedCreditUsed = BPCreditUsedRecalculator.recalculate(businessPartner,
+          creditUsed, strFromCurrencyId, strToCurrencyId, rate, strSetAmount);
 
       ScrollableResults scroll = null;
       GLItem glItem = OBDal.getInstance().get(GLItem.class, glItemId);
@@ -341,9 +343,8 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
       if (!strToCurrencyId.equals(strFromCurrencyId) && strToCurrencyId != null
           && !"null".equals(strToCurrencyId)) {
         businessPartner.setCurrency(OBDal.getInstance().get(Currency.class, strToCurrencyId));
-        if (rate.compareTo(BigDecimal.ZERO) != 0 && creditUsed.compareTo(BigDecimal.ZERO) != 0
-            && !strSetAmount) {
-          businessPartner.setCreditUsed(creditUsed.multiply(rate));
+        if (recomputedCreditUsed != null) {
+          businessPartner.setCreditUsed(recomputedCreditUsed);
         }
       }
       OBDal.getInstance().save(businessPartner);
@@ -363,6 +364,7 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
         String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
         JSONObject errorMessage = new JSONObject();
         errorMessage.put("severity", "error");
+        errorMessage.put("title", OBMessageUtils.messageBD("Error"));
         errorMessage.put("text", message);
         jsonRequest.put("message", errorMessage);
       } catch (Exception e2) {
