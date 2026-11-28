@@ -75,8 +75,10 @@ import org.openbravo.client.kernel.GetLabelActionHandlerTest;
 import org.openbravo.client.kernel.reference.AbsoluteDateTimeUIDefinitionTest;
 import org.openbravo.client.kernel.reference.AbsoluteTimeUIDefinitionTest;
 import org.openbravo.client.querylist.CheckOptionalFilterCalloutTest;
+import org.openbravo.common.actionhandler.BPCreditUsedRecalculatorTest;
 import org.openbravo.common.actionhandler.ChangeInventoryStatusActionHandlerTest;
 import org.openbravo.common.actionhandler.CheckAvailableCreditActionHandlerTest;
+import org.openbravo.common.actionhandler.SettlementRateResolverTest;
 import org.openbravo.common.actionhandler.copyfromorderprocess.CopyFromOrdersProcessFilterExpressionTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromInOutLinesTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromOrderLinesTest;
@@ -363,8 +365,10 @@ import org.openbravo.userinterface.selector.DefaultExpressionCalloutTest;
     CheckOptionalFilterCalloutTest.class,
 
     // common.actionhandler
+    BPCreditUsedRecalculatorTest.class,
     ChangeInventoryStatusActionHandlerTest.class,
     CheckAvailableCreditActionHandlerTest.class,
+    SettlementRateResolverTest.class,
     CopyFromOrdersProcessFilterExpressionTest.class,
     CreateInvoiceLinesFromInOutLinesTest.class,
     CreateInvoiceLinesFromOrderLinesTest.class,
